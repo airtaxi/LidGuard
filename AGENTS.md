@@ -124,6 +124,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Temporary lid close action change: enabled for the headless CLI runtime and applied to AC/DC together.
 - Sleep or hibernate after stop when lid is closed: disabled.
 - Immediate suspend mode: Sleep by default, Hibernate optional.
+- PermissionRequest hook response: Deny by default, Allow optional.
 - Parent process watchdog: enabled.
 
 ## Implemented Components
@@ -138,6 +139,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - `LidGuardSessionSnapshot`
   - `LidGuardSessionRegistry`
 - `Settings`
+  - `HookPermissionRequestBehavior`
   - `LidGuardSettings`
   - `LidGuardSettings.Default`
   - `LidGuardSettings.HeadlessRuntimeDefault`
@@ -217,16 +219,18 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 ### Codex CLI
 
 - Start event: `UserPromptSubmit`.
-- Stop events: `Stop`, `PermissionRequest`, `SessionEnd`.
+- Permission decision event: `PermissionRequest`.
+- Stop events: `Stop`, `SessionEnd`.
 - Command path: `lidguard codex-hook` when the global tool is available on PATH, otherwise the current executable path plus `codex-hook`.
 - Snippet command: `lidguard codex-hooks --format config-toml`.
 - Install/status commands: `lidguard hook-install --provider codex` and `lidguard hook-status --provider codex`.
 - Codex may require `features.codex_hooks = true`.
 - `codex-hook` reads Codex hook JSON from stdin and maps `hook_event_name` to runtime IPC.
 - For `UserPromptSubmit`, it sends internal `start --provider codex`.
-- For `Stop`, `PermissionRequest`, and `SessionEnd`, it sends internal `stop --provider codex`.
+- For `PermissionRequest`, it does not stop the runtime; it returns a structured allow/deny decision from `LidGuardSettings.PermissionRequestBehavior`.
+- For `Stop` and `SessionEnd`, it sends internal `stop --provider codex`.
 - Codex hook input does not provide a stable parent process id, so the current implementation resolves a process by working directory.
-- All handled Codex hook events exit successfully with empty stdout; LidGuard records diagnostics locally and should not block the Codex task even when the runtime request fails.
+- Codex `PermissionRequest` exits successfully with structured JSON stdout; non-decision events exit successfully with empty stdout. LidGuard records diagnostics locally and should not block the Codex task when a runtime request fails.
 - This behavior is based on analyzing the `openai/codex` `codex-rs` hook source: `exit 0` with empty stdout is treated as a no-op success, while non-empty stdout may be parsed as hook JSON or interpreted as plain-text context depending on the event.
 
 Reference:
@@ -237,7 +241,9 @@ Reference:
 ### Claude Code
 
 - Start event: `UserPromptSubmit`.
-- Stop events: `Stop`, `StopFailure`, `PermissionRequest`, `PermissionDenied`, `SessionEnd`.
+- Permission decision event: `PermissionRequest`.
+- Permission observation event: `PermissionDenied`.
+- Stop events: `Stop`, `StopFailure`, `SessionEnd`.
 - Command path: `lidguard claude-hook` when the global tool is available on PATH, otherwise the current executable path plus `claude-hook`.
 - Snippet command: `lidguard claude-hooks --format settings-json`.
 - Install/status commands: `lidguard hook-install --provider claude` and `lidguard hook-status --provider claude`.
@@ -247,9 +253,11 @@ Reference:
 - Based on the same local source snapshot analysis, `PermissionRequest` only becomes a programmatic allow/deny when the hook returns structured JSON with `hookSpecificOutput.decision`; empty stdout keeps the normal permission flow.
 - `claude-hook` reads Claude hook JSON from stdin and maps `hook_event_name` to runtime IPC.
 - For `UserPromptSubmit`, it sends internal `start --provider claude`.
-- For `Stop`, `StopFailure`, `PermissionRequest`, `PermissionDenied`, and `SessionEnd`, it sends internal `stop --provider claude`.
+- For `PermissionRequest`, it does not stop the runtime; it returns a structured allow/deny decision from `LidGuardSettings.PermissionRequestBehavior`.
+- For `PermissionDenied`, it only records diagnostics and leaves active session tracking intact.
+- For `Stop`, `StopFailure`, and `SessionEnd`, it sends internal `stop --provider claude`.
 - The analyzed Claude hook input provides `session_id` and `cwd`, but not a stable parent process id, so the current implementation resolves a process by working directory.
-- All handled Claude hook events exit successfully with empty stdout; LidGuard records diagnostics locally and should not block the Claude task even when the runtime request fails.
+- Claude `PermissionRequest` exits successfully with structured JSON stdout; non-decision events exit successfully with empty stdout. LidGuard records diagnostics locally and should not block the Claude task when a runtime request fails.
 
 Reference:
 
@@ -288,6 +296,7 @@ lidguard hook-install --provider codex
 lidguard hook-events --provider codex --count 50
 lidguard settings
 lidguard settings --change-lid-action true
+lidguard settings --permission-request-behavior allow
 lidguard settings --prevent-away-mode-sleep true --prevent-display-sleep true --power-request-reason "LidGuard keeps agent sessions awake"
 lidguard status
 lidguard cleanup-orphans
@@ -322,9 +331,9 @@ The Windows CLI hook receiving path is implemented for Codex and Claude Code. Pr
 7. ~~Add settings loading for the headless runtime.~~
 8. ~~Add a solution file including `LidGuardLib.Commons`, `LidGuardLib.Windows`, and `LidGuard`.~~
 9. ~~Add Codex hook parsing, snippet output, and managed config install/status helpers.~~
-10. ~~Map Codex `PermissionRequest` and `SessionEnd` to stop handling.~~
+10. ~~Map Codex `SessionEnd` to stop handling and handle `PermissionRequest` as a settings-driven allow/deny decision.~~
 11. ~~Add Claude hook parsing, snippet output, and managed `settings.json` install/status helpers.~~
-12. ~~Map Claude `Stop`, `StopFailure`, `PermissionRequest`, `PermissionDenied`, and `SessionEnd` to stop handling.~~
+12. ~~Map Claude `Stop`, `StopFailure`, and `SessionEnd` to stop handling, while handling `PermissionRequest` as a settings-driven allow/deny decision and `PermissionDenied` as diagnostics only.~~
 
 ## Design Constraints
 
@@ -333,6 +342,7 @@ The Windows CLI hook receiving path is implemented for Codex and Claude Code. Pr
 - Do not enable Nullable in the current library csproj files unless the user explicitly asks.
 - Keep `ImplicitUsings` enabled.
 - Keep NativeAOT/trimming compatibility in mind.
+- When adding an enum that may be serialized to JSON, attach `JsonStringEnumConverter<TEnum>` to the enum type so values are stored as strings, not numbers.
 - Prefer libraries over manual interop where reasonable.
 - For Windows native APIs, prefer CsWin32. Keep `NativeMethods.txt` minimal and sorted enough to maintain.
 - Do not introduce reflection-heavy, dynamic-loading, or runtime-marshalling-dependent patterns unless there is a clear AOT-safe reason.
