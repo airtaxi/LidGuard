@@ -8,6 +8,17 @@ public static class WindowsHookCommandUtilities
         return GetCurrentProcessExecutablePath();
     }
 
+    public static string GetDefaultMcpExecutableReference()
+    {
+        var currentProcessExecutablePath = GetCurrentLidGuardExecutablePath();
+        if (!string.IsNullOrWhiteSpace(currentProcessExecutablePath)) return currentProcessExecutablePath;
+
+        if (TryResolveCommandExecutablePath("lidguard", out var commandExecutablePath) && commandExecutablePath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) return commandExecutablePath;
+
+        if (IsCommandAvailable("lidguard")) return "lidguard";
+        return GetCurrentProcessExecutablePath();
+    }
+
     public static string CreateHookCommand(string executablePath, string hookCommandName)
     {
         var escapedExecutableReference = EscapeHookExecutableReference(executablePath);
@@ -39,6 +50,15 @@ public static class WindowsHookCommandUtilities
         return string.IsNullOrWhiteSpace(processPath) ? string.Empty : Path.GetFullPath(processPath);
     }
 
+    private static string GetCurrentLidGuardExecutablePath()
+    {
+        var processPath = GetCurrentProcessExecutablePath();
+        if (string.IsNullOrWhiteSpace(processPath)) return string.Empty;
+
+        var fileName = Path.GetFileNameWithoutExtension(processPath);
+        return fileName.Equals("lidguard", StringComparison.OrdinalIgnoreCase) ? processPath : string.Empty;
+    }
+
     private static bool IsPathLikeExecutableReference(string executableReference)
     {
         if (Path.IsPathRooted(executableReference)) return true;
@@ -46,7 +66,11 @@ public static class WindowsHookCommandUtilities
     }
 
     private static bool IsCommandAvailable(string commandName)
+        => TryResolveCommandExecutablePath(commandName, out _);
+
+    private static bool TryResolveCommandExecutablePath(string commandName, out string executablePath)
     {
+        executablePath = string.Empty;
         if (string.IsNullOrWhiteSpace(commandName)) return false;
 
         var pathValue = Environment.GetEnvironmentVariable("PATH");
@@ -59,7 +83,11 @@ public static class WindowsHookCommandUtilities
             {
                 try
                 {
-                    if (File.Exists(Path.Combine(directoryPath, candidateName))) return true;
+                    var candidatePath = Path.Combine(directoryPath, candidateName);
+                    if (!File.Exists(candidatePath)) continue;
+
+                    executablePath = Path.GetFullPath(candidatePath);
+                    return true;
                 }
                 catch (ArgumentException) { }
                 catch (NotSupportedException) { }

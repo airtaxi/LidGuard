@@ -69,7 +69,7 @@ internal static class McpManagementCommand
         ManagedProviderSelection.WriteSkippedProviderMessages(skippedProviderMessages);
         if (providers.Count == 0) return ManagedProviderSelection.WriteNoAvailableProvidersFound();
 
-        var managedExecutableReference = WindowsHookCommandUtilities.GetDefaultHookExecutableReference();
+        var managedExecutableReference = WindowsHookCommandUtilities.GetDefaultMcpExecutableReference();
         if (!WindowsHookCommandUtilities.HookExecutableExists(managedExecutableReference))
         {
             Console.Error.WriteLine($"LidGuard executable or command does not exist: {managedExecutableReference}");

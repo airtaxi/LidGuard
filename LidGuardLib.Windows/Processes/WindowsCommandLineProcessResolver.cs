@@ -27,6 +27,15 @@ public sealed partial class WindowsCommandLineProcessResolver : ICommandLineProc
         "pwsh"
     };
 
+    private static readonly string[] s_lidGuardUtilityCommandNames =
+    [
+        "claude-hook",
+        "codex-hook",
+        "copilot-hook",
+        "mcp-server",
+        "provider-mcp-server"
+    ];
+
     public LidGuardOperationResult<CommandLineProcessCandidate> FindForWorkingDirectory(string workingDirectory, AgentProvider provider = AgentProvider.Unknown)
     {
         if (string.IsNullOrWhiteSpace(workingDirectory)) return LidGuardOperationResult<CommandLineProcessCandidate>.Failure("A working directory is required.");
@@ -48,7 +57,7 @@ public sealed partial class WindowsCommandLineProcessResolver : ICommandLineProc
 
                 if (!TryReadCurrentDirectory(process.Id, out var processWorkingDirectory)) continue;
                 if (!DirectoryMatches(normalizedWorkingDirectory, processWorkingDirectory)) continue;
-                if (IsHookRunnerProcess(process.Id, processName)) continue;
+                if (IsLidGuardUtilityProcess(process.Id)) continue;
 
                 var candidate = new CommandLineProcessCandidate
                 {
@@ -117,25 +126,17 @@ public sealed partial class WindowsCommandLineProcessResolver : ICommandLineProc
         return 0;
     }
 
-    private static bool IsHookRunnerProcess(int processIdentifier, string processName)
+    private static bool IsLidGuardUtilityProcess(int processIdentifier)
     {
-        if (!IsShellProcess(processName)) return false;
         if (!TryReadCommandLine(processIdentifier, out var commandLine)) return false;
 
-        return IsLidGuardHookCommandLine(commandLine);
+        return IsLidGuardUtilityCommandLine(commandLine);
     }
 
-    private static bool IsLidGuardHookCommandLine(string commandLine)
+    private static bool IsLidGuardUtilityCommandLine(string commandLine)
     {
         if (!commandLine.Contains("lidguard", StringComparison.OrdinalIgnoreCase)) return false;
-        return commandLine.Contains("codex-hook", StringComparison.OrdinalIgnoreCase) || commandLine.Contains("claude-hook", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool IsShellProcess(string processName)
-    {
-        return processName.Equals("cmd", StringComparison.OrdinalIgnoreCase)
-            || processName.Equals("powershell", StringComparison.OrdinalIgnoreCase)
-            || processName.Equals("pwsh", StringComparison.OrdinalIgnoreCase);
+        return s_lidGuardUtilityCommandNames.Any(commandName => commandLine.Contains(commandName, StringComparison.OrdinalIgnoreCase));
     }
 
     private static bool DirectoryMatches(string normalizedWorkingDirectory, string processWorkingDirectory)

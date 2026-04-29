@@ -134,6 +134,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `LidGuard` hosts a stdio MCP server for local automation clients through `lidguard mcp-server`.
 - `mcp-status` inspects the provider's global/user MCP configuration and reports whether the `lidguard` server entry is present and still points at `mcp-server`.
 - `mcp-install` and `mcp-remove` register or remove the user/global LidGuard stdio MCP server named `lidguard` for Codex, Claude Code, and GitHub Copilot CLI.
+- `mcp-install` prefers the current `lidguard.exe` path over the Windows `.cmd` shim when registering stdio MCP servers, because shim wrapper processes can remain visible under MCP clients and should not be mistaken for agent work.
 - The regular MCP server exposes `get_settings_status`, `list_sessions`, `update_settings`, `remove_session`, `set_session_soft_lock`, and `clear_session_soft_lock`.
 - `list_sessions` returns the active session list plus runtime lid/session state without the full settings payload.
 - `update_settings` accepts multiple setting fields in a single request and persists them together.
@@ -141,6 +142,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `set_session_soft_lock` and `clear_session_soft_lock` are general-purpose tools that accept provider and session identifier inputs, so non-MCP providers can also use MCP-driven soft-lock control when they can supply those values.
 - `LidGuard` also hosts a separate stdio Provider MCP server through `lidguard provider-mcp-server --provider-name <name>`.
 - `provider-mcp-install` and `provider-mcp-remove` directly edit a caller-supplied JSON config file and register or remove a managed stdio server entry for `provider-mcp-server`; this path intentionally does not use Codex, Claude Code, or GitHub Copilot CLI-specific MCP registration commands.
+- `provider-mcp-install` uses the same MCP executable selection policy as `mcp-install`: prefer the current `lidguard.exe` path over the Windows `.cmd` shim unless the caller supplies `--executable`.
 - The Provider MCP server exposes `provider_start_session`, `provider_stop_session`, `provider_set_soft_lock`, and `provider_clear_soft_lock`.
 - `provider_start_session` is intended to be called before a provider begins processing a user prompt, while `provider_stop_session` is intended to be called before a turn ends only when the work is truly complete.
 - `provider_set_soft_lock` is intended to be called before a turn ends because the model needs user input and wants LidGuard to release keep-awake protection. The tool itself cannot end the turn; the model still has to stop or hand back the conversation after calling it.
@@ -264,7 +266,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `WindowsCommandLineProcessResolver`
   - Used when a hook does not provide a parent process id.
   - Finds CLI-like processes whose current working directory matches the hook working directory.
-  - Excludes transient shell processes whose command line is only running `LidGuard codex-hook`, `lidguard codex-hook`, `LidGuard claude-hook`, or `lidguard claude-hook`.
+  - Excludes transient LidGuard utility processes whose command line is running `codex-hook`, `claude-hook`, `copilot-hook`, `mcp-server`, or `provider-mcp-server`, so MCP launcher wrappers are never treated as watched agent processes.
   - Reads the remote process current directory from the process PEB instead of using WMI, to stay AOT-friendly.
   - Candidate process names include `codex`, `claude`, `copilot`, `cmd`, `pwsh`, `powershell`, `node`, `dotnet`, and `gh`.
 - `WindowsLidSwitchNotificationRegistration`
