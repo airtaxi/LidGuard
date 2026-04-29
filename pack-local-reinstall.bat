@@ -2,7 +2,18 @@
 setlocal EnableExtensions
 
 set "PACKAGE_VERSION=0.1.0"
-set "TOOL_ARCH=arm64"
+set "NATIVE_ARCH=%PROCESSOR_ARCHITECTURE%"
+if defined PROCESSOR_ARCHITEW6432 set "NATIVE_ARCH=%PROCESSOR_ARCHITEW6432%"
+
+if /I "%NATIVE_ARCH%"=="AMD64" set "TOOL_ARCH=x64"
+if /I "%NATIVE_ARCH%"=="X64" set "TOOL_ARCH=x64"
+if /I "%NATIVE_ARCH%"=="ARM64" set "TOOL_ARCH=arm64"
+if /I "%NATIVE_ARCH%"=="X86" set "TOOL_ARCH=x86"
+
+if not defined TOOL_ARCH (
+    echo Unsupported processor architecture: "%NATIVE_ARCH%"
+    exit /b 1
+)
 set "REPO_ROOT=%~dp0"
 set "PROJECT_FILE=%REPO_ROOT%LidGuard\LidGuard.csproj"
 set "PACKAGE_DIR=%REPO_ROOT%artifacts\packages"
@@ -25,6 +36,8 @@ if errorlevel 1 (
 echo Stopping running LidGuard processes...
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$processes = @(Get-Process -Name lidguard,LidGuard -ErrorAction SilentlyContinue); if ($processes.Count -gt 0) { $processes | Stop-Process -Force; Start-Sleep -Milliseconds 500 }; $remainingProcesses = @(Get-Process -Name lidguard,LidGuard -ErrorAction SilentlyContinue); if ($remainingProcesses.Count -gt 0) { Write-Error 'Unable to stop all LidGuard processes.'; exit 1 }"
 if errorlevel 1 goto fail
+
+echo Detected system architecture: %NATIVE_ARCH% ^(installing --arch %TOOL_ARCH%^)
 
 echo Removing stale 0.1.0 package outputs...
 if exist "%PACKAGE_DIR%\lidguard.%PACKAGE_VERSION%.nupkg" del /f /q "%PACKAGE_DIR%\lidguard.%PACKAGE_VERSION%.nupkg"
@@ -112,3 +125,5 @@ goto cleanup
 :cleanup
 if exist "%TEMP_CONFIG_DIR%" rmdir /s /q "%TEMP_CONFIG_DIR%"
 exit /b %EXIT_CODE%
+
+pause
