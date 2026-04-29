@@ -28,6 +28,8 @@ public sealed class LidGuardControlService
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(settingsPatch);
+        if (settingsPatch.PostStopSuspendDelaySeconds < 0)
+            return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure("Post-stop suspend delay seconds must be a non-negative integer.");
 
         if (!LidGuardSettingsStore.TryLoadOrCreate(out var currentSettings, out var message))
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
@@ -111,6 +113,7 @@ public sealed class LidGuardControlService
             },
             ChangeLidAction = settingsPatch.ChangeLidAction ?? normalizedBaseSettings.ChangeLidAction,
             SuspendMode = settingsPatch.SuspendMode ?? normalizedBaseSettings.SuspendMode,
+            PostStopSuspendDelaySeconds = settingsPatch.PostStopSuspendDelaySeconds ?? normalizedBaseSettings.PostStopSuspendDelaySeconds,
             ClosedLidPermissionRequestDecision = settingsPatch.ClosedLidPermissionRequestDecision ?? normalizedBaseSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settingsPatch.WatchParentProcess ?? normalizedBaseSettings.WatchParentProcess
         };
@@ -132,6 +135,7 @@ public sealed class LidGuardControlService
         AppendChange(changes, previousStoredSettings.ChangeLidAction, updatedStoredSettings.ChangeLidAction, "changeLidAction");
         AppendChange(changes, previousStoredSettings.WatchParentProcess, updatedStoredSettings.WatchParentProcess, "watchParentProcess");
         AppendChange(changes, previousStoredSettings.SuspendMode, updatedStoredSettings.SuspendMode, "suspendMode");
+        AppendChange(changes, previousStoredSettings.PostStopSuspendDelaySeconds, updatedStoredSettings.PostStopSuspendDelaySeconds, "postStopSuspendDelaySeconds");
         AppendChange(changes, previousStoredSettings.ClosedLidPermissionRequestDecision, updatedStoredSettings.ClosedLidPermissionRequestDecision, "closedLidPermissionRequestDecision");
 
         return [.. changes];

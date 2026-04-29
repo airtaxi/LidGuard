@@ -82,6 +82,7 @@ internal static class LidGuardSettingsStore
             },
             ChangeLidAction = normalizedSettings.ChangeLidAction,
             SuspendMode = normalizedSettings.SuspendMode,
+            PostStopSuspendDelaySeconds = normalizedSettings.PostStopSuspendDelaySeconds,
             ClosedLidPermissionRequestDecision = normalizedSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = normalizedSettings.WatchParentProcess
         };

@@ -18,7 +18,6 @@ internal sealed class LidGuardRuntimeCoordinator(
     ILidStateSource lidStateSource)
 {
     private static readonly TimeSpan s_processWatchInterval = TimeSpan.FromSeconds(1);
-    private static readonly TimeSpan s_suspendRequestDelay = TimeSpan.FromMilliseconds(250);
 
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly LidGuardSessionRegistry _sessionRegistry = new();
@@ -30,6 +29,7 @@ internal sealed class LidGuardRuntimeCoordinator(
     private LidActionBackup _lidActionBackup;
     private bool _hasLidActionBackup;
     private bool _protectionApplied;
+    private CancellationTokenSource _pendingSuspendCancellationTokenSource;
 
     public async Task<LidGuardPipeResponse> HandleAsync(LidGuardPipeRequest request, CancellationToken cancellationToken)
     {
@@ -89,6 +89,7 @@ internal sealed class LidGuardRuntimeCoordinator(
                 return response;
             }
 
+            CancelPendingSuspend();
             StartWatcher(snapshot);
 
             var watchMessage = snapshot.HasWatchedProcess ? $" Watching process {snapshot.WatchedProcessIdentifier}." : " No watched process was resolved; a stop hook is required.";
@@ -390,23 +391,32 @@ internal sealed class LidGuardRuntimeCoordinator(
         }
 
         var suspendMode = _settings.SuspendMode;
-        var scheduledResponse = CreateSuccessResponse($"Scheduled {suspendMode} because the lid is closed after the last session stopped.");
+        var postStopSuspendDelaySeconds = _settings.PostStopSuspendDelaySeconds;
+        var scheduledResponse = CreateSuccessResponse(
+            $"Scheduled {suspendMode} {DescribePostStopSuspendDelay(postStopSuspendDelaySeconds)} because the lid is closed after the last session stopped.");
         AppendSessionLog($"{eventName}-suspend-scheduled", request, scheduledResponse, snapshot);
-        _ = SuspendAfterDelayAsync(request, snapshot, eventName, suspendMode);
-        return CreateSuccessResponse($"{successMessage} Scheduled {suspendMode} because the lid is closed.");
+        CancelPendingSuspend();
+        var pendingSuspendCancellationTokenSource = new CancellationTokenSource();
+        _pendingSuspendCancellationTokenSource = pendingSuspendCancellationTokenSource;
+        _ = SuspendAfterDelayAsync(request, snapshot, eventName, postStopSuspendDelaySeconds, pendingSuspendCancellationTokenSource);
+        return CreateSuccessResponse(
+            $"{successMessage} Scheduled {suspendMode} {DescribePostStopSuspendDelay(postStopSuspendDelaySeconds)} because the lid is closed.");
     }
 
     private async Task SuspendAfterDelayAsync(
         LidGuardSessionStopRequest request,
         LidGuardSessionSnapshot snapshot,
         string eventName,
-        SystemSuspendMode suspendMode)
+        int postStopSuspendDelaySeconds,
+        CancellationTokenSource pendingSuspendCancellationTokenSource)
     {
         try
         {
-            await Task.Delay(s_suspendRequestDelay);
+            if (postStopSuspendDelaySeconds > 0)
+                await Task.Delay(TimeSpan.FromSeconds(postStopSuspendDelaySeconds), pendingSuspendCancellationTokenSource.Token);
 
-            await _gate.WaitAsync(CancellationToken.None);
+            var suspendMode = SystemSuspendMode.Sleep;
+            await _gate.WaitAsync(pendingSuspendCancellationTokenSource.Token);
             try
             {
                 if (_sessionRegistry.HasActiveSessions)
@@ -424,6 +434,7 @@ internal sealed class LidGuardRuntimeCoordinator(
                     return;
                 }
 
+                suspendMode = _settings.SuspendMode;
                 var requestingResponse = CreateSuccessResponse($"Requesting {suspendMode} because the lid is closed after the last session stopped.");
                 AppendSessionLog($"{eventName}-suspend-requesting", request, requestingResponse, snapshot);
             }
@@ -447,6 +458,10 @@ internal sealed class LidGuardRuntimeCoordinator(
             }
         }
         catch (OperationCanceledException) { }
+        finally
+        {
+            await ClearPendingSuspendAsync(pendingSuspendCancellationTokenSource);
+        }
     }
 
     private void CancelWatcher(LidGuardSessionKey key)
@@ -455,6 +470,30 @@ internal sealed class LidGuardRuntimeCoordinator(
 
         cancellationTokenSource.Cancel();
         cancellationTokenSource.Dispose();
+    }
+
+    private void CancelPendingSuspend()
+    {
+        if (_pendingSuspendCancellationTokenSource is null) return;
+
+        _pendingSuspendCancellationTokenSource.Cancel();
+        _pendingSuspendCancellationTokenSource = null;
+    }
+
+    private async Task ClearPendingSuspendAsync(CancellationTokenSource pendingSuspendCancellationTokenSource)
+    {
+        await _gate.WaitAsync(CancellationToken.None);
+        try
+        {
+            if (ReferenceEquals(_pendingSuspendCancellationTokenSource, pendingSuspendCancellationTokenSource))
+                _pendingSuspendCancellationTokenSource = null;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+
+        pendingSuspendCancellationTokenSource.Dispose();
     }
 
     private LidGuardPipeResponse CreateSuccessResponse(string message)
@@ -493,6 +532,9 @@ internal sealed class LidGuardRuntimeCoordinator(
         if (result.NativeErrorCode == 0) return result.Message;
         return $"{result.Message} Native error: {result.NativeErrorCode}.";
     }
+
+    private static string DescribePostStopSuspendDelay(int postStopSuspendDelaySeconds)
+        => postStopSuspendDelaySeconds == 0 ? "immediately" : $"in {postStopSuspendDelaySeconds} second(s)";
 
     private static void AppendRuntimeLog(string eventName, string command, LidGuardPipeResponse response)
     {

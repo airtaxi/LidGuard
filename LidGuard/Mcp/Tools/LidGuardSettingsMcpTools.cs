@@ -53,6 +53,8 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         bool? watchParentProcess = null,
         [Description("Set the suspend mode LidGuard uses after the last session stops while the lid is closed. Omit to keep the current value.")]
         SystemSuspendMode? suspendMode = null,
+        [Description("Set the post-stop suspend delay in seconds after the last session stops while the lid is closed. Use 0 for immediate suspend. Omit to keep the current value.")]
+        int? postStopSuspendDelaySeconds = null,
         [Description("Set the PermissionRequest decision returned while the lid is closed. Omit to keep the current value.")]
         ClosedLidPermissionRequestDecision? closedLidPermissionRequestDecision = null,
         [Description("Set the power request reason string. Pass an empty string to restore LidGuard's default reason text. Omit to keep the current value.")]
@@ -68,6 +70,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
             ChangeLidAction = changeLidAction,
             WatchParentProcess = watchParentProcess,
             SuspendMode = suspendMode,
+            PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             PowerRequestReason = powerRequestReason
         };

@@ -27,6 +27,7 @@ The goal is to keep Windows awake while at least one agent session is active, th
 - When sessions stop, all temporary power settings must be restored to the user's original values.
 - After the last active session stops, LidGuard should always request suspend when the laptop lid is closed.
 - The suspend mode remains user-selectable: Sleep by default, Hibernate optional.
+- The post-stop suspend delay remains user-selectable: 10 seconds by default, `0` for immediate suspend.
 
 The key design rule is to treat normal idle sleep and lid-close sleep as separate problems. Power requests handle idle sleep. `LIDACTION` policy backup/change/restore handles lid-close behavior because standard sleep-prevention APIs cannot reliably block a user lid-close action.
 
@@ -84,7 +85,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - `WindowsLidSwitchNotificationRegistration` converts these values to `LidSwitchState`.
 - Immediate sleep/hibernate uses `SetSuspendState` after enabling `SeShutdownPrivilege`.
 - On Modern Standby systems, `SetSuspendState(false, ...)` can fail with `ERROR_NOT_SUPPORTED`; a later fallback may use a display-off strategy.
-- After the last active session stops, a closed lid should always trigger suspend using the configured suspend mode.
+- After the last active session stops, a closed lid should always trigger suspend after the configured post-stop delay using the configured suspend mode. A delay of `0` means immediate suspend.
 
 ### Process Exit Watcher
 
@@ -135,7 +136,8 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Away-mode sleep prevention: enabled.
 - Display sleep prevention: disabled.
 - Temporary lid close action change: enabled for the headless CLI runtime and applied to AC/DC together.
-- Immediate suspend mode: Sleep by default, Hibernate optional.
+- Post-stop suspend delay: 10 seconds by default, `0` for immediate suspend.
+- Post-stop suspend mode: Sleep by default, Hibernate optional.
 - Closed-lid PermissionRequest decision: Deny by default, Allow optional.
 - PermissionRequest hooks only emit a structured allow/deny decision when the runtime reports the lid is closed; otherwise they return empty stdout so the provider's default permission flow continues.
 - Claude `Elicitation` hooks emit a structured `cancel` only when the runtime reports the lid is closed; otherwise they return empty stdout so Claude's default elicitation flow continues.
@@ -349,6 +351,7 @@ lidguard hook-remove --provider codex
 lidguard hook-events --provider codex --count 50
 lidguard settings
 lidguard settings --change-lid-action true
+lidguard settings --post-stop-suspend-delay-seconds 0
 lidguard settings --closed-lid-permission-request-decision allow
 lidguard settings --prevent-away-mode-sleep true --prevent-display-sleep true --power-request-reason "LidGuard keeps agent sessions awake"
 lidguard status
@@ -396,6 +399,7 @@ The Windows CLI hook receiving path is implemented for Codex and Claude Code. Pr
 13. ~~Add a stdio MCP server that can read LidGuard settings and update multiple settings in one request.~~
 14. ~~Add a Claude `Elicitation` hook guard that cancels closed-lid MCP elicitation requests.~~
 15. ~~Always request suspend after the last session stops while the lid is closed, while keeping Sleep/Hibernate mode selectable.~~
+16. ~~Add a configurable post-stop suspend delay with a default of 10 seconds and `0` for immediate suspend.~~
 
 ## Design Constraints
 

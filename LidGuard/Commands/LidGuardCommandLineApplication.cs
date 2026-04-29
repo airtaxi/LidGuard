@@ -418,6 +418,7 @@ internal static class LidGuardCommandLineApplication
         if (!TryParseBooleanOption(options, baseSettings.ChangeLidAction, out var changeLidAction, out message, "change-lid-action", "lid-action")) return false;
         if (!TryParseBooleanOption(options, baseSettings.WatchParentProcess, out var watchParentProcess, out message, "watch-parent-process", "watch-parent")) return false;
         if (!TryParseSuspendModeOption(options, baseSettings.SuspendMode, out var suspendMode, out message)) return false;
+        if (!TryParsePostStopSuspendDelaySecondsOption(options, baseSettings.PostStopSuspendDelaySeconds, out var postStopSuspendDelaySeconds, out message)) return false;
         if (!TryParseClosedLidPermissionRequestDecisionOption(options, baseSettings.ClosedLidPermissionRequestDecision, out var closedLidPermissionRequestDecision, out message)) return false;
 
         var reason = GetOption(options, "power-request-reason", "reason");
@@ -434,6 +435,7 @@ internal static class LidGuardCommandLineApplication
             },
             ChangeLidAction = changeLidAction,
             SuspendMode = suspendMode,
+            PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess
         };
@@ -454,6 +456,12 @@ internal static class LidGuardCommandLineApplication
         if (!TryReadBooleanSetting("Change lid action", normalizedSettings.ChangeLidAction, out var changeLidAction, out message)) return false;
         if (!TryReadBooleanSetting("Watch parent process", normalizedSettings.WatchParentProcess, out var watchParentProcess, out message)) return false;
         if (!TryReadSuspendModeSetting("Suspend mode", normalizedSettings.SuspendMode, out var suspendMode, out message)) return false;
+        if (!TryReadNonNegativeIntegerSetting(
+            "Post-stop suspend delay seconds",
+            normalizedSettings.PostStopSuspendDelaySeconds,
+            out var postStopSuspendDelaySeconds,
+            out message))
+            return false;
         if (!TryReadClosedLidPermissionRequestDecisionSetting("Closed lid permission request decision", normalizedSettings.ClosedLidPermissionRequestDecision, out var closedLidPermissionRequestDecision, out message)) return false;
 
         settings = new LidGuardSettings
@@ -467,6 +475,7 @@ internal static class LidGuardCommandLineApplication
             },
             ChangeLidAction = changeLidAction,
             SuspendMode = suspendMode,
+            PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess
         };
@@ -519,6 +528,26 @@ internal static class LidGuardCommandLineApplication
         if (valueText.Trim().Equals(value.ToString(), StringComparison.OrdinalIgnoreCase)) return true;
 
         message = $"{settingName} must be sleep or hibernate.";
+        return false;
+    }
+
+    private static bool TryReadNonNegativeIntegerSetting(string settingName, int defaultValue, out int value, out string message)
+    {
+        value = defaultValue;
+        message = string.Empty;
+        Console.Write($"{settingName} (default: {defaultValue}, 0 = immediate): ");
+
+        var valueText = Console.ReadLine();
+        if (valueText is null)
+        {
+            message = $"Input ended before {settingName} was entered.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(valueText)) return true;
+        if (int.TryParse(valueText.Trim(), out value) && value >= 0) return true;
+
+        message = $"{settingName} must be a non-negative integer.";
         return false;
     }
 
@@ -669,6 +698,21 @@ internal static class LidGuardCommandLineApplication
         return true;
     }
 
+    private static bool TryParsePostStopSuspendDelaySecondsOption(
+        IReadOnlyDictionary<string, string> options,
+        int defaultValue,
+        out int postStopSuspendDelaySeconds,
+        out string message)
+    {
+        postStopSuspendDelaySeconds = defaultValue;
+        message = string.Empty;
+        if (!TryGetOption(options, out var postStopSuspendDelaySecondsText, "post-stop-suspend-delay-seconds")) return true;
+        if (int.TryParse(postStopSuspendDelaySecondsText.Trim(), out postStopSuspendDelaySeconds) && postStopSuspendDelaySeconds >= 0) return true;
+
+        message = "The post-stop-suspend-delay-seconds option must be a non-negative integer.";
+        return false;
+    }
+
     private static string GetWorkingDirectory(IReadOnlyDictionary<string, string> options)
     {
         var workingDirectory = GetOption(options, "working-directory", "cwd");
@@ -740,6 +784,7 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  Change lid action: {normalizedSettings.ChangeLidAction}");
         Console.WriteLine($"  Watch parent process: {normalizedSettings.WatchParentProcess}");
         Console.WriteLine($"  Suspend mode: {normalizedSettings.SuspendMode}");
+        Console.WriteLine($"  Post-stop suspend delay seconds: {normalizedSettings.PostStopSuspendDelaySeconds}");
         Console.WriteLine($"  Closed lid permission request decision: {normalizedSettings.ClosedLidPermissionRequestDecision}");
         Console.WriteLine($"  Reason: {powerRequest.Reason}");
     }
@@ -764,8 +809,10 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  {commandDisplayName} settings [--reset true] [--change-lid-action true|false]");
         Console.WriteLine("                           [--prevent-system-sleep true|false] [--prevent-away-mode-sleep true|false] [--prevent-display-sleep true|false]");
         Console.WriteLine("                           [--watch-parent-process true|false]");
-        Console.WriteLine("                           [--suspend-mode sleep|hibernate] [--closed-lid-permission-request-decision deny|allow]");
+        Console.WriteLine("                           [--suspend-mode sleep|hibernate] [--post-stop-suspend-delay-seconds <number>]");
+        Console.WriteLine("                           [--closed-lid-permission-request-decision deny|allow]");
         Console.WriteLine("                           [--power-request-reason <text>]");
+        Console.WriteLine("                           Post-stop suspend delay defaults to 10 seconds; use 0 for immediate suspend.");
         Console.WriteLine($"  {commandDisplayName} status");
         Console.WriteLine($"  {commandDisplayName} cleanup-orphans");
         Console.WriteLine();

@@ -18,6 +18,8 @@ public sealed class LidGuardSettings
 
     public SystemSuspendMode SuspendMode { get; init; } = SystemSuspendMode.Sleep;
 
+    public int PostStopSuspendDelaySeconds { get; init; } = 10;
+
     public ClosedLidPermissionRequestDecision ClosedLidPermissionRequestDecision { get; init; } = ClosedLidPermissionRequestDecision.Deny;
 
     public bool WatchParentProcess { get; init; } = true;
@@ -38,6 +40,7 @@ public sealed class LidGuardSettings
             },
             ChangeLidAction = settings.ChangeLidAction,
             SuspendMode = settings.SuspendMode,
+            PostStopSuspendDelaySeconds = Math.Max(0, settings.PostStopSuspendDelaySeconds),
             ClosedLidPermissionRequestDecision = settings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settings.WatchParentProcess
         };
