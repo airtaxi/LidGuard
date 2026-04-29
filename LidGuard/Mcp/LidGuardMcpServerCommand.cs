@@ -29,12 +29,14 @@ internal static class LidGuardMcpServerCommand
             consoleLoggerOptions.LogToStandardErrorThreshold = LogLevel.Trace;
         });
 
+        var toolSerializerOptions = LidGuardMcpJsonUtilities.CreateToolSerializerOptions();
+
         applicationBuilder.Services.AddSingleton(postStopSuspendSoundPlayerResult.Value);
         applicationBuilder.Services.AddSingleton<LidGuardControlService>();
         applicationBuilder.Services
             .AddMcpServer()
             .WithStdioServerTransport()
-            .WithTools<LidGuardSettingsMcpTools>();
+            .WithTools<LidGuardSettingsMcpTools>(toolSerializerOptions);
 
         await applicationBuilder.Build().RunAsync();
         return 0;
