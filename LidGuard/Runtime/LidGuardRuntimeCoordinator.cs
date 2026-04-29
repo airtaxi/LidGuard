@@ -78,6 +78,7 @@ internal sealed class LidGuardRuntimeCoordinator(
             {
                 SessionIdentifier = request.SessionIdentifier,
                 Provider = request.Provider,
+                ProviderName = request.ProviderName,
                 StartedAt = DateTimeOffset.UtcNow,
                 WatchedProcessIdentifier = watchedProcessIdentifier,
                 WorkingDirectory = request.WorkingDirectory
@@ -87,7 +88,14 @@ internal sealed class LidGuardRuntimeCoordinator(
             var protectionResult = EnsureProtection();
             if (!protectionResult.Succeeded)
             {
-                _sessionRegistry.Stop(new LidGuardSessionStopRequest { SessionIdentifier = request.SessionIdentifier, Provider = request.Provider }, out _);
+                _sessionRegistry.Stop(
+                    new LidGuardSessionStopRequest
+                    {
+                        SessionIdentifier = request.SessionIdentifier,
+                        Provider = request.Provider,
+                        ProviderName = request.ProviderName
+                    },
+                    out _);
                 var response = CreateFailureResponse(protectionResult);
                 AppendSessionLog("session-start-failed", request, response);
                 return response;
@@ -142,8 +150,13 @@ internal sealed class LidGuardRuntimeCoordinator(
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            var stopRequest = new LidGuardSessionStopRequest { SessionIdentifier = request.SessionIdentifier, Provider = request.Provider };
-            return StopInsideGate(stopRequest, $"Stopped {stopRequest.Provider}:{stopRequest.SessionIdentifier}.");
+            var stopRequest = new LidGuardSessionStopRequest
+            {
+                SessionIdentifier = request.SessionIdentifier,
+                Provider = request.Provider,
+                ProviderName = request.ProviderName
+            };
+            return StopInsideGate(stopRequest, $"Stopped {new LidGuardSessionKey(stopRequest.Provider, stopRequest.SessionIdentifier, stopRequest.ProviderName)}.");
         }
         finally
         {
@@ -163,8 +176,8 @@ internal sealed class LidGuardRuntimeCoordinator(
                 return rejectedResponse;
             }
 
-            var key = new LidGuardSessionKey(request.Provider, request.SessionIdentifier);
-            if (!_sessionRegistry.TryMarkActive(request.Provider, request.SessionIdentifier, out var snapshot, out var changed))
+            var key = new LidGuardSessionKey(request.Provider, request.SessionIdentifier, request.ProviderName);
+            if (!_sessionRegistry.TryMarkActive(request.Provider, request.SessionIdentifier, request.ProviderName, out var snapshot, out var changed))
             {
                 var ignoredResponse = CreateSuccessResponse($"Session {key} is not active; ignored activity signal.");
                 AppendSessionLog("session-activity-ignored", request, ignoredResponse);
@@ -205,10 +218,11 @@ internal sealed class LidGuardRuntimeCoordinator(
                 return rejectedResponse;
             }
 
-            var key = new LidGuardSessionKey(request.Provider, request.SessionIdentifier);
+            var key = new LidGuardSessionKey(request.Provider, request.SessionIdentifier, request.ProviderName);
             if (!_sessionRegistry.TryMarkSoftLocked(
                 request.Provider,
                 request.SessionIdentifier,
+                request.ProviderName,
                 request.SessionStateReason,
                 DateTimeOffset.UtcNow,
                 out var snapshot,
@@ -272,11 +286,17 @@ internal sealed class LidGuardRuntimeCoordinator(
         try
         {
             if (request.MatchAllProvidersForSessionIdentifier) return RemoveSessionsMatchingSessionIdentifierInsideGate(request);
+            if (request.MatchAllProviderNamesForSessionIdentifier) return RemoveSessionsMatchingProviderInsideGate(request);
 
-            var stopRequest = new LidGuardSessionStopRequest { SessionIdentifier = request.SessionIdentifier, Provider = request.Provider };
+            var stopRequest = new LidGuardSessionStopRequest
+            {
+                SessionIdentifier = request.SessionIdentifier,
+                Provider = request.Provider,
+                ProviderName = request.ProviderName
+            };
             return StopInsideGate(
                 stopRequest,
-                $"Removed {stopRequest.Provider}:{stopRequest.SessionIdentifier}.",
+                $"Removed {new LidGuardSessionKey(stopRequest.Provider, stopRequest.SessionIdentifier, stopRequest.ProviderName)}.",
                 "session-removed",
                 LidGuardPipeCommands.RemoveSession);
         }
@@ -299,7 +319,12 @@ internal sealed class LidGuardRuntimeCoordinator(
                 if (IsProcessRunning(snapshot.WatchedProcessIdentifier)) continue;
 
                 var stopResponse = StopInsideGate(
-                    new LidGuardSessionStopRequest { SessionIdentifier = snapshot.SessionIdentifier, Provider = snapshot.Provider },
+                    new LidGuardSessionStopRequest
+                    {
+                        SessionIdentifier = snapshot.SessionIdentifier,
+                        Provider = snapshot.Provider,
+                        ProviderName = snapshot.ProviderName
+                    },
                     $"Cleaned orphan session {snapshot.Key}.",
                     "orphan-session-cleaned",
                     LidGuardPipeCommands.CleanupOrphans);
@@ -328,6 +353,7 @@ internal sealed class LidGuardRuntimeCoordinator(
     private int ResolveWatchedProcessIdentifier(LidGuardPipeRequest request)
     {
         if (request.WatchedProcessIdentifier > 0) return request.WatchedProcessIdentifier;
+        if (request.Provider == AgentProvider.Mcp) return 0;
         if (!_settings.WatchParentProcess) return 0;
         if (string.IsNullOrWhiteSpace(request.WorkingDirectory)) return 0;
 
@@ -465,7 +491,12 @@ internal sealed class LidGuardRuntimeCoordinator(
             try
             {
                 StopInsideGate(
-                    new LidGuardSessionStopRequest { SessionIdentifier = snapshot.SessionIdentifier, Provider = snapshot.Provider },
+                    new LidGuardSessionStopRequest
+                    {
+                        SessionIdentifier = snapshot.SessionIdentifier,
+                        Provider = snapshot.Provider,
+                        ProviderName = snapshot.ProviderName
+                    },
                     $"Watched process exited for {snapshot.Key}.",
                     "watched-process-exited");
             }
@@ -521,6 +552,53 @@ internal sealed class LidGuardRuntimeCoordinator(
         return CreateSuccessResponse(successMessage);
     }
 
+    private LidGuardPipeResponse RemoveSessionsMatchingProviderInsideGate(LidGuardPipeRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.SessionIdentifier))
+        {
+            var rejectedResponse = LidGuardPipeResponse.Failure("A session identifier is required.", _sessionRegistry.ActiveSessionCount);
+            AppendSessionLog("session-remove-rejected", request, rejectedResponse);
+            return rejectedResponse;
+        }
+
+        var matchingSnapshots = _sessionRegistry
+            .GetSnapshots()
+            .Where(snapshot => snapshot.Provider == request.Provider)
+            .Where(snapshot => string.Equals(snapshot.SessionIdentifier, request.SessionIdentifier, StringComparison.Ordinal))
+            .ToArray();
+        if (matchingSnapshots.Length == 0)
+        {
+            var alreadyStoppedResponse = CreateSuccessResponse(
+                $"Session id {request.SessionIdentifier} is already stopped for {AgentProviderDisplay.CreateProviderDisplayText(request.Provider, request.ProviderName)}.");
+            AppendSessionLog("session-remove-already-stopped", request, alreadyStoppedResponse);
+            return alreadyStoppedResponse;
+        }
+
+        var lastResponse = CreateSuccessResponse(string.Empty);
+        foreach (var matchingSnapshot in matchingSnapshots)
+        {
+            var stopRequest = new LidGuardSessionStopRequest
+            {
+                SessionIdentifier = matchingSnapshot.SessionIdentifier,
+                Provider = matchingSnapshot.Provider,
+                ProviderName = matchingSnapshot.ProviderName
+            };
+            lastResponse = StopInsideGate(
+                stopRequest,
+                $"Removed {matchingSnapshot.Key}.",
+                "session-removed",
+                LidGuardPipeCommands.RemoveSession);
+            if (!lastResponse.Succeeded) return lastResponse;
+        }
+
+        var successMessage = matchingSnapshots.Length == 1
+            ? lastResponse.Message
+            : $"Removed {matchingSnapshots.Length} session(s) matching {AgentProviderDisplay.CreateProviderDisplayText(request.Provider, request.ProviderName)} session id \"{request.SessionIdentifier}\".";
+        if (matchingSnapshots.Length > 1 && TryExtractPostStopScheduleMessage(lastResponse.Message, out var postStopScheduleMessage))
+            successMessage = $"{successMessage} {postStopScheduleMessage}";
+        return CreateSuccessResponse(successMessage);
+    }
+
     private LidGuardPipeResponse StopInsideGate(
         LidGuardSessionStopRequest request,
         string successMessage,
@@ -534,7 +612,7 @@ internal sealed class LidGuardRuntimeCoordinator(
             return response;
         }
 
-        var key = new LidGuardSessionKey(request.Provider, request.SessionIdentifier);
+        var key = new LidGuardSessionKey(request.Provider, request.SessionIdentifier, request.ProviderName);
         CancelWatcher(key);
 
         if (!_sessionRegistry.Stop(request, out var stoppedSnapshot))
@@ -844,6 +922,7 @@ internal sealed class LidGuardRuntimeCoordinator(
             {
                 SessionIdentifier = snapshot.SessionIdentifier,
                 Provider = snapshot.Provider,
+                ProviderName = snapshot.ProviderName,
                 StartedAt = snapshot.StartedAt,
                 SoftLockState = snapshot.SoftLockState,
                 SoftLockReason = snapshot.SoftLockReason,
@@ -904,6 +983,7 @@ internal sealed class LidGuardRuntimeCoordinator(
             EventName = eventName,
             Command = request.Command,
             Provider = request.Provider,
+            ProviderName = AgentProviderDisplay.NormalizeProviderName(request.Provider, request.ProviderName),
             SessionIdentifier = request.SessionIdentifier,
             SoftLockState = request.Command == LidGuardPipeCommands.MarkSessionSoftLocked ? LidGuardSessionSoftLockState.SoftLocked : LidGuardSessionSoftLockState.None,
             SoftLockReason = request.SessionStateReason,
@@ -922,6 +1002,7 @@ internal sealed class LidGuardRuntimeCoordinator(
             EventName = eventName,
             Command = request.Command,
             Provider = request.Provider,
+            ProviderName = snapshot.ProviderName,
             SessionIdentifier = request.SessionIdentifier,
             SoftLockState = snapshot.SoftLockState,
             SoftLockReason = snapshot.SoftLockReason,
@@ -941,6 +1022,7 @@ internal sealed class LidGuardRuntimeCoordinator(
             EventName = eventName,
             Command = commandName,
             Provider = request.Provider,
+            ProviderName = AgentProviderDisplay.NormalizeProviderName(request.Provider, request.ProviderName),
             SessionIdentifier = request.SessionIdentifier,
             Succeeded = response.Succeeded,
             Message = response.Message,
@@ -960,6 +1042,7 @@ internal sealed class LidGuardRuntimeCoordinator(
             EventName = eventName,
             Command = commandName,
             Provider = request.Provider,
+            ProviderName = snapshot.ProviderName,
             SessionIdentifier = request.SessionIdentifier,
             SoftLockState = snapshot.SoftLockState,
             SoftLockReason = snapshot.SoftLockReason,
@@ -983,6 +1066,7 @@ internal sealed class LidGuardRuntimeCoordinator(
             EventName = eventName,
             Command = pendingSuspendContext.CommandName,
             Provider = pendingSuspendContext.Provider,
+            ProviderName = pendingSuspendContext.ProviderName,
             SessionIdentifier = pendingSuspendContext.SessionIdentifier,
             SoftLockState = snapshot.SoftLockState,
             SoftLockReason = snapshot.SoftLockReason,
@@ -1011,6 +1095,7 @@ internal sealed class LidGuardRuntimeCoordinator(
         LidGuardSessionSnapshot snapshot)
         => new(
             request.Provider,
+            AgentProviderDisplay.NormalizeProviderName(request.Provider, request.ProviderName),
             request.SessionIdentifier,
             snapshot.WorkingDirectory,
             request.Command,
@@ -1022,6 +1107,7 @@ internal sealed class LidGuardRuntimeCoordinator(
         string commandName)
         => new(
             request.Provider,
+            AgentProviderDisplay.NormalizeProviderName(request.Provider, request.ProviderName),
             request.SessionIdentifier,
             snapshot.WorkingDirectory,
             commandName,
@@ -1029,6 +1115,7 @@ internal sealed class LidGuardRuntimeCoordinator(
 
     private readonly record struct PendingSuspendContext(
         AgentProvider Provider,
+        string ProviderName,
         string SessionIdentifier,
         string WorkingDirectory,
         string CommandName,

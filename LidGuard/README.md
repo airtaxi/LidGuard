@@ -24,6 +24,9 @@ lidguard hook-remove
 lidguard mcp-status
 lidguard mcp-install
 lidguard mcp-remove
+lidguard provider-mcp-status --config "<json-path>"
+lidguard provider-mcp-install --config "<json-path>" --provider-name "<name>"
+lidguard provider-mcp-remove --config "<json-path>"
 lidguard remove-pre-suspend-webhook
 lidguard remove-session --session "<session-id>"
 lidguard remove-session --session "<session-id>" --provider codex
@@ -52,6 +55,7 @@ lidguard hook-remove --provider codex
 lidguard mcp-status --provider codex
 lidguard mcp-install --provider codex
 lidguard mcp-remove --provider codex
+lidguard provider-mcp-server --provider-name "<name>"
 lidguard mcp-server
 lidguard settings
 lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
@@ -73,3 +77,5 @@ The default settings file is `settings.json`. Runtime session execution events a
 ## Notes
 
 This package targets `net10.0` and is packaged as RID-specific NativeAOT .NET tool packages for Windows, Linux, and macOS. Windows is the only implemented runtime platform in the current release.
+
+Provider MCP integrations are best-effort only. They depend on the model actually calling the LidGuard MCP tools at the right times, so LidGuard cannot guarantee that a provider will start, soft-lock, clear, and stop sessions correctly.

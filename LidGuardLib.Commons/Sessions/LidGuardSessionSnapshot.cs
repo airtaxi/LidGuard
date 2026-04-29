@@ -6,6 +6,7 @@ public sealed class LidGuardSessionSnapshot
     {
         SessionIdentifier = string.Empty,
         Provider = AgentProvider.Unknown,
+        ProviderName = string.Empty,
         StartedAt = DateTimeOffset.MinValue,
         SoftLockState = LidGuardSessionSoftLockState.None,
         SoftLockReason = string.Empty,
@@ -17,6 +18,8 @@ public sealed class LidGuardSessionSnapshot
     public required string SessionIdentifier { get; init; }
 
     public AgentProvider Provider { get; init; }
+
+    public string ProviderName { get; init; } = string.Empty;
 
     public DateTimeOffset StartedAt { get; init; }
 
@@ -30,7 +33,7 @@ public sealed class LidGuardSessionSnapshot
 
     public string WorkingDirectory { get; init; } = string.Empty;
 
-    public LidGuardSessionKey Key => new(Provider, SessionIdentifier);
+    public LidGuardSessionKey Key => new(Provider, SessionIdentifier, ProviderName);
 
     public bool HasWatchedProcess => WatchedProcessIdentifier > 0;
 

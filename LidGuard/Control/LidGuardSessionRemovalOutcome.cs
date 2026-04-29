@@ -11,6 +11,10 @@ public sealed class LidGuardSessionRemovalOutcome
 
     public AgentProvider RequestedProvider { get; init; } = AgentProvider.Unknown;
 
+    public bool HasProviderNameFilter { get; init; }
+
+    public string RequestedProviderName { get; init; } = string.Empty;
+
     public LidGuardSessionStatus[] RemovedSessions { get; init; } = [];
 
     public LidGuardControlSnapshot Snapshot { get; init; } = new();

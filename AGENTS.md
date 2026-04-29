@@ -4,6 +4,8 @@
 
 - You MUST NEVER run `git commit` or `git push` unless the user explicitly requests it.
 - Commit messages must be written in English.
+- On this Windows repository, normalize touched text files to consistent CRLF line endings before finishing. Do not leave mixed or LF-only working tree files that trigger recurring Git warnings such as `LF will be replaced by CRLF`.
+- This repository is NativeAOT and trimming sensitive. Avoid APIs that trigger IL2026 / IL3050 warnings, and prefer AOT-safe overloads plus source-generated `System.Text.Json` serializers over reflection-driven or dynamic JSON helpers.
 - You MUST NOT run builds unless the user explicitly asks for one, except when the changes are huge.
 - If something is unclear or ambiguous, ask the user immediately and provide selectable choices where possible.
 
@@ -13,6 +15,7 @@
 - `AGENTS.ko.md` is the Korean user-readable mirror of this document. Whenever this file changes in a meaningful way, update `AGENTS.ko.md` in the same turn.
 - `Plan.md` was removed to avoid duplicated planning content.
 - When changing core behavior, update this file instead of reintroducing duplicated design notes elsewhere.
+- Any future repository-wide README that documents Provider MCP or model-managed MCP session flows must explicitly state that the behavior is not guaranteed, because correct operation depends entirely on the model choosing to call the LidGuard MCP tools at the right times.
 
 ## Product Goal
 
@@ -107,13 +110,14 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 ### Current Windows CLI Path
 
-- `LidGuard` parses `start`, `stop`, `remove-pre-suspend-webhook`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `preview-system-sound`, and `mcp-server`.
+- `LidGuard` parses `start`, `stop`, `remove-pre-suspend-webhook`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `mcp-server`, and `provider-mcp-server`.
 - `start`, the `UserPromptSubmit` path in `codex-hook` and `claude-hook`, and the `userPromptSubmitted` path in `copilot-hook` load persisted default settings and send them with the start IPC request.
-- `remove-session` manually removes active sessions by session identifier; when `--provider` is omitted, it removes every active session whose session identifier matches.
+- `remove-session` manually removes active sessions by session identifier; when `--provider` is omitted, it removes every active session whose session identifier matches. When `--provider mcp` is used, `--provider-name` can narrow the removal to one MCP-backed provider; omitting `--provider-name` removes every MCP-backed session that shares that session identifier.
 - `remove-pre-suspend-webhook` clears the configured pre-suspend webhook URL and reports when no webhook is currently configured.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
 - `hook-install`, `hook-status`, `hook-remove`, and `hook-events` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
 - `mcp-status`, `mcp-install`, and `mcp-remove` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
+- `provider-mcp-status`, `provider-mcp-install`, and `provider-mcp-remove` work on a caller-supplied JSON config file path instead of using Codex, Claude Code, or GitHub Copilot CLI-specific MCP registration commands.
 - `--provider all` installs, removes, checks, or prints hook events only for providers whose default configuration roots already exist, and reports missing providers as skipped.
 - `mcp-status --provider all`, `mcp-install --provider all`, and `mcp-remove --provider all` only process providers whose default configuration roots already exist, and report missing providers as skipped.
 - When adding a new CLI command that takes a provider parameter, make omitted provider values prompt the user instead of silently defaulting.
@@ -129,20 +133,29 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `LidGuard` hosts a stdio MCP server for local automation clients through `lidguard mcp-server`.
 - `mcp-status` inspects the provider's global/user MCP configuration and reports whether the `lidguard` server entry is present and still points at `mcp-server`.
 - `mcp-install` and `mcp-remove` register or remove the user/global LidGuard stdio MCP server named `lidguard` for Codex, Claude Code, and GitHub Copilot CLI.
-- It exposes `get_settings_status`, `list_sessions`, `update_settings`, and `remove_session`.
+- The regular MCP server exposes `get_settings_status`, `list_sessions`, `update_settings`, `remove_session`, `set_session_soft_lock`, and `clear_session_soft_lock`.
 - `list_sessions` returns the active session list plus runtime lid/session state without the full settings payload.
 - `update_settings` accepts multiple setting fields in a single request and persists them together.
-- `remove_session` manually removes active sessions by session identifier and optionally narrows the removal to one provider.
+- `remove_session` manually removes active sessions by session identifier and optionally narrows the removal to one provider and one MCP provider name.
+- `set_session_soft_lock` and `clear_session_soft_lock` are general-purpose tools that accept provider and session identifier inputs, so non-MCP providers can also use MCP-driven soft-lock control when they can supply those values.
+- `LidGuard` also hosts a separate stdio Provider MCP server through `lidguard provider-mcp-server --provider-name <name>`.
+- `provider-mcp-install` and `provider-mcp-remove` directly edit a caller-supplied JSON config file and register or remove a managed stdio server entry for `provider-mcp-server`; this path intentionally does not use Codex, Claude Code, or GitHub Copilot CLI-specific MCP registration commands.
+- The Provider MCP server exposes `provider_start_session`, `provider_stop_session`, `provider_set_soft_lock`, and `provider_clear_soft_lock`.
+- `provider_start_session` is intended to be called before a provider begins processing a user prompt, while `provider_stop_session` is intended to be called before a turn ends only when the work is truly complete.
+- `provider_set_soft_lock` is intended to be called before a turn ends because the model needs user input and wants LidGuard to release keep-awake protection. The tool itself cannot end the turn; the model still has to stop or hand back the conversation after calling it.
+- Provider MCP behavior is inherently model-dependent. LidGuard cannot guarantee that a model will call these tools at the right times, so this integration should always be documented as best-effort rather than guaranteed.
 - MCP settings updates use the same named-pipe client and settings store used by the CLI, but they do not launch `run-server` if no runtime is listening.
 - MCP server logging must stay on stderr so stdio tool traffic remains clean.
 
 ### Active Session Policy
 
 - Session state is ref-counted by active session.
+- `AgentProvider.Mcp` sessions also carry a provider name so multiple MCP-backed providers can reuse the same session identifier without colliding.
 - Each session also carries a soft-lock state, reason, and timestamp.
 - One or more active sessions keep shared `SystemRequired` and `AwayModeRequired` power requests alive only while at least one active session is not soft-locked.
 - When all remaining active sessions are soft-locked, LidGuard treats the runtime as suspend-eligible even before those sessions emit stop events.
 - Provider activity such as new tool execution clears that session's current soft-lock state.
+- `AgentProvider.Mcp` sessions do not auto-resolve a watched process from the working directory, because model-managed Provider MCP sessions do not reliably identify one owning CLI process.
 - Optional lid action changes are backed up once and restored after the last active session stops.
 - Multiple stop signals for the same session should not cause repeated cleanup side effects.
 - Persistent pending backup state is still missing and is the next resilience priority.
@@ -287,14 +300,37 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 - `LidGuardMcpServerCommand`
   - Hosts the stdio MCP server from the main `lidguard` executable.
+- `ProviderMcpServerCommand`
+  - Hosts the dedicated stdio Provider MCP server from the main `lidguard` executable.
 - `LidGuardSettingsMcpTools`
   - Exposes `get_settings_status`.
   - Exposes `list_sessions` for active-session listing without the full settings payload.
   - Exposes `update_settings` for multi-field settings updates in one call.
-  - Exposes `remove_session` for manual active-session deletion by session identifier, with an optional provider filter.
+  - Exposes `remove_session` for manual active-session deletion by session identifier, with optional provider and MCP provider-name filters.
+  - Exposes `set_session_soft_lock` and `clear_session_soft_lock` for provider/session-targeted soft-lock control.
+- `LidGuardProviderMcpTools`
+  - Exposes `provider_start_session`, `provider_stop_session`, `provider_set_soft_lock`, and `provider_clear_soft_lock` for model-managed Provider MCP integrations.
 - `LidGuard` MCP hosting
   - Uses `WithStdioServerTransport()` and `WithTools<LidGuardSettingsMcpTools>()` from the official C# SDK.
   - Keeps host logging on stderr so MCP stdio responses stay valid.
+
+## Provider MCP Mapping
+
+### Generic Provider MCP
+
+- Provider enum: `AgentProvider.Mcp`.
+- Provider sessions are distinguished by both `sessionId` and `providerName`.
+- The external provider must supply a stable session identifier to the model when possible. If it cannot, the model should generate a stable identifier and keep reusing it until the session is truly complete.
+- Provider MCP install/remove/status commands are `lidguard provider-mcp-status --config <json-path>`, `lidguard provider-mcp-install --config <json-path> --provider-name <name>`, and `lidguard provider-mcp-remove --config <json-path>`.
+- Provider MCP config is edited directly as JSON and does not reuse the Codex, Claude Code, or GitHub Copilot CLI-specific MCP registration flows.
+- Provider MCP server command: `lidguard provider-mcp-server --provider-name <name>`.
+- Provider MCP start tool: `provider_start_session`.
+- Provider MCP stop tool: `provider_stop_session`.
+- Provider MCP soft-lock tools: `provider_set_soft_lock` and `provider_clear_soft_lock`.
+- `provider_start_session` should be described to the model as a pre-user-prompt call.
+- `provider_stop_session` should be described to the model as a pre-turn-end call only when the work is truly complete.
+- `provider_set_soft_lock` should explain the soft-lock concept and instruct the model to call it before ending a turn that is about to wait for user input. The description must also explain that the tool cannot end the turn on the model's behalf.
+- Because all Provider MCP behavior depends on model compliance, do not promise or document it as guaranteed behavior.
 
 ## Provider Hook Mapping
 
@@ -439,6 +475,10 @@ lidguard mcp-remove --provider codex
 lidguard mcp-status --provider all
 lidguard mcp-install --provider all
 lidguard mcp-remove --provider all
+lidguard provider-mcp-status --config "C:\path\to\mcp.json"
+lidguard provider-mcp-install --config "C:\path\to\mcp.json" --provider-name "ExampleProvider"
+lidguard provider-mcp-remove --config "C:\path\to\mcp.json"
+lidguard provider-mcp-server --provider-name "ExampleProvider"
 lidguard preview-system-sound --name Asterisk
 lidguard settings
 lidguard settings --change-lid-action true

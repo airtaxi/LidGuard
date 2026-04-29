@@ -128,15 +128,17 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         Idempotent = true,
         OpenWorld = false,
         UseStructuredContent = true),
-     Description("Remove one or more active LidGuard sessions by session identifier. When provider is omitted, LidGuard removes every active session whose session identifier matches.")]
+     Description("Remove one or more active LidGuard sessions by session identifier. When provider is omitted, LidGuard removes every active session whose session identifier matches. When provider is mcp, you can also pass providerName to remove only one MCP-backed provider's session.")]
     public async Task<LidGuardSessionRemovalToolResponse> RemoveSession(
         [Description("The session identifier to remove.")]
         string sessionIdentifier,
         [Description("Optional provider filter. Omit to remove matching sessions across all providers.")]
         AgentProvider? provider = null,
+        [Description("Optional provider name filter used only when provider is mcp. Omit it to remove every MCP-backed session that shares the same session identifier.")]
+        string providerName = null,
         CancellationToken cancellationToken = default)
     {
-        var result = await controlService.RemoveSessionAsync(sessionIdentifier, provider, cancellationToken);
+        var result = await controlService.RemoveSessionAsync(sessionIdentifier, provider, providerName, cancellationToken);
         if (!result.Succeeded) throw new McpException(result.Message);
 
         return new LidGuardSessionRemovalToolResponse
@@ -145,9 +147,59 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
             RequestedSessionIdentifier = result.Value.RequestedSessionIdentifier,
             HasProviderFilter = result.Value.HasProviderFilter,
             RequestedProvider = result.Value.RequestedProvider,
+            HasProviderNameFilter = result.Value.HasProviderNameFilter,
+            RequestedProviderName = result.Value.RequestedProviderName,
             RemovedSessions = result.Value.RemovedSessions,
             Snapshot = result.Value.Snapshot
         };
+    }
+
+    [McpServerTool(
+        Name = "set_session_soft_lock",
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        UseStructuredContent = true),
+     Description("Mark an existing LidGuard session as soft-locked. A soft-locked session stays tracked, but it stops keeping the machine awake. Use this before you finish a turn because you need the user's next input. This tool does not end the turn for you; after calling it, end or hand back the conversation yourself.")]
+    public async Task<LidGuardSessionCommandToolResponse> SetSessionSoftLock(
+        [Description("The provider whose active LidGuard session should become soft-locked.")]
+        AgentProvider provider,
+        [Description("The session identifier to soft-lock.")]
+        string sessionIdentifier,
+        [Description("The reason why the session is becoming soft-locked, such as waiting_for_user_input.")]
+        string reason,
+        [Description("Required when provider is mcp so LidGuard can distinguish which MCP-backed provider owns the session.")]
+        string providerName = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await controlService.SetSessionSoftLockAsync(sessionIdentifier, provider, providerName, reason, cancellationToken);
+        if (!result.Succeeded) throw new McpException(result.Message);
+
+        return CreateSessionCommandToolResponse(result.Value);
+    }
+
+    [McpServerTool(
+        Name = "clear_session_soft_lock",
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        UseStructuredContent = true),
+     Description("Clear a previous soft lock when autonomous work resumes on an existing LidGuard session. Call this before continuing work on the same session after the user replies or the waiting condition is resolved.")]
+    public async Task<LidGuardSessionCommandToolResponse> ClearSessionSoftLock(
+        [Description("The provider whose active LidGuard session should become active again.")]
+        AgentProvider provider,
+        [Description("The session identifier whose soft lock should be cleared.")]
+        string sessionIdentifier,
+        [Description("Optional reason describing why the session is active again, such as resumed_after_user_reply.")]
+        string reason = null,
+        [Description("Required when provider is mcp so LidGuard can distinguish which MCP-backed provider owns the session.")]
+        string providerName = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await controlService.ClearSessionSoftLockAsync(sessionIdentifier, provider, providerName, reason, cancellationToken);
+        if (!result.Succeeded) throw new McpException(result.Message);
+
+        return CreateSessionCommandToolResponse(result.Value);
     }
 
     private static string CreateStatusSummary(LidGuardControlSnapshot snapshot)
@@ -178,7 +230,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
     private static string CreateSessionRemovalSummary(LidGuardSessionRemovalOutcome outcome)
     {
         var requestScope = outcome.HasProviderFilter
-            ? $"{outcome.RequestedProvider}:{outcome.RequestedSessionIdentifier}"
+            ? $"{AgentProviderDisplay.CreateProviderDisplayText(outcome.RequestedProvider, outcome.RequestedProviderName)}:{outcome.RequestedSessionIdentifier}"
             : $"session id {outcome.RequestedSessionIdentifier}";
         var removedSessionCount = outcome.RemovedSessions.Length;
         var removalSummary = removedSessionCount == 0
@@ -188,5 +240,28 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         if (outcome.Snapshot.RuntimeReachable) return $"{removalSummary} Runtime now has {outcome.Snapshot.ActiveSessionCount} active session(s).";
         if (outcome.Snapshot.RuntimeUnavailable) return $"{removalSummary} Runtime is not running.";
         return $"{removalSummary} Runtime status after removal is unavailable: {outcome.Snapshot.RuntimeMessage}";
+    }
+
+    private static LidGuardSessionCommandToolResponse CreateSessionCommandToolResponse(LidGuardSessionCommandOutcome outcome)
+    {
+        return new LidGuardSessionCommandToolResponse
+        {
+            Summary = CreateSessionCommandSummary(outcome),
+            RequestedCommand = outcome.RequestedCommand,
+            RequestedSessionIdentifier = outcome.RequestedSessionIdentifier,
+            RequestedProvider = outcome.RequestedProvider,
+            RequestedProviderName = outcome.RequestedProviderName,
+            Snapshot = outcome.Snapshot
+        };
+    }
+
+    private static string CreateSessionCommandSummary(LidGuardSessionCommandOutcome outcome)
+    {
+        var scope = $"{AgentProviderDisplay.CreateProviderDisplayText(outcome.RequestedProvider, outcome.RequestedProviderName)}:{outcome.RequestedSessionIdentifier}";
+        if (outcome.Snapshot.RuntimeReachable)
+            return $"{outcome.RuntimeMessage} Runtime now tracks {outcome.Snapshot.ActiveSessionCount} active session(s) after handling {scope}.";
+        if (outcome.Snapshot.RuntimeUnavailable)
+            return $"{outcome.RuntimeMessage} Runtime is not running after handling {scope}.";
+        return $"{outcome.RuntimeMessage} Runtime status after handling {scope} is unavailable: {outcome.Snapshot.RuntimeMessage}";
     }
 }

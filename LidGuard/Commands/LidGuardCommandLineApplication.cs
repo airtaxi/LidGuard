@@ -36,6 +36,7 @@ internal static class LidGuardCommandLineApplication
         if (commandName == LidGuardPipeCommands.CopilotHook) return await GitHubCopilotHookCommand.RunAsync(commandLineArguments[1..]);
         if (commandName == LidGuardPipeCommands.CodexHook) return await CodexHookCommand.RunAsync();
         if (commandName == LidGuardMcpServerCommand.CommandName) return await LidGuardMcpServerCommand.RunAsync(commandLineArguments[1..]);
+        if (commandName == ProviderMcpServerCommand.CommandName) return await ProviderMcpServerCommand.RunAsync(commandLineArguments[1..]);
         if (commandName == LidGuardPipeCommands.RunServer) return await RunServerAsync(runtimePlatform);
 
         if (!TryParseOptions(commandLineArguments, 1, out var options, out var parseMessage))
@@ -64,6 +65,9 @@ internal static class LidGuardCommandLineApplication
             LidGuardPipeCommands.McpStatus => McpManagementCommand.WriteMcpStatus(options),
             LidGuardPipeCommands.McpInstall => McpManagementCommand.InstallMcp(options),
             LidGuardPipeCommands.McpRemove or "mcp-uninstall" => McpManagementCommand.RemoveMcp(options),
+            LidGuardPipeCommands.ProviderMcpStatus => ProviderMcpManagementCommand.WriteProviderMcpStatus(options),
+            LidGuardPipeCommands.ProviderMcpInstall => ProviderMcpManagementCommand.InstallProviderMcp(options),
+            LidGuardPipeCommands.ProviderMcpRemove or "provider-mcp-uninstall" => ProviderMcpManagementCommand.RemoveProviderMcp(options),
             _ => WriteUnknownCommand(commandName)
         };
     }
@@ -442,13 +446,19 @@ internal static class LidGuardCommandLineApplication
         var providerText = GetOption(options, "provider");
         if (!TryParseProvider(providerText, out var provider))
         {
-            message = "A provider is required. Use codex, claude, copilot, custom, or unknown.";
+            message = "A provider is required. Use codex, claude, copilot, custom, mcp, or unknown.";
             return false;
         }
 
         var workingDirectory = GetWorkingDirectory(options);
+        var providerName = GetSessionProviderName(options, provider);
         var sessionIdentifier = GetOption(options, "session", "session-id", "session-identifier");
-        if (string.IsNullOrWhiteSpace(sessionIdentifier)) sessionIdentifier = CreateFallbackSessionIdentifier(provider, workingDirectory);
+        if (string.IsNullOrWhiteSpace(sessionIdentifier)) sessionIdentifier = CreateFallbackSessionIdentifier(provider, providerName, workingDirectory);
+        if (provider == AgentProvider.Mcp && string.IsNullOrWhiteSpace(providerName))
+        {
+            message = "The --provider-name option is required when --provider mcp is used.";
+            return false;
+        }
 
         if (!TryParseWatchedProcessIdentifier(options, out var watchedProcessIdentifier, out message)) return false;
 
@@ -456,6 +466,7 @@ internal static class LidGuardCommandLineApplication
         {
             Command = commandName,
             Provider = provider,
+            ProviderName = providerName,
             SessionIdentifier = sessionIdentifier,
             WatchedProcessIdentifier = watchedProcessIdentifier,
             WorkingDirectory = workingDirectory,
@@ -485,16 +496,20 @@ internal static class LidGuardCommandLineApplication
         var providerWasSpecified = TryGetOption(options, out var providerText, "provider");
         if (providerWasSpecified && !TryParseProvider(providerText, out provider))
         {
-            message = "Unsupported provider. Use codex, claude, copilot, custom, or unknown.";
+            message = "Unsupported provider. Use codex, claude, copilot, custom, mcp, or unknown.";
             return false;
         }
+
+        var providerName = providerWasSpecified ? GetSessionProviderName(options, provider) : string.Empty;
 
         request = new LidGuardPipeRequest
         {
             Command = LidGuardPipeCommands.RemoveSession,
             Provider = provider,
+            ProviderName = providerName,
             SessionIdentifier = sessionIdentifier,
-            MatchAllProvidersForSessionIdentifier = !providerWasSpecified
+            MatchAllProvidersForSessionIdentifier = !providerWasSpecified,
+            MatchAllProviderNamesForSessionIdentifier = provider == AgentProvider.Mcp && string.IsNullOrWhiteSpace(providerName)
         };
         return true;
     }
@@ -555,11 +570,18 @@ internal static class LidGuardCommandLineApplication
             "claude" => AgentProvider.Claude,
             "copilot" or "github-copilot" or "githubcopilot" => AgentProvider.GitHubCopilot,
             "custom" => AgentProvider.Custom,
+            "mcp" => AgentProvider.Mcp,
             "unknown" => AgentProvider.Unknown,
             _ => AgentProvider.Unknown
         };
 
         return provider != AgentProvider.Unknown || providerText.Equals("unknown", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string GetSessionProviderName(IReadOnlyDictionary<string, string> options, AgentProvider provider)
+    {
+        if (provider != AgentProvider.Mcp) return string.Empty;
+        return GetOption(options, "provider-name", "mcp-provider-name").Trim();
     }
 
     private static bool TryParseWatchedProcessIdentifier(
@@ -1014,10 +1036,11 @@ internal static class LidGuardCommandLineApplication
         return false;
     }
 
-    private static string CreateFallbackSessionIdentifier(AgentProvider provider, string workingDirectory)
+    private static string CreateFallbackSessionIdentifier(AgentProvider provider, string providerName, string workingDirectory)
     {
         var normalizedWorkingDirectory = NormalizeWorkingDirectory(workingDirectory);
-        return $"{provider}:{normalizedWorkingDirectory}";
+        var providerDisplayText = AgentProviderDisplay.CreateProviderDisplayText(provider, providerName);
+        return $"{providerDisplayText}:{normalizedWorkingDirectory}";
     }
 
     private static string NormalizeWorkingDirectory(string workingDirectory)
@@ -1043,8 +1066,9 @@ internal static class LidGuardCommandLineApplication
             foreach (var session in response.Sessions)
             {
                 var processText = session.WatchedProcessIdentifier > 0 ? session.WatchedProcessIdentifier.ToString() : "none";
+                var providerDisplayText = AgentProviderDisplay.CreateProviderDisplayText(session.Provider, session.ProviderName);
                 Console.WriteLine(
-                    $"- {session.Provider}:{session.SessionIdentifier} process={processText} softLock={DescribeSoftLockStatus(session)} cwd=\"{session.WorkingDirectory}\" started={session.StartedAt:O}");
+                    $"- {providerDisplayText}:{session.SessionIdentifier} process={processText} softLock={DescribeSoftLockStatus(session)} cwd=\"{session.WorkingDirectory}\" started={session.StartedAt:O}");
             }
         }
 
@@ -1076,10 +1100,10 @@ internal static class LidGuardCommandLineApplication
         var commandDisplayName = GetCommandDisplayName();
 
         Console.WriteLine("Usage:");
-        Console.WriteLine($"  {commandDisplayName} start --provider codex|claude|copilot --session <id> [--parent-pid <pid>] [--working-directory <path>]");
-        Console.WriteLine($"  {commandDisplayName} stop --provider codex|claude|copilot --session <id>");
+        Console.WriteLine($"  {commandDisplayName} start --provider codex|claude|copilot|custom|mcp --session <id> [--provider-name <name>] [--parent-pid <pid>] [--working-directory <path>]");
+        Console.WriteLine($"  {commandDisplayName} stop --provider codex|claude|copilot|custom|mcp --session <id> [--provider-name <name>]");
         Console.WriteLine($"  {commandDisplayName} {LidGuardPipeCommands.RemovePreSuspendWebhook}");
-        Console.WriteLine($"  {commandDisplayName} remove-session --session <id> [--provider codex|claude|copilot|custom|unknown]");
+        Console.WriteLine($"  {commandDisplayName} remove-session --session <id> [--provider codex|claude|copilot|custom|mcp|unknown] [--provider-name <name>]");
         Console.WriteLine($"  {commandDisplayName} claude-hook");
         Console.WriteLine($"  {commandDisplayName} claude-hooks [--format settings-json|hooks-json] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} copilot-hook --event sessionStart|sessionEnd|userPromptSubmitted|preToolUse|postToolUse|permissionRequest|agentStop|errorOccurred|notification");
@@ -1095,8 +1119,12 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  {commandDisplayName} mcp-remove [--provider codex|claude|copilot|all]");
         Console.WriteLine("                           With --provider all, only providers with existing default configuration roots are processed.");
         Console.WriteLine("                           Missing providers are reported and skipped.");
+        Console.WriteLine($"  {commandDisplayName} {LidGuardPipeCommands.ProviderMcpStatus} --config <json-path> [--server-name <name>]");
+        Console.WriteLine($"  {commandDisplayName} {LidGuardPipeCommands.ProviderMcpInstall} --config <json-path> --provider-name <name> [--server-name <name>] [--executable <path>]");
+        Console.WriteLine($"  {commandDisplayName} {LidGuardPipeCommands.ProviderMcpRemove} --config <json-path> [--server-name <name>]");
         Console.WriteLine($"  {commandDisplayName} preview-system-sound --name Asterisk|Beep|Exclamation|Hand|Question");
         Console.WriteLine($"  {commandDisplayName} {LidGuardMcpServerCommand.CommandName}");
+        Console.WriteLine($"  {commandDisplayName} {ProviderMcpServerCommand.CommandName} --provider-name <name>");
         Console.WriteLine($"  {commandDisplayName} settings");
         Console.WriteLine($"  {commandDisplayName} settings [--reset true] [--change-lid-action true|false]");
         Console.WriteLine("                           [--prevent-system-sleep true|false] [--prevent-away-mode-sleep true|false] [--prevent-display-sleep true|false]");

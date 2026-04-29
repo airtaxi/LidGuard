@@ -9,9 +9,13 @@ internal sealed class LidGuardPipeRequest
 
     public AgentProvider Provider { get; init; } = AgentProvider.Unknown;
 
+    public string ProviderName { get; init; } = string.Empty;
+
     public string SessionIdentifier { get; init; } = string.Empty;
 
     public bool MatchAllProvidersForSessionIdentifier { get; init; }
+
+    public bool MatchAllProviderNamesForSessionIdentifier { get; init; }
 
     public int WatchedProcessIdentifier { get; init; }
 

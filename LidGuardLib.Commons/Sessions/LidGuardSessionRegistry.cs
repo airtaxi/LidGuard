@@ -30,6 +30,7 @@ public sealed class LidGuardSessionRegistry
         {
             SessionIdentifier = request.SessionIdentifier,
             Provider = request.Provider,
+            ProviderName = AgentProviderDisplay.NormalizeProviderName(request.Provider, request.ProviderName),
             StartedAt = request.StartedAt,
             SoftLockState = LidGuardSessionSoftLockState.None,
             SoftLockReason = string.Empty,
@@ -48,7 +49,7 @@ public sealed class LidGuardSessionRegistry
     public bool Stop(LidGuardSessionStopRequest request, out LidGuardSessionSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var key = new LidGuardSessionKey(request.Provider, request.SessionIdentifier);
+        var key = new LidGuardSessionKey(request.Provider, request.SessionIdentifier, request.ProviderName);
 
         lock (_gate)
         {
@@ -60,12 +61,20 @@ public sealed class LidGuardSessionRegistry
     }
 
     public bool TryMarkActive(AgentProvider provider, string sessionIdentifier, out LidGuardSessionSnapshot snapshot, out bool changed)
+        => TryMarkActive(provider, sessionIdentifier, string.Empty, out snapshot, out changed);
+
+    public bool TryMarkActive(
+        AgentProvider provider,
+        string sessionIdentifier,
+        string providerName,
+        out LidGuardSessionSnapshot snapshot,
+        out bool changed)
     {
         changed = false;
         snapshot = LidGuardSessionSnapshot.Empty;
         if (string.IsNullOrWhiteSpace(sessionIdentifier)) return false;
 
-        var key = new LidGuardSessionKey(provider, sessionIdentifier);
+        var key = new LidGuardSessionKey(provider, sessionIdentifier, providerName);
         lock (_gate)
         {
             if (!_sessions.TryGetValue(key, out var existingSnapshot)) return false;
@@ -86,6 +95,7 @@ public sealed class LidGuardSessionRegistry
     public bool TryMarkSoftLocked(
         AgentProvider provider,
         string sessionIdentifier,
+        string providerName,
         string softLockReason,
         DateTimeOffset softLockedAt,
         out LidGuardSessionSnapshot snapshot,
@@ -95,7 +105,7 @@ public sealed class LidGuardSessionRegistry
         snapshot = LidGuardSessionSnapshot.Empty;
         if (string.IsNullOrWhiteSpace(sessionIdentifier)) return false;
 
-        var key = new LidGuardSessionKey(provider, sessionIdentifier);
+        var key = new LidGuardSessionKey(provider, sessionIdentifier, providerName);
         lock (_gate)
         {
             if (!_sessions.TryGetValue(key, out var existingSnapshot)) return false;
@@ -134,6 +144,7 @@ public sealed class LidGuardSessionRegistry
         {
             SessionIdentifier = snapshot.SessionIdentifier,
             Provider = snapshot.Provider,
+            ProviderName = snapshot.ProviderName,
             StartedAt = snapshot.StartedAt,
             SoftLockState = softLockState,
             SoftLockReason = softLockReason,

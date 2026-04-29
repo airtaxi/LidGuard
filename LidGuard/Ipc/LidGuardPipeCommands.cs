@@ -19,6 +19,9 @@ internal static class LidGuardPipeCommands
     public const string McpRemove = "mcp-remove";
     public const string McpStatus = "mcp-status";
     public const string PreviewSystemSound = "preview-system-sound";
+    public const string ProviderMcpInstall = "provider-mcp-install";
+    public const string ProviderMcpRemove = "provider-mcp-remove";
+    public const string ProviderMcpStatus = "provider-mcp-status";
     public const string RemovePreSuspendWebhook = "remove-pre-suspend-webhook";
     public const string RemoveSession = "remove-session";
     public const string RunServer = "run-server";

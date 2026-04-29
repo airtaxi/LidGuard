@@ -19,6 +19,12 @@ public sealed class LidGuardSessionRemovalToolResponse
     [Description("The provider filter that was requested when HasProviderFilter is true.")]
     public AgentProvider RequestedProvider { get; init; } = AgentProvider.Unknown;
 
+    [Description("Indicates whether the removal request was narrowed to one provider name within the selected provider.")]
+    public bool HasProviderNameFilter { get; init; }
+
+    [Description("The provider name filter that was requested when HasProviderNameFilter is true.")]
+    public string RequestedProviderName { get; init; } = string.Empty;
+
     [Description("Active sessions that matched the request before the removal command ran.")]
     public LidGuardSessionStatus[] RemovedSessions { get; init; } = [];
 

@@ -12,6 +12,8 @@ internal sealed class LidGuardRuntimeSessionLogEntry
 
     public AgentProvider Provider { get; init; } = AgentProvider.Unknown;
 
+    public string ProviderName { get; init; } = string.Empty;
+
     public string SessionIdentifier { get; init; } = string.Empty;
 
     public LidGuardSessionSoftLockState SoftLockState { get; init; }

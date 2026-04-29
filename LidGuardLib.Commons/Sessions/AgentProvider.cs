@@ -9,5 +9,6 @@ public enum AgentProvider
     Codex = 1,
     Claude = 2,
     GitHubCopilot = 3,
-    Custom = 4
+    Custom = 4,
+    Mcp = 5
 }
