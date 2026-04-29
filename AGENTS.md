@@ -106,12 +106,14 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 ### Current Windows CLI Path
 
-- `LidGuard` parses `start`, `stop`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `preview-system-sound`, and `mcp-server`.
+- `LidGuard` parses `start`, `stop`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `preview-system-sound`, and `mcp-server`.
 - `start`, the `UserPromptSubmit` path in `codex-hook` and `claude-hook`, and the `userPromptSubmitted` path in `copilot-hook` load persisted default settings and send them with the start IPC request.
 - `remove-session` manually removes active sessions by session identifier; when `--provider` is omitted, it removes every active session whose session identifier matches.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
 - `hook-install`, `hook-status`, `hook-remove`, and `hook-events` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
+- `mcp-status`, `mcp-install`, and `mcp-remove` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
 - `--provider all` installs, removes, checks, or prints hook events only for providers whose default configuration roots already exist, and reports missing providers as skipped.
+- `mcp-status --provider all`, `mcp-install --provider all`, and `mcp-remove --provider all` only process providers whose default configuration roots already exist, and report missing providers as skipped.
 - When adding a new CLI command that takes a provider parameter, make omitted provider values prompt the user instead of silently defaulting.
 - When no runtime is listening, `start` launches detached `run-server`.
 - `run-server` acquires the named mutex `Local\LidGuard.Runtime.v1`.
@@ -123,6 +125,8 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 ### MCP Server
 
 - `LidGuard` hosts a stdio MCP server for local automation clients through `lidguard mcp-server`.
+- `mcp-status` inspects the provider's global/user MCP configuration and reports whether the `lidguard` server entry is present and still points at `mcp-server`.
+- `mcp-install` and `mcp-remove` register or remove the user/global LidGuard stdio MCP server named `lidguard` for Codex, Claude Code, and GitHub Copilot CLI.
 - It exposes `get_settings_status`, `list_sessions`, `update_settings`, and `remove_session`.
 - `list_sessions` returns the active session list plus runtime lid/session state without the full settings payload.
 - `update_settings` accepts multiple setting fields in a single request and persists them together.
@@ -300,7 +304,9 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Command path: `lidguard codex-hook` when the global tool is available on PATH, otherwise the current executable path plus `codex-hook`.
 - Snippet command: `lidguard codex-hooks --format config-toml`.
 - Install/status/remove commands: `lidguard hook-install --provider codex`, `lidguard hook-status --provider codex`, and `lidguard hook-remove --provider codex`.
+- MCP status/install/remove commands: `lidguard mcp-status --provider codex`, `lidguard mcp-install --provider codex`, and `lidguard mcp-remove --provider codex`.
 - Codex may require `features.codex_hooks = true`.
+- Codex MCP registration delegates to `codex mcp add/remove` and writes a global stdio server entry named `lidguard`.
 - `hook-install` and `hook-status` require `UserPromptSubmit`, `PermissionRequest`, and `Stop`; `SessionEnd` is optional and shown separately when present.
 - `codex-hook` reads Codex hook JSON from stdin and maps `hook_event_name` to runtime IPC.
 - For `UserPromptSubmit`, it sends internal `start --provider codex`.
@@ -327,8 +333,10 @@ Reference:
 - Command path: `lidguard claude-hook` when the global tool is available on PATH, otherwise the current executable path plus `claude-hook`.
 - Snippet command: `lidguard claude-hooks --format settings-json`.
 - Install/status/remove commands: `lidguard hook-install --provider claude`, `lidguard hook-status --provider claude`, and `lidguard hook-remove --provider claude`.
+- MCP status/install/remove commands: `lidguard mcp-status --provider claude`, `lidguard mcp-install --provider claude`, and `lidguard mcp-remove --provider claude`.
 - `hook-install` and `hook-status` require `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `Stop`, `StopFailure`, `Elicitation`, `PermissionRequest`, `Notification`, and `SessionEnd`.
 - Default config path: `CLAUDE_CONFIG_DIR\settings.json` when `CLAUDE_CONFIG_DIR` is set, otherwise `%USERPROFILE%\.claude\settings.json`.
+- Claude MCP registration uses the user-scope global config at `%USERPROFILE%\.claude.json` and delegates to `claude mcp add/remove --scope user`.
 - Windows hook config uses `shell = "powershell"` in Claude `settings.json` command hooks.
 - Based on analysis of a locally retained Claude Code source snapshot, command hooks treat `exit code 0` with empty stdout as a successful no-op, while non-empty stdout may be interpreted as hook JSON or plain-text output depending on the execution path.
 - Based on the same local source snapshot analysis, `PermissionRequest` only becomes a programmatic allow/deny when the hook returns structured JSON with `hookSpecificOutput.decision`; LidGuard also sets `interrupt: true` on those closed-lid decisions so Claude stops the interactive permission path immediately. Empty stdout keeps the normal permission flow.
@@ -360,7 +368,9 @@ Reference:
 - Command path: `lidguard copilot-hook --event <event-name>` when the global tool is available on PATH, otherwise the current executable path plus `copilot-hook --event <event-name>`.
 - Snippet command: `lidguard copilot-hooks --format config-json`.
 - Install/status/remove commands: `lidguard hook-install --provider copilot`, `lidguard hook-status --provider copilot`, and `lidguard hook-remove --provider copilot`.
+- MCP status/install/remove commands: `lidguard mcp-status --provider copilot`, `lidguard mcp-install --provider copilot`, and `lidguard mcp-remove --provider copilot`.
 - Default global config path: `COPILOT_HOME\hooks\lidguard-copilot-cli.json` when `COPILOT_HOME` is set, otherwise `%USERPROFILE%\.copilot\hooks\lidguard-copilot-cli.json`.
+- GitHub Copilot CLI MCP registration delegates to `copilot mcp add/remove` and uses the user config file `%USERPROFILE%\.copilot\mcp-config.json`.
 - GitHub Copilot CLI also supports inline user hooks in `~/.copilot/settings.json`; repository hooks in `.github/hooks/` and repository Copilot settings are loaded alongside user hooks, so `hook-install` and `hook-status` inspect those sources for conflicts.
 - `hook-install` and `hook-status` require `sessionStart`, `sessionEnd`, `userPromptSubmitted`, `preToolUse`, `postToolUse`, `permissionRequest`, `agentStop`, `errorOccurred`, and a filtered `notification` hook.
 - Because official Copilot CLI docs allow `agentStop` hooks to return `decision: "block"` with a `reason` continuation prompt, `hook-install` and `hook-status` should warn when non-LidGuard `agentStop` hooks are present.
@@ -405,14 +415,26 @@ lidguard hook-status --provider copilot
 lidguard hook-install --provider copilot
 lidguard hook-remove --provider copilot
 lidguard hook-events --provider copilot --count 50
+lidguard mcp-status --provider copilot
+lidguard mcp-install --provider copilot
+lidguard mcp-remove --provider copilot
 lidguard hook-status --provider claude
 lidguard hook-install --provider claude
 lidguard hook-remove --provider claude
 lidguard hook-events --provider claude --count 50
+lidguard mcp-status --provider claude
+lidguard mcp-install --provider claude
+lidguard mcp-remove --provider claude
 lidguard hook-status --provider codex
 lidguard hook-install --provider codex
 lidguard hook-remove --provider codex
 lidguard hook-events --provider codex --count 50
+lidguard mcp-status --provider codex
+lidguard mcp-install --provider codex
+lidguard mcp-remove --provider codex
+lidguard mcp-status --provider all
+lidguard mcp-install --provider all
+lidguard mcp-remove --provider all
 lidguard preview-system-sound --name Asterisk
 lidguard settings
 lidguard settings --change-lid-action true

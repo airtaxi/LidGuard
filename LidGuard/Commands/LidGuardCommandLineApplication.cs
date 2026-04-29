@@ -59,6 +59,9 @@ internal static class LidGuardCommandLineApplication
             LidGuardPipeCommands.HookInstall => HookManagementCommand.InstallHook(options),
             LidGuardPipeCommands.HookRemove or "hook-uninstall" => HookManagementCommand.RemoveHook(options),
             LidGuardPipeCommands.HookEvents => HookManagementCommand.WriteHookEvents(options),
+            LidGuardPipeCommands.McpStatus => McpManagementCommand.WriteMcpStatus(options),
+            LidGuardPipeCommands.McpInstall => McpManagementCommand.InstallMcp(options),
+            LidGuardPipeCommands.McpRemove or "mcp-uninstall" => McpManagementCommand.RemoveMcp(options),
             _ => WriteUnknownCommand(commandName)
         };
     }
@@ -994,6 +997,9 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  {commandDisplayName} hook-install [--provider codex|claude|copilot|all] [--config <path>] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} hook-remove [--provider codex|claude|copilot|all] [--config <path>] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} hook-events [--provider codex|claude|copilot|all] [--count <number>]");
+        Console.WriteLine($"  {commandDisplayName} mcp-status [--provider codex|claude|copilot|all]");
+        Console.WriteLine($"  {commandDisplayName} mcp-install [--provider codex|claude|copilot|all]");
+        Console.WriteLine($"  {commandDisplayName} mcp-remove [--provider codex|claude|copilot|all]");
         Console.WriteLine("                           With --provider all, only providers with existing default configuration roots are processed.");
         Console.WriteLine("                           Missing providers are reported and skipped.");
         Console.WriteLine($"  {commandDisplayName} preview-system-sound --name Asterisk|Beep|Exclamation|Hand|Question");

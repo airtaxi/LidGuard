@@ -14,9 +14,14 @@ internal static class HookManagementCommand
             return 1;
         }
 
-        ResolveAvailableProviders(selectedProviders, out var providers, out var skippedProviderMessages);
-        WriteSkippedProviderMessages(skippedProviderMessages);
-        if (providers.Count == 0) return WriteNoAvailableProvidersFound();
+        ManagedProviderSelection.ResolveAvailableProviders(
+            selectedProviders,
+            GetProviderConfigurationRootCandidatePaths,
+            out var providers,
+            out var skippedProviderMessages);
+
+        ManagedProviderSelection.WriteSkippedProviderMessages(skippedProviderMessages);
+        if (providers.Count == 0) return ManagedProviderSelection.WriteNoAvailableProvidersFound();
 
         var exitCode = 0;
         foreach (var provider in providers)
@@ -45,9 +50,14 @@ internal static class HookManagementCommand
             return 1;
         }
 
-        ResolveAvailableProviders(selectedProviders, out var providers, out var skippedProviderMessages);
-        WriteSkippedProviderMessages(skippedProviderMessages);
-        if (providers.Count == 0) return WriteNoAvailableProvidersFound();
+        ManagedProviderSelection.ResolveAvailableProviders(
+            selectedProviders,
+            GetProviderConfigurationRootCandidatePaths,
+            out var providers,
+            out var skippedProviderMessages);
+
+        ManagedProviderSelection.WriteSkippedProviderMessages(skippedProviderMessages);
+        if (providers.Count == 0) return ManagedProviderSelection.WriteNoAvailableProvidersFound();
 
         var exitCode = 0;
         foreach (var provider in providers)
@@ -75,9 +85,14 @@ internal static class HookManagementCommand
             return 1;
         }
 
-        ResolveAvailableProviders(selectedProviders, out var providers, out var skippedProviderMessages);
-        WriteSkippedProviderMessages(skippedProviderMessages);
-        if (providers.Count == 0) return WriteNoAvailableProvidersFound();
+        ManagedProviderSelection.ResolveAvailableProviders(
+            selectedProviders,
+            GetProviderConfigurationRootCandidatePaths,
+            out var providers,
+            out var skippedProviderMessages);
+
+        ManagedProviderSelection.WriteSkippedProviderMessages(skippedProviderMessages);
+        if (providers.Count == 0) return ManagedProviderSelection.WriteNoAvailableProvidersFound();
 
         var exitCode = 0;
         foreach (var provider in providers)
@@ -111,9 +126,14 @@ internal static class HookManagementCommand
             return 1;
         }
 
-        ResolveAvailableProviders(selectedProviders, out var providers, out var skippedProviderMessages);
-        WriteSkippedProviderMessages(skippedProviderMessages);
-        if (providers.Count == 0) return WriteNoAvailableProvidersFound();
+        ManagedProviderSelection.ResolveAvailableProviders(
+            selectedProviders,
+            GetProviderConfigurationRootCandidatePaths,
+            out var providers,
+            out var skippedProviderMessages);
+
+        ManagedProviderSelection.WriteSkippedProviderMessages(skippedProviderMessages);
+        if (providers.Count == 0) return ManagedProviderSelection.WriteNoAvailableProvidersFound();
 
         var exitCode = 0;
         foreach (var provider in providers)
@@ -227,55 +247,6 @@ internal static class HookManagementCommand
         return result.Succeeded ? 0 : 1;
     }
 
-    private static void ResolveAvailableProviders(
-        IReadOnlyList<AgentProvider> selectedProviders,
-        out IReadOnlyList<AgentProvider> availableProviders,
-        out IReadOnlyList<string> skippedProviderMessages)
-    {
-        availableProviders = selectedProviders;
-        skippedProviderMessages = [];
-        if (selectedProviders.Count < 2) return;
-
-        var availableProviderList = new List<AgentProvider>();
-        var skippedProviderMessageList = new List<string>();
-        foreach (var provider in selectedProviders)
-        {
-            if (TryGetProviderAvailability(provider, out var skippedProviderMessage))
-            {
-                availableProviderList.Add(provider);
-            }
-            else
-            {
-                skippedProviderMessageList.Add(skippedProviderMessage);
-            }
-        }
-
-        availableProviders = availableProviderList;
-        skippedProviderMessages = skippedProviderMessageList;
-    }
-
-    private static bool TryGetProviderAvailability(AgentProvider provider, out string skippedProviderMessage)
-    {
-        skippedProviderMessage = string.Empty;
-        if (HasExistingProviderConfigurationRoot(provider)) return true;
-
-        var candidatePaths = GetProviderConfigurationRootCandidatePaths(provider);
-        skippedProviderMessage = $"Skipping absent provider: {GetProviderDisplayName(provider)} (no existing configuration root was found at: {string.Join(" | ", candidatePaths)})";
-        return false;
-    }
-
-    private static bool HasExistingProviderConfigurationRoot(AgentProvider provider)
-    {
-        foreach (var candidatePath in GetProviderConfigurationRootCandidatePaths(provider))
-        {
-            if (string.IsNullOrWhiteSpace(candidatePath)) continue;
-            if (Directory.Exists(candidatePath)) return true;
-            if (File.Exists(candidatePath)) return true;
-        }
-
-        return false;
-    }
-
     private static IReadOnlyList<string> GetProviderConfigurationRootCandidatePaths(AgentProvider provider)
     {
         return provider switch
@@ -290,31 +261,6 @@ internal static class HookManagementCommand
             ],
             _ => []
         };
-    }
-
-    private static string GetProviderDisplayName(AgentProvider provider)
-    {
-        return provider switch
-        {
-            AgentProvider.Codex => "Codex",
-            AgentProvider.Claude => "Claude",
-            AgentProvider.GitHubCopilot => "GitHub Copilot",
-            _ => provider.ToString()
-        };
-    }
-
-    private static void WriteSkippedProviderMessages(IReadOnlyList<string> skippedProviderMessages)
-    {
-        if (skippedProviderMessages.Count == 0) return;
-
-        foreach (var skippedProviderMessage in skippedProviderMessages) Console.WriteLine(skippedProviderMessage);
-        Console.WriteLine();
-    }
-
-    private static int WriteNoAvailableProvidersFound()
-    {
-        Console.WriteLine("No available providers were found for all-provider execution.");
-        return 0;
     }
 
     private static int RemoveCodexHook(IReadOnlyDictionary<string, string> options)
@@ -433,30 +379,6 @@ internal static class HookManagementCommand
         return true;
     }
 
-    private static bool TryParseProvider(IReadOnlyDictionary<string, string> options, out AgentProvider provider, out string message)
-    {
-        provider = AgentProvider.Codex;
-        message = string.Empty;
-
-        var providerText = GetOption(options, "provider");
-        if (string.IsNullOrWhiteSpace(providerText)) return true;
-
-        provider = providerText.Trim().ToLowerInvariant() switch
-        {
-            "codex" => AgentProvider.Codex,
-            "claude" => AgentProvider.Claude,
-            "copilot" or "github-copilot" or "githubcopilot" => AgentProvider.GitHubCopilot,
-            "custom" => AgentProvider.Custom,
-            "unknown" => AgentProvider.Unknown,
-            _ => AgentProvider.Unknown
-        };
-
-        if (provider != AgentProvider.Unknown || providerText.Equals("unknown", StringComparison.OrdinalIgnoreCase)) return true;
-
-        message = "Unsupported provider. Use codex, claude, or copilot.";
-        return false;
-    }
-
     private static bool TrySelectHookProviders(
         IReadOnlyDictionary<string, string> options,
         string prompt,
@@ -467,49 +389,10 @@ internal static class HookManagementCommand
         providers = [];
         message = string.Empty;
 
-        var providerText = GetOption(options, "provider");
-        var parsed = string.IsNullOrWhiteSpace(providerText)
-            ? TryReadHookProviders(prompt, out providers, out message)
-            : TryParseHookProviderSelection(providerText, out providers, out message);
-        if (!parsed) return false;
+        if (!ManagedProviderSelection.TrySelectProviders(options, prompt, out providers, out message)) return false;
         if (!rejectSharedConfigurationFile || providers.Count < 2 || string.IsNullOrWhiteSpace(GetOption(options, "config", "configuration", "configuration-file"))) return true;
 
         message = "The config option cannot be used with all providers because each provider has a different configuration file.";
-        return false;
-    }
-
-    private static bool TryReadHookProviders(string prompt, out IReadOnlyList<AgentProvider> providers, out string message)
-    {
-        Console.Write($"{prompt} (codex, claude, copilot, all; default: all): ");
-        var providerText = Console.ReadLine();
-        if (providerText is null)
-        {
-            providers = [];
-            message = "Input ended before a provider was selected.";
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(providerText)) providerText = "all";
-        return TryParseHookProviderSelection(providerText, out providers, out message);
-    }
-
-    private static bool TryParseHookProviderSelection(string providerText, out IReadOnlyList<AgentProvider> providers, out string message)
-    {
-        providers = [];
-        message = string.Empty;
-
-        providers = providerText.Trim().ToLowerInvariant() switch
-        {
-            "codex" => [AgentProvider.Codex],
-            "claude" => [AgentProvider.Claude],
-            "copilot" or "github-copilot" or "githubcopilot" => [AgentProvider.GitHubCopilot],
-            "all" => [AgentProvider.Codex, AgentProvider.Claude, AgentProvider.GitHubCopilot],
-            _ => []
-        };
-
-        if (providers.Count > 0) return true;
-
-        message = "Unsupported provider. Use codex, claude, copilot, or all.";
         return false;
     }
 

@@ -15,6 +15,9 @@ internal static class LidGuardPipeCommands
     public const string HookStatus = "hook-status";
     public const string MarkSessionActive = "mark-session-active";
     public const string MarkSessionSoftLocked = "mark-session-softlocked";
+    public const string McpInstall = "mcp-install";
+    public const string McpRemove = "mcp-remove";
+    public const string McpStatus = "mcp-status";
     public const string PreviewSystemSound = "preview-system-sound";
     public const string RemoveSession = "remove-session";
     public const string RunServer = "run-server";
