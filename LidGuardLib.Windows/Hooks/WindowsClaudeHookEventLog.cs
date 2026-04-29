@@ -19,12 +19,15 @@ public static class WindowsClaudeHookEventLog
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
+        var details = $"permissionMode={Sanitize(hookInput.PermissionMode)} tool={Sanitize(hookInput.ToolName)} reason={Sanitize(hookInput.Reason)} notificationType={Sanitize(hookInput.NotificationType)}";
+        if (IsUserPromptSubmitEvent(hookInput.HookEventName)) details = $"{details} prompt={Sanitize(hookInput.Prompt)}";
+
         AppendLine(CreateLogLine(
             "received",
             hookInput.HookEventName,
             hookInput.SessionIdentifier,
             hookInput.WorkingDirectory,
-            $"permissionMode={Sanitize(hookInput.PermissionMode)} tool={Sanitize(hookInput.ToolName)} reason={Sanitize(hookInput.Reason)} notificationType={Sanitize(hookInput.NotificationType)}"));
+            details));
     }
 
     public static void AppendRuntimeResult(ClaudeHookInput hookInput, string commandName, bool succeeded, bool runtimeUnavailable, int activeSessionCount, string message)
@@ -79,6 +82,8 @@ public static class WindowsClaudeHookEventLog
         var timestamp = DateTimeOffset.UtcNow.ToString("O");
         return $"{timestamp} kind={Sanitize(kind)} event={Sanitize(hookEventName)} session={Sanitize(sessionIdentifier)} workingDirectory={Sanitize(workingDirectory)} {details}".TrimEnd();
     }
+
+    private static bool IsUserPromptSubmitEvent(string hookEventName) => string.Equals(hookEventName?.Trim(), ClaudeHookEventNames.UserPromptSubmit, StringComparison.Ordinal);
 
     private static string Sanitize(string value)
     {

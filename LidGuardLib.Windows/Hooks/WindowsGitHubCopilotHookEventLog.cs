@@ -17,6 +17,8 @@ public static class WindowsGitHubCopilotHookEventLog
         var details = $"tool={Sanitize(hookInput.ToolName)} source={Sanitize(hookInput.Source)} stopReason={Sanitize(hookInput.StopReason)} "
             + $"sessionEndReason={Sanitize(hookInput.SessionEndReason)} notificationType={Sanitize(hookInput.NotificationType)} "
             + $"errorContext={Sanitize(hookInput.ErrorContext)} recoverable={Sanitize(hookInput.Recoverable?.ToString() ?? string.Empty)}";
+        if (IsUserPromptSubmittedEvent(configuredHookEventName)) details = $"{details} prompt={Sanitize(hookInput.Prompt)}";
+
         AppendLine(CreateLogLine("received", configuredHookEventName, hookInput.SessionIdentifier, hookInput.WorkingDirectory, details));
     }
 
@@ -84,6 +86,10 @@ public static class WindowsGitHubCopilotHookEventLog
         var timestamp = DateTimeOffset.UtcNow.ToString("O");
         return $"{timestamp} kind={Sanitize(kind)} event={Sanitize(hookEventName)} session={Sanitize(sessionIdentifier)} workingDirectory={Sanitize(workingDirectory)} {details}".TrimEnd();
     }
+
+    private static bool IsUserPromptSubmittedEvent(string hookEventName) =>
+        string.Equals(hookEventName?.Trim(), GitHubCopilotHookEventNames.UserPromptSubmitted, StringComparison.Ordinal)
+        || string.Equals(hookEventName?.Trim(), GitHubCopilotHookEventNames.PascalCaseUserPromptSubmittedAlias, StringComparison.Ordinal);
 
     private static string Sanitize(string value)
     {

@@ -28,6 +28,9 @@ public sealed class ClaudeHookInput
     [JsonPropertyName("permission_mode")]
     public string PermissionMode { get; init; } = string.Empty;
 
+    [JsonPropertyName("prompt")]
+    public string Prompt { get; init; } = string.Empty;
+
     [JsonPropertyName("reason")]
     public string Reason { get; init; } = string.Empty;
 

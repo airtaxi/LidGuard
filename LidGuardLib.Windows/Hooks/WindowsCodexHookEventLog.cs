@@ -19,12 +19,15 @@ public static class WindowsCodexHookEventLog
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
+        var details = $"source={Sanitize(hookInput.Source)} model={Sanitize(hookInput.Model)}";
+        if (IsUserPromptSubmitEvent(hookInput.HookEventName)) details = $"{details} prompt={Sanitize(hookInput.Prompt)}";
+
         AppendLine(CreateLogLine(
             "received",
             hookInput.HookEventName,
             hookInput.SessionIdentifier,
             hookInput.WorkingDirectory,
-            $"source={Sanitize(hookInput.Source)} model={Sanitize(hookInput.Model)}"));
+            details));
     }
 
     public static void AppendRuntimeResult(CodexHookInput hookInput, string commandName, bool succeeded, bool runtimeUnavailable, int activeSessionCount, string message)
@@ -79,6 +82,8 @@ public static class WindowsCodexHookEventLog
         var timestamp = DateTimeOffset.UtcNow.ToString("O");
         return $"{timestamp} kind={Sanitize(kind)} event={Sanitize(hookEventName)} session={Sanitize(sessionIdentifier)} workingDirectory={Sanitize(workingDirectory)} {details}".TrimEnd();
     }
+
+    private static bool IsUserPromptSubmitEvent(string hookEventName) => string.Equals(hookEventName?.Trim(), CodexHookEventNames.UserPromptSubmit, StringComparison.Ordinal);
 
     private static string Sanitize(string value)
     {

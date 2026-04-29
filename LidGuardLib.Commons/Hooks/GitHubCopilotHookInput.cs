@@ -12,6 +12,8 @@ public sealed class GitHubCopilotHookInput
 
     public string NotificationType { get; init; } = string.Empty;
 
+    public string Prompt { get; init; } = string.Empty;
+
     public bool? Recoverable { get; init; }
 
     public string SessionEndReason { get; init; } = string.Empty;
@@ -55,6 +57,7 @@ public sealed class GitHubCopilotHookInput
                 NotificationMessage = GetString(hookInputElement, "message"),
                 NotificationTitle = GetString(hookInputElement, "title"),
                 NotificationType = GetString(hookInputElement, "notificationType", "notification_type"),
+                Prompt = GetString(hookInputElement, "prompt"),
                 Recoverable = GetBoolean(hookInputElement, "recoverable"),
                 SessionEndReason = GetString(hookInputElement, "reason"),
                 SessionIdentifier = GetString(hookInputElement, "sessionId", "session_id"),

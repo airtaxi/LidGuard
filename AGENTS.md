@@ -126,6 +126,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `run-server` is detached from inherited stdout/stderr so hook callers do not hang while reading child process output.
 - Runtime communication uses a local named pipe.
 - Session execution events are logged as JSON lines at `%LOCALAPPDATA%\LidGuard\session-execution.log`, keeping the latest 500 entries.
+- Provider hook event logs record the `prompt` field on received start events: Codex and Claude `UserPromptSubmit`, and GitHub Copilot CLI `userPromptSubmitted`.
 - Default settings are stored at `%LOCALAPPDATA%\LidGuard\settings.json`.
 
 ### MCP Server

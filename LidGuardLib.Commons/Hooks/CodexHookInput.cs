@@ -19,6 +19,9 @@ public sealed class CodexHookInput
     [JsonPropertyName("model")]
     public string Model { get; init; } = string.Empty;
 
+    [JsonPropertyName("prompt")]
+    public string Prompt { get; init; } = string.Empty;
+
     [JsonPropertyName("source")]
     public string Source { get; init; } = string.Empty;
 }
