@@ -107,7 +107,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `start`, the `UserPromptSubmit` path in `codex-hook` and `claude-hook`, and the `userPromptSubmitted` path in `copilot-hook` load persisted default settings and send them with the start IPC request.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
 - `hook-install`, `hook-status`, `hook-remove`, and `hook-events` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
-- `--provider all` installs, removes, checks, or prints hook events for all three implemented providers.
+- `--provider all` installs, removes, checks, or prints hook events only for providers whose default configuration roots already exist, and reports missing providers as skipped.
 - When adding a new CLI command that takes a provider parameter, make omitted provider values prompt the user instead of silently defaulting.
 - When no runtime is listening, `start` launches detached `run-server`.
 - `run-server` acquires the named mutex `Local\LidGuard.Runtime.v1`.

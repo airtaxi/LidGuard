@@ -175,9 +175,9 @@ public sealed class WindowsGitHubCopilotHookInstaller
     }
 
     public static string GetDefaultGitHubCopilotHooksConfigurationFilePath()
-    {
-        return Path.Combine(GetCopilotConfigurationDirectoryPath(), CopilotHooksDirectoryName, ManagedConfigurationFileName);
-    }
+        => Path.Combine(GetDefaultGitHubCopilotConfigurationDirectoryPath(), CopilotHooksDirectoryName, ManagedConfigurationFileName);
+
+    public static string GetDefaultGitHubCopilotConfigurationDirectoryPath() => GetCopilotConfigurationDirectoryPath();
 
     private static void AddConflictingAgentStopHooksFromDirectory(string directoryPath, string excludedConfigurationFilePath, ISet<string> conflictingAgentStopHookSources)
     {

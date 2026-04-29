@@ -8,11 +8,15 @@ internal static class HookManagementCommand
 {
     public static int WriteHookStatus(IReadOnlyDictionary<string, string> options)
     {
-        if (!TrySelectHookProviders(options, "Show hook status for provider", true, out var providers, out var message))
+        if (!TrySelectHookProviders(options, "Show hook status for provider", true, out var selectedProviders, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
         }
+
+        ResolveAvailableProviders(selectedProviders, out var providers, out var skippedProviderMessages);
+        WriteSkippedProviderMessages(skippedProviderMessages);
+        if (providers.Count == 0) return WriteNoAvailableProvidersFound();
 
         var exitCode = 0;
         foreach (var provider in providers)
@@ -35,11 +39,15 @@ internal static class HookManagementCommand
 
     public static int InstallHook(IReadOnlyDictionary<string, string> options)
     {
-        if (!TrySelectHookProviders(options, "Install hooks for provider", true, out var providers, out var message))
+        if (!TrySelectHookProviders(options, "Install hooks for provider", true, out var selectedProviders, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
         }
+
+        ResolveAvailableProviders(selectedProviders, out var providers, out var skippedProviderMessages);
+        WriteSkippedProviderMessages(skippedProviderMessages);
+        if (providers.Count == 0) return WriteNoAvailableProvidersFound();
 
         var exitCode = 0;
         foreach (var provider in providers)
@@ -61,11 +69,15 @@ internal static class HookManagementCommand
 
     public static int RemoveHook(IReadOnlyDictionary<string, string> options)
     {
-        if (!TrySelectHookProviders(options, "Remove hooks for provider", true, out var providers, out var message))
+        if (!TrySelectHookProviders(options, "Remove hooks for provider", true, out var selectedProviders, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
         }
+
+        ResolveAvailableProviders(selectedProviders, out var providers, out var skippedProviderMessages);
+        WriteSkippedProviderMessages(skippedProviderMessages);
+        if (providers.Count == 0) return WriteNoAvailableProvidersFound();
 
         var exitCode = 0;
         foreach (var provider in providers)
@@ -87,7 +99,7 @@ internal static class HookManagementCommand
 
     public static int WriteHookEvents(IReadOnlyDictionary<string, string> options)
     {
-        if (!TrySelectHookProviders(options, "Show hook events for provider", false, out var providers, out var providerMessage))
+        if (!TrySelectHookProviders(options, "Show hook events for provider", false, out var selectedProviders, out var providerMessage))
         {
             Console.Error.WriteLine(providerMessage);
             return 1;
@@ -98,6 +110,10 @@ internal static class HookManagementCommand
             Console.Error.WriteLine(lineCountMessage);
             return 1;
         }
+
+        ResolveAvailableProviders(selectedProviders, out var providers, out var skippedProviderMessages);
+        WriteSkippedProviderMessages(skippedProviderMessages);
+        if (providers.Count == 0) return WriteNoAvailableProvidersFound();
 
         var exitCode = 0;
         foreach (var provider in providers)
@@ -209,6 +225,96 @@ internal static class HookManagementCommand
         Console.WriteLine($"Changed: {result.Changed}");
         Console.WriteLine($"Message: {result.Message}");
         return result.Succeeded ? 0 : 1;
+    }
+
+    private static void ResolveAvailableProviders(
+        IReadOnlyList<AgentProvider> selectedProviders,
+        out IReadOnlyList<AgentProvider> availableProviders,
+        out IReadOnlyList<string> skippedProviderMessages)
+    {
+        availableProviders = selectedProviders;
+        skippedProviderMessages = [];
+        if (selectedProviders.Count < 2) return;
+
+        var availableProviderList = new List<AgentProvider>();
+        var skippedProviderMessageList = new List<string>();
+        foreach (var provider in selectedProviders)
+        {
+            if (TryGetProviderAvailability(provider, out var skippedProviderMessage))
+            {
+                availableProviderList.Add(provider);
+            }
+            else
+            {
+                skippedProviderMessageList.Add(skippedProviderMessage);
+            }
+        }
+
+        availableProviders = availableProviderList;
+        skippedProviderMessages = skippedProviderMessageList;
+    }
+
+    private static bool TryGetProviderAvailability(AgentProvider provider, out string skippedProviderMessage)
+    {
+        skippedProviderMessage = string.Empty;
+        if (HasExistingProviderConfigurationRoot(provider)) return true;
+
+        var candidatePaths = GetProviderConfigurationRootCandidatePaths(provider);
+        skippedProviderMessage = $"Skipping absent provider: {GetProviderDisplayName(provider)} (no existing configuration root was found at: {string.Join(" | ", candidatePaths)})";
+        return false;
+    }
+
+    private static bool HasExistingProviderConfigurationRoot(AgentProvider provider)
+    {
+        foreach (var candidatePath in GetProviderConfigurationRootCandidatePaths(provider))
+        {
+            if (string.IsNullOrWhiteSpace(candidatePath)) continue;
+            if (Directory.Exists(candidatePath)) return true;
+            if (File.Exists(candidatePath)) return true;
+        }
+
+        return false;
+    }
+
+    private static IReadOnlyList<string> GetProviderConfigurationRootCandidatePaths(AgentProvider provider)
+    {
+        return provider switch
+        {
+            AgentProvider.Codex => [WindowsCodexHookInstaller.GetDefaultCodexConfigurationDirectoryPath()],
+            AgentProvider.Claude => [WindowsClaudeHookInstaller.GetDefaultClaudeConfigurationDirectoryPath()],
+            AgentProvider.GitHubCopilot =>
+            [
+                WindowsGitHubCopilotHookInstaller.GetDefaultGitHubCopilotConfigurationDirectoryPath(),
+                Path.Combine(Environment.CurrentDirectory, ".github", "hooks"),
+                Path.Combine(Environment.CurrentDirectory, ".github", "copilot")
+            ],
+            _ => []
+        };
+    }
+
+    private static string GetProviderDisplayName(AgentProvider provider)
+    {
+        return provider switch
+        {
+            AgentProvider.Codex => "Codex",
+            AgentProvider.Claude => "Claude",
+            AgentProvider.GitHubCopilot => "GitHub Copilot",
+            _ => provider.ToString()
+        };
+    }
+
+    private static void WriteSkippedProviderMessages(IReadOnlyList<string> skippedProviderMessages)
+    {
+        if (skippedProviderMessages.Count == 0) return;
+
+        foreach (var skippedProviderMessage in skippedProviderMessages) Console.WriteLine(skippedProviderMessage);
+        Console.WriteLine();
+    }
+
+    private static int WriteNoAvailableProvidersFound()
+    {
+        Console.WriteLine("No available providers were found for all-provider execution.");
+        return 0;
     }
 
     private static int RemoveCodexHook(IReadOnlyDictionary<string, string> options)

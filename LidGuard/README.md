@@ -39,6 +39,8 @@ lidguard settings
 lidguard status
 ```
 
+With `--provider all`, LidGuard only processes providers whose default configuration roots already exist, and reports missing providers as skipped.
+
 ## Settings and Logs
 
 LidGuard stores its default settings and runtime logs under:

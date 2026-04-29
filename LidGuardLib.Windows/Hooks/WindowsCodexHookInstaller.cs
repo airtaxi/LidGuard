@@ -156,7 +156,7 @@ public sealed class WindowsCodexHookInstaller
         };
     }
 
-    public static string GetDefaultCodexConfigurationFilePath()
+    public static string GetDefaultCodexConfigurationDirectoryPath()
     {
         var codexHomePath = Environment.GetEnvironmentVariable("CODEX_HOME");
         if (string.IsNullOrWhiteSpace(codexHomePath))
@@ -165,8 +165,11 @@ public sealed class WindowsCodexHookInstaller
             codexHomePath = Path.Combine(userProfilePath, CodexConfigurationDirectoryName);
         }
 
-        return Path.Combine(codexHomePath, CodexConfigurationFileName);
+        return Path.GetFullPath(codexHomePath);
     }
+
+    public static string GetDefaultCodexConfigurationFilePath()
+        => Path.Combine(GetDefaultCodexConfigurationDirectoryPath(), CodexConfigurationFileName);
 
     private static CodexHookInstallationRequest NormalizeRequest(CodexHookInstallationRequest request)
     {

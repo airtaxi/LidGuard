@@ -151,7 +151,7 @@ public sealed class WindowsClaudeHookInstaller
         };
     }
 
-    public static string GetDefaultClaudeConfigurationFilePath()
+    public static string GetDefaultClaudeConfigurationDirectoryPath()
     {
         var claudeConfigurationDirectoryPath = Environment.GetEnvironmentVariable(ClaudeConfigurationDirectoryEnvironmentVariableName);
         if (string.IsNullOrWhiteSpace(claudeConfigurationDirectoryPath))
@@ -160,8 +160,11 @@ public sealed class WindowsClaudeHookInstaller
             claudeConfigurationDirectoryPath = Path.Combine(userProfilePath, ClaudeConfigurationDirectoryName);
         }
 
-        return Path.Combine(claudeConfigurationDirectoryPath, ClaudeConfigurationFileName);
+        return Path.GetFullPath(claudeConfigurationDirectoryPath);
     }
+
+    public static string GetDefaultClaudeConfigurationFilePath()
+        => Path.Combine(GetDefaultClaudeConfigurationDirectoryPath(), ClaudeConfigurationFileName);
 
     private static ClaudeHookInstallationRequest NormalizeRequest(ClaudeHookInstallationRequest request)
     {
