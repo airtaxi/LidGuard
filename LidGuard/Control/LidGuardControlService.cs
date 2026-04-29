@@ -1,6 +1,7 @@
 using LidGuardLib.Commons.Power;
 using LidGuardLib.Commons.Results;
 using LidGuardLib.Commons.Services;
+using LidGuardLib.Commons.Sessions;
 using LidGuardLib.Commons.Settings;
 using LidGuard.Ipc;
 using LidGuard.Settings;
@@ -69,6 +70,49 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         });
     }
 
+    public async Task<LidGuardOperationResult<LidGuardSessionRemovalOutcome>> RemoveSessionAsync(
+        string sessionIdentifier,
+        AgentProvider? provider = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(sessionIdentifier))
+            return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Failure("A session identifier is required.");
+
+        if (!LidGuardSettingsStore.TryLoadOrCreate(out var storedSettings, out var message))
+            return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Failure(message);
+
+        var normalizedStoredSettings = LidGuardSettings.Normalize(storedSettings);
+        var statusResponse = await _runtimeClient.SendAsync(
+            new LidGuardPipeRequest { Command = LidGuardPipeCommands.Status },
+            false,
+            cancellationToken);
+        if (!statusResponse.Succeeded && !statusResponse.RuntimeUnavailable)
+            return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Failure(statusResponse.Message);
+
+        var removedSessions = GetMatchingSessions(statusResponse, sessionIdentifier, provider);
+        var removeResponse = await _runtimeClient.SendAsync(
+            new LidGuardPipeRequest
+            {
+                Command = LidGuardPipeCommands.RemoveSession,
+                Provider = provider ?? AgentProvider.Unknown,
+                SessionIdentifier = sessionIdentifier,
+                MatchAllProvidersForSessionIdentifier = provider is null
+            },
+            false,
+            cancellationToken);
+        if (!removeResponse.Succeeded && !removeResponse.RuntimeUnavailable)
+            return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Failure(removeResponse.Message);
+
+        return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Success(new LidGuardSessionRemovalOutcome
+        {
+            RequestedSessionIdentifier = sessionIdentifier,
+            HasProviderFilter = provider is not null,
+            RequestedProvider = provider ?? AgentProvider.Unknown,
+            RemovedSessions = removedSessions,
+            Snapshot = CreateSnapshot(normalizedStoredSettings, removeResponse)
+        });
+    }
+
     private static LidGuardControlSnapshot CreateSnapshot(LidGuardSettings storedSettings, LidGuardPipeResponse response)
     {
         var normalizedStoredSettings = LidGuardSettings.Normalize(storedSettings);
@@ -130,6 +174,24 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
 
     private static string NormalizePowerRequestReason(string powerRequestReason)
         => string.IsNullOrWhiteSpace(powerRequestReason) ? PowerRequestOptions.Default.Reason : powerRequestReason;
+
+    private static LidGuardSessionStatus[] GetMatchingSessions(
+        LidGuardPipeResponse statusResponse,
+        string sessionIdentifier,
+        AgentProvider? provider)
+    {
+        if (!statusResponse.Succeeded) return [];
+
+        var matchingSessions = new List<LidGuardSessionStatus>();
+        foreach (var session in statusResponse.Sessions)
+        {
+            if (!string.Equals(session.SessionIdentifier, sessionIdentifier, StringComparison.Ordinal)) continue;
+            if (provider is not null && session.Provider != provider.Value) continue;
+            matchingSessions.Add(session);
+        }
+
+        return [.. matchingSessions];
+    }
 
     private static string[] DescribeChanges(LidGuardSettings previousStoredSettings, LidGuardSettings updatedStoredSettings)
     {

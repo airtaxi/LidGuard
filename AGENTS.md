@@ -51,7 +51,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
   - Prepared for .NET 10 RID-specific NativeAOT .NET tool distribution as NuGet package `lidguard` with tool command `lidguard`.
   - Supported package RIDs are `win-x64`, `win-x86`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, and `osx-arm64`.
   - Windows behavior is implemented; macOS/Linux currently print a support-planned message and return exit code `0`.
-  - Uses a named pipe to send `start`, `stop`, `status`, `settings`, and `cleanup-orphans` requests to the runtime.
+  - Uses a named pipe to send `start`, `stop`, `remove-session`, `status`, `settings`, and `cleanup-orphans` requests to the runtime.
   - Hosts the stdio MCP server through the `mcp-server` subcommand.
   - Stores default settings JSON at `%LOCALAPPDATA%\LidGuard\settings.json`.
 - `LidGuard.slnx`
@@ -103,8 +103,9 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 ### Current Windows CLI Path
 
-- `LidGuard` parses `start`, `stop`, `status`, `settings`, `cleanup-orphans`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `preview-system-sound`, and `mcp-server`.
+- `LidGuard` parses `start`, `stop`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `preview-system-sound`, and `mcp-server`.
 - `start`, the `UserPromptSubmit` path in `codex-hook` and `claude-hook`, and the `userPromptSubmitted` path in `copilot-hook` load persisted default settings and send them with the start IPC request.
+- `remove-session` manually removes active sessions by session identifier; when `--provider` is omitted, it removes every active session whose session identifier matches.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
 - `hook-install`, `hook-status`, `hook-remove`, and `hook-events` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
 - `--provider all` installs, removes, checks, or prints hook events only for providers whose default configuration roots already exist, and reports missing providers as skipped.
@@ -119,8 +120,10 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 ### MCP Server
 
 - `LidGuard` hosts a stdio MCP server for local automation clients through `lidguard mcp-server`.
-- It exposes `get_settings_status` and `update_settings`.
+- It exposes `get_settings_status`, `list_sessions`, `update_settings`, and `remove_session`.
+- `list_sessions` returns the active session list plus runtime lid/session state without the full settings payload.
 - `update_settings` accepts multiple setting fields in a single request and persists them together.
+- `remove_session` manually removes active sessions by session identifier and optionally narrows the removal to one provider.
 - MCP settings updates use the same named-pipe client and settings store used by the CLI, but they do not launch `run-server` if no runtime is listening.
 - MCP server logging must stay on stderr so stdio tool traffic remains clean.
 
@@ -214,6 +217,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `Control`
   - `LidGuardControlService`
   - `LidGuardControlSnapshot`
+  - `LidGuardSessionRemovalOutcome`
   - `LidGuardSettingsPatch`
   - `LidGuardSettingsUpdateOutcome`
 
@@ -271,7 +275,9 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - Hosts the stdio MCP server from the main `lidguard` executable.
 - `LidGuardSettingsMcpTools`
   - Exposes `get_settings_status`.
+  - Exposes `list_sessions` for active-session listing without the full settings payload.
   - Exposes `update_settings` for multi-field settings updates in one call.
+  - Exposes `remove_session` for manual active-session deletion by session identifier, with an optional provider filter.
 - `LidGuard` MCP hosting
   - Uses `WithStdioServerTransport()` and `WithTools<LidGuardSettingsMcpTools>()` from the official C# SDK.
   - Keeps host logging on stderr so MCP stdio responses stay valid.
@@ -367,6 +373,8 @@ Reference:
 ```powershell
 lidguard start --provider codex --session "<session-id>" --parent-pid 1234
 lidguard stop --provider codex --session "<session-id>"
+lidguard remove-session --session "<session-id>"
+lidguard remove-session --session "<session-id>" --provider codex
 lidguard start --provider claude --session "<session-id>"
 lidguard stop --provider claude --session "<session-id>"
 lidguard claude-hook

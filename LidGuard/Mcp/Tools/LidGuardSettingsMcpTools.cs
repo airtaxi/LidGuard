@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using LidGuard.Mcp.Models;
 using LidGuardLib.Commons.Power;
+using LidGuardLib.Commons.Sessions;
 using LidGuardLib.Commons.Settings;
 using LidGuard.Control;
 using ModelContextProtocol;
@@ -28,6 +29,31 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         {
             Summary = CreateStatusSummary(result.Value),
             Snapshot = result.Value
+        };
+    }
+
+    [McpServerTool(
+        Name = "list_sessions",
+        ReadOnly = true,
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        UseStructuredContent = true),
+     Description("List the active LidGuard sessions and runtime lid/session state without returning the full settings payload.")]
+    public async Task<LidGuardSessionListToolResponse> ListSessions(CancellationToken cancellationToken)
+    {
+        var result = await controlService.GetStatusAsync(cancellationToken);
+        if (!result.Succeeded) throw new McpException(result.Message);
+
+        return new LidGuardSessionListToolResponse
+        {
+            Summary = CreateSessionListSummary(result.Value),
+            RuntimeReachable = result.Value.RuntimeReachable,
+            RuntimeUnavailable = result.Value.RuntimeUnavailable,
+            RuntimeMessage = result.Value.RuntimeMessage,
+            ActiveSessionCount = result.Value.ActiveSessionCount,
+            LidSwitchState = result.Value.LidSwitchState,
+            Sessions = result.Value.Sessions
         };
     }
 
@@ -93,11 +119,46 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         };
     }
 
+    [McpServerTool(
+        Name = "remove_session",
+        Destructive = true,
+        Idempotent = true,
+        OpenWorld = false,
+        UseStructuredContent = true),
+     Description("Remove one or more active LidGuard sessions by session identifier. When provider is omitted, LidGuard removes every active session whose session identifier matches.")]
+    public async Task<LidGuardSessionRemovalToolResponse> RemoveSession(
+        [Description("The session identifier to remove.")]
+        string sessionIdentifier,
+        [Description("Optional provider filter. Omit to remove matching sessions across all providers.")]
+        AgentProvider? provider = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await controlService.RemoveSessionAsync(sessionIdentifier, provider, cancellationToken);
+        if (!result.Succeeded) throw new McpException(result.Message);
+
+        return new LidGuardSessionRemovalToolResponse
+        {
+            Summary = CreateSessionRemovalSummary(result.Value),
+            RequestedSessionIdentifier = result.Value.RequestedSessionIdentifier,
+            HasProviderFilter = result.Value.HasProviderFilter,
+            RequestedProvider = result.Value.RequestedProvider,
+            RemovedSessions = result.Value.RemovedSessions,
+            Snapshot = result.Value.Snapshot
+        };
+    }
+
     private static string CreateStatusSummary(LidGuardControlSnapshot snapshot)
     {
         if (snapshot.RuntimeReachable) return $"Stored settings loaded. Runtime reachable with {snapshot.ActiveSessionCount} active session(s).";
         if (snapshot.RuntimeUnavailable) return "Stored settings loaded. LidGuard runtime is not running.";
         return $"Stored settings loaded. Runtime status query failed: {snapshot.RuntimeMessage}";
+    }
+
+    private static string CreateSessionListSummary(LidGuardControlSnapshot snapshot)
+    {
+        if (snapshot.RuntimeReachable) return $"Runtime reachable with {snapshot.ActiveSessionCount} active session(s).";
+        if (snapshot.RuntimeUnavailable) return "LidGuard runtime is not running, so there are no active sessions to list.";
+        return $"Runtime session query failed: {snapshot.RuntimeMessage}";
     }
 
     private static string CreateUpdateSummary(LidGuardSettingsUpdateOutcome outcome)
@@ -109,5 +170,20 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         if (outcome.Snapshot.RuntimeReachable) return $"{changeSummary} Running runtime synchronized.";
         if (outcome.Snapshot.RuntimeUnavailable) return $"{changeSummary} Runtime is not running, so the saved settings will apply on the next session start.";
         return $"{changeSummary} Saved settings, but runtime synchronization failed: {outcome.Snapshot.RuntimeMessage}";
+    }
+
+    private static string CreateSessionRemovalSummary(LidGuardSessionRemovalOutcome outcome)
+    {
+        var requestScope = outcome.HasProviderFilter
+            ? $"{outcome.RequestedProvider}:{outcome.RequestedSessionIdentifier}"
+            : $"session id {outcome.RequestedSessionIdentifier}";
+        var removedSessionCount = outcome.RemovedSessions.Length;
+        var removalSummary = removedSessionCount == 0
+            ? $"No active sessions matched {requestScope}."
+            : $"Removed {removedSessionCount} active session(s) matching {requestScope}.";
+
+        if (outcome.Snapshot.RuntimeReachable) return $"{removalSummary} Runtime now has {outcome.Snapshot.ActiveSessionCount} active session(s).";
+        if (outcome.Snapshot.RuntimeUnavailable) return $"{removalSummary} Runtime is not running.";
+        return $"{removalSummary} Runtime status after removal is unavailable: {outcome.Snapshot.RuntimeMessage}";
     }
 }

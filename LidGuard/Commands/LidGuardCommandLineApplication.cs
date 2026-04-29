@@ -47,6 +47,7 @@ internal static class LidGuardCommandLineApplication
         {
             LidGuardPipeCommands.Start => await SendStartAsync(options),
             LidGuardPipeCommands.Stop => await SendStopAsync(options),
+            LidGuardPipeCommands.RemoveSession => await SendRemoveSessionAsync(options),
             LidGuardPipeCommands.Status => await SendStatusAsync(),
             LidGuardPipeCommands.CleanupOrphans => await SendCleanupOrphansAsync(),
             LidGuardPipeCommands.Settings => await SendSettingsAsync(options, runtimePlatform),
@@ -190,6 +191,24 @@ internal static class LidGuardCommandLineApplication
         }
 
         var response = await new LidGuardRuntimeClient().SendAsync(request, false);
+        return WriteResponse(response);
+    }
+
+    private static async Task<int> SendRemoveSessionAsync(IReadOnlyDictionary<string, string> options)
+    {
+        if (!TryCreateSessionRemovalRequest(options, out var request, out var message))
+        {
+            Console.Error.WriteLine(message);
+            return 1;
+        }
+
+        var response = await new LidGuardRuntimeClient().SendAsync(request, false);
+        if (!response.Succeeded && response.RuntimeUnavailable)
+        {
+            Console.WriteLine("LidGuard runtime is not running. No active session was removed.");
+            return 0;
+        }
+
         return WriteResponse(response);
     }
 
@@ -375,6 +394,39 @@ internal static class LidGuardCommandLineApplication
             Settings = settings
         };
 
+        return true;
+    }
+
+    private static bool TryCreateSessionRemovalRequest(
+        IReadOnlyDictionary<string, string> options,
+        out LidGuardPipeRequest request,
+        out string message)
+    {
+        request = new LidGuardPipeRequest();
+        message = string.Empty;
+
+        var sessionIdentifier = GetOption(options, "session", "session-id", "session-identifier");
+        if (string.IsNullOrWhiteSpace(sessionIdentifier))
+        {
+            message = "A session identifier is required.";
+            return false;
+        }
+
+        var provider = AgentProvider.Unknown;
+        var providerWasSpecified = TryGetOption(options, out var providerText, "provider");
+        if (providerWasSpecified && !TryParseProvider(providerText, out provider))
+        {
+            message = "Unsupported provider. Use codex, claude, copilot, custom, or unknown.";
+            return false;
+        }
+
+        request = new LidGuardPipeRequest
+        {
+            Command = LidGuardPipeCommands.RemoveSession,
+            Provider = provider,
+            SessionIdentifier = sessionIdentifier,
+            MatchAllProvidersForSessionIdentifier = !providerWasSpecified
+        };
         return true;
     }
 
@@ -930,6 +982,7 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine("Usage:");
         Console.WriteLine($"  {commandDisplayName} start --provider codex|claude|copilot --session <id> [--parent-pid <pid>] [--working-directory <path>]");
         Console.WriteLine($"  {commandDisplayName} stop --provider codex|claude|copilot --session <id>");
+        Console.WriteLine($"  {commandDisplayName} remove-session --session <id> [--provider codex|claude|copilot|custom|unknown]");
         Console.WriteLine($"  {commandDisplayName} claude-hook");
         Console.WriteLine($"  {commandDisplayName} claude-hooks [--format settings-json|hooks-json] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} copilot-hook --event sessionStart|sessionEnd|userPromptSubmitted|preToolUse|permissionRequest|agentStop|errorOccurred|notification");

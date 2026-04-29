@@ -21,6 +21,8 @@ lidguard --help
 ```powershell
 lidguard hook-install
 lidguard hook-remove
+lidguard remove-session --session "<session-id>"
+lidguard remove-session --session "<session-id>" --provider codex
 lidguard hook-install --provider all
 lidguard hook-status --provider all
 lidguard hook-remove --provider all

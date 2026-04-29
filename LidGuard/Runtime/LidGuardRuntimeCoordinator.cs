@@ -40,6 +40,7 @@ internal sealed class LidGuardRuntimeCoordinator(
         {
             LidGuardPipeCommands.Start => await StartAsync(request, cancellationToken),
             LidGuardPipeCommands.Stop => await StopAsync(request, cancellationToken),
+            LidGuardPipeCommands.RemoveSession => await RemoveSessionAsync(request, cancellationToken),
             LidGuardPipeCommands.Status => await GetStatusAsync(cancellationToken),
             LidGuardPipeCommands.CleanupOrphans => await CleanupOrphansAsync(cancellationToken),
             LidGuardPipeCommands.Settings => await UpdateSettingsAsync(request, cancellationToken),
@@ -161,6 +162,26 @@ internal sealed class LidGuardRuntimeCoordinator(
         }
     }
 
+    private async Task<LidGuardPipeResponse> RemoveSessionAsync(LidGuardPipeRequest request, CancellationToken cancellationToken)
+    {
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            if (request.MatchAllProvidersForSessionIdentifier) return RemoveSessionsMatchingSessionIdentifierInsideGate(request);
+
+            var stopRequest = new LidGuardSessionStopRequest { SessionIdentifier = request.SessionIdentifier, Provider = request.Provider };
+            return StopInsideGate(
+                stopRequest,
+                $"Removed {stopRequest.Provider}:{stopRequest.SessionIdentifier}.",
+                "session-removed",
+                LidGuardPipeCommands.RemoveSession);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     private async Task<LidGuardPipeResponse> CleanupOrphansAsync(CancellationToken cancellationToken)
     {
         await _gate.WaitAsync(cancellationToken);
@@ -176,7 +197,8 @@ internal sealed class LidGuardRuntimeCoordinator(
                 var stopResponse = StopInsideGate(
                     new LidGuardSessionStopRequest { SessionIdentifier = snapshot.SessionIdentifier, Provider = snapshot.Provider },
                     $"Cleaned orphan session {snapshot.Key}.",
-                    "orphan-session-cleaned");
+                    "orphan-session-cleaned",
+                    LidGuardPipeCommands.CleanupOrphans);
 
                 if (!stopResponse.Succeeded) cleanupFailureMessages.Add(stopResponse.Message);
                 cleanupCount++;
@@ -335,12 +357,60 @@ internal sealed class LidGuardRuntimeCoordinator(
         catch (OperationCanceledException) { }
     }
 
-    private LidGuardPipeResponse StopInsideGate(LidGuardSessionStopRequest request, string successMessage, string eventName = "session-stopped")
+    private LidGuardPipeResponse RemoveSessionsMatchingSessionIdentifierInsideGate(LidGuardPipeRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.SessionIdentifier))
+        {
+            var rejectedResponse = LidGuardPipeResponse.Failure("A session identifier is required.", _sessionRegistry.ActiveSessionCount);
+            AppendSessionLog("session-remove-rejected", request, rejectedResponse);
+            return rejectedResponse;
+        }
+
+        var matchingSnapshots = _sessionRegistry
+            .GetSnapshots()
+            .Where(snapshot => string.Equals(snapshot.SessionIdentifier, request.SessionIdentifier, StringComparison.Ordinal))
+            .ToArray();
+        if (matchingSnapshots.Length == 0)
+        {
+            var alreadyStoppedResponse = CreateSuccessResponse($"Session id {request.SessionIdentifier} is already stopped.");
+            AppendSessionLog("session-remove-already-stopped", request, alreadyStoppedResponse);
+            return alreadyStoppedResponse;
+        }
+
+        var lastResponse = CreateSuccessResponse(string.Empty);
+        foreach (var matchingSnapshot in matchingSnapshots)
+        {
+            var stopRequest = new LidGuardSessionStopRequest
+            {
+                SessionIdentifier = matchingSnapshot.SessionIdentifier,
+                Provider = matchingSnapshot.Provider
+            };
+            lastResponse = StopInsideGate(
+                stopRequest,
+                $"Removed {matchingSnapshot.Key}.",
+                "session-removed",
+                LidGuardPipeCommands.RemoveSession);
+            if (!lastResponse.Succeeded) return lastResponse;
+        }
+
+        var successMessage = matchingSnapshots.Length == 1
+            ? lastResponse.Message
+            : $"Removed {matchingSnapshots.Length} session(s) matching session id \"{request.SessionIdentifier}\".";
+        if (matchingSnapshots.Length > 1 && TryExtractPostStopScheduleMessage(lastResponse.Message, out var postStopScheduleMessage))
+            successMessage = $"{successMessage} {postStopScheduleMessage}";
+        return CreateSuccessResponse(successMessage);
+    }
+
+    private LidGuardPipeResponse StopInsideGate(
+        LidGuardSessionStopRequest request,
+        string successMessage,
+        string eventName = "session-stopped",
+        string commandName = LidGuardPipeCommands.Stop)
     {
         if (string.IsNullOrWhiteSpace(request.SessionIdentifier))
         {
             var response = LidGuardPipeResponse.Failure("A session identifier is required.", _sessionRegistry.ActiveSessionCount);
-            AppendSessionLog("session-stop-rejected", request, response);
+            AppendSessionLog("session-stop-rejected", request, response, commandName);
             return response;
         }
 
@@ -350,23 +420,23 @@ internal sealed class LidGuardRuntimeCoordinator(
         if (!_sessionRegistry.Stop(request, out var stoppedSnapshot))
         {
             var response = CreateSuccessResponse($"Session {key} is already stopped.");
-            AppendSessionLog($"{eventName}-already-stopped", request, response);
+            AppendSessionLog($"{eventName}-already-stopped", request, response, commandName);
             return response;
         }
 
         if (_sessionRegistry.HasActiveSessions)
         {
             var response = CreateSuccessResponse(successMessage);
-            AppendSessionLog(eventName, request, response, stoppedSnapshot);
+            AppendSessionLog(eventName, request, response, stoppedSnapshot, commandName);
             return response;
         }
 
         var restoreResult = RestoreProtection();
         var restoreResponse = restoreResult.Succeeded ? CreateSuccessResponse(successMessage) : CreateFailureResponse(restoreResult);
-        AppendSessionLog(eventName, request, restoreResponse, stoppedSnapshot);
+        AppendSessionLog(eventName, request, restoreResponse, stoppedSnapshot, commandName);
         if (!restoreResult.Succeeded) return restoreResponse;
 
-        return HandlePostStopSuspend(request, stoppedSnapshot, eventName, successMessage, restoreResponse);
+        return HandlePostStopSuspend(request, stoppedSnapshot, eventName, successMessage, restoreResponse, commandName);
     }
 
     private LidGuardPipeResponse HandlePostStopSuspend(
@@ -374,20 +444,21 @@ internal sealed class LidGuardRuntimeCoordinator(
         LidGuardSessionSnapshot snapshot,
         string eventName,
         string successMessage,
-        LidGuardPipeResponse restoreResponse)
+        LidGuardPipeResponse restoreResponse,
+        string commandName)
     {
         var lidSwitchState = lidStateSource.CurrentState;
         if (lidSwitchState == LidSwitchState.Open)
         {
             var response = CreateSuccessResponse("Skipped post-stop suspend because the lid is open.");
-            AppendSessionLog($"{eventName}-suspend-skipped", request, response, snapshot);
+            AppendSessionLog($"{eventName}-suspend-skipped", request, response, snapshot, commandName);
             return restoreResponse;
         }
 
         if (lidSwitchState != LidSwitchState.Closed)
         {
             var response = CreateSuccessResponse("Skipped post-stop suspend because the lid state is unknown.");
-            AppendSessionLog($"{eventName}-suspend-skipped", request, response, snapshot);
+            AppendSessionLog($"{eventName}-suspend-skipped", request, response, snapshot, commandName);
             return restoreResponse;
         }
 
@@ -395,11 +466,11 @@ internal sealed class LidGuardRuntimeCoordinator(
         var postStopSuspendDelaySeconds = _settings.PostStopSuspendDelaySeconds;
         var scheduledResponse = CreateSuccessResponse(
             $"Scheduled {suspendMode} {DescribePostStopSuspendDelay(postStopSuspendDelaySeconds)} because the lid is closed after the last session stopped.");
-        AppendSessionLog($"{eventName}-suspend-scheduled", request, scheduledResponse, snapshot);
+        AppendSessionLog($"{eventName}-suspend-scheduled", request, scheduledResponse, snapshot, commandName);
         CancelPendingSuspend();
         var pendingSuspendCancellationTokenSource = new CancellationTokenSource();
         _pendingSuspendCancellationTokenSource = pendingSuspendCancellationTokenSource;
-        _ = SuspendAfterDelayAsync(request, snapshot, eventName, postStopSuspendDelaySeconds, pendingSuspendCancellationTokenSource);
+        _ = SuspendAfterDelayAsync(request, snapshot, eventName, postStopSuspendDelaySeconds, commandName, pendingSuspendCancellationTokenSource);
         return CreateSuccessResponse(
             $"{successMessage} Scheduled {suspendMode} {DescribePostStopSuspendDelay(postStopSuspendDelaySeconds)} because the lid is closed.");
     }
@@ -409,6 +480,7 @@ internal sealed class LidGuardRuntimeCoordinator(
         LidGuardSessionSnapshot snapshot,
         string eventName,
         int postStopSuspendDelaySeconds,
+        string commandName,
         CancellationTokenSource pendingSuspendCancellationTokenSource)
     {
         try
@@ -424,7 +496,7 @@ internal sealed class LidGuardRuntimeCoordinator(
                 if (_sessionRegistry.HasActiveSessions)
                 {
                     var canceledResponse = CreateSuccessResponse("Skipped post-stop suspend because a new session started before suspend ran.");
-                    AppendSessionLog($"{eventName}-suspend-canceled", request, canceledResponse, snapshot);
+                    AppendSessionLog($"{eventName}-suspend-canceled", request, canceledResponse, snapshot, commandName);
                     return;
                 }
 
@@ -432,7 +504,7 @@ internal sealed class LidGuardRuntimeCoordinator(
                 if (lidSwitchState != LidSwitchState.Closed)
                 {
                     var canceledResponse = CreateSuccessResponse($"Skipped post-stop suspend because the lid state is {lidSwitchState} before suspend ran.");
-                    AppendSessionLog($"{eventName}-suspend-canceled", request, canceledResponse, snapshot);
+                    AppendSessionLog($"{eventName}-suspend-canceled", request, canceledResponse, snapshot, commandName);
                     return;
                 }
 
@@ -444,7 +516,13 @@ internal sealed class LidGuardRuntimeCoordinator(
                 _gate.Release();
             }
 
-            await PlayPostStopSuspendSoundAsync(request, snapshot, eventName, postStopSuspendSound, pendingSuspendCancellationTokenSource.Token);
+            await PlayPostStopSuspendSoundAsync(
+                request,
+                snapshot,
+                eventName,
+                postStopSuspendSound,
+                commandName,
+                pendingSuspendCancellationTokenSource.Token);
 
             await _gate.WaitAsync(pendingSuspendCancellationTokenSource.Token);
             try
@@ -452,7 +530,7 @@ internal sealed class LidGuardRuntimeCoordinator(
                 if (_sessionRegistry.HasActiveSessions)
                 {
                     var canceledResponse = CreateSuccessResponse("Skipped post-stop suspend because a new session started while the completion sound was playing.");
-                    AppendSessionLog($"{eventName}-suspend-canceled", request, canceledResponse, snapshot);
+                    AppendSessionLog($"{eventName}-suspend-canceled", request, canceledResponse, snapshot, commandName);
                     return;
                 }
 
@@ -460,13 +538,13 @@ internal sealed class LidGuardRuntimeCoordinator(
                 if (lidSwitchState != LidSwitchState.Closed)
                 {
                     var canceledResponse = CreateSuccessResponse($"Skipped post-stop suspend because the lid state is {lidSwitchState} after the completion sound finished.");
-                    AppendSessionLog($"{eventName}-suspend-canceled", request, canceledResponse, snapshot);
+                    AppendSessionLog($"{eventName}-suspend-canceled", request, canceledResponse, snapshot, commandName);
                     return;
                 }
 
                 suspendMode = _settings.SuspendMode;
                 var requestingResponse = CreateSuccessResponse($"Requesting {suspendMode} because the lid is closed after the last session stopped.");
-                AppendSessionLog($"{eventName}-suspend-requesting", request, requestingResponse, snapshot);
+                AppendSessionLog($"{eventName}-suspend-requesting", request, requestingResponse, snapshot, commandName);
             }
             finally
             {
@@ -480,7 +558,7 @@ internal sealed class LidGuardRuntimeCoordinator(
             try
             {
                 var response = CreateFailureResponse(suspendResult);
-                AppendSessionLog($"{eventName}-suspend-failed", request, response, snapshot);
+                AppendSessionLog($"{eventName}-suspend-failed", request, response, snapshot, commandName);
             }
             finally
             {
@@ -531,6 +609,7 @@ internal sealed class LidGuardRuntimeCoordinator(
         LidGuardSessionSnapshot snapshot,
         string eventName,
         string postStopSuspendSound,
+        string commandName,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(postStopSuspendSound)) return;
@@ -542,7 +621,7 @@ internal sealed class LidGuardRuntimeCoordinator(
         try
         {
             var response = CreateFailureResponse(playbackResult);
-            AppendSessionLog($"{eventName}-suspend-sound-failed", request, response, snapshot);
+            AppendSessionLog($"{eventName}-suspend-sound-failed", request, response, snapshot, commandName);
         }
         finally
         {
@@ -590,6 +669,18 @@ internal sealed class LidGuardRuntimeCoordinator(
     private static string DescribePostStopSuspendDelay(int postStopSuspendDelaySeconds)
         => postStopSuspendDelaySeconds == 0 ? "immediately" : $"in {postStopSuspendDelaySeconds} second(s)";
 
+    private static bool TryExtractPostStopScheduleMessage(string responseMessage, out string postStopScheduleMessage)
+    {
+        postStopScheduleMessage = string.Empty;
+        if (string.IsNullOrWhiteSpace(responseMessage)) return false;
+
+        var scheduledIndex = responseMessage.IndexOf("Scheduled ", StringComparison.Ordinal);
+        if (scheduledIndex < 0) return false;
+
+        postStopScheduleMessage = responseMessage[scheduledIndex..];
+        return true;
+    }
+
     private static void AppendRuntimeLog(string eventName, string command, LidGuardPipeResponse response)
     {
         LidGuardRuntimeSessionLogStore.Append(new LidGuardRuntimeSessionLogEntry
@@ -618,12 +709,12 @@ internal sealed class LidGuardRuntimeCoordinator(
         });
     }
 
-    private static void AppendSessionLog(string eventName, LidGuardSessionStopRequest request, LidGuardPipeResponse response)
+    private static void AppendSessionLog(string eventName, LidGuardSessionStopRequest request, LidGuardPipeResponse response, string commandName)
     {
         LidGuardRuntimeSessionLogStore.Append(new LidGuardRuntimeSessionLogEntry
         {
             EventName = eventName,
-            Command = LidGuardPipeCommands.Stop,
+            Command = commandName,
             Provider = request.Provider,
             SessionIdentifier = request.SessionIdentifier,
             Succeeded = response.Succeeded,
@@ -632,12 +723,17 @@ internal sealed class LidGuardRuntimeCoordinator(
         });
     }
 
-    private static void AppendSessionLog(string eventName, LidGuardSessionStopRequest request, LidGuardPipeResponse response, LidGuardSessionSnapshot snapshot)
+    private static void AppendSessionLog(
+        string eventName,
+        LidGuardSessionStopRequest request,
+        LidGuardPipeResponse response,
+        LidGuardSessionSnapshot snapshot,
+        string commandName)
     {
         LidGuardRuntimeSessionLogStore.Append(new LidGuardRuntimeSessionLogEntry
         {
             EventName = eventName,
-            Command = LidGuardPipeCommands.Stop,
+            Command = commandName,
             Provider = request.Provider,
             SessionIdentifier = request.SessionIdentifier,
             WatchedProcessIdentifier = snapshot.WatchedProcessIdentifier,
