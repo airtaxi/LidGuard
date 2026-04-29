@@ -103,11 +103,12 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 ### Current Windows CLI Path
 
-- `LidGuard` parses `start`, `stop`, `status`, `settings`, `cleanup-orphans`, `claude-hook`, `claude-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `preview-system-sound`, and `mcp-server`.
-- `start` and the `UserPromptSubmit` path in `codex-hook` and `claude-hook` load persisted default settings and send them with the start IPC request.
+- `LidGuard` parses `start`, `stop`, `status`, `settings`, `cleanup-orphans`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `preview-system-sound`, and `mcp-server`.
+- `start`, the `UserPromptSubmit` path in `codex-hook` and `claude-hook`, and the `userPromptSubmitted` path in `copilot-hook` load persisted default settings and send them with the start IPC request.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
-- `hook-install`, `hook-status`, and `hook-events` prompt for `codex`, `claude`, or `all` when `--provider` is omitted.
-- `--provider all` installs, checks, or prints hook events for both implemented providers.
+- `hook-install`, `hook-status`, and `hook-events` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
+- `hook-remove` prompts for `codex`, `claude`, or `copilot` when `--provider` is omitted.
+- `--provider all` installs, checks, or prints hook events for all three implemented providers.
 - When adding a new CLI command that takes a provider parameter, make omitted provider values prompt the user instead of silently defaulting.
 - When no runtime is listening, `start` launches detached `run-server`.
 - `run-server` acquires the named mutex `Local\LidGuard.Runtime.v1`.
@@ -143,7 +144,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Post-stop suspend sound: off by default.
 - Closed-lid PermissionRequest decision: Deny by default, Allow optional.
 - PermissionRequest hooks only emit a structured allow/deny decision when the runtime reports the lid is closed; otherwise they return empty stdout so the provider's default permission flow continues.
-- Claude's current closed-lid `PermissionRequest` output also sets `interrupt: true`. Even if another provider later uses a similar JSON shape, keep hook DTOs separate per provider instead of sharing one output type across providers.
+- Claude and GitHub Copilot CLI closed-lid `PermissionRequest` outputs also set `interrupt: true`. Even if another provider later uses a similar JSON shape, keep hook DTOs separate per provider instead of sharing one output type across providers.
 - Claude `Elicitation` hooks emit a structured `cancel` only when the runtime reports the lid is closed; otherwise they return empty stdout so Claude's default elicitation flow continues.
 - Parent process watchdog: enabled.
 
@@ -189,10 +190,13 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `Hooks`
   - Codex hook input models.
   - Claude hook input models.
+  - GitHub Copilot CLI hook input models.
   - Codex installation request/result/inspection models.
   - Claude installation request/result/inspection models.
+  - GitHub Copilot CLI installation request/result/inspection models.
   - Codex `config.toml` managed block generation and inspection.
   - Claude `settings.json` managed hook generation and inspection.
+  - GitHub Copilot CLI managed hook JSON generation and inspection.
 
 `LidActionPolicyController` backs up AC/DC lid close actions together, writes `DoNothing`, and restores backup values.
 
@@ -254,6 +258,13 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - Backs up existing config files before writing when configured.
 - `WindowsClaudeHookEventLog`
   - Records Claude hook diagnostics.
+- `WindowsGitHubCopilotHookInstaller`
+  - Resolves `COPILOT_HOME\hooks\lidguard-copilot-cli.json` or `%USERPROFILE%\.copilot\hooks\lidguard-copilot-cli.json`.
+  - Installs, removes, and inspects the LidGuard-managed global GitHub Copilot CLI hook file by default.
+  - Scans user-level hooks, user settings, repository hooks, and repository Copilot settings for non-LidGuard `agentStop` hooks and warns about continuation risk.
+  - Backs up existing hook files before writing when configured.
+- `WindowsGitHubCopilotHookEventLog`
+  - Records GitHub Copilot CLI hook diagnostics.
 
 ### MCP
 
@@ -322,20 +333,34 @@ Reference:
 
 ### GitHub Copilot CLI
 
-- Planned start event: `userPromptSubmitted`.
-- Planned stop event: `agentStop`.
-- `permissionRequest` is the planned closed-lid decision path, not a stop event.
-- `sessionEnd` and `errorOccurred` are planned as diagnostic or cleanup telemetry only, not the primary keep-awake stop signal.
+- Start event: `userPromptSubmitted`.
+- Stop event: `agentStop`.
+- Closed-lid permission decision event: `permissionRequest`.
+- Closed-lid ask-user guard event: `preToolUse` when `toolName` is `ask_user`.
+- Telemetry-only events: `sessionStart`, `sessionEnd`, `errorOccurred`, and `notification` with `notification_type` / `notificationType` of `permission_prompt` or `elicitation_dialog`.
+- Command path: `lidguard copilot-hook --event <event-name>` when the global tool is available on PATH, otherwise the current executable path plus `copilot-hook --event <event-name>`.
+- Snippet command: `lidguard copilot-hooks --format config-json`.
+- Install/status/remove commands: `lidguard hook-install --provider copilot`, `lidguard hook-status --provider copilot`, and `lidguard hook-remove --provider copilot`.
+- Default global config path: `COPILOT_HOME\hooks\lidguard-copilot-cli.json` when `COPILOT_HOME` is set, otherwise `%USERPROFILE%\.copilot\hooks\lidguard-copilot-cli.json`.
+- GitHub Copilot CLI also supports inline user hooks in `~/.copilot/settings.json`; repository hooks in `.github/hooks/` and repository Copilot settings are loaded alongside user hooks, so `hook-install` and `hook-status` inspect those sources for conflicts.
+- `hook-install` and `hook-status` require `sessionStart`, `sessionEnd`, `userPromptSubmitted`, `preToolUse`, `permissionRequest`, `agentStop`, `errorOccurred`, and a filtered `notification` hook.
 - Because official Copilot CLI docs allow `agentStop` hooks to return `decision: "block"` with a `reason` continuation prompt, `hook-install` and `hook-status` should warn when non-LidGuard `agentStop` hooks are present.
 - Based on the official Copilot CLI hooks documentation, passive hooks such as `sessionStart` may be implemented as logging-only shell commands with no JSON output, so `exit code 0` with empty stdout is a valid no-op pattern for non-decision hooks.
 - Based on the official hooks configuration reference, `preToolUse` output JSON is optional and omitting output allows the tool by default, so structured JSON should only be returned when LidGuard intentionally wants to influence a hook decision.
 - Even if a future GitHub Copilot CLI hook output ends up looking similar to another provider's current hook JSON, keep a dedicated GitHub Copilot CLI hook output type. Hook contracts are provider-specific and are not standardized across CLIs.
-- If hook input has no stable session id, generate one from provider, working directory, and timestamp or a persisted active marker.
-- Hook input parsing, snippets, and install helpers are not implemented yet.
+- `copilot-hook` takes the configured event name from the command line because camelCase GitHub Copilot CLI hook payloads do not consistently include the event name in stdin JSON.
+- For `userPromptSubmitted`, it sends internal `start --provider copilot`.
+- For `permissionRequest`, it does not stop the runtime; it queries the runtime lid state and returns a GitHub Copilot CLI allow/deny decision from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed, and it includes `interrupt: true`.
+- For `preToolUse`, it does not stop the runtime; it denies `ask_user` only when the lid is closed, so the agent cannot soft-lock waiting for user input that cannot be answered.
+- For `agentStop`, it sends internal `stop --provider copilot`.
+- For `sessionStart`, `sessionEnd`, `errorOccurred`, and filtered `notification`, it records telemetry only.
+- GitHub Copilot CLI hook input currently does not provide a stable parent process id in the documented payloads, so the current implementation resolves a process by working directory.
+- GitHub Copilot CLI `permissionRequest` exits successfully with structured JSON stdout only for closed-lid decisions; when the lid is open, unknown, or runtime status is unavailable, it exits successfully with empty stdout so the normal permission flow continues.
+- GitHub Copilot CLI `preToolUse` exits successfully with structured JSON stdout only for closed-lid `ask_user` denial; otherwise it exits successfully with empty stdout so normal tool handling continues.
 
 Reference:
 
-- https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-hooks
+- https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference
 - https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference
 
 ## CLI Examples
@@ -347,8 +372,16 @@ lidguard start --provider claude --session "<session-id>"
 lidguard stop --provider claude --session "<session-id>"
 lidguard claude-hook
 lidguard claude-hooks --format settings-json
+lidguard start --provider copilot --session "<session-id>"
+lidguard stop --provider copilot --session "<session-id>"
+lidguard copilot-hook --event userPromptSubmitted
+lidguard copilot-hooks --format config-json
 lidguard codex-hook
 lidguard codex-hooks --format config-toml
+lidguard hook-status --provider copilot
+lidguard hook-install --provider copilot
+lidguard hook-remove --provider copilot
+lidguard hook-events --provider copilot --count 50
 lidguard hook-status --provider claude
 lidguard hook-install --provider claude
 lidguard hook-remove --provider claude
@@ -376,18 +409,14 @@ lidguard mcp-server
 
 ## Missing Work
 
-The Windows CLI hook receiving path is implemented for Codex and Claude Code. Provider-specific installation and persistence are not complete.
+The Windows CLI hook receiving path is implemented for Codex, Claude Code, and GitHub Copilot CLI. Remaining work is now focused on resilience and verification.
 
 - Add persistent pending backup state for crash recovery. This is the recommended immediate next task because a forced runtime crash must not leave the active power plan stuck at `DoNothing`.
-- Add provider-specific hook input parsing for GitHub Copilot CLI.
-- Add hook snippet generation and install helpers for GitHub Copilot CLI.
-- Add `hook-install` and `hook-status` warnings for non-LidGuard `agentStop` hooks in GitHub Copilot CLI configs, because they may continue the turn after LidGuard receives `agentStop`.
-- When implementing GitHub Copilot CLI hooks, default non-decision hooks to `exit 0` with empty stdout, and treat `preToolUse` JSON output as opt-in for explicit blocking or permission control only.
-- Decide whether GitHub Copilot CLI hook payload JSON should be parsed directly in `LidGuard`.
 - Add runtime lifecycle policy for idle shutdown.
 - Verify Codex hook behavior on the latest Codex CLI and Codex Desktop/App.
 - Verify the analyzed Claude Code hook stdout behavior against the latest released Claude Code build before finalizing provider integration.
 - Verify the documented GitHub Copilot CLI hook output behavior against the latest CLI build before finalizing provider integration.
+- Verify user-level `~/.copilot/hooks/` loading and inline `~/.copilot/settings.json` hook composition against the latest GitHub Copilot CLI build.
 - Verify parent process id availability for GitHub Copilot CLI hooks.
 - Verify parent process id availability for Claude Code Windows hooks.
 - Verify GitHub Copilot CLI session id stability.
@@ -414,6 +443,8 @@ The Windows CLI hook receiving path is implemented for Codex and Claude Code. Pr
 16. ~~Add a configurable post-stop suspend delay with a default of 10 seconds and `0` for immediate suspend.~~
 17. ~~Add an optional post-stop suspend completion sound with SystemSounds or `.wav` support, and wait for it before suspend.~~
 18. ~~Add a `preview-system-sound` CLI command for auditioning supported SystemSounds names.~~
+19. ~~Add GitHub Copilot CLI hook parsing, snippet output, and managed global hook install/remove/status helpers.~~
+20. ~~Map GitHub Copilot CLI `userPromptSubmitted` and `agentStop` to start/stop handling, handle `permissionRequest` as a closed-lid-only settings-driven allow/deny decision with `interrupt: true`, and deny closed-lid `preToolUse` `ask_user`.~~
 
 ## Design Constraints
 

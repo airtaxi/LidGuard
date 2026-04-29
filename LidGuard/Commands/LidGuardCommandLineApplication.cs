@@ -32,6 +32,7 @@ internal static class LidGuardCommandLineApplication
         }
 
         if (commandName == LidGuardPipeCommands.ClaudeHook) return await ClaudeHookCommand.RunAsync();
+        if (commandName == LidGuardPipeCommands.CopilotHook) return await GitHubCopilotHookCommand.RunAsync(commandLineArguments[1..]);
         if (commandName == LidGuardPipeCommands.CodexHook) return await CodexHookCommand.RunAsync();
         if (commandName == LidGuardMcpServerCommand.CommandName) return await LidGuardMcpServerCommand.RunAsync(commandLineArguments[1..]);
         if (commandName == LidGuardPipeCommands.RunServer) return await RunServerAsync(runtimePlatform);
@@ -51,6 +52,7 @@ internal static class LidGuardCommandLineApplication
             LidGuardPipeCommands.Settings => await SendSettingsAsync(options, runtimePlatform),
             LidGuardPipeCommands.PreviewSystemSound => await PreviewSystemSoundAsync(options, runtimePlatform),
             LidGuardPipeCommands.ClaudeHooks => ClaudeHookCommand.WriteHookSnippet(options),
+            LidGuardPipeCommands.CopilotHooks => GitHubCopilotHookCommand.WriteHookSnippet(options),
             LidGuardPipeCommands.CodexHooks => CodexHookCommand.WriteHookSnippet(options),
             LidGuardPipeCommands.HookStatus => HookManagementCommand.WriteHookStatus(options),
             LidGuardPipeCommands.HookInstall => HookManagementCommand.InstallHook(options),
@@ -926,16 +928,18 @@ internal static class LidGuardCommandLineApplication
         var commandDisplayName = GetCommandDisplayName();
 
         Console.WriteLine("Usage:");
-        Console.WriteLine($"  {commandDisplayName} start --provider codex|claude --session <id> [--parent-pid <pid>] [--working-directory <path>]");
-        Console.WriteLine($"  {commandDisplayName} stop --provider codex|claude --session <id>");
+        Console.WriteLine($"  {commandDisplayName} start --provider codex|claude|copilot --session <id> [--parent-pid <pid>] [--working-directory <path>]");
+        Console.WriteLine($"  {commandDisplayName} stop --provider codex|claude|copilot --session <id>");
         Console.WriteLine($"  {commandDisplayName} claude-hook");
         Console.WriteLine($"  {commandDisplayName} claude-hooks [--format settings-json|hooks-json] [--executable <path>]");
+        Console.WriteLine($"  {commandDisplayName} copilot-hook --event sessionStart|sessionEnd|userPromptSubmitted|preToolUse|permissionRequest|agentStop|errorOccurred|notification");
+        Console.WriteLine($"  {commandDisplayName} copilot-hooks [--format config-json|hooks-json] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} codex-hook");
         Console.WriteLine($"  {commandDisplayName} codex-hooks [--format config-toml|hooks-json] [--executable <path>]");
-        Console.WriteLine($"  {commandDisplayName} hook-status [--provider codex|claude|all] [--config <path>] [--executable <path>]");
-        Console.WriteLine($"  {commandDisplayName} hook-install [--provider codex|claude|all] [--config <path>] [--executable <path>]");
-        Console.WriteLine($"  {commandDisplayName} hook-remove [--provider codex|claude] [--config <path>] [--executable <path>]");
-        Console.WriteLine($"  {commandDisplayName} hook-events [--provider codex|claude|all] [--count <number>]");
+        Console.WriteLine($"  {commandDisplayName} hook-status [--provider codex|claude|copilot|all] [--config <path>] [--executable <path>]");
+        Console.WriteLine($"  {commandDisplayName} hook-install [--provider codex|claude|copilot|all] [--config <path>] [--executable <path>]");
+        Console.WriteLine($"  {commandDisplayName} hook-remove [--provider codex|claude|copilot] [--config <path>] [--executable <path>]");
+        Console.WriteLine($"  {commandDisplayName} hook-events [--provider codex|claude|copilot|all] [--count <number>]");
         Console.WriteLine($"  {commandDisplayName} preview-system-sound --name Asterisk|Beep|Exclamation|Hand|Question");
         Console.WriteLine($"  {commandDisplayName} {LidGuardMcpServerCommand.CommandName}");
         Console.WriteLine($"  {commandDisplayName} settings");

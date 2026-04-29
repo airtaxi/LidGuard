@@ -22,6 +22,7 @@ internal static class HookManagementCommand
             {
                 AgentProvider.Codex => WriteCodexHookStatus(options),
                 AgentProvider.Claude => WriteClaudeHookStatus(options),
+                AgentProvider.GitHubCopilot => WriteGitHubCopilotHookStatus(options),
                 _ => WriteUnsupportedProvider()
             };
 
@@ -48,6 +49,7 @@ internal static class HookManagementCommand
             {
                 AgentProvider.Codex => InstallCodexHook(options),
                 AgentProvider.Claude => InstallClaudeHook(options),
+                AgentProvider.GitHubCopilot => InstallGitHubCopilotHook(options),
                 _ => WriteUnsupportedProvider()
             };
 
@@ -59,7 +61,7 @@ internal static class HookManagementCommand
 
     public static int RemoveHook(IReadOnlyDictionary<string, string> options)
     {
-        if (!TryParseProvider(options, out var provider, out var message))
+        if (!TrySelectSingleHookProvider(options, "Remove hooks for provider", out var provider, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -69,6 +71,7 @@ internal static class HookManagementCommand
         {
             AgentProvider.Codex => RemoveCodexHook(options),
             AgentProvider.Claude => RemoveClaudeHook(options),
+            AgentProvider.GitHubCopilot => RemoveGitHubCopilotHook(options),
             _ => WriteUnsupportedProvider()
         };
     }
@@ -94,12 +97,13 @@ internal static class HookManagementCommand
             {
                 AgentProvider.Codex => WindowsCodexHookEventLog.ReadRecentLines(maximumLineCount),
                 AgentProvider.Claude => WindowsClaudeHookEventLog.ReadRecentLines(maximumLineCount),
+                AgentProvider.GitHubCopilot => WindowsGitHubCopilotHookEventLog.ReadRecentLines(maximumLineCount),
                 _ => null
             };
 
             if (eventLines is null)
             {
-                Console.Error.WriteLine("Only Codex and Claude hook event logs are implemented.");
+                Console.Error.WriteLine("Only Codex, Claude, and GitHub Copilot hook event logs are implemented.");
                 exitCode = 1;
                 continue;
             }
@@ -148,6 +152,20 @@ internal static class HookManagementCommand
         return 0;
     }
 
+    private static int WriteGitHubCopilotHookStatus(IReadOnlyDictionary<string, string> options)
+    {
+        var installer = new WindowsGitHubCopilotHookInstaller();
+        if (!TryCreateGitHubCopilotHookInstallationRequest(options, installer, out var request, out var message))
+        {
+            Console.Error.WriteLine(message);
+            return 1;
+        }
+
+        var inspection = installer.Inspect(request);
+        WriteGitHubCopilotHookInspection(inspection);
+        return 0;
+    }
+
     private static int InstallCodexHook(IReadOnlyDictionary<string, string> options)
     {
         var installer = new WindowsCodexHookInstaller();
@@ -166,6 +184,24 @@ internal static class HookManagementCommand
         return result.Succeeded ? 0 : 1;
     }
 
+    private static int InstallGitHubCopilotHook(IReadOnlyDictionary<string, string> options)
+    {
+        var installer = new WindowsGitHubCopilotHookInstaller();
+        if (!TryCreateGitHubCopilotHookInstallationRequest(options, installer, out var request, out var message))
+        {
+            Console.Error.WriteLine(message);
+            return 1;
+        }
+
+        var result = installer.Install(request);
+        WriteGitHubCopilotHookInspection(result.Inspection);
+
+        if (!string.IsNullOrWhiteSpace(result.BackupFilePath)) Console.WriteLine($"Backup: {result.BackupFilePath}");
+        Console.WriteLine($"Changed: {result.Changed}");
+        Console.WriteLine($"Message: {result.Message}");
+        return result.Succeeded ? 0 : 1;
+    }
+
     private static int RemoveCodexHook(IReadOnlyDictionary<string, string> options)
     {
         var installer = new WindowsCodexHookInstaller();
@@ -177,6 +213,24 @@ internal static class HookManagementCommand
 
         var result = installer.Remove(request);
         WriteCodexHookInspection(result.Inspection);
+
+        if (!string.IsNullOrWhiteSpace(result.BackupFilePath)) Console.WriteLine($"Backup: {result.BackupFilePath}");
+        Console.WriteLine($"Changed: {result.Changed}");
+        Console.WriteLine($"Message: {result.Message}");
+        return result.Succeeded ? 0 : 1;
+    }
+
+    private static int RemoveGitHubCopilotHook(IReadOnlyDictionary<string, string> options)
+    {
+        var installer = new WindowsGitHubCopilotHookInstaller();
+        if (!TryCreateGitHubCopilotHookInstallationRequest(options, installer, out var request, out var message))
+        {
+            Console.Error.WriteLine(message);
+            return 1;
+        }
+
+        var result = installer.Remove(request);
+        WriteGitHubCopilotHookInspection(result.Inspection);
 
         if (!string.IsNullOrWhiteSpace(result.BackupFilePath)) Console.WriteLine($"Backup: {result.BackupFilePath}");
         Console.WriteLine($"Changed: {result.Changed}");
@@ -234,6 +288,21 @@ internal static class HookManagementCommand
         return true;
     }
 
+    private static bool TryCreateGitHubCopilotHookInstallationRequest(
+        IReadOnlyDictionary<string, string> options,
+        WindowsGitHubCopilotHookInstaller installer,
+        out GitHubCopilotHookInstallationRequest request,
+        out string message)
+    {
+        request = null;
+        message = string.Empty;
+
+        var configurationFilePath = GetOption(options, "config", "configuration", "configuration-file");
+        var hookExecutablePath = GetOption(options, "executable", "hook-executable", "path");
+        request = installer.CreateDefaultRequest(hookExecutablePath, configurationFilePath);
+        return true;
+    }
+
     private static bool TryCreateClaudeHookInstallationRequest(
         IReadOnlyDictionary<string, string> options,
         WindowsClaudeHookInstaller installer,
@@ -269,7 +338,7 @@ internal static class HookManagementCommand
 
         if (provider != AgentProvider.Unknown || providerText.Equals("unknown", StringComparison.OrdinalIgnoreCase)) return true;
 
-        message = "Unsupported provider. Use codex or claude.";
+        message = "Unsupported provider. Use codex, claude, or copilot.";
         return false;
     }
 
@@ -296,7 +365,7 @@ internal static class HookManagementCommand
 
     private static bool TryReadHookProviders(string prompt, out IReadOnlyList<AgentProvider> providers, out string message)
     {
-        Console.Write($"{prompt} (codex, claude, all; default: all): ");
+        Console.Write($"{prompt} (codex, claude, copilot, all; default: all): ");
         var providerText = Console.ReadLine();
         if (providerText is null)
         {
@@ -318,14 +387,48 @@ internal static class HookManagementCommand
         {
             "codex" => [AgentProvider.Codex],
             "claude" => [AgentProvider.Claude],
-            "all" => [AgentProvider.Codex, AgentProvider.Claude],
+            "copilot" or "github-copilot" or "githubcopilot" => [AgentProvider.GitHubCopilot],
+            "all" => [AgentProvider.Codex, AgentProvider.Claude, AgentProvider.GitHubCopilot],
             _ => []
         };
 
         if (providers.Count > 0) return true;
 
-        message = "Unsupported provider. Use codex, claude, or all.";
+        message = "Unsupported provider. Use codex, claude, copilot, or all.";
         return false;
+    }
+
+    private static bool TrySelectSingleHookProvider(
+        IReadOnlyDictionary<string, string> options,
+        string prompt,
+        out AgentProvider provider,
+        out string message)
+    {
+        provider = AgentProvider.Unknown;
+        message = string.Empty;
+
+        var providerText = GetOption(options, "provider");
+        if (string.IsNullOrWhiteSpace(providerText))
+        {
+            Console.Write($"{prompt} (codex, claude, copilot): ");
+            providerText = Console.ReadLine();
+            if (providerText is null)
+            {
+                message = "Input ended before a provider was selected.";
+                return false;
+            }
+        }
+
+        IReadOnlyList<AgentProvider> selectedProviders = [];
+        if (!TryParseHookProviderSelection(providerText, out selectedProviders, out message)) return false;
+        if (selectedProviders.Count != 1)
+        {
+            message = "A single provider is required. Use codex, claude, or copilot.";
+            return false;
+        }
+
+        provider = selectedProviders[0];
+        return true;
     }
 
     private static bool TryParseMaximumLineCount(IReadOnlyDictionary<string, string> options, out int maximumLineCount, out string message)
@@ -389,16 +492,45 @@ internal static class HookManagementCommand
         Console.WriteLine($"  Message: {inspection.Message}");
     }
 
+    private static void WriteGitHubCopilotHookInspection(GitHubCopilotHookInstallationInspection inspection)
+    {
+        Console.WriteLine("Hook installation:");
+        Console.WriteLine($"  Provider: {inspection.Provider}");
+        Console.WriteLine($"  Status: {inspection.Status}");
+        Console.WriteLine($"  Installed: {inspection.IsInstalled}");
+        Console.WriteLine($"  Config: {inspection.ConfigurationFilePath}");
+        Console.WriteLine($"  Config exists: {inspection.ConfigurationFileExists}");
+        Console.WriteLine($"  Executable: {inspection.HookExecutablePath}");
+        Console.WriteLine($"  Command: {inspection.HookCommand}");
+        Console.WriteLine($"  Hook log: {GetHookLogFilePath(inspection.Provider)}");
+        Console.WriteLine($"  Hooks object: {inspection.HasHooksObject}");
+        Console.WriteLine($"  Managed hooks: {inspection.HasManagedHookEntries}");
+        Console.WriteLine($"  SessionStart hook: {inspection.HasSessionStartHook}");
+        Console.WriteLine($"  SessionEnd hook: {inspection.HasSessionEndHook}");
+        Console.WriteLine($"  UserPromptSubmitted hook: {inspection.HasUserPromptSubmittedHook}");
+        Console.WriteLine($"  PreToolUse hook: {inspection.HasPreToolUseHook}");
+        Console.WriteLine($"  PermissionRequest hook: {inspection.HasPermissionRequestHook}");
+        Console.WriteLine($"  AgentStop hook: {inspection.HasAgentStopHook}");
+        Console.WriteLine($"  ErrorOccurred hook: {inspection.HasErrorOccurredHook}");
+        Console.WriteLine($"  Notification hook: {inspection.HasNotificationHook}");
+        Console.WriteLine($"  Expected commands: {inspection.HasExpectedHookCommands}");
+        Console.WriteLine($"  Expected notification matcher: {inspection.HasExpectedNotificationMatcher}");
+        Console.WriteLine($"  Conflicting agentStop hooks: {inspection.HasConflictingAgentStopHooks}");
+        Console.WriteLine($"  Conflict sources: {(inspection.ConflictingAgentStopHookSources.Count == 0 ? "<none>" : string.Join(" | ", inspection.ConflictingAgentStopHookSources))}");
+        Console.WriteLine($"  Message: {inspection.Message}");
+    }
+
     private static string GetHookLogFilePath(AgentProvider provider)
     {
         if (provider == AgentProvider.Codex) return WindowsCodexHookEventLog.GetDefaultLogFilePath();
         if (provider == AgentProvider.Claude) return WindowsClaudeHookEventLog.GetDefaultLogFilePath();
+        if (provider == AgentProvider.GitHubCopilot) return WindowsGitHubCopilotHookEventLog.GetDefaultLogFilePath();
         return string.Empty;
     }
 
     private static int WriteUnsupportedProvider()
     {
-        Console.Error.WriteLine("Only Codex and Claude hook management are implemented.");
+        Console.Error.WriteLine("Only Codex, Claude, and GitHub Copilot hook management are implemented.");
         return 1;
     }
 
