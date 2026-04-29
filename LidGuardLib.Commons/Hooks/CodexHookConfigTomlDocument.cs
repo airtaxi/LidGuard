@@ -12,7 +12,7 @@ public static class CodexHookConfigTomlDocument
     private const string FeaturesSectionHeader = "[features]";
     private const string CodexHooksFeatureKey = "codex_hooks";
     private const string StartStatusMessage = "Starting LidGuard turn protection";
-    private const string PermissionRequestStatusMessage = "Responding to permission request";
+    private const string PermissionRequestStatusMessage = "Responding to closed-lid permission request";
     private const string StopStatusMessage = "Stopping LidGuard session protection";
     private static readonly string[] s_stopHookEventNames = [CodexHookEventNames.Stop, CodexHookEventNames.SessionEnd];
 

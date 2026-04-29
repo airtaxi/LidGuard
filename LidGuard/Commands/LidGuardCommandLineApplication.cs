@@ -416,7 +416,7 @@ internal static class LidGuardCommandLineApplication
         if (!TryParseBooleanOption(options, baseSettings.WatchParentProcess, out var watchParentProcess, out message, "watch-parent-process", "watch-parent")) return false;
         if (!TryParseBooleanOption(options, baseSettings.SuspendWhenStoppedAndLidClosed, out var suspendWhenStoppedAndLidClosed, out message, "suspend-when-stopped-and-lid-closed", "suspend-when-lid-closed")) return false;
         if (!TryParseSuspendModeOption(options, baseSettings.SuspendMode, out var suspendMode, out message)) return false;
-        if (!TryParsePermissionRequestBehaviorOption(options, baseSettings.PermissionRequestBehavior, out var permissionRequestBehavior, out message)) return false;
+        if (!TryParseClosedLidPermissionRequestDecisionOption(options, baseSettings.ClosedLidPermissionRequestDecision, out var closedLidPermissionRequestDecision, out message)) return false;
 
         var reason = GetOption(options, "power-request-reason", "reason");
         if (string.IsNullOrWhiteSpace(reason)) reason = basePowerRequest.Reason;
@@ -433,7 +433,7 @@ internal static class LidGuardCommandLineApplication
             ChangeLidAction = changeLidAction,
             SuspendWhenStoppedAndLidClosed = suspendWhenStoppedAndLidClosed,
             SuspendMode = suspendMode,
-            PermissionRequestBehavior = permissionRequestBehavior,
+            ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess
         };
 
@@ -454,7 +454,7 @@ internal static class LidGuardCommandLineApplication
         if (!TryReadBooleanSetting("Watch parent process", normalizedSettings.WatchParentProcess, out var watchParentProcess, out message)) return false;
         if (!TryReadBooleanSetting("Suspend when stopped and lid closed", normalizedSettings.SuspendWhenStoppedAndLidClosed, out var suspendWhenStoppedAndLidClosed, out message)) return false;
         if (!TryReadSuspendModeSetting("Suspend mode", normalizedSettings.SuspendMode, out var suspendMode, out message)) return false;
-        if (!TryReadPermissionRequestBehaviorSetting("Permission request behavior", normalizedSettings.PermissionRequestBehavior, out var permissionRequestBehavior, out message)) return false;
+        if (!TryReadClosedLidPermissionRequestDecisionSetting("Closed lid permission request decision", normalizedSettings.ClosedLidPermissionRequestDecision, out var closedLidPermissionRequestDecision, out message)) return false;
 
         settings = new LidGuardSettings
         {
@@ -468,7 +468,7 @@ internal static class LidGuardCommandLineApplication
             ChangeLidAction = changeLidAction,
             SuspendWhenStoppedAndLidClosed = suspendWhenStoppedAndLidClosed,
             SuspendMode = suspendMode,
-            PermissionRequestBehavior = permissionRequestBehavior,
+            ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess
         };
 
@@ -523,10 +523,10 @@ internal static class LidGuardCommandLineApplication
         return false;
     }
 
-    private static bool TryReadPermissionRequestBehaviorSetting(
+    private static bool TryReadClosedLidPermissionRequestDecisionSetting(
         string settingName,
-        HookPermissionRequestBehavior defaultValue,
-        out HookPermissionRequestBehavior value,
+        ClosedLidPermissionRequestDecision defaultValue,
+        out ClosedLidPermissionRequestDecision value,
         out string message)
     {
         value = defaultValue;
@@ -541,7 +541,7 @@ internal static class LidGuardCommandLineApplication
         }
 
         if (string.IsNullOrWhiteSpace(valueText)) return true;
-        return TryParsePermissionRequestBehavior(valueText, out value, out message);
+        return TryParseClosedLidPermissionRequestDecision(valueText, out value, out message);
     }
 
     private static bool TryParseInteractiveBoolean(string valueText, out bool value)
@@ -604,41 +604,41 @@ internal static class LidGuardCommandLineApplication
         }
     }
 
-    private static bool TryParsePermissionRequestBehaviorOption(
+    private static bool TryParseClosedLidPermissionRequestDecisionOption(
         IReadOnlyDictionary<string, string> options,
-        HookPermissionRequestBehavior defaultValue,
-        out HookPermissionRequestBehavior permissionRequestBehavior,
+        ClosedLidPermissionRequestDecision defaultValue,
+        out ClosedLidPermissionRequestDecision closedLidPermissionRequestDecision,
         out string message)
     {
-        permissionRequestBehavior = defaultValue;
+        closedLidPermissionRequestDecision = defaultValue;
         message = string.Empty;
-        if (!TryGetOption(options, out var permissionRequestBehaviorText, "permission-request-behavior", "permission-request-decision")) return true;
-        return TryParsePermissionRequestBehavior(permissionRequestBehaviorText, out permissionRequestBehavior, out message);
+        if (!TryGetOption(options, out var permissionRequestDecisionText, "closed-lid-permission-request-decision", "permission-request-decision-when-lid-closed")) return true;
+        return TryParseClosedLidPermissionRequestDecision(permissionRequestDecisionText, out closedLidPermissionRequestDecision, out message);
     }
 
-    private static bool TryParsePermissionRequestBehavior(
-        string permissionRequestBehaviorText,
-        out HookPermissionRequestBehavior permissionRequestBehavior,
+    private static bool TryParseClosedLidPermissionRequestDecision(
+        string permissionRequestDecisionText,
+        out ClosedLidPermissionRequestDecision closedLidPermissionRequestDecision,
         out string message)
     {
-        permissionRequestBehavior = HookPermissionRequestBehavior.Deny;
+        closedLidPermissionRequestDecision = ClosedLidPermissionRequestDecision.Deny;
         message = string.Empty;
-        if (string.IsNullOrWhiteSpace(permissionRequestBehaviorText))
+        if (string.IsNullOrWhiteSpace(permissionRequestDecisionText))
         {
-            message = "Permission request behavior must be deny or allow.";
+            message = "Closed lid permission request decision must be deny or allow.";
             return false;
         }
 
-        switch (permissionRequestBehaviorText.Trim().ToLowerInvariant())
+        switch (permissionRequestDecisionText.Trim().ToLowerInvariant())
         {
             case "allow":
-                permissionRequestBehavior = HookPermissionRequestBehavior.Allow;
+                closedLidPermissionRequestDecision = ClosedLidPermissionRequestDecision.Allow;
                 return true;
             case "deny":
-                permissionRequestBehavior = HookPermissionRequestBehavior.Deny;
+                closedLidPermissionRequestDecision = ClosedLidPermissionRequestDecision.Deny;
                 return true;
             default:
-                message = "Permission request behavior must be deny or allow.";
+                message = "Closed lid permission request decision must be deny or allow.";
                 return false;
         }
     }
@@ -714,6 +714,7 @@ internal static class LidGuardCommandLineApplication
 
         if (!string.IsNullOrWhiteSpace(response.Message)) Console.WriteLine(response.Message);
         Console.WriteLine($"Active sessions: {response.ActiveSessionCount}");
+        Console.WriteLine($"Lid state: {response.LidSwitchState}");
 
         if (includeSessions)
         {
@@ -741,7 +742,7 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  Watch parent process: {normalizedSettings.WatchParentProcess}");
         Console.WriteLine($"  Suspend when stopped and lid closed: {normalizedSettings.SuspendWhenStoppedAndLidClosed}");
         Console.WriteLine($"  Suspend mode: {normalizedSettings.SuspendMode}");
-        Console.WriteLine($"  Permission request behavior: {normalizedSettings.PermissionRequestBehavior}");
+        Console.WriteLine($"  Closed lid permission request decision: {normalizedSettings.ClosedLidPermissionRequestDecision}");
         Console.WriteLine($"  Reason: {powerRequest.Reason}");
     }
 
@@ -763,7 +764,8 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  {commandDisplayName} settings [--reset true] [--change-lid-action true|false]");
         Console.WriteLine("                           [--prevent-system-sleep true|false] [--prevent-away-mode-sleep true|false] [--prevent-display-sleep true|false]");
         Console.WriteLine("                           [--watch-parent-process true|false]");
-        Console.WriteLine("                           [--suspend-mode sleep|hibernate] [--permission-request-behavior deny|allow] [--power-request-reason <text>]");
+        Console.WriteLine("                           [--suspend-mode sleep|hibernate] [--closed-lid-permission-request-decision deny|allow]");
+        Console.WriteLine("                           [--power-request-reason <text>]");
         Console.WriteLine($"  {commandDisplayName} status");
         Console.WriteLine($"  {commandDisplayName} cleanup-orphans");
         Console.WriteLine();

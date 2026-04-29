@@ -2,6 +2,7 @@ using System.Text.Json;
 using LidGuard.Ipc;
 using LidGuard.Settings;
 using LidGuardLib.Commons.Hooks;
+using LidGuardLib.Commons.Power;
 using LidGuardLib.Commons.Sessions;
 using LidGuardLib.Commons.Settings;
 using LidGuardLib.Windows.Hooks;
@@ -42,7 +43,7 @@ internal static class ClaudeHookCommand
         WindowsClaudeHookEventLog.AppendReceived(hookInput);
         var hookEventName = hookInput.HookEventName.Trim();
         if (hookEventName.Equals(ClaudeHookEventNames.UserPromptSubmit, StringComparison.Ordinal)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Start, hookInput);
-        if (hookEventName.Equals(ClaudeHookEventNames.PermissionRequest, StringComparison.Ordinal)) return WritePermissionRequestDecision();
+        if (hookEventName.Equals(ClaudeHookEventNames.PermissionRequest, StringComparison.Ordinal)) return await WriteClosedLidPermissionRequestDecisionAsync();
         if (ClaudeHookEventNames.IsStopTrigger(hookEventName)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookInput);
 
         return 0;
@@ -79,16 +80,23 @@ internal static class ClaudeHookCommand
         return 1;
     }
 
-    private static int WritePermissionRequestDecision()
+    private static async Task<int> WriteClosedLidPermissionRequestDecisionAsync()
     {
-        if (!LidGuardSettingsStore.TryLoadOrCreate(out var settings, out var settingsMessage))
+        var response = await new LidGuardRuntimeClient().SendAsync(new LidGuardPipeRequest { Command = LidGuardPipeCommands.Status }, false);
+        if (!response.Succeeded)
         {
-            WindowsClaudeHookEventLog.AppendMessage(settingsMessage);
-            settings = LidGuardSettings.HeadlessRuntimeDefault;
+            WindowsClaudeHookEventLog.AppendMessage($"LidGuard Claude hook skipped PermissionRequest decision because runtime status is unavailable: {response.Message}");
+            return 0;
         }
 
-        WindowsClaudeHookEventLog.AppendMessage($"LidGuard Claude hook handled PermissionRequest with {settings.PermissionRequestBehavior}.");
-        return HookPermissionRequestDecisionOutput.Write(settings);
+        if (response.LidSwitchState != LidSwitchState.Closed)
+        {
+            WindowsClaudeHookEventLog.AppendMessage($"LidGuard Claude hook left PermissionRequest to Claude because the lid state is {response.LidSwitchState}.");
+            return 0;
+        }
+
+        WindowsClaudeHookEventLog.AppendMessage($"LidGuard Claude hook handled closed-lid PermissionRequest with {response.Settings.ClosedLidPermissionRequestDecision}.");
+        return ClosedLidPermissionRequestDecisionOutput.Write(response.Settings);
     }
 
     private static async Task<int> SendRuntimeRequestAsync(string commandName, ClaudeHookInput hookInput)

@@ -20,7 +20,7 @@ public sealed class LidGuardSettings
 
     public SystemSuspendMode SuspendMode { get; init; } = SystemSuspendMode.Sleep;
 
-    public HookPermissionRequestBehavior PermissionRequestBehavior { get; init; } = HookPermissionRequestBehavior.Deny;
+    public ClosedLidPermissionRequestDecision ClosedLidPermissionRequestDecision { get; init; } = ClosedLidPermissionRequestDecision.Deny;
 
     public bool WatchParentProcess { get; init; } = true;
 
@@ -41,7 +41,7 @@ public sealed class LidGuardSettings
             ChangeLidAction = settings.ChangeLidAction,
             SuspendWhenStoppedAndLidClosed = settings.SuspendWhenStoppedAndLidClosed,
             SuspendMode = settings.SuspendMode,
-            PermissionRequestBehavior = settings.PermissionRequestBehavior,
+            ClosedLidPermissionRequestDecision = settings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settings.WatchParentProcess
         };
     }

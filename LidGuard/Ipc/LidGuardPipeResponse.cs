@@ -1,3 +1,4 @@
+using LidGuardLib.Commons.Power;
 using LidGuardLib.Commons.Settings;
 
 namespace LidGuard.Ipc;
@@ -16,13 +17,21 @@ internal sealed class LidGuardPipeResponse
 
     public LidGuardSettings Settings { get; init; } = LidGuardSettings.Default;
 
-    public static LidGuardPipeResponse Success(string message, int activeSessionCount, LidGuardSessionStatus[] sessions, LidGuardSettings settings) => new()
+    public LidSwitchState LidSwitchState { get; init; } = LidSwitchState.Unknown;
+
+    public static LidGuardPipeResponse Success(
+        string message,
+        int activeSessionCount,
+        LidGuardSessionStatus[] sessions,
+        LidGuardSettings settings,
+        LidSwitchState lidSwitchState = LidSwitchState.Unknown) => new()
     {
         Succeeded = true,
         Message = message,
         ActiveSessionCount = activeSessionCount,
         Sessions = sessions,
-        Settings = settings
+        Settings = settings,
+        LidSwitchState = lidSwitchState
     };
 
     public static LidGuardPipeResponse Failure(string message, int activeSessionCount = 0, bool runtimeUnavailable = false) => new()

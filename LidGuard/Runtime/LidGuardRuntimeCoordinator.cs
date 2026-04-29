@@ -469,7 +469,7 @@ internal sealed class LidGuardRuntimeCoordinator(
     private LidGuardPipeResponse CreateSuccessResponse(string message)
     {
         var snapshots = _sessionRegistry.GetSnapshots();
-        return LidGuardPipeResponse.Success(message, snapshots.Count, CreateSessionStatuses(snapshots), _settings);
+        return LidGuardPipeResponse.Success(message, snapshots.Count, CreateSessionStatuses(snapshots), _settings, lidStateSource.CurrentState);
     }
 
     private LidGuardPipeResponse CreateFailureResponse(LidGuardOperationResult result)

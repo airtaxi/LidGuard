@@ -6,7 +6,8 @@ namespace LidGuard.Settings;
 
 [JsonSourceGenerationOptions(WriteIndented = true)]
 [JsonSerializable(typeof(LidGuardSettings))]
-[JsonSerializable(typeof(HookPermissionRequestBehavior))]
+[JsonSerializable(typeof(ClosedLidPermissionRequestDecision))]
+[JsonSerializable(typeof(LidSwitchState))]
 [JsonSerializable(typeof(PowerRequestOptions))]
 [JsonSerializable(typeof(SystemSuspendMode))]
 internal sealed partial class LidGuardSettingsFileJsonSerializerContext : JsonSerializerContext

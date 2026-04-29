@@ -11,7 +11,7 @@ public static class ClaudeHookSettingsJsonDocument
     private const string HooksPropertyName = "hooks";
     private const string PowerShellShellName = "powershell";
     private const string StartStatusMessage = "Starting LidGuard turn protection";
-    private const string PermissionRequestStatusMessage = "Responding to permission request";
+    private const string PermissionRequestStatusMessage = "Responding to closed-lid permission request";
     private const string PermissionDeniedStatusMessage = "Recording permission denial";
     private const string StopStatusMessage = "Stopping LidGuard session protection";
     private static readonly JsonSerializerOptions s_jsonSerializerOptions = new() { WriteIndented = true };

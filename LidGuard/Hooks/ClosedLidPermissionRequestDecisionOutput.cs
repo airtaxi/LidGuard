@@ -3,22 +3,24 @@ using LidGuardLib.Commons.Settings;
 
 namespace LidGuard.Hooks;
 
-internal static class HookPermissionRequestDecisionOutput
+internal static class ClosedLidPermissionRequestDecisionOutput
 {
-    private const string DenyMessage = "LidGuard denied this permission request because PermissionRequest behavior is set to Deny. "
-        + "To allow future permission requests, run: lidguard settings --permission-request-behavior allow.";
+    private const string DenyMessage = "LidGuard denied this permission request because the lid is closed "
+        + "and ClosedLidPermissionRequestDecision is set to Deny. To allow future closed-lid permission requests, "
+        + "run: lidguard settings --closed-lid-permission-request-decision allow.";
     private const string PermissionRequestHookEventName = "PermissionRequest";
 
     public static int Write(LidGuardSettings settings)
     {
         var normalizedSettings = LidGuardSettings.Normalize(settings);
-        var behaviorText = normalizedSettings.PermissionRequestBehavior == HookPermissionRequestBehavior.Allow ? "allow" : "deny";
+        var decision = normalizedSettings.ClosedLidPermissionRequestDecision;
+        var behaviorText = decision == ClosedLidPermissionRequestDecision.Allow ? "allow" : "deny";
         var decisionObject = new JsonObject
         {
             ["behavior"] = behaviorText
         };
 
-        if (normalizedSettings.PermissionRequestBehavior == HookPermissionRequestBehavior.Deny) decisionObject["message"] = DenyMessage;
+        if (decision == ClosedLidPermissionRequestDecision.Deny) decisionObject["message"] = DenyMessage;
 
         var outputObject = new JsonObject
         {
