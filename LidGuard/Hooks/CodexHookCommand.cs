@@ -96,7 +96,7 @@ internal static class CodexHookCommand
         }
 
         WindowsCodexHookEventLog.AppendMessage($"LidGuard Codex hook handled closed-lid PermissionRequest with {response.Settings.ClosedLidPermissionRequestDecision}.");
-        return ClosedLidPermissionRequestDecisionOutput.Write(response.Settings);
+        return CodexClosedLidPermissionRequestDecisionOutput.Write(response.Settings);
     }
 
     private static async Task<int> SendRuntimeRequestAsync(string commandName, CodexHookInput hookInput)

@@ -3,7 +3,7 @@ using LidGuardLib.Commons.Settings;
 
 namespace LidGuard.Hooks;
 
-internal static class ClosedLidPermissionRequestDecisionOutput
+internal static class CodexClosedLidPermissionRequestDecisionOutput
 {
     private const string DenyMessage = "LidGuard denied this permission request because the lid is closed "
         + "and ClosedLidPermissionRequestDecision is set to Deny. To allow future closed-lid permission requests, "

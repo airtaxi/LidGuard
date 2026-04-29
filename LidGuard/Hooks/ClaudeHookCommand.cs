@@ -97,7 +97,7 @@ internal static class ClaudeHookCommand
         }
 
         WindowsClaudeHookEventLog.AppendMessage($"LidGuard Claude hook handled closed-lid PermissionRequest with {response.Settings.ClosedLidPermissionRequestDecision}.");
-        return ClosedLidPermissionRequestDecisionOutput.Write(response.Settings);
+        return ClaudeClosedLidPermissionRequestDecisionOutput.Write(response.Settings);
     }
 
     private static async Task<int> WriteClosedLidElicitationDecisionAsync()
@@ -116,7 +116,7 @@ internal static class ClaudeHookCommand
         }
 
         WindowsClaudeHookEventLog.AppendMessage("LidGuard Claude hook canceled closed-lid Elicitation.");
-        return ClosedLidClaudeElicitationOutput.Write();
+        return ClaudeClosedLidElicitationOutput.Write();
     }
 
     private static async Task<int> SendRuntimeRequestAsync(string commandName, ClaudeHookInput hookInput)

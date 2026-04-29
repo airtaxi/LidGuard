@@ -2,7 +2,7 @@ using System.Text.Json.Nodes;
 
 namespace LidGuard.Hooks;
 
-internal static class ClosedLidClaudeElicitationOutput
+internal static class ClaudeClosedLidElicitationOutput
 {
     private const string CancelReason = "LidGuard canceled this elicitation because the lid is closed.";
     private const string ElicitationHookEventName = "Elicitation";
