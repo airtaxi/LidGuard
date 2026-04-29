@@ -417,7 +417,6 @@ internal static class LidGuardCommandLineApplication
         if (!TryParseBooleanOption(options, basePowerRequest.PreventDisplaySleep, out var preventDisplaySleep, out message, "prevent-display-sleep", "display-required")) return false;
         if (!TryParseBooleanOption(options, baseSettings.ChangeLidAction, out var changeLidAction, out message, "change-lid-action", "lid-action")) return false;
         if (!TryParseBooleanOption(options, baseSettings.WatchParentProcess, out var watchParentProcess, out message, "watch-parent-process", "watch-parent")) return false;
-        if (!TryParseBooleanOption(options, baseSettings.SuspendWhenStoppedAndLidClosed, out var suspendWhenStoppedAndLidClosed, out message, "suspend-when-stopped-and-lid-closed", "suspend-when-lid-closed")) return false;
         if (!TryParseSuspendModeOption(options, baseSettings.SuspendMode, out var suspendMode, out message)) return false;
         if (!TryParseClosedLidPermissionRequestDecisionOption(options, baseSettings.ClosedLidPermissionRequestDecision, out var closedLidPermissionRequestDecision, out message)) return false;
 
@@ -434,7 +433,6 @@ internal static class LidGuardCommandLineApplication
                 Reason = reason
             },
             ChangeLidAction = changeLidAction,
-            SuspendWhenStoppedAndLidClosed = suspendWhenStoppedAndLidClosed,
             SuspendMode = suspendMode,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess
@@ -455,7 +453,6 @@ internal static class LidGuardCommandLineApplication
         if (!TryReadBooleanSetting("Prevent display sleep", powerRequest.PreventDisplaySleep, out var preventDisplaySleep, out message)) return false;
         if (!TryReadBooleanSetting("Change lid action", normalizedSettings.ChangeLidAction, out var changeLidAction, out message)) return false;
         if (!TryReadBooleanSetting("Watch parent process", normalizedSettings.WatchParentProcess, out var watchParentProcess, out message)) return false;
-        if (!TryReadBooleanSetting("Suspend when stopped and lid closed", normalizedSettings.SuspendWhenStoppedAndLidClosed, out var suspendWhenStoppedAndLidClosed, out message)) return false;
         if (!TryReadSuspendModeSetting("Suspend mode", normalizedSettings.SuspendMode, out var suspendMode, out message)) return false;
         if (!TryReadClosedLidPermissionRequestDecisionSetting("Closed lid permission request decision", normalizedSettings.ClosedLidPermissionRequestDecision, out var closedLidPermissionRequestDecision, out message)) return false;
 
@@ -469,7 +466,6 @@ internal static class LidGuardCommandLineApplication
                 Reason = powerRequest.Reason
             },
             ChangeLidAction = changeLidAction,
-            SuspendWhenStoppedAndLidClosed = suspendWhenStoppedAndLidClosed,
             SuspendMode = suspendMode,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess
@@ -743,7 +739,6 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  Prevent display sleep: {powerRequest.PreventDisplaySleep}");
         Console.WriteLine($"  Change lid action: {normalizedSettings.ChangeLidAction}");
         Console.WriteLine($"  Watch parent process: {normalizedSettings.WatchParentProcess}");
-        Console.WriteLine($"  Suspend when stopped and lid closed: {normalizedSettings.SuspendWhenStoppedAndLidClosed}");
         Console.WriteLine($"  Suspend mode: {normalizedSettings.SuspendMode}");
         Console.WriteLine($"  Closed lid permission request decision: {normalizedSettings.ClosedLidPermissionRequestDecision}");
         Console.WriteLine($"  Reason: {powerRequest.Reason}");

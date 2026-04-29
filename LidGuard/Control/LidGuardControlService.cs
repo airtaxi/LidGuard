@@ -110,7 +110,6 @@ public sealed class LidGuardControlService
                     : NormalizePowerRequestReason(settingsPatch.PowerRequestReason)
             },
             ChangeLidAction = settingsPatch.ChangeLidAction ?? normalizedBaseSettings.ChangeLidAction,
-            SuspendWhenStoppedAndLidClosed = settingsPatch.SuspendWhenStoppedAndLidClosed ?? normalizedBaseSettings.SuspendWhenStoppedAndLidClosed,
             SuspendMode = settingsPatch.SuspendMode ?? normalizedBaseSettings.SuspendMode,
             ClosedLidPermissionRequestDecision = settingsPatch.ClosedLidPermissionRequestDecision ?? normalizedBaseSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settingsPatch.WatchParentProcess ?? normalizedBaseSettings.WatchParentProcess
@@ -132,7 +131,6 @@ public sealed class LidGuardControlService
         AppendChange(changes, previousPowerRequest.Reason, updatedPowerRequest.Reason, "powerRequestReason");
         AppendChange(changes, previousStoredSettings.ChangeLidAction, updatedStoredSettings.ChangeLidAction, "changeLidAction");
         AppendChange(changes, previousStoredSettings.WatchParentProcess, updatedStoredSettings.WatchParentProcess, "watchParentProcess");
-        AppendChange(changes, previousStoredSettings.SuspendWhenStoppedAndLidClosed, updatedStoredSettings.SuspendWhenStoppedAndLidClosed, "suspendWhenStoppedAndLidClosed");
         AppendChange(changes, previousStoredSettings.SuspendMode, updatedStoredSettings.SuspendMode, "suspendMode");
         AppendChange(changes, previousStoredSettings.ClosedLidPermissionRequestDecision, updatedStoredSettings.ClosedLidPermissionRequestDecision, "closedLidPermissionRequestDecision");
 

@@ -51,9 +51,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         bool? changeLidAction = null,
         [Description("Set whether LidGuard watches the resolved parent process and cleans up when that process exits. Omit to keep the current value.")]
         bool? watchParentProcess = null,
-        [Description("Set whether LidGuard should request sleep or hibernate after the last session stops while the lid is closed. Omit to keep the current value.")]
-        bool? suspendWhenStoppedAndLidClosed = null,
-        [Description("Set the suspend mode used when suspendWhenStoppedAndLidClosed is enabled. Omit to keep the current value.")]
+        [Description("Set the suspend mode LidGuard uses after the last session stops while the lid is closed. Omit to keep the current value.")]
         SystemSuspendMode? suspendMode = null,
         [Description("Set the PermissionRequest decision returned while the lid is closed. Omit to keep the current value.")]
         ClosedLidPermissionRequestDecision? closedLidPermissionRequestDecision = null,
@@ -69,7 +67,6 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
             PreventDisplaySleep = preventDisplaySleep,
             ChangeLidAction = changeLidAction,
             WatchParentProcess = watchParentProcess,
-            SuspendWhenStoppedAndLidClosed = suspendWhenStoppedAndLidClosed,
             SuspendMode = suspendMode,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             PowerRequestReason = powerRequestReason

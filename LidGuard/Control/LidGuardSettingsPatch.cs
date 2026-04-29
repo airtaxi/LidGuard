@@ -17,8 +17,6 @@ public sealed class LidGuardSettingsPatch
 
     public bool? WatchParentProcess { get; init; }
 
-    public bool? SuspendWhenStoppedAndLidClosed { get; init; }
-
     public SystemSuspendMode? SuspendMode { get; init; }
 
     public ClosedLidPermissionRequestDecision? ClosedLidPermissionRequestDecision { get; init; }

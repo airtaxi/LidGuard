@@ -16,8 +16,6 @@ public sealed class LidGuardSettings
 
     public bool ChangeLidAction { get; init; }
 
-    public bool SuspendWhenStoppedAndLidClosed { get; init; }
-
     public SystemSuspendMode SuspendMode { get; init; } = SystemSuspendMode.Sleep;
 
     public ClosedLidPermissionRequestDecision ClosedLidPermissionRequestDecision { get; init; } = ClosedLidPermissionRequestDecision.Deny;
@@ -39,7 +37,6 @@ public sealed class LidGuardSettings
                 Reason = string.IsNullOrWhiteSpace(powerRequest.Reason) ? PowerRequestOptions.Default.Reason : powerRequest.Reason
             },
             ChangeLidAction = settings.ChangeLidAction,
-            SuspendWhenStoppedAndLidClosed = settings.SuspendWhenStoppedAndLidClosed,
             SuspendMode = settings.SuspendMode,
             ClosedLidPermissionRequestDecision = settings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settings.WatchParentProcess

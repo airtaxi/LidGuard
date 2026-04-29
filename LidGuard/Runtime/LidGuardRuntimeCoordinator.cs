@@ -374,8 +374,6 @@ internal sealed class LidGuardRuntimeCoordinator(
         string successMessage,
         LidGuardPipeResponse restoreResponse)
     {
-        if (!_settings.SuspendWhenStoppedAndLidClosed) return restoreResponse;
-
         var lidSwitchState = lidStateSource.CurrentState;
         if (lidSwitchState == LidSwitchState.Open)
         {
@@ -414,13 +412,6 @@ internal sealed class LidGuardRuntimeCoordinator(
                 if (_sessionRegistry.HasActiveSessions)
                 {
                     var canceledResponse = CreateSuccessResponse("Skipped post-stop suspend because a new session started before suspend ran.");
-                    AppendSessionLog($"{eventName}-suspend-canceled", request, canceledResponse, snapshot);
-                    return;
-                }
-
-                if (!_settings.SuspendWhenStoppedAndLidClosed)
-                {
-                    var canceledResponse = CreateSuccessResponse("Skipped post-stop suspend because the setting was disabled before suspend ran.");
                     AppendSessionLog($"{eventName}-suspend-canceled", request, canceledResponse, snapshot);
                     return;
                 }
