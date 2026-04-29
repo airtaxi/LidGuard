@@ -104,6 +104,46 @@ public sealed class WindowsCodexHookInstaller
         return CodexHookInstallationResult.Success(inspection, true, message, backupFilePath);
     }
 
+    public CodexHookInstallationResult Remove(CodexHookInstallationRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var normalizedRequest = NormalizeRequest(request);
+        if (normalizedRequest.Provider != AgentProvider.Codex)
+        {
+            var unsupportedInspection = new CodexHookInstallationInspection
+            {
+                Provider = normalizedRequest.Provider,
+                Format = normalizedRequest.Format,
+                Status = CodexHookInstallationStatus.Unknown,
+                ConfigurationFilePath = normalizedRequest.ConfigurationFilePath,
+                HookExecutablePath = normalizedRequest.HookExecutablePath,
+                Message = "Only Codex hook removal is implemented."
+            };
+
+            return CodexHookInstallationResult.Failure(unsupportedInspection, unsupportedInspection.Message);
+        }
+
+        var configurationFileExists = File.Exists(normalizedRequest.ConfigurationFilePath);
+        if (!configurationFileExists) return CodexHookInstallationResult.Success(Inspect(normalizedRequest), false, "Codex hook is not installed.");
+
+        var originalContent = File.ReadAllText(normalizedRequest.ConfigurationFilePath);
+        var updatedContent = CodexHookConfigTomlDocument.RemoveManagedHookBlock(originalContent);
+        if (string.Equals(originalContent, updatedContent, StringComparison.Ordinal)) return CodexHookInstallationResult.Success(Inspect(normalizedRequest), false, "No LidGuard-managed Codex hook was found.");
+
+        var backupFilePath = string.Empty;
+        if (normalizedRequest.CreateBackup)
+        {
+            backupFilePath = WindowsHookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
+            File.Copy(normalizedRequest.ConfigurationFilePath, backupFilePath, false);
+        }
+
+        File.WriteAllText(normalizedRequest.ConfigurationFilePath, updatedContent);
+
+        var inspection = Inspect(normalizedRequest);
+        return CodexHookInstallationResult.Success(inspection, true, "Codex hook removed.", backupFilePath);
+    }
+
     public CodexHookInstallationRequest CreateDefaultRequest(string hookExecutablePath = "", string configurationFilePath = "")
     {
         return new CodexHookInstallationRequest

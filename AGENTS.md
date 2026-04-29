@@ -98,7 +98,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 ### Current Windows CLI Path
 
-- `LidGuard` parses `start`, `stop`, `status`, `settings`, `cleanup-orphans`, `claude-hook`, `claude-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, and `hook-events`.
+- `LidGuard` parses `start`, `stop`, `status`, `settings`, `cleanup-orphans`, `claude-hook`, `claude-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, and `hook-events`.
 - `start` and the `UserPromptSubmit` path in `codex-hook` and `claude-hook` load persisted default settings and send them with the start IPC request.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
 - When no runtime is listening, `start` launches detached `run-server`.
@@ -204,13 +204,14 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - Reports unsupported platforms before Windows-only services are constructed.
 - `WindowsCodexHookInstaller`
   - Resolves `%USERPROFILE%\.codex\config.toml` or `CODEX_HOME\config.toml`.
-  - Installs and inspects the LidGuard-managed Codex hook block.
+  - Installs, removes, and inspects the LidGuard-managed Codex hook block.
+  - When no managed block marker exists, status and removal fall back to detecting valid `lidguard ... codex-hook` command entries in the required hook events.
   - Backs up existing config files before writing when configured.
 - `WindowsCodexHookEventLog`
   - Records Codex hook diagnostics.
 - `WindowsClaudeHookInstaller`
   - Resolves `CLAUDE_CONFIG_DIR\settings.json` or `%USERPROFILE%\.claude\settings.json`.
-  - Installs and inspects the LidGuard-managed Claude hook entries in `settings.json`.
+  - Installs, removes, and inspects the LidGuard-managed Claude hook entries in `settings.json`.
   - Backs up existing config files before writing when configured.
 - `WindowsClaudeHookEventLog`
   - Records Claude hook diagnostics.
@@ -224,7 +225,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Stop events: `Stop`, `SessionEnd`.
 - Command path: `lidguard codex-hook` when the global tool is available on PATH, otherwise the current executable path plus `codex-hook`.
 - Snippet command: `lidguard codex-hooks --format config-toml`.
-- Install/status commands: `lidguard hook-install --provider codex` and `lidguard hook-status --provider codex`.
+- Install/status/remove commands: `lidguard hook-install --provider codex`, `lidguard hook-status --provider codex`, and `lidguard hook-remove --provider codex`.
 - Codex may require `features.codex_hooks = true`.
 - `codex-hook` reads Codex hook JSON from stdin and maps `hook_event_name` to runtime IPC.
 - For `UserPromptSubmit`, it sends internal `start --provider codex`.
@@ -246,7 +247,7 @@ Reference:
 - Stop events: `Stop`, `StopFailure`, `SessionEnd`.
 - Command path: `lidguard claude-hook` when the global tool is available on PATH, otherwise the current executable path plus `claude-hook`.
 - Snippet command: `lidguard claude-hooks --format settings-json`.
-- Install/status commands: `lidguard hook-install --provider claude` and `lidguard hook-status --provider claude`.
+- Install/status/remove commands: `lidguard hook-install --provider claude`, `lidguard hook-status --provider claude`, and `lidguard hook-remove --provider claude`.
 - Default config path: `CLAUDE_CONFIG_DIR\settings.json` when `CLAUDE_CONFIG_DIR` is set, otherwise `%USERPROFILE%\.claude\settings.json`.
 - Windows hook config uses `shell = "powershell"` in Claude `settings.json` command hooks.
 - Based on analysis of a locally retained Claude Code source snapshot, command hooks treat `exit code 0` with empty stdout as a successful no-op, while non-empty stdout may be interpreted as hook JSON or plain-text output depending on the execution path.
@@ -289,9 +290,11 @@ lidguard codex-hook
 lidguard codex-hooks --format config-toml
 lidguard hook-status --provider claude
 lidguard hook-install --provider claude
+lidguard hook-remove --provider claude
 lidguard hook-events --provider claude --count 50
 lidguard hook-status --provider codex
 lidguard hook-install --provider codex
+lidguard hook-remove --provider codex
 lidguard hook-events --provider codex --count 50
 lidguard settings
 lidguard settings --change-lid-action true
@@ -329,9 +332,9 @@ The Windows CLI hook receiving path is implemented for Codex and Claude Code. Pr
 6. ~~Start with a local/headless orchestration path before tray IPC.~~
 7. ~~Add settings loading for the headless runtime.~~
 8. ~~Add a solution file including `LidGuardLib.Commons`, `LidGuardLib.Windows`, and `LidGuard`.~~
-9. ~~Add Codex hook parsing, snippet output, and managed config install/status helpers.~~
+9. ~~Add Codex hook parsing, snippet output, and managed config install/remove/status helpers.~~
 10. ~~Map Codex `SessionEnd` to stop handling and handle `PermissionRequest` as a closed-lid-only settings-driven allow/deny decision.~~
-11. ~~Add Claude hook parsing, snippet output, and managed `settings.json` install/status helpers.~~
+11. ~~Add Claude hook parsing, snippet output, and managed `settings.json` install/remove/status helpers.~~
 12. ~~Map Claude `Stop`, `StopFailure`, and `SessionEnd` to stop handling, while handling `PermissionRequest` as a closed-lid-only settings-driven allow/deny decision.~~
 
 ## Design Constraints

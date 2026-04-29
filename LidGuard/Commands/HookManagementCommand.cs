@@ -38,6 +38,22 @@ internal static class HookManagementCommand
         };
     }
 
+    public static int RemoveHook(IReadOnlyDictionary<string, string> options)
+    {
+        if (!TryParseProvider(options, out var provider, out var message))
+        {
+            Console.Error.WriteLine(message);
+            return 1;
+        }
+
+        return provider switch
+        {
+            AgentProvider.Codex => RemoveCodexHook(options),
+            AgentProvider.Claude => RemoveClaudeHook(options),
+            _ => WriteUnsupportedProvider()
+        };
+    }
+
     public static int WriteHookEvents(IReadOnlyDictionary<string, string> options)
     {
         if (!TryParseProvider(options, out var provider, out var providerMessage))
@@ -121,6 +137,24 @@ internal static class HookManagementCommand
         return result.Succeeded ? 0 : 1;
     }
 
+    private static int RemoveCodexHook(IReadOnlyDictionary<string, string> options)
+    {
+        var installer = new WindowsCodexHookInstaller();
+        if (!TryCreateCodexHookInstallationRequest(options, installer, out var request, out var message))
+        {
+            Console.Error.WriteLine(message);
+            return 1;
+        }
+
+        var result = installer.Remove(request);
+        WriteCodexHookInspection(result.Inspection);
+
+        if (!string.IsNullOrWhiteSpace(result.BackupFilePath)) Console.WriteLine($"Backup: {result.BackupFilePath}");
+        Console.WriteLine($"Changed: {result.Changed}");
+        Console.WriteLine($"Message: {result.Message}");
+        return result.Succeeded ? 0 : 1;
+    }
+
     private static int InstallClaudeHook(IReadOnlyDictionary<string, string> options)
     {
         var installer = new WindowsClaudeHookInstaller();
@@ -131,6 +165,24 @@ internal static class HookManagementCommand
         }
 
         var result = installer.Install(request);
+        WriteClaudeHookInspection(result.Inspection);
+
+        if (!string.IsNullOrWhiteSpace(result.BackupFilePath)) Console.WriteLine($"Backup: {result.BackupFilePath}");
+        Console.WriteLine($"Changed: {result.Changed}");
+        Console.WriteLine($"Message: {result.Message}");
+        return result.Succeeded ? 0 : 1;
+    }
+
+    private static int RemoveClaudeHook(IReadOnlyDictionary<string, string> options)
+    {
+        var installer = new WindowsClaudeHookInstaller();
+        if (!TryCreateClaudeHookInstallationRequest(options, installer, out var request, out var message))
+        {
+            Console.Error.WriteLine(message);
+            return 1;
+        }
+
+        var result = installer.Remove(request);
         WriteClaudeHookInspection(result.Inspection);
 
         if (!string.IsNullOrWhiteSpace(result.BackupFilePath)) Console.WriteLine($"Backup: {result.BackupFilePath}");
@@ -223,6 +275,7 @@ internal static class HookManagementCommand
         Console.WriteLine($"  PermissionRequest hook: {inspection.HasPermissionRequestHook}");
         Console.WriteLine($"  SessionEnd hook: {inspection.HasSessionEndHook}");
         Console.WriteLine($"  All stop hooks: {inspection.HasAllStopHooks}");
+        Console.WriteLine($"  Valid command: {inspection.HasValidHookCommand}");
         Console.WriteLine($"  Expected command: {inspection.HasExpectedHookCommand}");
         Console.WriteLine($"  Message: {inspection.Message}");
     }

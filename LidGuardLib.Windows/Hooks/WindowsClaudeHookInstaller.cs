@@ -96,6 +96,50 @@ public sealed class WindowsClaudeHookInstaller
         return ClaudeHookInstallationResult.Success(inspection, true, message, backupFilePath);
     }
 
+    public ClaudeHookInstallationResult Remove(ClaudeHookInstallationRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var normalizedRequest = NormalizeRequest(request);
+        if (normalizedRequest.Provider != AgentProvider.Claude)
+        {
+            var unsupportedInspection = new ClaudeHookInstallationInspection
+            {
+                Provider = normalizedRequest.Provider,
+                Status = CodexHookInstallationStatus.Unknown,
+                ConfigurationFilePath = normalizedRequest.ConfigurationFilePath,
+                HookExecutablePath = normalizedRequest.HookExecutablePath,
+                Message = "Only Claude hook removal is implemented."
+            };
+
+            return ClaudeHookInstallationResult.Failure(unsupportedInspection, unsupportedInspection.Message);
+        }
+
+        var configurationFileExists = File.Exists(normalizedRequest.ConfigurationFilePath);
+        if (!configurationFileExists) return ClaudeHookInstallationResult.Success(Inspect(normalizedRequest), false, "Claude hook is not installed.");
+
+        var originalContent = File.ReadAllText(normalizedRequest.ConfigurationFilePath);
+        var currentInspection = Inspect(normalizedRequest);
+        if (!ClaudeHookSettingsJsonDocument.TryRemoveManagedHooks(originalContent, out var updatedContent, out var changed, out var updateMessage))
+        {
+            return ClaudeHookInstallationResult.Failure(currentInspection, updateMessage);
+        }
+
+        if (!changed) return ClaudeHookInstallationResult.Success(currentInspection, false, "No LidGuard-managed Claude hook was found.");
+
+        var backupFilePath = string.Empty;
+        if (normalizedRequest.CreateBackup)
+        {
+            backupFilePath = WindowsHookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
+            File.Copy(normalizedRequest.ConfigurationFilePath, backupFilePath, false);
+        }
+
+        File.WriteAllText(normalizedRequest.ConfigurationFilePath, updatedContent);
+
+        var inspection = Inspect(normalizedRequest);
+        return ClaudeHookInstallationResult.Success(inspection, true, "Claude hook removed.", backupFilePath);
+    }
+
     public ClaudeHookInstallationRequest CreateDefaultRequest(string hookExecutablePath = "", string configurationFilePath = "")
     {
         return new ClaudeHookInstallationRequest

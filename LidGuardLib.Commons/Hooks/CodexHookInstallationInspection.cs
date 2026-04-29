@@ -32,6 +32,8 @@ public sealed class CodexHookInstallationInspection
 
     public bool HasExpectedHookCommand { get; init; }
 
+    public bool HasValidHookCommand { get; init; }
+
     public string Message { get; init; } = string.Empty;
 
     public bool HasAllStopHooks => HasStopHook && HasSessionEndHook;

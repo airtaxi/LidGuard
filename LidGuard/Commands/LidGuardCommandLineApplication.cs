@@ -49,6 +49,7 @@ internal static class LidGuardCommandLineApplication
             LidGuardPipeCommands.CodexHooks => CodexHookCommand.WriteHookSnippet(options),
             LidGuardPipeCommands.HookStatus => HookManagementCommand.WriteHookStatus(options),
             LidGuardPipeCommands.HookInstall => HookManagementCommand.InstallHook(options),
+            LidGuardPipeCommands.HookRemove or "hook-uninstall" => HookManagementCommand.RemoveHook(options),
             LidGuardPipeCommands.HookEvents => HookManagementCommand.WriteHookEvents(options),
             _ => WriteUnknownCommand(commandName)
         };
@@ -759,6 +760,7 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  {commandDisplayName} codex-hooks [--format config-toml|hooks-json] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} hook-status [--provider codex|claude] [--config <path>] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} hook-install [--provider codex|claude] [--config <path>] [--executable <path>]");
+        Console.WriteLine($"  {commandDisplayName} hook-remove [--provider codex|claude] [--config <path>] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} hook-events [--provider codex|claude] [--count <number>]");
         Console.WriteLine($"  {commandDisplayName} settings");
         Console.WriteLine($"  {commandDisplayName} settings [--reset true] [--change-lid-action true|false]");

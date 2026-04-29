@@ -169,6 +169,30 @@ public static class ClaudeHookSettingsJsonDocument
         return true;
     }
 
+    public static bool TryRemoveManagedHooks(string content, out string updatedContent, out bool changed, out string message)
+    {
+        updatedContent = content;
+        changed = false;
+        if (!TryParseSettingsRoot(content, out var settingsObject, out message)) return false;
+        if (!settingsObject.TryGetPropertyValue(HooksPropertyName, out var hooksNode) || hooksNode is null) return true;
+        if (hooksNode is not JsonObject hooksObject)
+        {
+            message = "Claude hooks setting must be a JSON object.";
+            return false;
+        }
+
+        foreach (var hookDefinition in s_requiredHookDefinitions)
+        {
+            changed |= RemoveManagedHook(hooksObject, hookDefinition.HookEventName);
+        }
+
+        if (!changed) return true;
+        if (hooksObject.Count == 0) settingsObject.Remove(HooksPropertyName);
+
+        updatedContent = settingsObject.ToJsonString(s_jsonSerializerOptions) + Environment.NewLine;
+        return true;
+    }
+
     private static JsonObject CreateHooksObject(string hookCommand)
     {
         var hooksObject = new JsonObject();
@@ -323,6 +347,40 @@ public static class ClaudeHookSettingsJsonDocument
         }
 
         AddJsonNode(hookMatchers, CreateManagedHookMatcher(hookCommand, statusMessage));
+        return true;
+    }
+
+    private static bool RemoveManagedHook(JsonObject hooksObject, string hookEventName)
+    {
+        if (!hooksObject.TryGetPropertyValue(hookEventName, out var hookEventNode) || hookEventNode is null) return false;
+        if (hookEventNode is not JsonArray hookMatchers) return false;
+
+        var changed = false;
+        for (var hookMatcherIndex = hookMatchers.Count - 1; hookMatcherIndex >= 0; hookMatcherIndex--)
+        {
+            if (hookMatchers[hookMatcherIndex] is not JsonObject hookMatcherObject) continue;
+            if (hookMatcherObject["hooks"] is not JsonArray hookDefinitions) continue;
+
+            for (var hookDefinitionIndex = hookDefinitions.Count - 1; hookDefinitionIndex >= 0; hookDefinitionIndex--)
+            {
+                if (hookDefinitions[hookDefinitionIndex] is not JsonObject hookDefinitionObject) continue;
+
+                var command = GetStringProperty(hookDefinitionObject, "command");
+                if (!IsLidGuardClaudeHookCommand(command)) continue;
+
+                hookDefinitions.RemoveAt(hookDefinitionIndex);
+                changed = true;
+            }
+
+            if (hookDefinitions.Count > 0) continue;
+
+            hookMatchers.RemoveAt(hookMatcherIndex);
+            changed = true;
+        }
+
+        if (hookMatchers.Count > 0) return changed;
+
+        hooksObject.Remove(hookEventName);
         return true;
     }
 
