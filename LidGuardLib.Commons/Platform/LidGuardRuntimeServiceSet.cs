@@ -9,6 +9,7 @@ public sealed class LidGuardRuntimeServiceSet(
     IProcessExitWatcher processExitWatcher,
     LidActionPolicyController lidActionPolicyController,
     ISystemSuspendService systemSuspendService,
+    IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer,
     ILidStateSource lidStateSource) : IDisposable
 {
     public IPowerRequestService PowerRequestService { get; } = powerRequestService;
@@ -20,6 +21,8 @@ public sealed class LidGuardRuntimeServiceSet(
     public LidActionPolicyController LidActionPolicyController { get; } = lidActionPolicyController;
 
     public ISystemSuspendService SystemSuspendService { get; } = systemSuspendService;
+
+    public IPostStopSuspendSoundPlayer PostStopSuspendSoundPlayer { get; } = postStopSuspendSoundPlayer;
 
     public ILidStateSource LidStateSource { get; } = lidStateSource;
 

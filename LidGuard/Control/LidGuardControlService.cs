@@ -1,12 +1,13 @@
 using LidGuardLib.Commons.Power;
 using LidGuardLib.Commons.Results;
+using LidGuardLib.Commons.Services;
 using LidGuardLib.Commons.Settings;
 using LidGuard.Ipc;
 using LidGuard.Settings;
 
 namespace LidGuard.Control;
 
-public sealed class LidGuardControlService
+public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer)
 {
     private readonly LidGuardRuntimeClient _runtimeClient = new();
 
@@ -36,6 +37,13 @@ public sealed class LidGuardControlService
 
         var previousStoredSettings = LidGuardSettings.Normalize(currentSettings);
         var updatedStoredSettings = ApplyPatch(previousStoredSettings, settingsPatch);
+        if (!PostStopSuspendSoundConfiguration.TryNormalize(
+            updatedStoredSettings,
+            postStopSuspendSoundPlayer,
+            out updatedStoredSettings,
+            out message))
+            return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
+
         if (!LidGuardSettingsStore.TrySave(updatedStoredSettings, out message))
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
 
@@ -114,6 +122,7 @@ public sealed class LidGuardControlService
             ChangeLidAction = settingsPatch.ChangeLidAction ?? normalizedBaseSettings.ChangeLidAction,
             SuspendMode = settingsPatch.SuspendMode ?? normalizedBaseSettings.SuspendMode,
             PostStopSuspendDelaySeconds = settingsPatch.PostStopSuspendDelaySeconds ?? normalizedBaseSettings.PostStopSuspendDelaySeconds,
+            PostStopSuspendSound = settingsPatch.PostStopSuspendSound ?? normalizedBaseSettings.PostStopSuspendSound,
             ClosedLidPermissionRequestDecision = settingsPatch.ClosedLidPermissionRequestDecision ?? normalizedBaseSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settingsPatch.WatchParentProcess ?? normalizedBaseSettings.WatchParentProcess
         };
@@ -136,6 +145,7 @@ public sealed class LidGuardControlService
         AppendChange(changes, previousStoredSettings.WatchParentProcess, updatedStoredSettings.WatchParentProcess, "watchParentProcess");
         AppendChange(changes, previousStoredSettings.SuspendMode, updatedStoredSettings.SuspendMode, "suspendMode");
         AppendChange(changes, previousStoredSettings.PostStopSuspendDelaySeconds, updatedStoredSettings.PostStopSuspendDelaySeconds, "postStopSuspendDelaySeconds");
+        AppendChange(changes, previousStoredSettings.PostStopSuspendSound, updatedStoredSettings.PostStopSuspendSound, "postStopSuspendSound");
         AppendChange(changes, previousStoredSettings.ClosedLidPermissionRequestDecision, updatedStoredSettings.ClosedLidPermissionRequestDecision, "closedLidPermissionRequestDecision");
 
         return [.. changes];

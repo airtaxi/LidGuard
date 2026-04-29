@@ -1,4 +1,5 @@
 using LidGuardLib.Commons.Results;
+using LidGuardLib.Commons.Services;
 
 namespace LidGuardLib.Commons.Platform;
 
@@ -9,4 +10,6 @@ public interface ILidGuardRuntimePlatform
     string UnsupportedMessage { get; }
 
     LidGuardOperationResult<LidGuardRuntimeServiceSet> CreateRuntimeServiceSet();
+
+    LidGuardOperationResult<IPostStopSuspendSoundPlayer> CreatePostStopSuspendSoundPlayer();
 }

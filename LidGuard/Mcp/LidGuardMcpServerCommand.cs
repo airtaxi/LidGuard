@@ -1,5 +1,6 @@
 using LidGuard.Control;
 using LidGuard.Mcp.Tools;
+using LidGuardLib.Windows.Platform;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -13,6 +14,14 @@ internal static class LidGuardMcpServerCommand
 
     public static async Task<int> RunAsync(string[] commandLineArguments)
     {
+        var runtimePlatform = new WindowsLidGuardRuntimePlatform();
+        var postStopSuspendSoundPlayerResult = runtimePlatform.CreatePostStopSuspendSoundPlayer();
+        if (!postStopSuspendSoundPlayerResult.Succeeded)
+        {
+            Console.Error.WriteLine(postStopSuspendSoundPlayerResult.Message);
+            return 1;
+        }
+
         var applicationBuilder = Host.CreateApplicationBuilder(commandLineArguments);
         applicationBuilder.Logging.ClearProviders();
         applicationBuilder.Logging.AddConsole(consoleLoggerOptions =>
@@ -20,6 +29,7 @@ internal static class LidGuardMcpServerCommand
             consoleLoggerOptions.LogToStandardErrorThreshold = LogLevel.Trace;
         });
 
+        applicationBuilder.Services.AddSingleton(postStopSuspendSoundPlayerResult.Value);
         applicationBuilder.Services.AddSingleton<LidGuardControlService>();
         applicationBuilder.Services
             .AddMcpServer()

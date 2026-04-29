@@ -15,6 +15,7 @@ internal sealed class LidGuardRuntimeCoordinator(
     IProcessExitWatcher processExitWatcher,
     LidActionPolicyController lidActionPolicyController,
     ISystemSuspendService systemSuspendService,
+    IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer,
     ILidStateSource lidStateSource)
 {
     private static readonly TimeSpan s_processWatchInterval = TimeSpan.FromSeconds(1);
@@ -415,6 +416,7 @@ internal sealed class LidGuardRuntimeCoordinator(
             if (postStopSuspendDelaySeconds > 0)
                 await Task.Delay(TimeSpan.FromSeconds(postStopSuspendDelaySeconds), pendingSuspendCancellationTokenSource.Token);
 
+            var postStopSuspendSound = string.Empty;
             var suspendMode = SystemSuspendMode.Sleep;
             await _gate.WaitAsync(pendingSuspendCancellationTokenSource.Token);
             try
@@ -430,6 +432,34 @@ internal sealed class LidGuardRuntimeCoordinator(
                 if (lidSwitchState != LidSwitchState.Closed)
                 {
                     var canceledResponse = CreateSuccessResponse($"Skipped post-stop suspend because the lid state is {lidSwitchState} before suspend ran.");
+                    AppendSessionLog($"{eventName}-suspend-canceled", request, canceledResponse, snapshot);
+                    return;
+                }
+
+                postStopSuspendSound = _settings.PostStopSuspendSound;
+                suspendMode = _settings.SuspendMode;
+            }
+            finally
+            {
+                _gate.Release();
+            }
+
+            await PlayPostStopSuspendSoundAsync(request, snapshot, eventName, postStopSuspendSound, pendingSuspendCancellationTokenSource.Token);
+
+            await _gate.WaitAsync(pendingSuspendCancellationTokenSource.Token);
+            try
+            {
+                if (_sessionRegistry.HasActiveSessions)
+                {
+                    var canceledResponse = CreateSuccessResponse("Skipped post-stop suspend because a new session started while the completion sound was playing.");
+                    AppendSessionLog($"{eventName}-suspend-canceled", request, canceledResponse, snapshot);
+                    return;
+                }
+
+                var lidSwitchState = lidStateSource.CurrentState;
+                if (lidSwitchState != LidSwitchState.Closed)
+                {
+                    var canceledResponse = CreateSuccessResponse($"Skipped post-stop suspend because the lid state is {lidSwitchState} after the completion sound finished.");
                     AppendSessionLog($"{eventName}-suspend-canceled", request, canceledResponse, snapshot);
                     return;
                 }
@@ -494,6 +524,30 @@ internal sealed class LidGuardRuntimeCoordinator(
         }
 
         pendingSuspendCancellationTokenSource.Dispose();
+    }
+
+    private async Task PlayPostStopSuspendSoundAsync(
+        LidGuardSessionStopRequest request,
+        LidGuardSessionSnapshot snapshot,
+        string eventName,
+        string postStopSuspendSound,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(postStopSuspendSound)) return;
+
+        var playbackResult = await postStopSuspendSoundPlayer.PlayAsync(postStopSuspendSound, cancellationToken);
+        if (playbackResult.Succeeded) return;
+
+        await _gate.WaitAsync(CancellationToken.None);
+        try
+        {
+            var response = CreateFailureResponse(playbackResult);
+            AppendSessionLog($"{eventName}-suspend-sound-failed", request, response, snapshot);
+        }
+        finally
+        {
+            _gate.Release();
+        }
     }
 
     private LidGuardPipeResponse CreateSuccessResponse(string message)

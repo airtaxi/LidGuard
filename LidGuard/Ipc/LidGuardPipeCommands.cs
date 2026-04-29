@@ -11,6 +11,7 @@ internal static class LidGuardPipeCommands
     public const string HookInstall = "hook-install";
     public const string HookRemove = "hook-remove";
     public const string HookStatus = "hook-status";
+    public const string PreviewSystemSound = "preview-system-sound";
     public const string RunServer = "run-server";
     public const string Settings = "settings";
     public const string Start = "start";

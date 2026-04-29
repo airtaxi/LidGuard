@@ -28,6 +28,7 @@ The goal is to keep Windows awake while at least one agent session is active, th
 - After the last active session stops, LidGuard should always request suspend when the laptop lid is closed.
 - The suspend mode remains user-selectable: Sleep by default, Hibernate optional.
 - The post-stop suspend delay remains user-selectable: 10 seconds by default, `0` for immediate suspend.
+- The post-stop suspend sound remains optional: off by default, with supported SystemSounds names or a playable `.wav` path.
 
 The key design rule is to treat normal idle sleep and lid-close sleep as separate problems. Power requests handle idle sleep. `LIDACTION` policy backup/change/restore handles lid-close behavior because standard sleep-prevention APIs cannot reliably block a user lid-close action.
 
@@ -86,6 +87,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - Immediate sleep/hibernate uses `SetSuspendState` after enabling `SeShutdownPrivilege`.
 - On Modern Standby systems, `SetSuspendState(false, ...)` can fail with `ERROR_NOT_SUPPORTED`; a later fallback may use a display-off strategy.
 - After the last active session stops, a closed lid should always trigger suspend after the configured post-stop delay using the configured suspend mode. A delay of `0` means immediate suspend.
+- If a post-stop suspend sound is configured, LidGuard should wait for the delay first, then play the configured sound to completion, then re-check the lid/session state before requesting suspend.
 
 ### Process Exit Watcher
 
@@ -101,7 +103,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 ### Current Windows CLI Path
 
-- `LidGuard` parses `start`, `stop`, `status`, `settings`, `cleanup-orphans`, `claude-hook`, `claude-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, and `mcp-server`.
+- `LidGuard` parses `start`, `stop`, `status`, `settings`, `cleanup-orphans`, `claude-hook`, `claude-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `preview-system-sound`, and `mcp-server`.
 - `start` and the `UserPromptSubmit` path in `codex-hook` and `claude-hook` load persisted default settings and send them with the start IPC request.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
 - `hook-install`, `hook-status`, and `hook-events` prompt for `codex`, `claude`, or `all` when `--provider` is omitted.
@@ -138,6 +140,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Temporary lid close action change: enabled for the headless CLI runtime and applied to AC/DC together.
 - Post-stop suspend delay: 10 seconds by default, `0` for immediate suspend.
 - Post-stop suspend mode: Sleep by default, Hibernate optional.
+- Post-stop suspend sound: off by default.
 - Closed-lid PermissionRequest decision: Deny by default, Allow optional.
 - PermissionRequest hooks only emit a structured allow/deny decision when the runtime reports the lid is closed; otherwise they return empty stdout so the provider's default permission flow continues.
 - Claude `Elicitation` hooks emit a structured `cancel` only when the runtime reports the lid is closed; otherwise they return empty stdout so Claude's default elicitation flow continues.
@@ -319,7 +322,10 @@ Reference:
 ### GitHub Copilot CLI
 
 - Planned start event: `userPromptSubmitted`.
-- Planned stop events: `agentStop`, `errorOccurred`, `permissionRequest`, `sessionEnd`.
+- Planned stop event: `agentStop`.
+- `permissionRequest` is the planned closed-lid decision path, not a stop event.
+- `sessionEnd` and `errorOccurred` are planned as diagnostic or cleanup telemetry only, not the primary keep-awake stop signal.
+- Because official Copilot CLI docs allow `agentStop` hooks to return `decision: "block"` with a `reason` continuation prompt, `hook-install` and `hook-status` should warn when non-LidGuard `agentStop` hooks are present.
 - Based on the official Copilot CLI hooks documentation, passive hooks such as `sessionStart` may be implemented as logging-only shell commands with no JSON output, so `exit code 0` with empty stdout is a valid no-op pattern for non-decision hooks.
 - Based on the official hooks configuration reference, `preToolUse` output JSON is optional and omitting output allows the tool by default, so structured JSON should only be returned when LidGuard intentionally wants to influence a hook decision.
 - If hook input has no stable session id, generate one from provider, working directory, and timestamp or a persisted active marker.
@@ -349,9 +355,11 @@ lidguard hook-status --provider codex
 lidguard hook-install --provider codex
 lidguard hook-remove --provider codex
 lidguard hook-events --provider codex --count 50
+lidguard preview-system-sound --name Asterisk
 lidguard settings
 lidguard settings --change-lid-action true
 lidguard settings --post-stop-suspend-delay-seconds 0
+lidguard settings --post-stop-suspend-sound Asterisk
 lidguard settings --closed-lid-permission-request-decision allow
 lidguard settings --prevent-away-mode-sleep true --prevent-display-sleep true --power-request-reason "LidGuard keeps agent sessions awake"
 lidguard status
@@ -371,12 +379,14 @@ The Windows CLI hook receiving path is implemented for Codex and Claude Code. Pr
 - Add persistent pending backup state for crash recovery. This is the recommended immediate next task because a forced runtime crash must not leave the active power plan stuck at `DoNothing`.
 - Add provider-specific hook input parsing for GitHub Copilot CLI.
 - Add hook snippet generation and install helpers for GitHub Copilot CLI.
+- Add `hook-install` and `hook-status` warnings for non-LidGuard `agentStop` hooks in GitHub Copilot CLI configs, because they may continue the turn after LidGuard receives `agentStop`.
 - When implementing GitHub Copilot CLI hooks, default non-decision hooks to `exit 0` with empty stdout, and treat `preToolUse` JSON output as opt-in for explicit blocking or permission control only.
 - Decide whether GitHub Copilot CLI hook payload JSON should be parsed directly in `LidGuard`.
 - Add runtime lifecycle policy for idle shutdown.
 - Verify Codex hook behavior on the latest Codex CLI and Codex Desktop/App.
 - Verify the analyzed Claude Code hook stdout behavior against the latest released Claude Code build before finalizing provider integration.
 - Verify the documented GitHub Copilot CLI hook output behavior against the latest CLI build before finalizing provider integration.
+- Verify parent process id availability for GitHub Copilot CLI hooks.
 - Verify parent process id availability for Claude Code Windows hooks.
 - Verify GitHub Copilot CLI session id stability.
 - Verify `PowerReadACValueIndex`/`PowerReadDCValueIndex` read/write behavior under normal user permissions.
@@ -400,6 +410,8 @@ The Windows CLI hook receiving path is implemented for Codex and Claude Code. Pr
 14. ~~Add a Claude `Elicitation` hook guard that cancels closed-lid MCP elicitation requests.~~
 15. ~~Always request suspend after the last session stops while the lid is closed, while keeping Sleep/Hibernate mode selectable.~~
 16. ~~Add a configurable post-stop suspend delay with a default of 10 seconds and `0` for immediate suspend.~~
+17. ~~Add an optional post-stop suspend completion sound with SystemSounds or `.wav` support, and wait for it before suspend.~~
+18. ~~Add a `preview-system-sound` CLI command for auditioning supported SystemSounds names.~~
 
 ## Design Constraints
 

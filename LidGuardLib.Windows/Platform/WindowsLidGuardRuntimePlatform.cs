@@ -18,6 +18,9 @@ public sealed class WindowsLidGuardRuntimePlatform : ILidGuardRuntimePlatform
     {
         if (!OperatingSystem.IsWindowsVersionAtLeast(6, 1)) return LidGuardOperationResult<LidGuardRuntimeServiceSet>.Failure(UnsupportedMessage);
 
+        var postStopSuspendSoundPlayerResult = CreatePostStopSuspendSoundPlayer();
+        if (!postStopSuspendSoundPlayerResult.Succeeded) return LidGuardOperationResult<LidGuardRuntimeServiceSet>.Failure(postStopSuspendSoundPlayerResult.Message);
+
         var lidActionService = new WindowsLidActionService();
         var lidStateSource = CreateLidStateSource();
         var serviceSet = new LidGuardRuntimeServiceSet(
@@ -26,9 +29,16 @@ public sealed class WindowsLidGuardRuntimePlatform : ILidGuardRuntimePlatform
             new WindowsProcessExitWatcher(),
             new LidActionPolicyController(lidActionService),
             new WindowsSystemSuspendService(),
+            postStopSuspendSoundPlayerResult.Value,
             lidStateSource);
 
         return LidGuardOperationResult<LidGuardRuntimeServiceSet>.Success(serviceSet);
+    }
+
+    public LidGuardOperationResult<IPostStopSuspendSoundPlayer> CreatePostStopSuspendSoundPlayer()
+    {
+        if (!OperatingSystem.IsWindowsVersionAtLeast(6, 1)) return LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Failure(UnsupportedMessage);
+        return LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Success(new WindowsPostStopSuspendSoundPlayer());
     }
 
     [SupportedOSPlatform("windows6.1")]

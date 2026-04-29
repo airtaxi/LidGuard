@@ -14,6 +14,8 @@ namespace LidGuard.Commands;
 
 internal static class LidGuardCommandLineApplication
 {
+    private static readonly string[] s_supportedPostStopSuspendSystemSoundNames = ["Asterisk", "Beep", "Exclamation", "Hand", "Question"];
+
     public static async Task<int> RunAsync(string[] commandLineArguments)
     {
         var runtimePlatform = new WindowsLidGuardRuntimePlatform();
@@ -46,7 +48,8 @@ internal static class LidGuardCommandLineApplication
             LidGuardPipeCommands.Stop => await SendStopAsync(options),
             LidGuardPipeCommands.Status => await SendStatusAsync(),
             LidGuardPipeCommands.CleanupOrphans => await SendCleanupOrphansAsync(),
-            LidGuardPipeCommands.Settings => await SendSettingsAsync(options),
+            LidGuardPipeCommands.Settings => await SendSettingsAsync(options, runtimePlatform),
+            LidGuardPipeCommands.PreviewSystemSound => await PreviewSystemSoundAsync(options, runtimePlatform),
             LidGuardPipeCommands.ClaudeHooks => ClaudeHookCommand.WriteHookSnippet(options),
             LidGuardPipeCommands.CodexHooks => CodexHookCommand.WriteHookSnippet(options),
             LidGuardPipeCommands.HookStatus => HookManagementCommand.WriteHookStatus(options),
@@ -87,6 +90,7 @@ internal static class LidGuardCommandLineApplication
                 serviceSet.ProcessExitWatcher,
                 serviceSet.LidActionPolicyController,
                 serviceSet.SystemSuspendService,
+                serviceSet.PostStopSuspendSoundPlayer,
                 serviceSet.LidStateSource);
 
             var pipeServer = new LidGuardPipeServer(runtimeCoordinator);
@@ -224,11 +228,18 @@ internal static class LidGuardCommandLineApplication
         return WriteResponse(response);
     }
 
-    private static async Task<int> SendSettingsAsync(IReadOnlyDictionary<string, string> options)
+    private static async Task<int> SendSettingsAsync(IReadOnlyDictionary<string, string> options, ILidGuardRuntimePlatform runtimePlatform)
     {
         if (!LidGuardSettingsStore.TryLoadOrCreate(out var currentSettings, out var loadMessage))
         {
             Console.Error.WriteLine(loadMessage);
+            return 1;
+        }
+
+        var postStopSuspendSoundPlayerResult = runtimePlatform.CreatePostStopSuspendSoundPlayer();
+        if (!postStopSuspendSoundPlayerResult.Succeeded)
+        {
+            Console.Error.WriteLine(postStopSuspendSoundPlayerResult.Message);
             return 1;
         }
 
@@ -240,6 +251,16 @@ internal static class LidGuardCommandLineApplication
             : TryCreateSettings(options, currentSettings, out settings, out settingsMessage);
 
         if (!settingsCreated)
+        {
+            Console.Error.WriteLine(settingsMessage);
+            return 1;
+        }
+
+        if (!PostStopSuspendSoundConfiguration.TryNormalize(
+            settings,
+            postStopSuspendSoundPlayerResult.Value,
+            out settings,
+            out settingsMessage))
         {
             Console.Error.WriteLine(settingsMessage);
             return 1;
@@ -277,6 +298,42 @@ internal static class LidGuardCommandLineApplication
 
         Console.Error.WriteLine(response.Message);
         return 1;
+    }
+
+    private static async Task<int> PreviewSystemSoundAsync(IReadOnlyDictionary<string, string> options, ILidGuardRuntimePlatform runtimePlatform)
+    {
+        var postStopSuspendSoundPlayerResult = runtimePlatform.CreatePostStopSuspendSoundPlayer();
+        if (!postStopSuspendSoundPlayerResult.Succeeded)
+        {
+            Console.Error.WriteLine(postStopSuspendSoundPlayerResult.Message);
+            return 1;
+        }
+
+        var systemSoundName = GetOption(options, "name", "system-sound");
+        if (string.IsNullOrWhiteSpace(systemSoundName))
+        {
+            Console.Error.WriteLine($"A system sound name is required. Supported values: {DescribeSupportedPostStopSuspendSystemSounds()}");
+            return 1;
+        }
+
+        var normalizedSystemSoundName = systemSoundName.Trim();
+        if (!s_supportedPostStopSuspendSystemSoundNames.Any(
+            supportedSystemSoundName => supportedSystemSoundName.Equals(normalizedSystemSoundName, StringComparison.OrdinalIgnoreCase)))
+        {
+            Console.Error.WriteLine($"Unsupported system sound name: {normalizedSystemSoundName}");
+            Console.Error.WriteLine($"Supported values: {DescribeSupportedPostStopSuspendSystemSounds()}");
+            return 1;
+        }
+
+        var playbackResult = await postStopSuspendSoundPlayerResult.Value.PlayAsync(normalizedSystemSoundName, CancellationToken.None);
+        if (!playbackResult.Succeeded)
+        {
+            Console.Error.WriteLine(playbackResult.Message);
+            return 1;
+        }
+
+        Console.WriteLine($"Played system sound: {normalizedSystemSoundName}");
+        return 0;
     }
 
     private static bool TryCreateSessionRequest(
@@ -419,6 +476,8 @@ internal static class LidGuardCommandLineApplication
         if (!TryParseBooleanOption(options, baseSettings.WatchParentProcess, out var watchParentProcess, out message, "watch-parent-process", "watch-parent")) return false;
         if (!TryParseSuspendModeOption(options, baseSettings.SuspendMode, out var suspendMode, out message)) return false;
         if (!TryParsePostStopSuspendDelaySecondsOption(options, baseSettings.PostStopSuspendDelaySeconds, out var postStopSuspendDelaySeconds, out message)) return false;
+        var postStopSuspendSound = baseSettings.PostStopSuspendSound;
+        if (TryGetOption(options, out var postStopSuspendSoundText, "post-stop-suspend-sound")) postStopSuspendSound = postStopSuspendSoundText;
         if (!TryParseClosedLidPermissionRequestDecisionOption(options, baseSettings.ClosedLidPermissionRequestDecision, out var closedLidPermissionRequestDecision, out message)) return false;
 
         var reason = GetOption(options, "power-request-reason", "reason");
@@ -436,6 +495,7 @@ internal static class LidGuardCommandLineApplication
             ChangeLidAction = changeLidAction,
             SuspendMode = suspendMode,
             PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
+            PostStopSuspendSound = postStopSuspendSound,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess
         };
@@ -462,6 +522,12 @@ internal static class LidGuardCommandLineApplication
             out var postStopSuspendDelaySeconds,
             out message))
             return false;
+        if (!TryReadPostStopSuspendSoundSetting(
+            "Post-stop suspend sound",
+            normalizedSettings.PostStopSuspendSound,
+            out var postStopSuspendSound,
+            out message))
+            return false;
         if (!TryReadClosedLidPermissionRequestDecisionSetting("Closed lid permission request decision", normalizedSettings.ClosedLidPermissionRequestDecision, out var closedLidPermissionRequestDecision, out message)) return false;
 
         settings = new LidGuardSettings
@@ -476,6 +542,7 @@ internal static class LidGuardCommandLineApplication
             ChangeLidAction = changeLidAction,
             SuspendMode = suspendMode,
             PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
+            PostStopSuspendSound = postStopSuspendSound,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess
         };
@@ -549,6 +616,26 @@ internal static class LidGuardCommandLineApplication
 
         message = $"{settingName} must be a non-negative integer.";
         return false;
+    }
+
+    private static bool TryReadPostStopSuspendSoundSetting(string settingName, string defaultValue, out string value, out string message)
+    {
+        value = defaultValue;
+        message = string.Empty;
+        var defaultDisplayValue = PostStopSuspendSoundConfiguration.GetDisplayValue(defaultValue);
+        Console.Write(
+            $"{settingName} (default: {defaultDisplayValue}, use off to disable, SystemSounds: {DescribeSupportedPostStopSuspendSystemSounds()}, or a .wav path): ");
+
+        var valueText = Console.ReadLine();
+        if (valueText is null)
+        {
+            message = $"Input ended before {settingName} was entered.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(valueText)) return true;
+        value = valueText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase) ? string.Empty : valueText.Trim();
+        return true;
     }
 
     private static bool TryReadClosedLidPermissionRequestDecisionSetting(
@@ -785,6 +872,7 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  Watch parent process: {normalizedSettings.WatchParentProcess}");
         Console.WriteLine($"  Suspend mode: {normalizedSettings.SuspendMode}");
         Console.WriteLine($"  Post-stop suspend delay seconds: {normalizedSettings.PostStopSuspendDelaySeconds}");
+        Console.WriteLine($"  Post-stop suspend sound: {PostStopSuspendSoundConfiguration.GetDisplayValue(normalizedSettings.PostStopSuspendSound)}");
         Console.WriteLine($"  Closed lid permission request decision: {normalizedSettings.ClosedLidPermissionRequestDecision}");
         Console.WriteLine($"  Reason: {powerRequest.Reason}");
     }
@@ -804,15 +892,19 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  {commandDisplayName} hook-install [--provider codex|claude|all] [--config <path>] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} hook-remove [--provider codex|claude] [--config <path>] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} hook-events [--provider codex|claude|all] [--count <number>]");
+        Console.WriteLine($"  {commandDisplayName} preview-system-sound --name Asterisk|Beep|Exclamation|Hand|Question");
         Console.WriteLine($"  {commandDisplayName} {LidGuardMcpServerCommand.CommandName}");
         Console.WriteLine($"  {commandDisplayName} settings");
         Console.WriteLine($"  {commandDisplayName} settings [--reset true] [--change-lid-action true|false]");
         Console.WriteLine("                           [--prevent-system-sleep true|false] [--prevent-away-mode-sleep true|false] [--prevent-display-sleep true|false]");
         Console.WriteLine("                           [--watch-parent-process true|false]");
         Console.WriteLine("                           [--suspend-mode sleep|hibernate] [--post-stop-suspend-delay-seconds <number>]");
+        Console.WriteLine("                           [--post-stop-suspend-sound off|Asterisk|Beep|Exclamation|Hand|Question|<wav-path>]");
         Console.WriteLine("                           [--closed-lid-permission-request-decision deny|allow]");
         Console.WriteLine("                           [--power-request-reason <text>]");
         Console.WriteLine("                           Post-stop suspend delay defaults to 10 seconds; use 0 for immediate suspend.");
+        Console.WriteLine($"                           Post-stop suspend sound defaults to off. Supported SystemSounds: {DescribeSupportedPostStopSuspendSystemSounds()}.");
+        Console.WriteLine("                           WAV paths must point to an existing playable .wav file.");
         Console.WriteLine($"  {commandDisplayName} status");
         Console.WriteLine($"  {commandDisplayName} cleanup-orphans");
         Console.WriteLine();
@@ -835,4 +927,6 @@ internal static class LidGuardCommandLineApplication
         Console.Error.WriteLine($"Unknown command: {commandName}");
         return WriteHelp(1);
     }
+
+    private static string DescribeSupportedPostStopSuspendSystemSounds() => string.Join(", ", s_supportedPostStopSuspendSystemSoundNames);
 }

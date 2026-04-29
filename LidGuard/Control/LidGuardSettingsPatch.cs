@@ -21,6 +21,8 @@ public sealed class LidGuardSettingsPatch
 
     public int? PostStopSuspendDelaySeconds { get; init; }
 
+    public string PostStopSuspendSound { get; init; }
+
     public ClosedLidPermissionRequestDecision? ClosedLidPermissionRequestDecision { get; init; }
 
     public string PowerRequestReason { get; init; }
