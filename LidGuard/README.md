@@ -29,6 +29,7 @@ lidguard hook-remove --provider claude
 lidguard hook-install --provider codex
 lidguard hook-status --provider codex
 lidguard hook-remove --provider codex
+lidguard mcp-server
 lidguard settings
 lidguard status
 ```

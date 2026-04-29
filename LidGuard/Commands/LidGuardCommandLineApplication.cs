@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using LidGuard.Hooks;
 using LidGuard.Ipc;
+using LidGuard.Mcp;
 using LidGuard.Runtime;
 using LidGuard.Settings;
 using LidGuardLib.Commons.Platform;
@@ -30,6 +31,7 @@ internal static class LidGuardCommandLineApplication
 
         if (commandName == LidGuardPipeCommands.ClaudeHook) return await ClaudeHookCommand.RunAsync();
         if (commandName == LidGuardPipeCommands.CodexHook) return await CodexHookCommand.RunAsync();
+        if (commandName == LidGuardMcpServerCommand.CommandName) return await LidGuardMcpServerCommand.RunAsync(commandLineArguments[1..]);
         if (commandName == LidGuardPipeCommands.RunServer) return await RunServerAsync(runtimePlatform);
 
         if (!TryParseOptions(commandLineArguments, 1, out var options, out var parseMessage))
@@ -762,6 +764,7 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  {commandDisplayName} hook-install [--provider codex|claude|all] [--config <path>] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} hook-remove [--provider codex|claude] [--config <path>] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} hook-events [--provider codex|claude|all] [--count <number>]");
+        Console.WriteLine($"  {commandDisplayName} {LidGuardMcpServerCommand.CommandName}");
         Console.WriteLine($"  {commandDisplayName} settings");
         Console.WriteLine($"  {commandDisplayName} settings [--reset true] [--change-lid-action true|false]");
         Console.WriteLine("                           [--prevent-system-sleep true|false] [--prevent-away-mode-sleep true|false] [--prevent-display-sleep true|false]");
@@ -791,4 +794,3 @@ internal static class LidGuardCommandLineApplication
         return WriteHelp(1);
     }
 }
-

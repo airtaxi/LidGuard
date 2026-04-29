@@ -10,32 +10,35 @@ internal sealed class LidGuardRuntimeClient
     private static readonly TimeSpan s_runtimeConnectionTimeout = TimeSpan.FromMilliseconds(750);
     private static readonly TimeSpan s_runtimeStartupTimeout = TimeSpan.FromSeconds(5);
 
-    public async Task<LidGuardPipeResponse> SendAsync(LidGuardPipeRequest request, bool startRuntimeIfUnavailable)
+    public async Task<LidGuardPipeResponse> SendAsync(
+        LidGuardPipeRequest request,
+        bool startRuntimeIfUnavailable,
+        CancellationToken cancellationToken = default)
     {
-        var pipeClientStream = await WaitForRuntimeAsync(s_runtimeConnectionTimeout);
+        var pipeClientStream = await WaitForRuntimeAsync(s_runtimeConnectionTimeout, cancellationToken);
         if (pipeClientStream is null && startRuntimeIfUnavailable)
         {
             if (!TryStartRuntime()) return LidGuardPipeResponse.Failure("Failed to start the LidGuard runtime.", runtimeUnavailable: true);
-            pipeClientStream = await WaitForRuntimeAsync(s_runtimeStartupTimeout);
+            pipeClientStream = await WaitForRuntimeAsync(s_runtimeStartupTimeout, cancellationToken);
         }
 
         if (pipeClientStream is null) return LidGuardPipeResponse.Failure("LidGuard runtime is not running.", runtimeUnavailable: true);
 
         using (pipeClientStream)
         {
-            return await SendConnectedAsync(pipeClientStream, request);
+            return await SendConnectedAsync(pipeClientStream, request, cancellationToken);
         }
     }
 
-    private static async Task<LidGuardPipeResponse> SendConnectedAsync(Stream stream, LidGuardPipeRequest request)
+    private static async Task<LidGuardPipeResponse> SendConnectedAsync(Stream stream, LidGuardPipeRequest request, CancellationToken cancellationToken)
     {
         using var streamReader = new StreamReader(stream, Encoding.UTF8, false, 4096, true);
         using var streamWriter = new StreamWriter(stream, new UTF8Encoding(false), 4096, true) { AutoFlush = true };
 
         var requestJson = JsonSerializer.Serialize(request, LidGuardJsonSerializerContext.Default.LidGuardPipeRequest);
-        await streamWriter.WriteLineAsync(requestJson);
+        await streamWriter.WriteLineAsync(requestJson.AsMemory(), cancellationToken);
 
-        var responseJson = await streamReader.ReadLineAsync();
+        var responseJson = await streamReader.ReadLineAsync(cancellationToken);
         if (string.IsNullOrWhiteSpace(responseJson)) return LidGuardPipeResponse.Failure("The LidGuard runtime returned an empty response.");
 
         try
@@ -46,20 +49,21 @@ internal sealed class LidGuardRuntimeClient
         catch (JsonException exception) { return LidGuardPipeResponse.Failure($"The LidGuard runtime returned invalid JSON: {exception.Message}"); }
     }
 
-    private static async Task<NamedPipeClientStream> WaitForRuntimeAsync(TimeSpan timeout)
+    private static async Task<NamedPipeClientStream> WaitForRuntimeAsync(TimeSpan timeout, CancellationToken cancellationToken)
     {
         var stopAt = DateTimeOffset.UtcNow.Add(timeout);
         while (DateTimeOffset.UtcNow < stopAt)
         {
-            var pipeClientStream = await TryConnectAsync();
+            cancellationToken.ThrowIfCancellationRequested();
+            var pipeClientStream = await TryConnectAsync(cancellationToken);
             if (pipeClientStream is not null) return pipeClientStream;
-            await Task.Delay(100);
+            await Task.Delay(100, cancellationToken);
         }
 
         return null;
     }
 
-    private static async Task<NamedPipeClientStream> TryConnectAsync()
+    private static async Task<NamedPipeClientStream> TryConnectAsync(CancellationToken cancellationToken)
     {
         var pipeClientStream = new NamedPipeClientStream(
             ".",
@@ -69,8 +73,13 @@ internal sealed class LidGuardRuntimeClient
 
         try
         {
-            await pipeClientStream.ConnectAsync(250);
+            await pipeClientStream.ConnectAsync(250, cancellationToken);
             return pipeClientStream;
+        }
+        catch (OperationCanceledException)
+        {
+            pipeClientStream.Dispose();
+            throw;
         }
         catch (TimeoutException)
         {
@@ -86,12 +95,12 @@ internal sealed class LidGuardRuntimeClient
 
     private static bool TryStartRuntime()
     {
-        var executablePath = Environment.ProcessPath;
-        if (string.IsNullOrWhiteSpace(executablePath)) return false;
+        var runtimeExecutablePath = Environment.ProcessPath;
+        if (string.IsNullOrWhiteSpace(runtimeExecutablePath)) return false;
 
         var processStartInfo = new ProcessStartInfo
         {
-            FileName = executablePath,
+            FileName = runtimeExecutablePath,
             UseShellExecute = true,
             WindowStyle = ProcessWindowStyle.Hidden,
             WorkingDirectory = AppContext.BaseDirectory
@@ -107,4 +116,3 @@ internal sealed class LidGuardRuntimeClient
         catch { return false; }
     }
 }
-

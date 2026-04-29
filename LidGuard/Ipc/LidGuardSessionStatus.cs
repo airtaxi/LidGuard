@@ -2,7 +2,7 @@ using LidGuardLib.Commons.Sessions;
 
 namespace LidGuard.Ipc;
 
-internal sealed class LidGuardSessionStatus
+public sealed class LidGuardSessionStatus
 {
     public required string SessionIdentifier { get; init; }
 
@@ -14,4 +14,3 @@ internal sealed class LidGuardSessionStatus
 
     public string WorkingDirectory { get; init; } = string.Empty;
 }
-
