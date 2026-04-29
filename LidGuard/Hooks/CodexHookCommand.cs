@@ -42,6 +42,7 @@ internal static class CodexHookCommand
         WindowsCodexHookEventLog.AppendReceived(hookInput);
         var hookEventName = hookInput.HookEventName.Trim();
         if (hookEventName.Equals(CodexHookEventNames.UserPromptSubmit, StringComparison.Ordinal)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Start, hookInput);
+        if (hookEventName.Equals(CodexHookEventNames.PermissionRequest, StringComparison.Ordinal)) return WritePermissionRequestDecision();
         if (CodexHookEventNames.IsStopTrigger(hookEventName)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookInput);
 
         return 0;
@@ -76,6 +77,18 @@ internal static class CodexHookCommand
 
         Console.Error.WriteLine("Unsupported Codex hook snippet format. Use config-toml or hooks-json.");
         return 1;
+    }
+
+    private static int WritePermissionRequestDecision()
+    {
+        if (!LidGuardSettingsStore.TryLoadOrCreate(out var settings, out var settingsMessage))
+        {
+            WindowsCodexHookEventLog.AppendMessage(settingsMessage);
+            settings = LidGuardSettings.HeadlessRuntimeDefault;
+        }
+
+        WindowsCodexHookEventLog.AppendMessage($"LidGuard Codex hook handled PermissionRequest with {settings.PermissionRequestBehavior}.");
+        return HookPermissionRequestDecisionOutput.Write(settings);
     }
 
     private static async Task<int> SendRuntimeRequestAsync(string commandName, CodexHookInput hookInput)
@@ -137,7 +150,7 @@ internal static class CodexHookCommand
         {
             (CodexHookEventNames.UserPromptSubmit, "Starting LidGuard turn protection"),
             (CodexHookEventNames.Stop, "Stopping LidGuard session protection"),
-            (CodexHookEventNames.PermissionRequest, "Stopping LidGuard session protection"),
+            (CodexHookEventNames.PermissionRequest, "Responding to permission request"),
             (CodexHookEventNames.SessionEnd, "Stopping LidGuard session protection")
         };
 

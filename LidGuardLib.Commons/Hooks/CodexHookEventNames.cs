@@ -9,6 +9,5 @@ public static class CodexHookEventNames
 
     public static bool IsStopTrigger(string hookEventName) =>
         hookEventName.Equals(Stop, StringComparison.Ordinal)
-        || hookEventName.Equals(PermissionRequest, StringComparison.Ordinal)
         || hookEventName.Equals(SessionEnd, StringComparison.Ordinal);
 }

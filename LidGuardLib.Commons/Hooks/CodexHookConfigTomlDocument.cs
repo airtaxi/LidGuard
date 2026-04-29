@@ -12,8 +12,9 @@ public static class CodexHookConfigTomlDocument
     private const string FeaturesSectionHeader = "[features]";
     private const string CodexHooksFeatureKey = "codex_hooks";
     private const string StartStatusMessage = "Starting LidGuard turn protection";
+    private const string PermissionRequestStatusMessage = "Responding to permission request";
     private const string StopStatusMessage = "Stopping LidGuard session protection";
-    private static readonly string[] s_stopHookEventNames = [CodexHookEventNames.Stop, CodexHookEventNames.PermissionRequest, CodexHookEventNames.SessionEnd];
+    private static readonly string[] s_stopHookEventNames = [CodexHookEventNames.Stop, CodexHookEventNames.SessionEnd];
 
     public static string CreateManagedHookBlock(string hookCommand)
     {
@@ -22,6 +23,8 @@ public static class CodexHookConfigTomlDocument
 
         builder.AppendLine(ManagedBlockStartMarker);
         AppendHookBlock(builder, CodexHookEventNames.UserPromptSubmit, tomlCommandLiteral, StartStatusMessage);
+        builder.AppendLine();
+        AppendHookBlock(builder, CodexHookEventNames.PermissionRequest, tomlCommandLiteral, PermissionRequestStatusMessage);
         foreach (var hookEventName in s_stopHookEventNames)
         {
             builder.AppendLine();
@@ -47,10 +50,10 @@ public static class CodexHookConfigTomlDocument
         var hasStopHook = ContainsHookBlock(content, CodexHookEventNames.Stop);
         var hasPermissionRequestHook = ContainsHookBlock(content, CodexHookEventNames.PermissionRequest);
         var hasSessionEndHook = ContainsHookBlock(content, CodexHookEventNames.SessionEnd);
-        var hasAllStopHooks = hasStopHook && hasPermissionRequestHook && hasSessionEndHook;
+        var hasAllStopHooks = hasStopHook && hasSessionEndHook;
         var expectedHookCommandLiteral = ToTomlStringLiteral(hookCommand);
         var hasExpectedHookCommand = content.Contains(hookCommand, StringComparison.Ordinal) || content.Contains(expectedHookCommandLiteral, StringComparison.Ordinal);
-        var isInstalled = hasFeatureFlag && hasUserPromptSubmitHook && hasAllStopHooks && hasExpectedHookCommand && (!hasManagedBlock || hasCurrentManagedBlock);
+        var isInstalled = hasFeatureFlag && hasUserPromptSubmitHook && hasPermissionRequestHook && hasAllStopHooks && hasExpectedHookCommand && (!hasManagedBlock || hasCurrentManagedBlock);
         var status = isInstalled ? CodexHookInstallationStatus.Installed : hasManagedBlock ? CodexHookInstallationStatus.NeedsUpdate : CodexHookInstallationStatus.NotInstalled;
         var message = isInstalled ? "Codex hook is installed." : hasManagedBlock ? "Codex hook is installed but needs update." : "Codex hook is not installed.";
 

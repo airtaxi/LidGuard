@@ -38,7 +38,7 @@ public sealed class ClaudeHookInstallationInspection
 
     public string Message { get; init; } = string.Empty;
 
-    public bool HasAllStopHooks => HasStopHook && HasStopFailureHook && HasPermissionRequestHook && HasPermissionDeniedHook && HasSessionEndHook;
+    public bool HasAllStopHooks => HasStopHook && HasStopFailureHook && HasSessionEndHook;
 
     public bool IsInstalled => Status == CodexHookInstallationStatus.Installed;
 }

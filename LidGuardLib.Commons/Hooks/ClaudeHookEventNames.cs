@@ -12,7 +12,5 @@ public static class ClaudeHookEventNames
     public static bool IsStopTrigger(string hookEventName) =>
         hookEventName.Equals(Stop, StringComparison.Ordinal)
         || hookEventName.Equals(StopFailure, StringComparison.Ordinal)
-        || hookEventName.Equals(PermissionRequest, StringComparison.Ordinal)
-        || hookEventName.Equals(PermissionDenied, StringComparison.Ordinal)
         || hookEventName.Equals(SessionEnd, StringComparison.Ordinal);
 }

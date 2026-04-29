@@ -11,6 +11,8 @@ public static class ClaudeHookSettingsJsonDocument
     private const string HooksPropertyName = "hooks";
     private const string PowerShellShellName = "powershell";
     private const string StartStatusMessage = "Starting LidGuard turn protection";
+    private const string PermissionRequestStatusMessage = "Responding to permission request";
+    private const string PermissionDeniedStatusMessage = "Recording permission denial";
     private const string StopStatusMessage = "Stopping LidGuard session protection";
     private static readonly JsonSerializerOptions s_jsonSerializerOptions = new() { WriteIndented = true };
     private static readonly (string HookEventName, string StatusMessage)[] s_requiredHookDefinitions =
@@ -18,8 +20,8 @@ public static class ClaudeHookSettingsJsonDocument
         (ClaudeHookEventNames.UserPromptSubmit, StartStatusMessage),
         (ClaudeHookEventNames.Stop, StopStatusMessage),
         (ClaudeHookEventNames.StopFailure, StopStatusMessage),
-        (ClaudeHookEventNames.PermissionRequest, StopStatusMessage),
-        (ClaudeHookEventNames.PermissionDenied, StopStatusMessage),
+        (ClaudeHookEventNames.PermissionRequest, PermissionRequestStatusMessage),
+        (ClaudeHookEventNames.PermissionDenied, PermissionDeniedStatusMessage),
         (ClaudeHookEventNames.SessionEnd, StopStatusMessage)
     ];
 
