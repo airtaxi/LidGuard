@@ -1,0 +1,725 @@
+using System.Diagnostics;
+using LidGuard.Hooks;
+using LidGuard.Ipc;
+using LidGuard.Runtime;
+using LidGuard.Settings;
+using LidGuardLib.Commons.Platform;
+using LidGuardLib.Commons.Power;
+using LidGuardLib.Commons.Sessions;
+using LidGuardLib.Commons.Settings;
+using LidGuardLib.Windows.Platform;
+
+namespace LidGuard.Commands;
+
+internal static class LidGuardCommandLineApplication
+{
+    public static async Task<int> RunAsync(string[] commandLineArguments)
+    {
+        var runtimePlatform = new WindowsLidGuardRuntimePlatform();
+        if (!runtimePlatform.IsSupported) return WriteUnsupportedPlatform(runtimePlatform);
+
+        if (commandLineArguments.Length == 0) return WriteHelp(1);
+
+        var commandName = commandLineArguments[0].Trim().ToLowerInvariant();
+        if (commandName is "help" or "--help" or "-h" or "/?") return WriteHelp(0);
+        if (!TryRestorePendingLidActionBackup(runtimePlatform, out var recoveryMessage))
+        {
+            Console.Error.WriteLine(recoveryMessage);
+            return 1;
+        }
+
+        if (commandName == LidGuardPipeCommands.ClaudeHook) return await ClaudeHookCommand.RunAsync();
+        if (commandName == LidGuardPipeCommands.CodexHook) return await CodexHookCommand.RunAsync();
+        if (commandName == LidGuardPipeCommands.RunServer) return await RunServerAsync(runtimePlatform);
+
+        if (!TryParseOptions(commandLineArguments, 1, out var options, out var parseMessage))
+        {
+            Console.Error.WriteLine(parseMessage);
+            return 1;
+        }
+
+        return commandName switch
+        {
+            LidGuardPipeCommands.Start => await SendStartAsync(options),
+            LidGuardPipeCommands.Stop => await SendStopAsync(options),
+            LidGuardPipeCommands.Status => await SendStatusAsync(),
+            LidGuardPipeCommands.CleanupOrphans => await SendCleanupOrphansAsync(),
+            LidGuardPipeCommands.Settings => await SendSettingsAsync(options),
+            LidGuardPipeCommands.ClaudeHooks => ClaudeHookCommand.WriteHookSnippet(options),
+            LidGuardPipeCommands.CodexHooks => CodexHookCommand.WriteHookSnippet(options),
+            LidGuardPipeCommands.HookStatus => HookManagementCommand.WriteHookStatus(options),
+            LidGuardPipeCommands.HookInstall => HookManagementCommand.InstallHook(options),
+            LidGuardPipeCommands.HookEvents => HookManagementCommand.WriteHookEvents(options),
+            _ => WriteUnknownCommand(commandName)
+        };
+    }
+
+    private static async Task<int> RunServerAsync(ILidGuardRuntimePlatform runtimePlatform)
+    {
+        using var runtimeMutex = new Mutex(false, LidGuardPipeNames.RuntimeMutexName);
+        if (!TryAcquireRuntimeMutex(runtimeMutex)) return 0;
+
+        try
+        {
+            using var cancellationTokenSource = new CancellationTokenSource();
+            Console.CancelKeyPress += (_, eventArguments) =>
+            {
+                eventArguments.Cancel = true;
+                cancellationTokenSource.Cancel();
+            };
+
+            var serviceSetResult = runtimePlatform.CreateRuntimeServiceSet();
+            if (!serviceSetResult.Succeeded)
+            {
+                Console.WriteLine(serviceSetResult.Message);
+                return 0;
+            }
+
+            using var serviceSet = serviceSetResult.Value;
+            var settings = CreateRuntimeSettings();
+            var runtimeCoordinator = new LidGuardRuntimeCoordinator(
+                settings,
+                serviceSet.PowerRequestService,
+                serviceSet.CommandLineProcessResolver,
+                serviceSet.ProcessExitWatcher,
+                serviceSet.LidActionPolicyController,
+                serviceSet.SystemSuspendService,
+                serviceSet.LidStateSource);
+
+            var pipeServer = new LidGuardPipeServer(runtimeCoordinator);
+
+            try
+            {
+                await pipeServer.RunAsync(cancellationTokenSource.Token);
+                return 0;
+            }
+            catch (OperationCanceledException) { return 0; }
+        }
+        finally
+        {
+            runtimeMutex.ReleaseMutex();
+        }
+    }
+
+    private static bool TryAcquireRuntimeMutex(Mutex runtimeMutex)
+    {
+        try { return runtimeMutex.WaitOne(0); }
+        catch (AbandonedMutexException) { return true; }
+    }
+
+    private static bool TryRestorePendingLidActionBackup(ILidGuardRuntimePlatform runtimePlatform, out string message)
+    {
+        using var runtimeMutex = new Mutex(false, LidGuardPipeNames.RuntimeMutexName);
+        var ownsRuntimeMutex = false;
+        message = string.Empty;
+
+        try
+        {
+            try
+            {
+                if (!runtimeMutex.WaitOne(0)) return true;
+                ownsRuntimeMutex = true;
+            }
+            catch (AbandonedMutexException)
+            {
+                ownsRuntimeMutex = true;
+            }
+
+            if (!File.Exists(LidGuardPendingLidActionBackupStore.GetDefaultFilePath())) return true;
+
+            var serviceSetResult = runtimePlatform.CreateRuntimeServiceSet();
+            if (!serviceSetResult.Succeeded)
+            {
+                message = serviceSetResult.Message;
+                return false;
+            }
+
+            using var serviceSet = serviceSetResult.Value;
+            var pendingBackupManager = new LidGuardPendingLidActionBackupManager(serviceSet.LidActionPolicyController);
+            var restoreResult = pendingBackupManager.RestorePendingBackupIfPresent();
+            if (restoreResult.Succeeded) return true;
+
+            message = restoreResult.Message;
+            return false;
+        }
+        finally
+        {
+            if (ownsRuntimeMutex) runtimeMutex.ReleaseMutex();
+        }
+    }
+
+    private static int WriteUnsupportedPlatform(ILidGuardRuntimePlatform runtimePlatform)
+    {
+        Console.WriteLine(runtimePlatform.UnsupportedMessage);
+        return 0;
+    }
+
+    private static LidGuardSettings CreateRuntimeSettings()
+    {
+        if (LidGuardSettingsStore.TryLoadOrCreate(out var settings, out _)) return settings;
+        return LidGuardSettings.HeadlessRuntimeDefault;
+    }
+
+    private static async Task<int> SendStartAsync(IReadOnlyDictionary<string, string> options)
+    {
+        if (!TryCreateSessionRequest(options, LidGuardPipeCommands.Start, true, out var request, out var message))
+        {
+            Console.Error.WriteLine(message);
+            return 1;
+        }
+
+        var response = await new LidGuardRuntimeClient().SendAsync(request, true);
+        return WriteResponse(response);
+    }
+
+    private static async Task<int> SendStopAsync(IReadOnlyDictionary<string, string> options)
+    {
+        if (!TryCreateSessionRequest(options, LidGuardPipeCommands.Stop, false, out var request, out var message))
+        {
+            Console.Error.WriteLine(message);
+            return 1;
+        }
+
+        var response = await new LidGuardRuntimeClient().SendAsync(request, false);
+        return WriteResponse(response);
+    }
+
+    private static async Task<int> SendStatusAsync()
+    {
+        var request = new LidGuardPipeRequest { Command = LidGuardPipeCommands.Status };
+        var response = await new LidGuardRuntimeClient().SendAsync(request, false);
+        if (!response.Succeeded && response.RuntimeUnavailable)
+        {
+            Console.WriteLine("LidGuard runtime is not running.");
+            Console.WriteLine("Active sessions: 0");
+            if (LidGuardSettingsStore.TryLoadOrCreate(out var settings, out var settingsMessage))
+            {
+                Console.WriteLine($"Settings file: {LidGuardSettingsStore.GetDefaultSettingsFilePath()}");
+                WriteSettings(settings);
+            }
+            else
+            {
+                Console.Error.WriteLine(settingsMessage);
+            }
+
+            return 0;
+        }
+
+        return WriteResponse(response, true, true);
+    }
+
+    private static async Task<int> SendCleanupOrphansAsync()
+    {
+        var request = new LidGuardPipeRequest { Command = LidGuardPipeCommands.CleanupOrphans };
+        var response = await new LidGuardRuntimeClient().SendAsync(request, false);
+        if (!response.Succeeded && response.RuntimeUnavailable)
+        {
+            Console.WriteLine("LidGuard runtime is not running. Nothing to clean up.");
+            return 0;
+        }
+
+        return WriteResponse(response);
+    }
+
+    private static async Task<int> SendSettingsAsync(IReadOnlyDictionary<string, string> options)
+    {
+        if (!LidGuardSettingsStore.TryLoadOrCreate(out var currentSettings, out var loadMessage))
+        {
+            Console.Error.WriteLine(loadMessage);
+            return 1;
+        }
+
+        var settings = LidGuardSettings.Default;
+        var settingsMessage = string.Empty;
+        var isInteractiveSettings = options.Count == 0;
+        var settingsCreated = isInteractiveSettings
+            ? TryCreateInteractiveSettings(currentSettings, out settings, out settingsMessage)
+            : TryCreateSettings(options, currentSettings, out settings, out settingsMessage);
+
+        if (!settingsCreated)
+        {
+            Console.Error.WriteLine(settingsMessage);
+            return 1;
+        }
+
+        if (!LidGuardSettingsStore.TrySave(settings, out var saveMessage))
+        {
+            Console.Error.WriteLine(saveMessage);
+            return 1;
+        }
+
+        var request = new LidGuardPipeRequest
+        {
+            Command = LidGuardPipeCommands.Settings,
+            HasSettings = true,
+            Settings = settings
+        };
+
+        var response = await new LidGuardRuntimeClient().SendAsync(request, false);
+        Console.WriteLine($"Settings file: {LidGuardSettingsStore.GetDefaultSettingsFilePath()}");
+        WriteSettings(settings);
+        if (isInteractiveSettings) Console.WriteLine($"To change Reason, run: {GetCommandDisplayName()} settings --power-request-reason <text>");
+
+        if (response.Succeeded)
+        {
+            Console.WriteLine("Runtime settings updated.");
+            return 0;
+        }
+
+        if (response.RuntimeUnavailable)
+        {
+            Console.WriteLine("Runtime is not running; saved settings will be used on the next start.");
+            return 0;
+        }
+
+        Console.Error.WriteLine(response.Message);
+        return 1;
+    }
+
+    private static bool TryCreateSessionRequest(
+        IReadOnlyDictionary<string, string> options,
+        string commandName,
+        bool includeSettings,
+        out LidGuardPipeRequest request,
+        out string message)
+    {
+        request = new LidGuardPipeRequest();
+        message = string.Empty;
+
+        var settings = LidGuardSettings.Default;
+        if (includeSettings && !LidGuardSettingsStore.TryLoadOrCreate(out settings, out message)) return false;
+
+        var providerText = GetOption(options, "provider");
+        if (!TryParseProvider(providerText, out var provider))
+        {
+            message = "A provider is required. Use codex, claude, copilot, custom, or unknown.";
+            return false;
+        }
+
+        var workingDirectory = GetWorkingDirectory(options);
+        var sessionIdentifier = GetOption(options, "session", "session-id", "session-identifier");
+        if (string.IsNullOrWhiteSpace(sessionIdentifier)) sessionIdentifier = CreateFallbackSessionIdentifier(provider, workingDirectory);
+
+        if (!TryParseWatchedProcessIdentifier(options, out var watchedProcessIdentifier, out message)) return false;
+
+        request = new LidGuardPipeRequest
+        {
+            Command = commandName,
+            Provider = provider,
+            SessionIdentifier = sessionIdentifier,
+            WatchedProcessIdentifier = watchedProcessIdentifier,
+            WorkingDirectory = workingDirectory,
+            HasSettings = includeSettings,
+            Settings = settings
+        };
+
+        return true;
+    }
+
+    private static bool TryParseOptions(
+        string[] commandLineArguments,
+        int firstOptionIndex,
+        out Dictionary<string, string> options,
+        out string message)
+    {
+        options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        message = string.Empty;
+
+        for (var argumentIndex = firstOptionIndex; argumentIndex < commandLineArguments.Length; argumentIndex++)
+        {
+            var argument = commandLineArguments[argumentIndex];
+            if (!argument.StartsWith("--", StringComparison.Ordinal))
+            {
+                message = $"Unexpected argument: {argument}";
+                return false;
+            }
+
+            var separatorIndex = argument.IndexOf('=');
+            if (separatorIndex > 2)
+            {
+                var optionName = argument[2..separatorIndex];
+                options[optionName] = argument[(separatorIndex + 1)..];
+                continue;
+            }
+
+            var standaloneOptionName = argument[2..];
+            if (string.IsNullOrWhiteSpace(standaloneOptionName))
+            {
+                message = "An option name is required after --.";
+                return false;
+            }
+
+            if (argumentIndex + 1 >= commandLineArguments.Length || commandLineArguments[argumentIndex + 1].StartsWith("--", StringComparison.Ordinal))
+            {
+                options[standaloneOptionName] = bool.TrueString;
+                continue;
+            }
+
+            options[standaloneOptionName] = commandLineArguments[++argumentIndex];
+        }
+
+        return true;
+    }
+
+    private static bool TryParseProvider(string providerText, out AgentProvider provider)
+    {
+        provider = AgentProvider.Unknown;
+        if (string.IsNullOrWhiteSpace(providerText)) return false;
+
+        provider = providerText.Trim().ToLowerInvariant() switch
+        {
+            "codex" => AgentProvider.Codex,
+            "claude" => AgentProvider.Claude,
+            "copilot" or "github-copilot" or "githubcopilot" => AgentProvider.GitHubCopilot,
+            "custom" => AgentProvider.Custom,
+            "unknown" => AgentProvider.Unknown,
+            _ => AgentProvider.Unknown
+        };
+
+        return provider != AgentProvider.Unknown || providerText.Equals("unknown", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool TryParseWatchedProcessIdentifier(
+        IReadOnlyDictionary<string, string> options,
+        out int watchedProcessIdentifier,
+        out string message)
+    {
+        watchedProcessIdentifier = 0;
+        message = string.Empty;
+
+        var watchedProcessText = GetOption(options, "parent-pid", "watched-process-id", "watched-process-identifier");
+        if (string.IsNullOrWhiteSpace(watchedProcessText)) return true;
+        if (int.TryParse(watchedProcessText, out watchedProcessIdentifier) && watchedProcessIdentifier >= 0) return true;
+
+        message = "The watched process identifier must be a non-negative integer.";
+        return false;
+    }
+
+    private static bool TryCreateSettings(
+        IReadOnlyDictionary<string, string> options,
+        LidGuardSettings currentSettings,
+        out LidGuardSettings settings,
+        out string message)
+    {
+        settings = LidGuardSettings.Normalize(currentSettings);
+        if (!TryParseBooleanOption(options, false, out var resetSettings, out message, "reset", "default", "defaults")) return false;
+
+        var baseSettings = resetSettings ? LidGuardSettings.HeadlessRuntimeDefault : settings;
+        var basePowerRequest = baseSettings.PowerRequest ?? PowerRequestOptions.Default;
+        settings = baseSettings;
+        message = string.Empty;
+
+        if (!TryParseBooleanOption(options, basePowerRequest.PreventSystemSleep, out var preventSystemSleep, out message, "prevent-system-sleep", "system-required")) return false;
+        if (!TryParseBooleanOption(options, basePowerRequest.PreventAwayModeSleep, out var preventAwayModeSleep, out message, "prevent-away-mode-sleep", "away-mode-required")) return false;
+        if (!TryParseBooleanOption(options, basePowerRequest.PreventDisplaySleep, out var preventDisplaySleep, out message, "prevent-display-sleep", "display-required")) return false;
+        if (!TryParseBooleanOption(options, baseSettings.ChangeLidAction, out var changeLidAction, out message, "change-lid-action", "lid-action")) return false;
+        if (!TryParseBooleanOption(options, baseSettings.WatchParentProcess, out var watchParentProcess, out message, "watch-parent-process", "watch-parent")) return false;
+        if (!TryParseBooleanOption(options, baseSettings.SuspendWhenStoppedAndLidClosed, out var suspendWhenStoppedAndLidClosed, out message, "suspend-when-stopped-and-lid-closed", "suspend-when-lid-closed")) return false;
+        if (!TryParseSuspendModeOption(options, baseSettings.SuspendMode, out var suspendMode, out message)) return false;
+
+        var reason = GetOption(options, "power-request-reason", "reason");
+        if (string.IsNullOrWhiteSpace(reason)) reason = basePowerRequest.Reason;
+
+        settings = new LidGuardSettings
+        {
+            PowerRequest = new PowerRequestOptions
+            {
+                PreventSystemSleep = preventSystemSleep,
+                PreventAwayModeSleep = preventAwayModeSleep,
+                PreventDisplaySleep = preventDisplaySleep,
+                Reason = reason
+            },
+            ChangeLidAction = changeLidAction,
+            SuspendWhenStoppedAndLidClosed = suspendWhenStoppedAndLidClosed,
+            SuspendMode = suspendMode,
+            WatchParentProcess = watchParentProcess
+        };
+
+        return true;
+    }
+
+    private static bool TryCreateInteractiveSettings(LidGuardSettings currentSettings, out LidGuardSettings settings, out string message)
+    {
+        var normalizedSettings = LidGuardSettings.Normalize(currentSettings);
+        var powerRequest = normalizedSettings.PowerRequest ?? PowerRequestOptions.Default;
+        settings = normalizedSettings;
+        message = string.Empty;
+
+        if (!TryReadBooleanSetting("Prevent system sleep", powerRequest.PreventSystemSleep, out var preventSystemSleep, out message)) return false;
+        if (!TryReadBooleanSetting("Prevent away mode sleep", powerRequest.PreventAwayModeSleep, out var preventAwayModeSleep, out message)) return false;
+        if (!TryReadBooleanSetting("Prevent display sleep", powerRequest.PreventDisplaySleep, out var preventDisplaySleep, out message)) return false;
+        if (!TryReadBooleanSetting("Change lid action", normalizedSettings.ChangeLidAction, out var changeLidAction, out message)) return false;
+        if (!TryReadBooleanSetting("Watch parent process", normalizedSettings.WatchParentProcess, out var watchParentProcess, out message)) return false;
+        if (!TryReadBooleanSetting("Suspend when stopped and lid closed", normalizedSettings.SuspendWhenStoppedAndLidClosed, out var suspendWhenStoppedAndLidClosed, out message)) return false;
+        if (!TryReadSuspendModeSetting("Suspend mode", normalizedSettings.SuspendMode, out var suspendMode, out message)) return false;
+
+        settings = new LidGuardSettings
+        {
+            PowerRequest = new PowerRequestOptions
+            {
+                PreventSystemSleep = preventSystemSleep,
+                PreventAwayModeSleep = preventAwayModeSleep,
+                PreventDisplaySleep = preventDisplaySleep,
+                Reason = powerRequest.Reason
+            },
+            ChangeLidAction = changeLidAction,
+            SuspendWhenStoppedAndLidClosed = suspendWhenStoppedAndLidClosed,
+            SuspendMode = suspendMode,
+            WatchParentProcess = watchParentProcess
+        };
+
+        return true;
+    }
+
+    private static bool TryReadBooleanSetting(string settingName, bool defaultValue, out bool value, out string message)
+    {
+        value = defaultValue;
+        message = string.Empty;
+        Console.Write($"{settingName} (default: {defaultValue}): ");
+
+        var valueText = Console.ReadLine();
+        if (valueText is null)
+        {
+            message = $"Input ended before {settingName} was entered.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(valueText)) return true;
+        if (TryParseInteractiveBoolean(valueText.Trim(), out value)) return true;
+
+        message = $"{settingName} must be true or false.";
+        return false;
+    }
+
+    private static bool TryReadSuspendModeSetting(string settingName, SystemSuspendMode defaultValue, out SystemSuspendMode value, out string message)
+    {
+        value = defaultValue;
+        message = string.Empty;
+        Console.Write($"{settingName} (default: {defaultValue}, candidates: Sleep, Hibernate): ");
+
+        var valueText = Console.ReadLine();
+        if (valueText is null)
+        {
+            message = $"Input ended before {settingName} was entered.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(valueText)) return true;
+
+        value = valueText.Trim().ToLowerInvariant() switch
+        {
+            "sleep" => SystemSuspendMode.Sleep,
+            "hibernate" => SystemSuspendMode.Hibernate,
+            _ => defaultValue
+        };
+
+        if (valueText.Trim().Equals(value.ToString(), StringComparison.OrdinalIgnoreCase)) return true;
+
+        message = $"{settingName} must be sleep or hibernate.";
+        return false;
+    }
+
+    private static bool TryParseInteractiveBoolean(string valueText, out bool value)
+    {
+        value = false;
+        if (valueText.Equals(bool.TrueString, StringComparison.OrdinalIgnoreCase))
+        {
+            value = true;
+            return true;
+        }
+
+        if (valueText.Equals(bool.FalseString, StringComparison.OrdinalIgnoreCase))
+        {
+            value = false;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryParseBooleanOption(
+        IReadOnlyDictionary<string, string> options,
+        bool defaultValue,
+        out bool value,
+        out string message,
+        params string[] optionNames)
+    {
+        value = defaultValue;
+        message = string.Empty;
+        if (!TryGetOption(options, out var valueText, optionNames)) return true;
+        if (TryParseBoolean(valueText, out value)) return true;
+
+        message = $"The {optionNames[0]} option must be true or false.";
+        return false;
+    }
+
+    private static bool TryParseBoolean(string valueText, out bool value)
+    {
+        value = false;
+        if (string.IsNullOrWhiteSpace(valueText)) return false;
+
+        switch (valueText.Trim().ToLowerInvariant())
+        {
+            case "true":
+            case "1":
+            case "yes":
+            case "y":
+            case "on":
+                value = true;
+                return true;
+            case "false":
+            case "0":
+            case "no":
+            case "n":
+            case "off":
+                value = false;
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static bool TryParseSuspendModeOption(
+        IReadOnlyDictionary<string, string> options,
+        SystemSuspendMode defaultValue,
+        out SystemSuspendMode suspendMode,
+        out string message)
+    {
+        suspendMode = defaultValue;
+        message = string.Empty;
+        if (!TryGetOption(options, out var suspendModeText, "suspend-mode")) return true;
+
+        var normalizedSuspendModeText = suspendModeText.Trim();
+        suspendMode = normalizedSuspendModeText.ToLowerInvariant() switch
+        {
+            "sleep" => SystemSuspendMode.Sleep,
+            "hibernate" => SystemSuspendMode.Hibernate,
+            _ => defaultValue
+        };
+
+        if (suspendMode == defaultValue && !normalizedSuspendModeText.Equals(defaultValue.ToString(), StringComparison.OrdinalIgnoreCase))
+        {
+            message = "The suspend-mode option must be sleep or hibernate.";
+            return false;
+        }
+
+        return true;
+    }
+
+    private static string GetWorkingDirectory(IReadOnlyDictionary<string, string> options)
+    {
+        var workingDirectory = GetOption(options, "working-directory", "cwd");
+        return string.IsNullOrWhiteSpace(workingDirectory) ? Environment.CurrentDirectory : workingDirectory;
+    }
+
+    private static string GetOption(IReadOnlyDictionary<string, string> options, params string[] optionNames)
+    {
+        return TryGetOption(options, out var optionValue, optionNames) ? optionValue : string.Empty;
+    }
+
+    private static bool TryGetOption(IReadOnlyDictionary<string, string> options, out string optionValue, params string[] optionNames)
+    {
+        foreach (var optionName in optionNames)
+        {
+            if (options.TryGetValue(optionName, out optionValue)) return true;
+        }
+
+        optionValue = string.Empty;
+        return false;
+    }
+
+    private static string CreateFallbackSessionIdentifier(AgentProvider provider, string workingDirectory)
+    {
+        var normalizedWorkingDirectory = NormalizeWorkingDirectory(workingDirectory);
+        return $"{provider}:{normalizedWorkingDirectory}";
+    }
+
+    private static string NormalizeWorkingDirectory(string workingDirectory)
+    {
+        try { return Path.TrimEndingDirectorySeparator(Path.GetFullPath(workingDirectory)); }
+        catch { return workingDirectory; }
+    }
+
+    private static int WriteResponse(LidGuardPipeResponse response, bool includeSessions = false, bool includeSettings = false)
+    {
+        if (!response.Succeeded)
+        {
+            Console.Error.WriteLine(response.Message);
+            return 1;
+        }
+
+        if (!string.IsNullOrWhiteSpace(response.Message)) Console.WriteLine(response.Message);
+        Console.WriteLine($"Active sessions: {response.ActiveSessionCount}");
+
+        if (includeSessions)
+        {
+            foreach (var session in response.Sessions)
+            {
+                var processText = session.WatchedProcessIdentifier > 0 ? session.WatchedProcessIdentifier.ToString() : "none";
+                Console.WriteLine($"- {session.Provider}:{session.SessionIdentifier} process={processText} cwd=\"{session.WorkingDirectory}\" started={session.StartedAt:O}");
+            }
+        }
+
+        if (includeSettings) WriteSettings(response.Settings);
+
+        return 0;
+    }
+
+    private static void WriteSettings(LidGuardSettings settings)
+    {
+        var normalizedSettings = LidGuardSettings.Normalize(settings);
+        var powerRequest = normalizedSettings.PowerRequest ?? PowerRequestOptions.Default;
+        Console.WriteLine("Settings:");
+        Console.WriteLine($"  Prevent system sleep: {powerRequest.PreventSystemSleep}");
+        Console.WriteLine($"  Prevent away mode sleep: {powerRequest.PreventAwayModeSleep}");
+        Console.WriteLine($"  Prevent display sleep: {powerRequest.PreventDisplaySleep}");
+        Console.WriteLine($"  Change lid action: {normalizedSettings.ChangeLidAction}");
+        Console.WriteLine($"  Watch parent process: {normalizedSettings.WatchParentProcess}");
+        Console.WriteLine($"  Suspend when stopped and lid closed: {normalizedSettings.SuspendWhenStoppedAndLidClosed}");
+        Console.WriteLine($"  Suspend mode: {normalizedSettings.SuspendMode}");
+        Console.WriteLine($"  Reason: {powerRequest.Reason}");
+    }
+
+    private static int WriteHelp(int exitCode)
+    {
+        var commandDisplayName = GetCommandDisplayName();
+
+        Console.WriteLine("Usage:");
+        Console.WriteLine($"  {commandDisplayName} start --provider codex|claude --session <id> [--parent-pid <pid>] [--working-directory <path>]");
+        Console.WriteLine($"  {commandDisplayName} stop --provider codex|claude --session <id>");
+        Console.WriteLine($"  {commandDisplayName} claude-hook");
+        Console.WriteLine($"  {commandDisplayName} claude-hooks [--format settings-json|hooks-json] [--executable <path>]");
+        Console.WriteLine($"  {commandDisplayName} codex-hook");
+        Console.WriteLine($"  {commandDisplayName} codex-hooks [--format config-toml|hooks-json] [--executable <path>]");
+        Console.WriteLine($"  {commandDisplayName} hook-status [--provider codex|claude] [--config <path>] [--executable <path>]");
+        Console.WriteLine($"  {commandDisplayName} hook-install [--provider codex|claude] [--config <path>] [--executable <path>]");
+        Console.WriteLine($"  {commandDisplayName} hook-events [--provider codex|claude] [--count <number>]");
+        Console.WriteLine($"  {commandDisplayName} settings");
+        Console.WriteLine($"  {commandDisplayName} settings [--reset true] [--change-lid-action true|false]");
+        Console.WriteLine("                           [--prevent-system-sleep true|false] [--prevent-away-mode-sleep true|false] [--prevent-display-sleep true|false]");
+        Console.WriteLine("                           [--watch-parent-process true|false]");
+        Console.WriteLine("                           [--suspend-mode sleep|hibernate] [--power-request-reason <text>]");
+        Console.WriteLine($"  {commandDisplayName} status");
+        Console.WriteLine($"  {commandDisplayName} cleanup-orphans");
+        Console.WriteLine();
+        Console.WriteLine($"Settings file: {LidGuardSettingsStore.GetDefaultSettingsFilePath()}");
+        Console.WriteLine($"Session log: {LidGuardRuntimeSessionLogStore.GetDefaultLogFilePath()}");
+        return exitCode;
+    }
+
+    private static string GetCommandDisplayName()
+    {
+        var processPath = Environment.ProcessPath;
+        if (string.IsNullOrWhiteSpace(processPath)) return "lidguard";
+
+        var fileName = Path.GetFileNameWithoutExtension(processPath);
+        return string.IsNullOrWhiteSpace(fileName) ? "lidguard" : fileName;
+    }
+
+    private static int WriteUnknownCommand(string commandName)
+    {
+        Console.Error.WriteLine($"Unknown command: {commandName}");
+        return WriteHelp(1);
+    }
+}
+

@@ -1,0 +1,11 @@
+<Solution>
+  <Configurations>
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="LidGuardLib.Commons/LidGuardLib.Commons.csproj" />
+  <Project Path="LidGuardLib.Windows/LidGuardLib.Windows.csproj" />
+  <Project Path="LidGuard/LidGuard.csproj" />
+</Solution>
+

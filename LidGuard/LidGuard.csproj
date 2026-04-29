@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>lidguard</AssemblyName>
+    <RootNamespace>LidGuard</RootNamespace>
+    <RuntimeIdentifiers>win-x64;win-x86;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
+    <ToolPackageRuntimeIdentifiers>$(RuntimeIdentifiers)</ToolPackageRuntimeIdentifiers>
+    <PublishAot>true</PublishAot>
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsTrimmable>true</IsTrimmable>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>lidguard</ToolCommandName>
+    <PackageId>lidguard</PackageId>
+    <Title>LidGuard</Title>
+    <Authors>LidGuard Contributors</Authors>
+    <Description>Command-line tool that keeps long-running local AI coding agent sessions awake. Windows support is currently implemented; macOS and Linux support is planned.</Description>
+    <PackageTags>dotnet-tool;nativeaot;aot;windows;macos;linux;codex;claude;copilot;power;sleep;lid</PackageTags>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageOutputPath>$(MSBuildProjectDirectory)\..\artifacts\packages</PackageOutputPath>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LidGuardLib.Commons\LidGuardLib.Commons.csproj" />
+    <ProjectReference Include="..\LidGuardLib.Windows\LidGuardLib.Windows.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>
+
