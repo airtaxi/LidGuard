@@ -138,6 +138,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Immediate suspend mode: Sleep by default, Hibernate optional.
 - Closed-lid PermissionRequest decision: Deny by default, Allow optional.
 - PermissionRequest hooks only emit a structured allow/deny decision when the runtime reports the lid is closed; otherwise they return empty stdout so the provider's default permission flow continues.
+- Claude `Elicitation` hooks emit a structured `cancel` only when the runtime reports the lid is closed; otherwise they return empty stdout so Claude's default elicitation flow continues.
 - Parent process watchdog: enabled.
 
 ## Implemented Components
@@ -289,20 +290,24 @@ Reference:
 
 - Start event: `UserPromptSubmit`.
 - Permission decision event: `PermissionRequest`.
+- MCP elicitation event: `Elicitation`.
 - Stop events: `Stop`, `StopFailure`, `SessionEnd`.
 - Command path: `lidguard claude-hook` when the global tool is available on PATH, otherwise the current executable path plus `claude-hook`.
 - Snippet command: `lidguard claude-hooks --format settings-json`.
 - Install/status/remove commands: `lidguard hook-install --provider claude`, `lidguard hook-status --provider claude`, and `lidguard hook-remove --provider claude`.
+- `hook-install` and `hook-status` require `UserPromptSubmit`, `Stop`, `StopFailure`, `Elicitation`, `PermissionRequest`, and `SessionEnd`.
 - Default config path: `CLAUDE_CONFIG_DIR\settings.json` when `CLAUDE_CONFIG_DIR` is set, otherwise `%USERPROFILE%\.claude\settings.json`.
 - Windows hook config uses `shell = "powershell"` in Claude `settings.json` command hooks.
 - Based on analysis of a locally retained Claude Code source snapshot, command hooks treat `exit code 0` with empty stdout as a successful no-op, while non-empty stdout may be interpreted as hook JSON or plain-text output depending on the execution path.
 - Based on the same local source snapshot analysis, `PermissionRequest` only becomes a programmatic allow/deny when the hook returns structured JSON with `hookSpecificOutput.decision`; empty stdout keeps the normal permission flow.
 - `claude-hook` reads Claude hook JSON from stdin and maps `hook_event_name` to runtime IPC.
 - For `UserPromptSubmit`, it sends internal `start --provider claude`.
+- For `Elicitation`, it does not stop the runtime; it queries the runtime lid state and returns a structured `cancel` only when the lid is closed.
 - For `PermissionRequest`, it does not stop the runtime; it queries the runtime lid state and returns a structured allow/deny decision from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed.
-- When working on Claude Code-related setup, support, or documentation, explicitly and strongly warn the user not to use third-party prompt-style hooks alongside LidGuard. Explain that LidGuard must only answer its own closed-lid `PermissionRequest` path and must not be presented as able to answer or proxy third-party hook prompts.
+- When working on Claude Code-related setup, support, or documentation, explicitly and strongly warn the user not to use third-party prompt-style hooks alongside LidGuard. Explain that LidGuard must only answer its own closed-lid `PermissionRequest` and `Elicitation` paths and must not be presented as able to answer or proxy third-party hook prompts.
 - For `Stop`, `StopFailure`, and `SessionEnd`, it sends internal `stop --provider claude`.
 - The analyzed Claude hook input provides `session_id` and `cwd`, but not a stable parent process id, so the current implementation resolves a process by working directory.
+- Claude `Elicitation` exits successfully with structured JSON stdout only for closed-lid `cancel`; when the lid is open, unknown, or runtime status is unavailable, it exits successfully with empty stdout. LidGuard records diagnostics locally and should not block the Claude task when a runtime request fails.
 - Claude `PermissionRequest` exits successfully with structured JSON stdout only for closed-lid decisions; when the lid is open, unknown, or runtime status is unavailable, it exits successfully with empty stdout. LidGuard records diagnostics locally and should not block the Claude task when a runtime request fails.
 
 Reference:
@@ -389,6 +394,7 @@ The Windows CLI hook receiving path is implemented for Codex and Claude Code. Pr
 11. ~~Add Claude hook parsing, snippet output, and managed `settings.json` install/remove/status helpers.~~
 12. ~~Map Claude `Stop`, `StopFailure`, and `SessionEnd` to stop handling, while handling `PermissionRequest` as a closed-lid-only settings-driven allow/deny decision.~~
 13. ~~Add a stdio MCP server that can read LidGuard settings and update multiple settings in one request.~~
+14. ~~Add a Claude `Elicitation` hook guard that cancels closed-lid MCP elicitation requests.~~
 
 ## Design Constraints
 
@@ -463,5 +469,5 @@ lidguard status
 ## Operational Notes
 
 - Existing Codex and Claude config should point directly to the intended `lidguard.exe` path after `hook-install`.
-- When helping a user with Claude deployment or configuration, explicitly and strongly warn them not to rely on third-party prompt hooks with LidGuard. State that LidGuard can only make its own closed-lid permission decision and cannot safely respond on behalf of unrelated Claude hook prompts.
+- When helping a user with Claude deployment or configuration, explicitly and strongly warn them not to rely on third-party prompt hooks with LidGuard. State that LidGuard can only make its own closed-lid permission or elicitation decisions and cannot safely respond on behalf of unrelated Claude hook prompts.
 - If tests are added, prefer focused unit tests around Commons policy controllers and small integration-style tests around Windows service wrappers where safe.

@@ -10,6 +10,7 @@ public static class ClaudeHookSettingsJsonDocument
 
     private const string HooksPropertyName = "hooks";
     private const string PowerShellShellName = "powershell";
+    private const string ElicitationStatusMessage = "Canceling closed-lid elicitation request";
     private const string StartStatusMessage = "Starting LidGuard turn protection";
     private const string PermissionRequestStatusMessage = "Responding to closed-lid permission request";
     private const string StopStatusMessage = "Stopping LidGuard session protection";
@@ -19,6 +20,7 @@ public static class ClaudeHookSettingsJsonDocument
         (ClaudeHookEventNames.UserPromptSubmit, StartStatusMessage),
         (ClaudeHookEventNames.Stop, StopStatusMessage),
         (ClaudeHookEventNames.StopFailure, StopStatusMessage),
+        (ClaudeHookEventNames.Elicitation, ElicitationStatusMessage),
         (ClaudeHookEventNames.PermissionRequest, PermissionRequestStatusMessage),
         (ClaudeHookEventNames.SessionEnd, StopStatusMessage)
     ];
@@ -90,6 +92,7 @@ public static class ClaudeHookSettingsJsonDocument
         if (!TryInspectHookEvent(hooksObject, ClaudeHookEventNames.UserPromptSubmit, hookCommand, out var userPromptSubmitInspection, out parseMessage)
             || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Stop, hookCommand, out var stopInspection, out parseMessage)
             || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.StopFailure, hookCommand, out var stopFailureInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Elicitation, hookCommand, out var elicitationInspection, out parseMessage)
             || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PermissionRequest, hookCommand, out var permissionRequestInspection, out parseMessage)
             || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SessionEnd, hookCommand, out var sessionEndInspection, out parseMessage))
         {
@@ -109,21 +112,25 @@ public static class ClaudeHookSettingsJsonDocument
         var hasManagedHookEntries = userPromptSubmitInspection.HasManagedHook
             || stopInspection.HasManagedHook
             || stopFailureInspection.HasManagedHook
+            || elicitationInspection.HasManagedHook
             || permissionRequestInspection.HasManagedHook
             || sessionEndInspection.HasManagedHook;
         var hasExpectedHookCommand = userPromptSubmitInspection.HasExpectedCommand
             && stopInspection.HasExpectedCommand
             && stopFailureInspection.HasExpectedCommand
+            && elicitationInspection.HasExpectedCommand
             && permissionRequestInspection.HasExpectedCommand
             && sessionEndInspection.HasExpectedCommand;
         var hasExpectedHookShell = userPromptSubmitInspection.HasExpectedShell
             && stopInspection.HasExpectedShell
             && stopFailureInspection.HasExpectedShell
+            && elicitationInspection.HasExpectedShell
             && permissionRequestInspection.HasExpectedShell
             && sessionEndInspection.HasExpectedShell;
         var isInstalled = userPromptSubmitInspection.HasManagedHook
             && stopInspection.HasManagedHook
             && stopFailureInspection.HasManagedHook
+            && elicitationInspection.HasManagedHook
             && permissionRequestInspection.HasManagedHook
             && sessionEndInspection.HasManagedHook
             && hasExpectedHookCommand
@@ -146,6 +153,7 @@ public static class ClaudeHookSettingsJsonDocument
             HasUserPromptSubmitHook = userPromptSubmitInspection.HasManagedHook,
             HasStopHook = stopInspection.HasManagedHook,
             HasStopFailureHook = stopFailureInspection.HasManagedHook,
+            HasElicitationHook = elicitationInspection.HasManagedHook,
             HasPermissionRequestHook = permissionRequestInspection.HasManagedHook,
             HasSessionEndHook = sessionEndInspection.HasManagedHook,
             Message = message

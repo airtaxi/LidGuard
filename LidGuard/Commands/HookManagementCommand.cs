@@ -380,6 +380,7 @@ internal static class HookManagementCommand
         Console.WriteLine($"  UserPromptSubmit hook: {inspection.HasUserPromptSubmitHook}");
         Console.WriteLine($"  Stop hook: {inspection.HasStopHook}");
         Console.WriteLine($"  StopFailure hook: {inspection.HasStopFailureHook}");
+        Console.WriteLine($"  Elicitation hook: {inspection.HasElicitationHook}");
         Console.WriteLine($"  PermissionRequest hook: {inspection.HasPermissionRequestHook}");
         Console.WriteLine($"  SessionEnd hook: {inspection.HasSessionEndHook}");
         Console.WriteLine($"  All stop hooks: {inspection.HasAllStopHooks}");

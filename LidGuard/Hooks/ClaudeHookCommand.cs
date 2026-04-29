@@ -43,6 +43,7 @@ internal static class ClaudeHookCommand
         WindowsClaudeHookEventLog.AppendReceived(hookInput);
         var hookEventName = hookInput.HookEventName.Trim();
         if (hookEventName.Equals(ClaudeHookEventNames.UserPromptSubmit, StringComparison.Ordinal)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Start, hookInput);
+        if (hookEventName.Equals(ClaudeHookEventNames.Elicitation, StringComparison.Ordinal)) return await WriteClosedLidElicitationDecisionAsync();
         if (hookEventName.Equals(ClaudeHookEventNames.PermissionRequest, StringComparison.Ordinal)) return await WriteClosedLidPermissionRequestDecisionAsync();
         if (ClaudeHookEventNames.IsStopTrigger(hookEventName)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookInput);
 
@@ -97,6 +98,25 @@ internal static class ClaudeHookCommand
 
         WindowsClaudeHookEventLog.AppendMessage($"LidGuard Claude hook handled closed-lid PermissionRequest with {response.Settings.ClosedLidPermissionRequestDecision}.");
         return ClosedLidPermissionRequestDecisionOutput.Write(response.Settings);
+    }
+
+    private static async Task<int> WriteClosedLidElicitationDecisionAsync()
+    {
+        var response = await new LidGuardRuntimeClient().SendAsync(new LidGuardPipeRequest { Command = LidGuardPipeCommands.Status }, false);
+        if (!response.Succeeded)
+        {
+            WindowsClaudeHookEventLog.AppendMessage($"LidGuard Claude hook skipped Elicitation decision because runtime status is unavailable: {response.Message}");
+            return 0;
+        }
+
+        if (response.LidSwitchState != LidSwitchState.Closed)
+        {
+            WindowsClaudeHookEventLog.AppendMessage($"LidGuard Claude hook left Elicitation to Claude because the lid state is {response.LidSwitchState}.");
+            return 0;
+        }
+
+        WindowsClaudeHookEventLog.AppendMessage("LidGuard Claude hook canceled closed-lid Elicitation.");
+        return ClosedLidClaudeElicitationOutput.Write();
     }
 
     private static async Task<int> SendRuntimeRequestAsync(string commandName, ClaudeHookInput hookInput)

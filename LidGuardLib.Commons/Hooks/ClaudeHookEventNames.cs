@@ -2,6 +2,7 @@ namespace LidGuardLib.Commons.Hooks;
 
 public static class ClaudeHookEventNames
 {
+    public const string Elicitation = "Elicitation";
     public const string PermissionRequest = "PermissionRequest";
     public const string SessionEnd = "SessionEnd";
     public const string Stop = "Stop";

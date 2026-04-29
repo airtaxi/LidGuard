@@ -30,6 +30,8 @@ public sealed class ClaudeHookInstallationInspection
 
     public bool HasStopFailureHook { get; init; }
 
+    public bool HasElicitationHook { get; init; }
+
     public bool HasPermissionRequestHook { get; init; }
 
     public bool HasSessionEndHook { get; init; }
