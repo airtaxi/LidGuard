@@ -8,34 +8,53 @@ internal static class HookManagementCommand
 {
     public static int WriteHookStatus(IReadOnlyDictionary<string, string> options)
     {
-        if (!TryParseProvider(options, out var provider, out var message))
+        if (!TrySelectHookProviders(options, "Show hook status for provider", true, out var providers, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
         }
 
-        return provider switch
+        var exitCode = 0;
+        foreach (var provider in providers)
         {
-            AgentProvider.Codex => WriteCodexHookStatus(options),
-            AgentProvider.Claude => WriteClaudeHookStatus(options),
-            _ => WriteUnsupportedProvider()
-        };
+            if (providers.Count > 1) Console.WriteLine($"{provider} hook status:");
+            var providerExitCode = provider switch
+            {
+                AgentProvider.Codex => WriteCodexHookStatus(options),
+                AgentProvider.Claude => WriteClaudeHookStatus(options),
+                _ => WriteUnsupportedProvider()
+            };
+
+            if (providerExitCode != 0) exitCode = providerExitCode;
+            if (providers.Count > 1) Console.WriteLine();
+        }
+
+        return exitCode;
     }
 
     public static int InstallHook(IReadOnlyDictionary<string, string> options)
     {
-        if (!TryParseProvider(options, out var provider, out var message))
+        if (!TrySelectHookProviders(options, "Install hooks for provider", true, out var providers, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
         }
 
-        return provider switch
+        var exitCode = 0;
+        foreach (var provider in providers)
         {
-            AgentProvider.Codex => InstallCodexHook(options),
-            AgentProvider.Claude => InstallClaudeHook(options),
-            _ => WriteUnsupportedProvider()
-        };
+            if (providers.Count > 1) Console.WriteLine($"Installing {provider} hook...");
+            var providerExitCode = provider switch
+            {
+                AgentProvider.Codex => InstallCodexHook(options),
+                AgentProvider.Claude => InstallClaudeHook(options),
+                _ => WriteUnsupportedProvider()
+            };
+
+            if (providerExitCode != 0) exitCode = providerExitCode;
+        }
+
+        return exitCode;
     }
 
     public static int RemoveHook(IReadOnlyDictionary<string, string> options)
@@ -56,7 +75,7 @@ internal static class HookManagementCommand
 
     public static int WriteHookEvents(IReadOnlyDictionary<string, string> options)
     {
-        if (!TryParseProvider(options, out var provider, out var providerMessage))
+        if (!TrySelectHookProviders(options, "Show hook events for provider", false, out var providers, out var providerMessage))
         {
             Console.Error.WriteLine(providerMessage);
             return 1;
@@ -68,27 +87,37 @@ internal static class HookManagementCommand
             return 1;
         }
 
-        var eventLines = provider switch
+        var exitCode = 0;
+        foreach (var provider in providers)
         {
-            AgentProvider.Codex => WindowsCodexHookEventLog.ReadRecentLines(maximumLineCount),
-            AgentProvider.Claude => WindowsClaudeHookEventLog.ReadRecentLines(maximumLineCount),
-            _ => null
-        };
+            var eventLines = provider switch
+            {
+                AgentProvider.Codex => WindowsCodexHookEventLog.ReadRecentLines(maximumLineCount),
+                AgentProvider.Claude => WindowsClaudeHookEventLog.ReadRecentLines(maximumLineCount),
+                _ => null
+            };
 
-        if (eventLines is null)
-        {
-            Console.Error.WriteLine("Only Codex and Claude hook event logs are implemented.");
-            return 1;
+            if (eventLines is null)
+            {
+                Console.Error.WriteLine("Only Codex and Claude hook event logs are implemented.");
+                exitCode = 1;
+                continue;
+            }
+
+            if (providers.Count > 1) Console.WriteLine($"{provider} hook events:");
+            if (eventLines.Count == 0)
+            {
+                Console.WriteLine("<empty>");
+            }
+            else
+            {
+                foreach (var eventLine in eventLines) Console.WriteLine(eventLine);
+            }
+
+            if (providers.Count > 1) Console.WriteLine();
         }
 
-        if (eventLines.Count == 0)
-        {
-            Console.WriteLine("<empty>");
-            return 0;
-        }
-
-        foreach (var eventLine in eventLines) Console.WriteLine(eventLine);
-        return 0;
+        return exitCode;
     }
 
     private static int WriteCodexHookStatus(IReadOnlyDictionary<string, string> options)
@@ -241,6 +270,61 @@ internal static class HookManagementCommand
         if (provider != AgentProvider.Unknown || providerText.Equals("unknown", StringComparison.OrdinalIgnoreCase)) return true;
 
         message = "Unsupported provider. Use codex or claude.";
+        return false;
+    }
+
+    private static bool TrySelectHookProviders(
+        IReadOnlyDictionary<string, string> options,
+        string prompt,
+        bool rejectSharedConfigurationFile,
+        out IReadOnlyList<AgentProvider> providers,
+        out string message)
+    {
+        providers = [];
+        message = string.Empty;
+
+        var providerText = GetOption(options, "provider");
+        var parsed = string.IsNullOrWhiteSpace(providerText)
+            ? TryReadHookProviders(prompt, out providers, out message)
+            : TryParseHookProviderSelection(providerText, out providers, out message);
+        if (!parsed) return false;
+        if (!rejectSharedConfigurationFile || providers.Count < 2 || string.IsNullOrWhiteSpace(GetOption(options, "config", "configuration", "configuration-file"))) return true;
+
+        message = "The config option cannot be used with all providers because each provider has a different configuration file.";
+        return false;
+    }
+
+    private static bool TryReadHookProviders(string prompt, out IReadOnlyList<AgentProvider> providers, out string message)
+    {
+        Console.Write($"{prompt} (codex, claude, all; default: all): ");
+        var providerText = Console.ReadLine();
+        if (providerText is null)
+        {
+            providers = [];
+            message = "Input ended before a provider was selected.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(providerText)) providerText = "all";
+        return TryParseHookProviderSelection(providerText, out providers, out message);
+    }
+
+    private static bool TryParseHookProviderSelection(string providerText, out IReadOnlyList<AgentProvider> providers, out string message)
+    {
+        providers = [];
+        message = string.Empty;
+
+        providers = providerText.Trim().ToLowerInvariant() switch
+        {
+            "codex" => [AgentProvider.Codex],
+            "claude" => [AgentProvider.Claude],
+            "all" => [AgentProvider.Codex, AgentProvider.Claude],
+            _ => []
+        };
+
+        if (providers.Count > 0) return true;
+
+        message = "Unsupported provider. Use codex, claude, or all.";
         return false;
     }
 

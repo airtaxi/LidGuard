@@ -19,6 +19,10 @@ lidguard --help
 ## Common Commands
 
 ```powershell
+lidguard hook-install
+lidguard hook-install --provider all
+lidguard hook-status --provider all
+lidguard hook-events --provider all
 lidguard hook-install --provider claude
 lidguard hook-status --provider claude
 lidguard hook-remove --provider claude

@@ -758,10 +758,10 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  {commandDisplayName} claude-hooks [--format settings-json|hooks-json] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} codex-hook");
         Console.WriteLine($"  {commandDisplayName} codex-hooks [--format config-toml|hooks-json] [--executable <path>]");
-        Console.WriteLine($"  {commandDisplayName} hook-status [--provider codex|claude] [--config <path>] [--executable <path>]");
-        Console.WriteLine($"  {commandDisplayName} hook-install [--provider codex|claude] [--config <path>] [--executable <path>]");
+        Console.WriteLine($"  {commandDisplayName} hook-status [--provider codex|claude|all] [--config <path>] [--executable <path>]");
+        Console.WriteLine($"  {commandDisplayName} hook-install [--provider codex|claude|all] [--config <path>] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} hook-remove [--provider codex|claude] [--config <path>] [--executable <path>]");
-        Console.WriteLine($"  {commandDisplayName} hook-events [--provider codex|claude] [--count <number>]");
+        Console.WriteLine($"  {commandDisplayName} hook-events [--provider codex|claude|all] [--count <number>]");
         Console.WriteLine($"  {commandDisplayName} settings");
         Console.WriteLine($"  {commandDisplayName} settings [--reset true] [--change-lid-action true|false]");
         Console.WriteLine("                           [--prevent-system-sleep true|false] [--prevent-away-mode-sleep true|false] [--prevent-display-sleep true|false]");

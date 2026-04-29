@@ -101,6 +101,9 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `LidGuard` parses `start`, `stop`, `status`, `settings`, `cleanup-orphans`, `claude-hook`, `claude-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, and `hook-events`.
 - `start` and the `UserPromptSubmit` path in `codex-hook` and `claude-hook` load persisted default settings and send them with the start IPC request.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
+- `hook-install`, `hook-status`, and `hook-events` prompt for `codex`, `claude`, or `all` when `--provider` is omitted.
+- `--provider all` installs, checks, or prints hook events for both implemented providers.
+- When adding a new CLI command that takes a provider parameter, make omitted provider values prompt the user instead of silently defaulting.
 - When no runtime is listening, `start` launches detached `run-server`.
 - `run-server` acquires the named mutex `Local\LidGuard.Runtime.v1`.
 - `run-server` is detached from inherited stdout/stderr so hook callers do not hang while reading child process output.
