@@ -604,6 +604,8 @@ internal sealed class LidGuardRuntimeCoordinator(
             pendingSuspendContext,
             snapshot,
             eventName,
+            CreateSuspendWebhookReason(activeSessionCount),
+            activeSessionCount,
             postStopSuspendDelaySeconds,
             pendingSuspendCancellationTokenSource);
         return CreateSuccessResponse(
@@ -614,16 +616,25 @@ internal sealed class LidGuardRuntimeCoordinator(
         PendingSuspendContext pendingSuspendContext,
         LidGuardSessionSnapshot snapshot,
         string eventName,
+        SuspendWebhookReason suspendWebhookReason,
+        int suspendTriggerSessionCount,
         int postStopSuspendDelaySeconds,
         CancellationTokenSource pendingSuspendCancellationTokenSource)
     {
         try
         {
+            await SendPreSuspendWebhookAsync(
+                pendingSuspendContext,
+                snapshot,
+                eventName,
+                suspendWebhookReason,
+                suspendTriggerSessionCount,
+                pendingSuspendCancellationTokenSource.Token);
+
             if (postStopSuspendDelaySeconds > 0)
                 await Task.Delay(TimeSpan.FromSeconds(postStopSuspendDelaySeconds), pendingSuspendCancellationTokenSource.Token);
 
             var postStopSuspendSound = string.Empty;
-            var suspendMode = SystemSuspendMode.Sleep;
             await _gate.WaitAsync(pendingSuspendCancellationTokenSource.Token);
             try
             {
@@ -643,7 +654,6 @@ internal sealed class LidGuardRuntimeCoordinator(
                 }
 
                 postStopSuspendSound = _settings.PostStopSuspendSound;
-                suspendMode = _settings.SuspendMode;
             }
             finally
             {
@@ -656,52 +666,65 @@ internal sealed class LidGuardRuntimeCoordinator(
                 eventName,
                 postStopSuspendSound,
                 pendingSuspendCancellationTokenSource.Token);
-
-            await _gate.WaitAsync(pendingSuspendCancellationTokenSource.Token);
-            try
-            {
-                if (HasSessionsKeepingProtectionAppliedInsideGate())
-                {
-                    var canceledResponse = CreateSuccessResponse("Skipped pending suspend because a session became active while the completion sound was playing.");
-                    AppendSessionLog($"{eventName}-suspend-canceled", pendingSuspendContext, canceledResponse, snapshot);
-                    return;
-                }
-
-                var lidSwitchState = lidStateSource.CurrentState;
-                if (lidSwitchState != LidSwitchState.Closed)
-                {
-                    var canceledResponse = CreateSuccessResponse($"Skipped suspend because the lid state is {lidSwitchState} after the completion sound finished.");
-                    AppendSessionLog($"{eventName}-suspend-canceled", pendingSuspendContext, canceledResponse, snapshot);
-                    return;
-                }
-
-                suspendMode = _settings.SuspendMode;
-                var requestingResponse = CreateSuccessResponse($"Requesting {suspendMode} {DescribeSuspendReason(_sessionRegistry.ActiveSessionCount)}");
-                AppendSessionLog($"{eventName}-suspend-requesting", pendingSuspendContext, requestingResponse, snapshot);
-            }
-            finally
-            {
-                _gate.Release();
-            }
-
-            var suspendResult = systemSuspendService.Suspend(suspendMode);
-            if (suspendResult.Succeeded) return;
-
-            await _gate.WaitAsync(CancellationToken.None);
-            try
-            {
-                var response = CreateFailureResponse(suspendResult);
-                AppendSessionLog($"{eventName}-suspend-failed", pendingSuspendContext, response, snapshot);
-            }
-            finally
-            {
-                _gate.Release();
-            }
+            await RequestSuspendAsync(
+                pendingSuspendContext,
+                snapshot,
+                eventName,
+                pendingSuspendCancellationTokenSource.Token);
         }
         catch (OperationCanceledException) { }
         finally
         {
             await ClearPendingSuspendAsync(pendingSuspendCancellationTokenSource);
+        }
+    }
+
+    private async Task RequestSuspendAsync(
+        PendingSuspendContext pendingSuspendContext,
+        LidGuardSessionSnapshot snapshot,
+        string eventName,
+        CancellationToken cancellationToken)
+    {
+        var suspendMode = SystemSuspendMode.Sleep;
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            if (HasSessionsKeepingProtectionAppliedInsideGate())
+            {
+                var canceledResponse = CreateSuccessResponse("Skipped pending suspend because a session became active before suspend was requested.");
+                AppendSessionLog($"{eventName}-suspend-canceled", pendingSuspendContext, canceledResponse, snapshot);
+                return;
+            }
+
+            var lidSwitchState = lidStateSource.CurrentState;
+            if (lidSwitchState != LidSwitchState.Closed)
+            {
+                var canceledResponse = CreateSuccessResponse($"Skipped suspend because the lid state is {lidSwitchState} before suspend was requested.");
+                AppendSessionLog($"{eventName}-suspend-canceled", pendingSuspendContext, canceledResponse, snapshot);
+                return;
+            }
+
+            suspendMode = _settings.SuspendMode;
+            var requestingResponse = CreateSuccessResponse($"Requesting {suspendMode} {DescribeSuspendReason(_sessionRegistry.ActiveSessionCount)}");
+            AppendSessionLog($"{eventName}-suspend-requesting", pendingSuspendContext, requestingResponse, snapshot);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+
+        var suspendResult = systemSuspendService.Suspend(suspendMode);
+        if (suspendResult.Succeeded) return;
+
+        await _gate.WaitAsync(CancellationToken.None);
+        try
+        {
+            var response = CreateFailureResponse(suspendResult);
+            AppendSessionLog($"{eventName}-suspend-failed", pendingSuspendContext, response, snapshot);
+        }
+        finally
+        {
+            _gate.Release();
         }
     }
 
@@ -761,6 +784,44 @@ internal sealed class LidGuardRuntimeCoordinator(
         }
     }
 
+    private async Task SendPreSuspendWebhookAsync(
+        PendingSuspendContext pendingSuspendContext,
+        LidGuardSessionSnapshot snapshot,
+        string eventName,
+        SuspendWebhookReason suspendWebhookReason,
+        int suspendTriggerSessionCount,
+        CancellationToken cancellationToken)
+    {
+        string preSuspendWebhookUrl;
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            preSuspendWebhookUrl = _settings.PreSuspendWebhookUrl;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+
+        var sendResult = await SuspendWebhookSender.SendAsync(
+            preSuspendWebhookUrl,
+            suspendWebhookReason,
+            suspendTriggerSessionCount,
+            cancellationToken);
+        if (sendResult.Succeeded) return;
+
+        await _gate.WaitAsync(CancellationToken.None);
+        try
+        {
+            var response = CreateFailureResponse(sendResult);
+            AppendSessionLog($"{eventName}-suspend-webhook-failed", pendingSuspendContext, response, snapshot);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     private LidGuardPipeResponse CreateSuccessResponse(string message)
     {
         var snapshots = _sessionRegistry.GetSnapshots();
@@ -803,6 +864,9 @@ internal sealed class LidGuardRuntimeCoordinator(
 
     private static string DescribePostStopSuspendDelay(int postStopSuspendDelaySeconds)
         => postStopSuspendDelaySeconds == 0 ? "immediately" : $"in {postStopSuspendDelaySeconds} second(s)";
+
+    private static SuspendWebhookReason CreateSuspendWebhookReason(int activeSessionCount)
+        => activeSessionCount == 0 ? SuspendWebhookReason.Completed : SuspendWebhookReason.SoftLocked;
 
     private static string DescribeSuspendReason(int activeSessionCount)
         => activeSessionCount == 0

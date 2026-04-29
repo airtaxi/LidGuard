@@ -24,6 +24,7 @@ lidguard hook-remove
 lidguard mcp-status
 lidguard mcp-install
 lidguard mcp-remove
+lidguard remove-pre-suspend-webhook
 lidguard remove-session --session "<session-id>"
 lidguard remove-session --session "<session-id>" --provider codex
 lidguard hook-install --provider all
@@ -53,6 +54,7 @@ lidguard mcp-install --provider codex
 lidguard mcp-remove --provider codex
 lidguard mcp-server
 lidguard settings
+lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
 lidguard status
 ```
 

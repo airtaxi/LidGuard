@@ -44,6 +44,18 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             out updatedStoredSettings,
             out message))
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
+        if (settingsPatch.PreSuspendWebhookUrl is not null)
+        {
+            if (!PreSuspendWebhookConfiguration.TryNormalizeConfiguredValue(
+                settingsPatch.PreSuspendWebhookUrl,
+                out var normalizedPreSuspendWebhookUrl,
+                out message))
+                return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
+
+            updatedStoredSettings = PreSuspendWebhookConfiguration.WithPreSuspendWebhookUrl(
+                updatedStoredSettings,
+                normalizedPreSuspendWebhookUrl);
+        }
 
         if (!LidGuardSettingsStore.TrySave(updatedStoredSettings, out message))
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
@@ -167,6 +179,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             SuspendMode = settingsPatch.SuspendMode ?? normalizedBaseSettings.SuspendMode,
             PostStopSuspendDelaySeconds = settingsPatch.PostStopSuspendDelaySeconds ?? normalizedBaseSettings.PostStopSuspendDelaySeconds,
             PostStopSuspendSound = settingsPatch.PostStopSuspendSound ?? normalizedBaseSettings.PostStopSuspendSound,
+            PreSuspendWebhookUrl = settingsPatch.PreSuspendWebhookUrl ?? normalizedBaseSettings.PreSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = settingsPatch.ClosedLidPermissionRequestDecision ?? normalizedBaseSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settingsPatch.WatchParentProcess ?? normalizedBaseSettings.WatchParentProcess
         };
@@ -208,6 +221,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         AppendChange(changes, previousStoredSettings.SuspendMode, updatedStoredSettings.SuspendMode, "suspendMode");
         AppendChange(changes, previousStoredSettings.PostStopSuspendDelaySeconds, updatedStoredSettings.PostStopSuspendDelaySeconds, "postStopSuspendDelaySeconds");
         AppendChange(changes, previousStoredSettings.PostStopSuspendSound, updatedStoredSettings.PostStopSuspendSound, "postStopSuspendSound");
+        AppendChange(changes, previousStoredSettings.PreSuspendWebhookUrl, updatedStoredSettings.PreSuspendWebhookUrl, "preSuspendWebhookUrl");
         AppendChange(changes, previousStoredSettings.ClosedLidPermissionRequestDecision, updatedStoredSettings.ClosedLidPermissionRequestDecision, "closedLidPermissionRequestDecision");
 
         return [.. changes];

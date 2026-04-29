@@ -84,6 +84,7 @@ internal static class LidGuardSettingsStore
             SuspendMode = normalizedSettings.SuspendMode,
             PostStopSuspendDelaySeconds = normalizedSettings.PostStopSuspendDelaySeconds,
             PostStopSuspendSound = normalizedSettings.PostStopSuspendSound,
+            PreSuspendWebhookUrl = normalizedSettings.PreSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = normalizedSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = normalizedSettings.WatchParentProcess
         };

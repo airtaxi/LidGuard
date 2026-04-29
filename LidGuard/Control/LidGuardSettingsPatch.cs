@@ -23,6 +23,8 @@ public sealed class LidGuardSettingsPatch
 
     public string PostStopSuspendSound { get; init; }
 
+    public string PreSuspendWebhookUrl { get; init; }
+
     public ClosedLidPermissionRequestDecision? ClosedLidPermissionRequestDecision { get; init; }
 
     public string PowerRequestReason { get; init; }

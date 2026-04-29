@@ -22,6 +22,8 @@ public sealed class LidGuardSettings
 
     public string PostStopSuspendSound { get; init; } = string.Empty;
 
+    public string PreSuspendWebhookUrl { get; init; } = string.Empty;
+
     public ClosedLidPermissionRequestDecision ClosedLidPermissionRequestDecision { get; init; } = ClosedLidPermissionRequestDecision.Deny;
 
     public bool WatchParentProcess { get; init; } = true;
@@ -44,6 +46,7 @@ public sealed class LidGuardSettings
             SuspendMode = settings.SuspendMode,
             PostStopSuspendDelaySeconds = Math.Max(0, settings.PostStopSuspendDelaySeconds),
             PostStopSuspendSound = string.IsNullOrWhiteSpace(settings.PostStopSuspendSound) ? string.Empty : settings.PostStopSuspendSound.Trim(),
+            PreSuspendWebhookUrl = string.IsNullOrWhiteSpace(settings.PreSuspendWebhookUrl) ? string.Empty : settings.PreSuspendWebhookUrl.Trim(),
             ClosedLidPermissionRequestDecision = settings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settings.WatchParentProcess
         };

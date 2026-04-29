@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using LidGuard.Control;
 using LidGuard.Hooks;
 using LidGuard.Ipc;
 using LidGuard.Mcp;
@@ -47,6 +48,7 @@ internal static class LidGuardCommandLineApplication
         {
             LidGuardPipeCommands.Start => await SendStartAsync(options),
             LidGuardPipeCommands.Stop => await SendStopAsync(options),
+            LidGuardPipeCommands.RemovePreSuspendWebhook => await SendRemovePreSuspendWebhookAsync(options, runtimePlatform),
             LidGuardPipeCommands.RemoveSession => await SendRemoveSessionAsync(options),
             LidGuardPipeCommands.Status => await SendStatusAsync(),
             LidGuardPipeCommands.CleanupOrphans => await SendCleanupOrphansAsync(),
@@ -289,7 +291,6 @@ internal static class LidGuardCommandLineApplication
             Console.Error.WriteLine(settingsMessage);
             return 1;
         }
-
         if (!LidGuardSettingsStore.TrySave(settings, out var saveMessage))
         {
             Console.Error.WriteLine(saveMessage);
@@ -306,7 +307,12 @@ internal static class LidGuardCommandLineApplication
         var response = await new LidGuardRuntimeClient().SendAsync(request, false);
         Console.WriteLine($"Settings file: {LidGuardSettingsStore.GetDefaultSettingsFilePath()}");
         WriteSettings(settings);
-        if (isInteractiveSettings) Console.WriteLine($"To change Reason, run: {GetCommandDisplayName()} settings --power-request-reason <text>");
+        if (isInteractiveSettings)
+        {
+            Console.WriteLine($"To change Reason, run: {GetCommandDisplayName()} settings --power-request-reason <text>");
+            Console.WriteLine($"To change Pre-suspend webhook URL, run: {GetCommandDisplayName()} settings --pre-suspend-webhook-url <http-or-https-url>");
+            Console.WriteLine($"To remove Pre-suspend webhook URL, run: {GetCommandDisplayName()} {LidGuardPipeCommands.RemovePreSuspendWebhook}");
+        }
 
         if (response.Succeeded)
         {
@@ -321,6 +327,66 @@ internal static class LidGuardCommandLineApplication
         }
 
         Console.Error.WriteLine(response.Message);
+        return 1;
+    }
+
+    private static async Task<int> SendRemovePreSuspendWebhookAsync(
+        IReadOnlyDictionary<string, string> options,
+        ILidGuardRuntimePlatform runtimePlatform)
+    {
+        if (options.Count > 0)
+        {
+            Console.Error.WriteLine($"{LidGuardPipeCommands.RemovePreSuspendWebhook} does not accept options.");
+            return 1;
+        }
+
+        if (!LidGuardSettingsStore.TryLoadOrCreate(out var currentSettings, out var loadMessage))
+        {
+            Console.Error.WriteLine(loadMessage);
+            return 1;
+        }
+
+        var normalizedCurrentSettings = LidGuardSettings.Normalize(currentSettings);
+        if (string.IsNullOrWhiteSpace(normalizedCurrentSettings.PreSuspendWebhookUrl))
+        {
+            Console.WriteLine("No pre-suspend webhook URL is configured.");
+            return 0;
+        }
+
+        var postStopSuspendSoundPlayerResult = runtimePlatform.CreatePostStopSuspendSoundPlayer();
+        if (!postStopSuspendSoundPlayerResult.Succeeded)
+        {
+            Console.Error.WriteLine(postStopSuspendSoundPlayerResult.Message);
+            return 1;
+        }
+
+        var controlService = new LidGuardControlService(postStopSuspendSoundPlayerResult.Value);
+        var updateResult = await controlService.UpdateSettingsAsync(
+            new LidGuardSettingsPatch { PreSuspendWebhookUrl = string.Empty });
+        if (!updateResult.Succeeded)
+        {
+            Console.Error.WriteLine(updateResult.Message);
+            return 1;
+        }
+
+        var outcome = updateResult.Value;
+        Console.WriteLine($"Settings file: {LidGuardSettingsStore.GetDefaultSettingsFilePath()}");
+        WriteSettings(outcome.UpdatedStoredSettings);
+        Console.WriteLine("Pre-suspend webhook URL removed.");
+
+        if (outcome.Snapshot.RuntimeReachable)
+        {
+            Console.WriteLine("Runtime settings updated.");
+            return 0;
+        }
+
+        if (outcome.Snapshot.RuntimeUnavailable)
+        {
+            Console.WriteLine("Runtime is not running; saved settings will be used on the next start.");
+            return 0;
+        }
+
+        Console.Error.WriteLine(outcome.Snapshot.RuntimeMessage);
         return 1;
     }
 
@@ -535,6 +601,7 @@ internal static class LidGuardCommandLineApplication
         if (!TryParsePostStopSuspendDelaySecondsOption(options, baseSettings.PostStopSuspendDelaySeconds, out var postStopSuspendDelaySeconds, out message)) return false;
         var postStopSuspendSound = baseSettings.PostStopSuspendSound;
         if (TryGetOption(options, out var postStopSuspendSoundText, "post-stop-suspend-sound")) postStopSuspendSound = postStopSuspendSoundText;
+        if (!TryParsePreSuspendWebhookUrlOption(options, baseSettings.PreSuspendWebhookUrl, out var preSuspendWebhookUrl, out message)) return false;
         if (!TryParseClosedLidPermissionRequestDecisionOption(options, baseSettings.ClosedLidPermissionRequestDecision, out var closedLidPermissionRequestDecision, out message)) return false;
 
         var reason = GetOption(options, "power-request-reason", "reason");
@@ -553,6 +620,7 @@ internal static class LidGuardCommandLineApplication
             SuspendMode = suspendMode,
             PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
             PostStopSuspendSound = postStopSuspendSound,
+            PreSuspendWebhookUrl = preSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess
         };
@@ -610,6 +678,7 @@ internal static class LidGuardCommandLineApplication
             SuspendMode = suspendMode,
             PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
             PostStopSuspendSound = postStopSuspendSound,
+            PreSuspendWebhookUrl = normalizedStoredSettings.PreSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess
         };
@@ -724,6 +793,28 @@ internal static class LidGuardCommandLineApplication
         if (string.IsNullOrWhiteSpace(valueText)) return true;
         value = valueText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase) ? string.Empty : valueText.Trim();
         return true;
+    }
+
+    private static bool TryParsePreSuspendWebhookUrlOption(
+        IReadOnlyDictionary<string, string> options,
+        string defaultValue,
+        out string preSuspendWebhookUrl,
+        out string message)
+    {
+        preSuspendWebhookUrl = defaultValue;
+        message = string.Empty;
+        if (!TryGetOption(options, out var preSuspendWebhookUrlText, "pre-suspend-webhook-url", "suspend-webhook-url")) return true;
+
+        if (string.IsNullOrWhiteSpace(preSuspendWebhookUrlText) || preSuspendWebhookUrlText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
+        {
+            message = $"Use {GetCommandDisplayName()} {LidGuardPipeCommands.RemovePreSuspendWebhook} to remove the pre-suspend webhook URL.";
+            return false;
+        }
+
+        return PreSuspendWebhookConfiguration.TryNormalizeConfiguredValue(
+            preSuspendWebhookUrlText,
+            out preSuspendWebhookUrl,
+            out message);
     }
 
     private static bool TryReadClosedLidPermissionRequestDecisionSetting(
@@ -975,6 +1066,7 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  Suspend mode: {normalizedSettings.SuspendMode}");
         Console.WriteLine($"  Post-stop suspend delay seconds: {normalizedSettings.PostStopSuspendDelaySeconds}");
         Console.WriteLine($"  Post-stop suspend sound: {PostStopSuspendSoundConfiguration.GetDisplayValue(normalizedSettings.PostStopSuspendSound)}");
+        Console.WriteLine($"  Pre-suspend webhook URL: {PreSuspendWebhookConfiguration.GetDisplayValue(normalizedSettings.PreSuspendWebhookUrl)}");
         Console.WriteLine($"  Closed lid permission request decision: {normalizedSettings.ClosedLidPermissionRequestDecision}");
         Console.WriteLine($"  Reason: {powerRequest.Reason}");
     }
@@ -986,6 +1078,7 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine("Usage:");
         Console.WriteLine($"  {commandDisplayName} start --provider codex|claude|copilot --session <id> [--parent-pid <pid>] [--working-directory <path>]");
         Console.WriteLine($"  {commandDisplayName} stop --provider codex|claude|copilot --session <id>");
+        Console.WriteLine($"  {commandDisplayName} {LidGuardPipeCommands.RemovePreSuspendWebhook}");
         Console.WriteLine($"  {commandDisplayName} remove-session --session <id> [--provider codex|claude|copilot|custom|unknown]");
         Console.WriteLine($"  {commandDisplayName} claude-hook");
         Console.WriteLine($"  {commandDisplayName} claude-hooks [--format settings-json|hooks-json] [--executable <path>]");
@@ -1010,10 +1103,13 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine("                           [--watch-parent-process true|false]");
         Console.WriteLine("                           [--suspend-mode sleep|hibernate] [--post-stop-suspend-delay-seconds <number>]");
         Console.WriteLine("                           [--post-stop-suspend-sound off|Asterisk|Beep|Exclamation|Hand|Question|<wav-path>]");
+        Console.WriteLine("                           [--pre-suspend-webhook-url <http-or-https-url>]");
         Console.WriteLine("                           [--closed-lid-permission-request-decision deny|allow]");
         Console.WriteLine("                           [--power-request-reason <text>]");
         Console.WriteLine("                           Post-stop suspend delay defaults to 10 seconds; use 0 for immediate suspend.");
         Console.WriteLine($"                           Post-stop suspend sound defaults to off. Supported SystemSounds: {DescribeSupportedPostStopSuspendSystemSounds()}.");
+        Console.WriteLine($"                           Use {LidGuardPipeCommands.RemovePreSuspendWebhook} to remove the pre-suspend webhook URL.");
+        Console.WriteLine("                           Pre-suspend webhook URL must be an absolute HTTP or HTTPS URL when set.");
         Console.WriteLine("                           WAV paths must point to an existing playable .wav file.");
         Console.WriteLine($"  {commandDisplayName} status");
         Console.WriteLine($"  {commandDisplayName} cleanup-orphans");

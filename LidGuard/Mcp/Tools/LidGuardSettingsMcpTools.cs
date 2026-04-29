@@ -83,6 +83,8 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         int? postStopSuspendDelaySeconds = null,
         [Description("Set the post-stop suspend sound. Use off or an empty string to disable it. Supported system sound names are Asterisk, Beep, Exclamation, Hand, and Question. You can also pass a path to a playable .wav file. Omit to keep the current value.")]
         string postStopSuspendSound = null,
+        [Description("Set the webhook URL LidGuard POSTs before requesting suspend. Pass an empty string to disable it. Omit to keep the current value.")]
+        string preSuspendWebhookUrl = null,
         [Description("Set the PermissionRequest decision returned while the lid is closed. Omit to keep the current value.")]
         ClosedLidPermissionRequestDecision? closedLidPermissionRequestDecision = null,
         [Description("Set the power request reason string. Pass an empty string to restore LidGuard's default reason text. Omit to keep the current value.")]
@@ -100,6 +102,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
             SuspendMode = suspendMode,
             PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
             PostStopSuspendSound = postStopSuspendSound,
+            PreSuspendWebhookUrl = preSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             PowerRequestReason = powerRequestReason
         };
