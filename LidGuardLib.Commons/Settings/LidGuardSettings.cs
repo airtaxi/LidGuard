@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using LidGuardLib.Commons.Power;
 
 namespace LidGuardLib.Commons.Settings;
@@ -19,8 +18,9 @@ public sealed class LidGuardSettings
 
     public bool SuspendWhenStoppedAndLidClosed { get; init; }
 
-    [JsonConverter(typeof(JsonStringEnumConverter<SystemSuspendMode>))]
     public SystemSuspendMode SuspendMode { get; init; } = SystemSuspendMode.Sleep;
+
+    public HookPermissionRequestBehavior PermissionRequestBehavior { get; init; } = HookPermissionRequestBehavior.Deny;
 
     public bool WatchParentProcess { get; init; } = true;
 
@@ -41,6 +41,7 @@ public sealed class LidGuardSettings
             ChangeLidAction = settings.ChangeLidAction,
             SuspendWhenStoppedAndLidClosed = settings.SuspendWhenStoppedAndLidClosed,
             SuspendMode = settings.SuspendMode,
+            PermissionRequestBehavior = settings.PermissionRequestBehavior,
             WatchParentProcess = settings.WatchParentProcess
         };
     }

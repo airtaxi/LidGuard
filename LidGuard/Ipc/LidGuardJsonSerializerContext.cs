@@ -10,8 +10,10 @@ namespace LidGuard.Ipc;
 [JsonSerializable(typeof(LidGuardPipeRequest))]
 [JsonSerializable(typeof(LidGuardPipeResponse))]
 [JsonSerializable(typeof(LidGuardSessionStatus[]))]
+[JsonSerializable(typeof(HookPermissionRequestBehavior))]
 [JsonSerializable(typeof(LidGuardSettings))]
 [JsonSerializable(typeof(PowerRequestOptions))]
+[JsonSerializable(typeof(SystemSuspendMode))]
 internal sealed partial class LidGuardJsonSerializerContext : JsonSerializerContext
 {
 }
