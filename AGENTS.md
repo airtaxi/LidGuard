@@ -18,14 +18,17 @@
 
 LidGuard is a Windows-first utility for long-running local AI coding agents such as Codex, Claude Code, and GitHub Copilot CLI.
 
-The goal is to keep Windows awake while at least one agent session is active, then restore the user's original power policy after the session ends.
+The goal is to keep Windows awake while at least one tracked agent session still needs protection, then restore the user's original power policy after the session ends or becomes suspend-eligible.
 
 - Agent sessions start through provider hooks.
 - LidGuard detects and tracks active sessions.
-- While at least one session is active, Windows should not enter idle sleep through `PowerRequestSystemRequired` and `PowerRequestAwayModeRequired`.
+- Claude Code and GitHub Copilot CLI sessions can enter a runtime-managed soft-lock state when provider notifications show the agent is waiting on user input.
+- While at least one non-soft-locked session is active, Windows should not enter idle sleep through `PowerRequestSystemRequired` and `PowerRequestAwayModeRequired`.
+- If every remaining active session is soft-locked, LidGuard should release temporary keep-awake protection, restore any temporary lid policy change, and start the configured suspend flow when the lid is closed.
 - Optional settings temporarily change the active power plan's lid close action to `Do Nothing`.
 - When sessions stop, all temporary power settings must be restored to the user's original values.
 - After the last active session stops, LidGuard should always request suspend when the laptop lid is closed.
+- If active sessions remain but all of them are soft-locked, LidGuard should follow the same suspend path without waiting for stop hooks.
 - The suspend mode remains user-selectable: Sleep by default, Hibernate optional.
 - The post-stop suspend delay remains user-selectable: 10 seconds by default, `0` for immediate suspend.
 - The post-stop suspend sound remains optional: off by default, with supported SystemSounds names or a playable `.wav` path.
@@ -130,7 +133,10 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 ### Active Session Policy
 
 - Session state is ref-counted by active session.
-- One or more active sessions keep shared `SystemRequired` and `AwayModeRequired` power requests alive.
+- Each session also carries a soft-lock state, reason, and timestamp.
+- One or more active sessions keep shared `SystemRequired` and `AwayModeRequired` power requests alive only while at least one active session is not soft-locked.
+- When all remaining active sessions are soft-locked, LidGuard treats the runtime as suspend-eligible even before those sessions emit stop events.
+- Provider activity such as new tool execution clears that session's current soft-lock state.
 - Optional lid action changes are backed up once and restored after the last active session stops.
 - Multiple stop signals for the same session should not cause repeated cleanup side effects.
 - Persistent pending backup state is still missing and is the next resilience priority.
@@ -157,6 +163,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `Sessions`
   - `AgentProvider`
   - `LidGuardSessionKey`
+  - `LidGuardSessionSoftLockState`
   - `LidGuardSessionStartRequest`
   - `LidGuardSessionStopRequest`
   - `LidGuardSessionSnapshot`
@@ -299,6 +306,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - For `UserPromptSubmit`, it sends internal `start --provider codex`.
 - For `PermissionRequest`, it does not stop the runtime; it queries the runtime lid state and returns a structured allow/deny decision from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed.
 - For `Stop`, and for `SessionEnd` when a Codex build emits it, it sends internal `stop --provider codex`.
+- Notification-driven soft-lock detection is currently unsupported for Codex because the current public hook surface does not expose a comparable `Notification` event. Future support can be added if Codex exposes notification or machine-readable pending-state hooks later.
 - Codex hook input does not provide a stable parent process id, so the current implementation resolves a process by working directory.
 - Codex `PermissionRequest` exits successfully with structured JSON stdout only for closed-lid decisions; when the lid is open, unknown, or runtime status is unavailable, it exits successfully with empty stdout. LidGuard records diagnostics locally and should not block the Codex task when a runtime request fails.
 - This behavior is based on analyzing the `openai/codex` `codex-rs` hook source: `exit 0` with empty stdout is treated as a no-op success, while non-empty stdout may be parsed as hook JSON or interpreted as plain-text context depending on the event.
@@ -311,20 +319,24 @@ Reference:
 ### Claude Code
 
 - Start event: `UserPromptSubmit`.
+- Activity telemetry events: `PreToolUse`, `PostToolUse`, `PostToolUseFailure`.
 - Permission decision event: `PermissionRequest`.
 - MCP elicitation event: `Elicitation`.
+- Soft-lock notification event: `Notification`.
 - Stop events: `Stop`, `StopFailure`, `SessionEnd`.
 - Command path: `lidguard claude-hook` when the global tool is available on PATH, otherwise the current executable path plus `claude-hook`.
 - Snippet command: `lidguard claude-hooks --format settings-json`.
 - Install/status/remove commands: `lidguard hook-install --provider claude`, `lidguard hook-status --provider claude`, and `lidguard hook-remove --provider claude`.
-- `hook-install` and `hook-status` require `UserPromptSubmit`, `Stop`, `StopFailure`, `Elicitation`, `PermissionRequest`, and `SessionEnd`.
+- `hook-install` and `hook-status` require `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `Stop`, `StopFailure`, `Elicitation`, `PermissionRequest`, `Notification`, and `SessionEnd`.
 - Default config path: `CLAUDE_CONFIG_DIR\settings.json` when `CLAUDE_CONFIG_DIR` is set, otherwise `%USERPROFILE%\.claude\settings.json`.
 - Windows hook config uses `shell = "powershell"` in Claude `settings.json` command hooks.
 - Based on analysis of a locally retained Claude Code source snapshot, command hooks treat `exit code 0` with empty stdout as a successful no-op, while non-empty stdout may be interpreted as hook JSON or plain-text output depending on the execution path.
 - Based on the same local source snapshot analysis, `PermissionRequest` only becomes a programmatic allow/deny when the hook returns structured JSON with `hookSpecificOutput.decision`; LidGuard also sets `interrupt: true` on those closed-lid decisions so Claude stops the interactive permission path immediately. Empty stdout keeps the normal permission flow.
 - `claude-hook` reads Claude hook JSON from stdin and maps `hook_event_name` to runtime IPC.
 - For `UserPromptSubmit`, it sends internal `start --provider claude`.
+- For `PreToolUse`, `PostToolUse`, and `PostToolUseFailure`, it records provider activity and clears the current session soft-lock state for non-`AskUserQuestion` tools.
 - For `Elicitation`, it does not stop the runtime; it queries the runtime lid state and returns a structured `cancel` only when the lid is closed.
+- For `Notification`, `permission_prompt` and `elicitation_dialog` mark the session soft-locked, while `elicitation_complete` and `elicitation_response` clear the current soft-lock state.
 - For `PermissionRequest`, it does not stop the runtime; it queries the runtime lid state and returns a Claude-specific structured allow/deny decision with `interrupt: true` from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed.
 - When working on Claude Code-related setup, support, or documentation, explicitly and strongly warn the user not to use third-party prompt-style hooks alongside LidGuard. Explain that LidGuard must only answer its own closed-lid `PermissionRequest` and `Elicitation` paths and must not be presented as able to answer or proxy third-party hook prompts.
 - For `Stop`, `StopFailure`, and `SessionEnd`, it sends internal `stop --provider claude`.
@@ -342,13 +354,15 @@ Reference:
 - Stop event: `agentStop`.
 - Closed-lid permission decision event: `permissionRequest`.
 - Closed-lid ask-user guard event: `preToolUse` when `toolName` is `ask_user`.
-- Telemetry-only events: `sessionStart`, `sessionEnd`, `errorOccurred`, and `notification` with `notification_type` / `notificationType` of `permission_prompt` or `elicitation_dialog`.
+- Activity event: `postToolUse`.
+- Soft-lock notification event: `notification` with `notification_type` / `notificationType` of `permission_prompt` or `elicitation_dialog`.
+- Telemetry-only events: `sessionStart`, `sessionEnd`, and `errorOccurred`.
 - Command path: `lidguard copilot-hook --event <event-name>` when the global tool is available on PATH, otherwise the current executable path plus `copilot-hook --event <event-name>`.
 - Snippet command: `lidguard copilot-hooks --format config-json`.
 - Install/status/remove commands: `lidguard hook-install --provider copilot`, `lidguard hook-status --provider copilot`, and `lidguard hook-remove --provider copilot`.
 - Default global config path: `COPILOT_HOME\hooks\lidguard-copilot-cli.json` when `COPILOT_HOME` is set, otherwise `%USERPROFILE%\.copilot\hooks\lidguard-copilot-cli.json`.
 - GitHub Copilot CLI also supports inline user hooks in `~/.copilot/settings.json`; repository hooks in `.github/hooks/` and repository Copilot settings are loaded alongside user hooks, so `hook-install` and `hook-status` inspect those sources for conflicts.
-- `hook-install` and `hook-status` require `sessionStart`, `sessionEnd`, `userPromptSubmitted`, `preToolUse`, `permissionRequest`, `agentStop`, `errorOccurred`, and a filtered `notification` hook.
+- `hook-install` and `hook-status` require `sessionStart`, `sessionEnd`, `userPromptSubmitted`, `preToolUse`, `postToolUse`, `permissionRequest`, `agentStop`, `errorOccurred`, and a filtered `notification` hook.
 - Because official Copilot CLI docs allow `agentStop` hooks to return `decision: "block"` with a `reason` continuation prompt, `hook-install` and `hook-status` should warn when non-LidGuard `agentStop` hooks are present.
 - Based on the official Copilot CLI hooks documentation, passive hooks such as `sessionStart` may be implemented as logging-only shell commands with no JSON output, so `exit code 0` with empty stdout is a valid no-op pattern for non-decision hooks.
 - Based on the official hooks configuration reference, `preToolUse` output JSON is optional and omitting output allows the tool by default, so structured JSON should only be returned when LidGuard intentionally wants to influence a hook decision.
@@ -356,9 +370,11 @@ Reference:
 - `copilot-hook` takes the configured event name from the command line because camelCase GitHub Copilot CLI hook payloads do not consistently include the event name in stdin JSON.
 - For `userPromptSubmitted`, it sends internal `start --provider copilot`.
 - For `permissionRequest`, it does not stop the runtime; it queries the runtime lid state and returns a GitHub Copilot CLI allow/deny decision from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed, and it includes `interrupt: true`.
-- For `preToolUse`, it does not stop the runtime; it denies `ask_user` only when the lid is closed, so the agent cannot soft-lock waiting for user input that cannot be answered.
+- For `preToolUse`, it does not stop the runtime; it denies `ask_user` only when the lid is closed, so the agent cannot soft-lock waiting for user input that cannot be answered, and it clears the current session soft-lock state for non-`ask_user` tools.
+- For `postToolUse`, it records tool completion activity and clears the current session soft-lock state for non-`ask_user` tools.
+- For `notification`, it marks the session soft-locked when GitHub Copilot CLI reports `permission_prompt` or `elicitation_dialog`.
 - For `agentStop`, it sends internal `stop --provider copilot`.
-- For `sessionStart`, `sessionEnd`, `errorOccurred`, and filtered `notification`, it records telemetry only.
+- For `sessionStart`, `sessionEnd`, and `errorOccurred`, it records telemetry only.
 - GitHub Copilot CLI hook input currently does not provide a stable parent process id in the documented payloads, so the current implementation resolves a process by working directory.
 - GitHub Copilot CLI `permissionRequest` exits successfully with structured JSON stdout only for closed-lid decisions; when the lid is open, unknown, or runtime status is unavailable, it exits successfully with empty stdout so the normal permission flow continues.
 - GitHub Copilot CLI `preToolUse` exits successfully with structured JSON stdout only for closed-lid `ask_user` denial; otherwise it exits successfully with empty stdout so normal tool handling continues.
@@ -429,6 +445,7 @@ The Windows CLI hook receiving path is implemented for Codex, Claude Code, and G
 - Verify GitHub Copilot CLI session id stability.
 - Verify `PowerReadACValueIndex`/`PowerReadDCValueIndex` read/write behavior under normal user permissions.
 - Verify Group Policy or MDM blocked power settings and fallback messages.
+- Add direct Codex soft-lock support only if Codex later exposes a notification or machine-readable pending-state hook surface.
 
 ## Completed Work
 
@@ -452,6 +469,7 @@ The Windows CLI hook receiving path is implemented for Codex, Claude Code, and G
 18. ~~Add a `preview-system-sound` CLI command for auditioning supported SystemSounds names.~~
 19. ~~Add GitHub Copilot CLI hook parsing, snippet output, and managed global hook install/remove/status helpers.~~
 20. ~~Map GitHub Copilot CLI `userPromptSubmitted` and `agentStop` to start/stop handling, handle `permissionRequest` as a closed-lid-only settings-driven allow/deny decision with `interrupt: true`, and deny closed-lid `preToolUse` `ask_user`.~~
+21. ~~Add runtime-led Claude/GitHub Copilot soft-lock orchestration driven by provider notifications, with per-session soft-lock state and activity-based clearing.~~
 
 ## Design Constraints
 

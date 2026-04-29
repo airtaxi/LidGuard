@@ -22,7 +22,17 @@ public sealed class ClaudeHookInstallationInspection
 
     public bool HasExpectedHookCommand { get; init; }
 
+    public bool HasExpectedNotificationMatcher { get; init; }
+
     public bool HasExpectedHookShell { get; init; }
+
+    public bool HasNotificationHook { get; init; }
+
+    public bool HasPostToolUseFailureHook { get; init; }
+
+    public bool HasPostToolUseHook { get; init; }
+
+    public bool HasPreToolUseHook { get; init; }
 
     public bool HasUserPromptSubmitHook { get; init; }
 

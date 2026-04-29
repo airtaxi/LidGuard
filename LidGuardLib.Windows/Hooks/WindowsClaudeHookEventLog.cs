@@ -24,7 +24,7 @@ public static class WindowsClaudeHookEventLog
             hookInput.HookEventName,
             hookInput.SessionIdentifier,
             hookInput.WorkingDirectory,
-            $"permissionMode={Sanitize(hookInput.PermissionMode)} tool={Sanitize(hookInput.ToolName)} reason={Sanitize(hookInput.Reason)}"));
+            $"permissionMode={Sanitize(hookInput.PermissionMode)} tool={Sanitize(hookInput.ToolName)} reason={Sanitize(hookInput.Reason)} notificationType={Sanitize(hookInput.NotificationType)}"));
     }
 
     public static void AppendRuntimeResult(ClaudeHookInput hookInput, string commandName, bool succeeded, bool runtimeUnavailable, int activeSessionCount, string message)

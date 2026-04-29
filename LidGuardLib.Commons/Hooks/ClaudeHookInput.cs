@@ -4,8 +4,17 @@ namespace LidGuardLib.Commons.Hooks;
 
 public sealed class ClaudeHookInput
 {
+    [JsonPropertyName("message")]
+    public string NotificationMessage { get; init; } = string.Empty;
+
+    [JsonPropertyName("notification_type")]
+    public string NotificationType { get; init; } = string.Empty;
+
     [JsonPropertyName("session_id")]
     public string SessionIdentifier { get; init; } = string.Empty;
+
+    [JsonPropertyName("title")]
+    public string NotificationTitle { get; init; } = string.Empty;
 
     [JsonPropertyName("transcript_path")]
     public string TranscriptPath { get; init; } = string.Empty;

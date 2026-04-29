@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using LidGuardLib.Commons.Hooks;
 using LidGuardLib.Commons.Power;
+using LidGuardLib.Commons.Sessions;
 using LidGuardLib.Commons.Settings;
 
 namespace LidGuard.Ipc;

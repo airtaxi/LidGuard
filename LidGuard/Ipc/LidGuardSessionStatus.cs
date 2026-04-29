@@ -10,6 +10,12 @@ public sealed class LidGuardSessionStatus
 
     public DateTimeOffset StartedAt { get; init; }
 
+    public LidGuardSessionSoftLockState SoftLockState { get; init; }
+
+    public string SoftLockReason { get; init; } = string.Empty;
+
+    public DateTimeOffset? SoftLockedAt { get; init; }
+
     public int WatchedProcessIdentifier { get; init; }
 
     public string WorkingDirectory { get; init; } = string.Empty;

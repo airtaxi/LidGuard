@@ -42,6 +42,12 @@ internal static class ClaudeHookCommand
 
         WindowsClaudeHookEventLog.AppendReceived(hookInput);
         var hookEventName = hookInput.HookEventName.Trim();
+        if (hookEventName.Equals(ClaudeHookEventNames.Notification, StringComparison.Ordinal))
+            return await HandleNotificationAsync(hookInput);
+        if (hookEventName.Equals(ClaudeHookEventNames.PreToolUse, StringComparison.Ordinal)
+            || hookEventName.Equals(ClaudeHookEventNames.PostToolUse, StringComparison.Ordinal)
+            || hookEventName.Equals(ClaudeHookEventNames.PostToolUseFailure, StringComparison.Ordinal))
+            return await ReportActivityAsync(hookInput);
         if (hookEventName.Equals(ClaudeHookEventNames.UserPromptSubmit, StringComparison.Ordinal)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Start, hookInput);
         if (hookEventName.Equals(ClaudeHookEventNames.Elicitation, StringComparison.Ordinal)) return await WriteClosedLidElicitationDecisionAsync();
         if (hookEventName.Equals(ClaudeHookEventNames.PermissionRequest, StringComparison.Ordinal)) return await WriteClosedLidPermissionRequestDecisionAsync();
@@ -152,6 +158,40 @@ internal static class ClaudeHookCommand
         return 0;
     }
 
+    private static async Task<int> HandleNotificationAsync(ClaudeHookInput hookInput)
+    {
+        if (ClaudeSoftLockSignalSource.TryGetSoftLockReason(hookInput, out var softLockReason))
+            return await SendSessionStateRequestAsync(LidGuardPipeCommands.MarkSessionSoftLocked, hookInput, softLockReason);
+        if (ClaudeSoftLockSignalSource.IsActivityEvent(hookInput))
+            return await SendSessionStateRequestAsync(LidGuardPipeCommands.MarkSessionActive, hookInput, hookInput.NotificationType);
+        return 0;
+    }
+
+    private static Task<int> ReportActivityAsync(ClaudeHookInput hookInput)
+    {
+        if (!ClaudeSoftLockSignalSource.IsActivityEvent(hookInput)) return Task.FromResult(0);
+        return SendSessionStateRequestAsync(
+            LidGuardPipeCommands.MarkSessionActive,
+            hookInput,
+            DescribeActivityReason(hookInput.HookEventName, hookInput.ToolName));
+    }
+
+    private static async Task<int> SendSessionStateRequestAsync(string commandName, ClaudeHookInput hookInput, string sessionStateReason)
+    {
+        var request = new LidGuardPipeRequest
+        {
+            Command = commandName,
+            Provider = AgentProvider.Claude,
+            SessionIdentifier = GetSessionIdentifier(hookInput),
+            SessionStateReason = sessionStateReason,
+            WorkingDirectory = GetWorkingDirectory(hookInput)
+        };
+
+        var response = await new LidGuardRuntimeClient().SendAsync(request, false);
+        WindowsClaudeHookEventLog.AppendRuntimeResult(hookInput, commandName, response.Succeeded, response.RuntimeUnavailable, response.ActiveSessionCount, response.Message);
+        return 0;
+    }
+
     private static string GetSessionIdentifier(ClaudeHookInput hookInput)
     {
         if (!string.IsNullOrWhiteSpace(hookInput.SessionIdentifier)) return hookInput.SessionIdentifier;
@@ -167,6 +207,12 @@ internal static class ClaudeHookCommand
     {
         try { return Path.TrimEndingDirectorySeparator(Path.GetFullPath(workingDirectory)); }
         catch { return workingDirectory; }
+    }
+
+    private static string DescribeActivityReason(string hookEventName, string toolName)
+    {
+        if (string.IsNullOrWhiteSpace(toolName)) return hookEventName;
+        return $"{hookEventName}:{toolName}";
     }
 
     private static string GetOption(IReadOnlyDictionary<string, string> options, params string[] optionNames)

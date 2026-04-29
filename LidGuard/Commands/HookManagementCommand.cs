@@ -563,13 +563,18 @@ internal static class HookManagementCommand
         Console.WriteLine($"  Hooks object: {inspection.HasHooksObject}");
         Console.WriteLine($"  Managed hooks: {inspection.HasManagedHookEntries}");
         Console.WriteLine($"  UserPromptSubmit hook: {inspection.HasUserPromptSubmitHook}");
+        Console.WriteLine($"  PreToolUse hook: {inspection.HasPreToolUseHook}");
+        Console.WriteLine($"  PostToolUse hook: {inspection.HasPostToolUseHook}");
+        Console.WriteLine($"  PostToolUseFailure hook: {inspection.HasPostToolUseFailureHook}");
         Console.WriteLine($"  Stop hook: {inspection.HasStopHook}");
         Console.WriteLine($"  StopFailure hook: {inspection.HasStopFailureHook}");
         Console.WriteLine($"  Elicitation hook: {inspection.HasElicitationHook}");
         Console.WriteLine($"  PermissionRequest hook: {inspection.HasPermissionRequestHook}");
+        Console.WriteLine($"  Notification hook: {inspection.HasNotificationHook}");
         Console.WriteLine($"  SessionEnd hook: {inspection.HasSessionEndHook}");
         Console.WriteLine($"  All stop hooks: {inspection.HasAllStopHooks}");
         Console.WriteLine($"  Expected command: {inspection.HasExpectedHookCommand}");
+        Console.WriteLine($"  Expected notification matcher: {inspection.HasExpectedNotificationMatcher}");
         Console.WriteLine($"  Expected shell: {inspection.HasExpectedHookShell}");
         Console.WriteLine($"  Message: {inspection.Message}");
     }
@@ -591,6 +596,7 @@ internal static class HookManagementCommand
         Console.WriteLine($"  SessionEnd hook: {inspection.HasSessionEndHook}");
         Console.WriteLine($"  UserPromptSubmitted hook: {inspection.HasUserPromptSubmittedHook}");
         Console.WriteLine($"  PreToolUse hook: {inspection.HasPreToolUseHook}");
+        Console.WriteLine($"  PostToolUse hook: {inspection.HasPostToolUseHook}");
         Console.WriteLine($"  PermissionRequest hook: {inspection.HasPermissionRequestHook}");
         Console.WriteLine($"  AgentStop hook: {inspection.HasAgentStopHook}");
         Console.WriteLine($"  ErrorOccurred hook: {inspection.HasErrorOccurredHook}");

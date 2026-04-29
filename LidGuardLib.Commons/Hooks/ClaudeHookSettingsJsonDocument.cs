@@ -11,18 +11,26 @@ public static class ClaudeHookSettingsJsonDocument
     private const string HooksPropertyName = "hooks";
     private const string PowerShellShellName = "powershell";
     private const string ElicitationStatusMessage = "Canceling closed-lid elicitation request";
+    private const string NotificationStatusMessage = "Recording Claude soft-lock telemetry";
+    private const string PostToolUseFailureStatusMessage = "Recording Claude failed tool activity";
+    private const string PostToolUseStatusMessage = "Recording Claude tool completion activity";
+    private const string PreToolUseStatusMessage = "Recording Claude tool activity";
     private const string StartStatusMessage = "Starting LidGuard turn protection";
     private const string PermissionRequestStatusMessage = "Responding to closed-lid permission request";
     private const string StopStatusMessage = "Stopping LidGuard session protection";
     private static readonly JsonSerializerOptions s_jsonSerializerOptions = new() { WriteIndented = true };
-    private static readonly (string HookEventName, string StatusMessage)[] s_requiredHookDefinitions =
+    private static readonly (string HookEventName, string StatusMessage, string Matcher)[] s_requiredHookDefinitions =
     [
-        (ClaudeHookEventNames.UserPromptSubmit, StartStatusMessage),
-        (ClaudeHookEventNames.Stop, StopStatusMessage),
-        (ClaudeHookEventNames.StopFailure, StopStatusMessage),
-        (ClaudeHookEventNames.Elicitation, ElicitationStatusMessage),
-        (ClaudeHookEventNames.PermissionRequest, PermissionRequestStatusMessage),
-        (ClaudeHookEventNames.SessionEnd, StopStatusMessage)
+        (ClaudeHookEventNames.UserPromptSubmit, StartStatusMessage, string.Empty),
+        (ClaudeHookEventNames.PreToolUse, PreToolUseStatusMessage, string.Empty),
+        (ClaudeHookEventNames.PostToolUse, PostToolUseStatusMessage, string.Empty),
+        (ClaudeHookEventNames.PostToolUseFailure, PostToolUseFailureStatusMessage, string.Empty),
+        (ClaudeHookEventNames.Stop, StopStatusMessage, string.Empty),
+        (ClaudeHookEventNames.StopFailure, StopStatusMessage, string.Empty),
+        (ClaudeHookEventNames.Elicitation, ElicitationStatusMessage, string.Empty),
+        (ClaudeHookEventNames.PermissionRequest, PermissionRequestStatusMessage, string.Empty),
+        (ClaudeHookEventNames.Notification, NotificationStatusMessage, ClaudeSoftLockSignalSource.NotificationMatcher),
+        (ClaudeHookEventNames.SessionEnd, StopStatusMessage, string.Empty)
     ];
 
     public static string CreateSettingsJsonSnippet(string hookCommand)
@@ -89,12 +97,16 @@ public static class ClaudeHookSettingsJsonDocument
             };
         }
 
-        if (!TryInspectHookEvent(hooksObject, ClaudeHookEventNames.UserPromptSubmit, hookCommand, out var userPromptSubmitInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Stop, hookCommand, out var stopInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.StopFailure, hookCommand, out var stopFailureInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Elicitation, hookCommand, out var elicitationInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PermissionRequest, hookCommand, out var permissionRequestInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SessionEnd, hookCommand, out var sessionEndInspection, out parseMessage))
+        if (!TryInspectHookEvent(hooksObject, ClaudeHookEventNames.UserPromptSubmit, hookCommand, string.Empty, out var userPromptSubmitInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PreToolUse, hookCommand, string.Empty, out var preToolUseInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PostToolUse, hookCommand, string.Empty, out var postToolUseInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PostToolUseFailure, hookCommand, string.Empty, out var postToolUseFailureInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Stop, hookCommand, string.Empty, out var stopInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.StopFailure, hookCommand, string.Empty, out var stopFailureInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Elicitation, hookCommand, string.Empty, out var elicitationInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PermissionRequest, hookCommand, string.Empty, out var permissionRequestInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Notification, hookCommand, ClaudeSoftLockSignalSource.NotificationMatcher, out var notificationInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SessionEnd, hookCommand, string.Empty, out var sessionEndInspection, out parseMessage))
         {
             return new ClaudeHookInstallationInspection
             {
@@ -110,30 +122,57 @@ public static class ClaudeHookSettingsJsonDocument
         }
 
         var hasManagedHookEntries = userPromptSubmitInspection.HasManagedHook
+            || preToolUseInspection.HasManagedHook
+            || postToolUseInspection.HasManagedHook
+            || postToolUseFailureInspection.HasManagedHook
             || stopInspection.HasManagedHook
             || stopFailureInspection.HasManagedHook
             || elicitationInspection.HasManagedHook
             || permissionRequestInspection.HasManagedHook
+            || notificationInspection.HasManagedHook
             || sessionEndInspection.HasManagedHook;
         var hasExpectedHookCommand = userPromptSubmitInspection.HasExpectedCommand
+            && preToolUseInspection.HasExpectedCommand
+            && postToolUseInspection.HasExpectedCommand
+            && postToolUseFailureInspection.HasExpectedCommand
             && stopInspection.HasExpectedCommand
             && stopFailureInspection.HasExpectedCommand
             && elicitationInspection.HasExpectedCommand
             && permissionRequestInspection.HasExpectedCommand
+            && notificationInspection.HasExpectedCommand
             && sessionEndInspection.HasExpectedCommand;
+        var hasExpectedNotificationMatcher = userPromptSubmitInspection.HasExpectedMatcher
+            && preToolUseInspection.HasExpectedMatcher
+            && postToolUseInspection.HasExpectedMatcher
+            && postToolUseFailureInspection.HasExpectedMatcher
+            && stopInspection.HasExpectedMatcher
+            && stopFailureInspection.HasExpectedMatcher
+            && elicitationInspection.HasExpectedMatcher
+            && permissionRequestInspection.HasExpectedMatcher
+            && notificationInspection.HasExpectedMatcher
+            && sessionEndInspection.HasExpectedMatcher;
         var hasExpectedHookShell = userPromptSubmitInspection.HasExpectedShell
+            && preToolUseInspection.HasExpectedShell
+            && postToolUseInspection.HasExpectedShell
+            && postToolUseFailureInspection.HasExpectedShell
             && stopInspection.HasExpectedShell
             && stopFailureInspection.HasExpectedShell
             && elicitationInspection.HasExpectedShell
             && permissionRequestInspection.HasExpectedShell
+            && notificationInspection.HasExpectedShell
             && sessionEndInspection.HasExpectedShell;
         var isInstalled = userPromptSubmitInspection.HasManagedHook
+            && preToolUseInspection.HasManagedHook
+            && postToolUseInspection.HasManagedHook
+            && postToolUseFailureInspection.HasManagedHook
             && stopInspection.HasManagedHook
             && stopFailureInspection.HasManagedHook
             && elicitationInspection.HasManagedHook
             && permissionRequestInspection.HasManagedHook
+            && notificationInspection.HasManagedHook
             && sessionEndInspection.HasManagedHook
             && hasExpectedHookCommand
+            && hasExpectedNotificationMatcher
             && hasExpectedHookShell;
         var status = isInstalled ? CodexHookInstallationStatus.Installed : hasManagedHookEntries ? CodexHookInstallationStatus.NeedsUpdate : CodexHookInstallationStatus.NotInstalled;
         var message = isInstalled ? "Claude hook is installed." : hasManagedHookEntries ? "Claude hook is installed but needs update." : "Claude hook is not installed.";
@@ -149,7 +188,12 @@ public static class ClaudeHookSettingsJsonDocument
             HasHooksObject = true,
             HasManagedHookEntries = hasManagedHookEntries,
             HasExpectedHookCommand = hasExpectedHookCommand,
+            HasExpectedNotificationMatcher = hasExpectedNotificationMatcher,
             HasExpectedHookShell = hasExpectedHookShell,
+            HasNotificationHook = notificationInspection.HasManagedHook,
+            HasPostToolUseFailureHook = postToolUseFailureInspection.HasManagedHook,
+            HasPostToolUseHook = postToolUseInspection.HasManagedHook,
+            HasPreToolUseHook = preToolUseInspection.HasManagedHook,
             HasUserPromptSubmitHook = userPromptSubmitInspection.HasManagedHook,
             HasStopHook = stopInspection.HasManagedHook,
             HasStopFailureHook = stopFailureInspection.HasManagedHook,
@@ -170,7 +214,14 @@ public static class ClaudeHookSettingsJsonDocument
 
         foreach (var hookDefinition in s_requiredHookDefinitions)
         {
-            if (!TryUpsertManagedHook(hooksObject, hookDefinition.HookEventName, hookCommand, hookDefinition.StatusMessage, out message)) return false;
+            if (!TryUpsertManagedHook(
+                hooksObject,
+                hookDefinition.HookEventName,
+                hookCommand,
+                hookDefinition.StatusMessage,
+                hookDefinition.Matcher,
+                out message))
+                return false;
         }
 
         updatedContent = settingsObject.ToJsonString(s_jsonSerializerOptions) + Environment.NewLine;
@@ -206,7 +257,8 @@ public static class ClaudeHookSettingsJsonDocument
         var hooksObject = new JsonObject();
         foreach (var hookDefinition in s_requiredHookDefinitions)
         {
-            hooksObject[hookDefinition.HookEventName] = CreateJsonArrayWithSingleNode(CreateManagedHookMatcher(hookCommand, hookDefinition.StatusMessage));
+            hooksObject[hookDefinition.HookEventName] = CreateJsonArrayWithSingleNode(
+                CreateManagedHookMatcher(hookCommand, hookDefinition.StatusMessage, hookDefinition.Matcher));
         }
 
         return hooksObject;
@@ -259,7 +311,13 @@ public static class ClaudeHookSettingsJsonDocument
         return false;
     }
 
-    private static bool TryInspectHookEvent(JsonObject hooksObject, string hookEventName, string expectedHookCommand, out ClaudeHookEventInspection inspection, out string message)
+    private static bool TryInspectHookEvent(
+        JsonObject hooksObject,
+        string hookEventName,
+        string expectedHookCommand,
+        string expectedMatcher,
+        out ClaudeHookEventInspection inspection,
+        out string message)
     {
         inspection = default;
         message = string.Empty;
@@ -273,6 +331,7 @@ public static class ClaudeHookSettingsJsonDocument
         var hasManagedHook = false;
         var hasExpectedCommand = false;
         var hasExpectedShell = false;
+        var hasExpectedMatcher = false;
         foreach (var hookMatcherNode in hookMatchers)
         {
             if (hookMatcherNode is not JsonObject hookMatcherObject)
@@ -286,6 +345,8 @@ public static class ClaudeHookSettingsJsonDocument
                 message = $"Claude hook matcher for '{hookEventName}' must contain a hooks array.";
                 return false;
             }
+
+            hasExpectedMatcher |= HasExpectedMatcher(GetStringProperty(hookMatcherObject, "matcher"), expectedMatcher);
 
             foreach (var hookDefinitionNode in hookDefinitions)
             {
@@ -304,17 +365,23 @@ public static class ClaudeHookSettingsJsonDocument
             }
         }
 
-        inspection = new ClaudeHookEventInspection(hasManagedHook, hasExpectedCommand, hasExpectedShell);
+        inspection = new ClaudeHookEventInspection(hasManagedHook, hasExpectedCommand, hasExpectedMatcher, hasExpectedShell);
         return true;
     }
 
-    private static bool TryUpsertManagedHook(JsonObject hooksObject, string hookEventName, string hookCommand, string statusMessage, out string message)
+    private static bool TryUpsertManagedHook(
+        JsonObject hooksObject,
+        string hookEventName,
+        string hookCommand,
+        string statusMessage,
+        string matcher,
+        out string message)
     {
         message = string.Empty;
 
         if (!hooksObject.TryGetPropertyValue(hookEventName, out var hookEventNode) || hookEventNode is null)
         {
-            hooksObject[hookEventName] = CreateJsonArrayWithSingleNode(CreateManagedHookMatcher(hookCommand, statusMessage));
+            hooksObject[hookEventName] = CreateJsonArrayWithSingleNode(CreateManagedHookMatcher(hookCommand, statusMessage, matcher));
             return true;
         }
 
@@ -349,12 +416,12 @@ public static class ClaudeHookSettingsJsonDocument
                 var command = GetStringProperty(hookDefinitionObject, "command");
                 if (!IsLidGuardClaudeHookCommand(command)) continue;
 
-                ReplaceManagedHookDefinition(hookDefinitionObject, hookCommand, statusMessage);
+                ReplaceManagedHookDefinition(hookMatcherObject, hookDefinitionObject, hookCommand, statusMessage, matcher);
                 return true;
             }
         }
 
-        AddJsonNode(hookMatchers, CreateManagedHookMatcher(hookCommand, statusMessage));
+        AddJsonNode(hookMatchers, CreateManagedHookMatcher(hookCommand, statusMessage, matcher));
         return true;
     }
 
@@ -392,12 +459,15 @@ public static class ClaudeHookSettingsJsonDocument
         return true;
     }
 
-    private static JsonObject CreateManagedHookMatcher(string hookCommand, string statusMessage)
+    private static JsonObject CreateManagedHookMatcher(string hookCommand, string statusMessage, string matcher)
     {
-        return new JsonObject
+        var hookMatcherObject = new JsonObject
         {
             ["hooks"] = CreateJsonArrayWithSingleNode(CreateManagedHookDefinition(hookCommand, statusMessage))
         };
+
+        if (!string.IsNullOrWhiteSpace(matcher)) hookMatcherObject["matcher"] = matcher;
+        return hookMatcherObject;
     }
 
     private static JsonObject CreateManagedHookDefinition(string hookCommand, string statusMessage)
@@ -412,14 +482,30 @@ public static class ClaudeHookSettingsJsonDocument
         };
     }
 
-    private static void ReplaceManagedHookDefinition(JsonObject hookDefinitionObject, string hookCommand, string statusMessage)
+    private static void ReplaceManagedHookDefinition(
+        JsonObject hookMatcherObject,
+        JsonObject hookDefinitionObject,
+        string hookCommand,
+        string statusMessage,
+        string matcher)
     {
+        if (string.IsNullOrWhiteSpace(matcher))
+            hookMatcherObject.Remove("matcher");
+        else
+            hookMatcherObject["matcher"] = matcher;
+
         hookDefinitionObject.Clear();
         hookDefinitionObject["type"] = "command";
         hookDefinitionObject["command"] = hookCommand;
         hookDefinitionObject["shell"] = PowerShellShellName;
         hookDefinitionObject["timeout"] = 30;
         hookDefinitionObject["statusMessage"] = statusMessage;
+    }
+
+    private static bool HasExpectedMatcher(string actualMatcher, string expectedMatcher)
+    {
+        if (string.IsNullOrWhiteSpace(expectedMatcher)) return string.IsNullOrWhiteSpace(actualMatcher);
+        return actualMatcher.Equals(expectedMatcher, StringComparison.Ordinal);
     }
 
     private static bool IsLidGuardClaudeHookCommand(string command)
@@ -443,5 +529,9 @@ public static class ClaudeHookSettingsJsonDocument
 
     private static void AddJsonNode(JsonArray jsonArray, JsonNode jsonNode) => jsonArray.Add(jsonNode);
 
-    private readonly record struct ClaudeHookEventInspection(bool HasManagedHook, bool HasExpectedCommand, bool HasExpectedShell);
+    private readonly record struct ClaudeHookEventInspection(
+        bool HasManagedHook,
+        bool HasExpectedCommand,
+        bool HasExpectedMatcher,
+        bool HasExpectedShell);
 }

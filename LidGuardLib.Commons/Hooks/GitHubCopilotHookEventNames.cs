@@ -10,11 +10,13 @@ public static class GitHubCopilotHookEventNames
     public const string NotificationPascalCaseAlias = "Notification";
     public const string PascalCaseAgentStopAlias = "Stop";
     public const string PascalCaseErrorOccurredAlias = "ErrorOccurred";
+    public const string PascalCasePostToolUseAlias = "PostToolUse";
     public const string PascalCasePermissionRequestAlias = "PermissionRequest";
     public const string PascalCasePreToolUseAlias = "PreToolUse";
     public const string PascalCaseSessionEndAlias = "SessionEnd";
     public const string PascalCaseSessionStartAlias = "SessionStart";
     public const string PascalCaseUserPromptSubmittedAlias = "UserPromptSubmit";
+    public const string PostToolUse = "postToolUse";
     public const string PermissionPromptNotificationType = "permission_prompt";
     public const string PermissionRequest = "permissionRequest";
     public const string PreToolUse = "preToolUse";
@@ -29,6 +31,7 @@ public static class GitHubCopilotHookEventNames
             AgentStop => PascalCaseAgentStopAlias,
             ErrorOccurred => PascalCaseErrorOccurredAlias,
             Notification => NotificationPascalCaseAlias,
+            PostToolUse => PascalCasePostToolUseAlias,
             PermissionRequest => PascalCasePermissionRequestAlias,
             PreToolUse => PascalCasePreToolUseAlias,
             SessionEnd => PascalCaseSessionEndAlias,

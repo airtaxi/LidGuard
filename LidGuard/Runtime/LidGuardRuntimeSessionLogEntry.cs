@@ -14,6 +14,12 @@ internal sealed class LidGuardRuntimeSessionLogEntry
 
     public string SessionIdentifier { get; init; } = string.Empty;
 
+    public LidGuardSessionSoftLockState SoftLockState { get; init; }
+
+    public string SoftLockReason { get; init; } = string.Empty;
+
+    public DateTimeOffset? SoftLockedAt { get; init; }
+
     public int WatchedProcessIdentifier { get; init; }
 
     public string WorkingDirectory { get; init; } = string.Empty;

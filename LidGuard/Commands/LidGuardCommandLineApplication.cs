@@ -949,7 +949,8 @@ internal static class LidGuardCommandLineApplication
             foreach (var session in response.Sessions)
             {
                 var processText = session.WatchedProcessIdentifier > 0 ? session.WatchedProcessIdentifier.ToString() : "none";
-                Console.WriteLine($"- {session.Provider}:{session.SessionIdentifier} process={processText} cwd=\"{session.WorkingDirectory}\" started={session.StartedAt:O}");
+                Console.WriteLine(
+                    $"- {session.Provider}:{session.SessionIdentifier} process={processText} softLock={DescribeSoftLockStatus(session)} cwd=\"{session.WorkingDirectory}\" started={session.StartedAt:O}");
             }
         }
 
@@ -985,7 +986,7 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  {commandDisplayName} remove-session --session <id> [--provider codex|claude|copilot|custom|unknown]");
         Console.WriteLine($"  {commandDisplayName} claude-hook");
         Console.WriteLine($"  {commandDisplayName} claude-hooks [--format settings-json|hooks-json] [--executable <path>]");
-        Console.WriteLine($"  {commandDisplayName} copilot-hook --event sessionStart|sessionEnd|userPromptSubmitted|preToolUse|permissionRequest|agentStop|errorOccurred|notification");
+        Console.WriteLine($"  {commandDisplayName} copilot-hook --event sessionStart|sessionEnd|userPromptSubmitted|preToolUse|postToolUse|permissionRequest|agentStop|errorOccurred|notification");
         Console.WriteLine($"  {commandDisplayName} copilot-hooks [--format config-json|hooks-json] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} codex-hook");
         Console.WriteLine($"  {commandDisplayName} codex-hooks [--format config-toml|hooks-json] [--executable <path>]");
@@ -1032,4 +1033,14 @@ internal static class LidGuardCommandLineApplication
     }
 
     private static string DescribeSupportedPostStopSuspendSystemSounds() => string.Join(", ", s_supportedPostStopSuspendSystemSoundNames);
+
+    private static string DescribeSoftLockStatus(LidGuardSessionStatus session)
+    {
+        if (session.SoftLockState != LidGuardSessionSoftLockState.SoftLocked) return session.SoftLockState.ToString();
+
+        var details = session.SoftLockState.ToString();
+        if (!string.IsNullOrWhiteSpace(session.SoftLockReason)) details = $"{details}:{session.SoftLockReason}";
+        if (session.SoftLockedAt is not null) details = $"{details}@{session.SoftLockedAt.Value:O}";
+        return details;
+    }
 }

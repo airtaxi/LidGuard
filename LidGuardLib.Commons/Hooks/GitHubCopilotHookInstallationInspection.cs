@@ -28,6 +28,8 @@ public sealed class GitHubCopilotHookInstallationInspection
 
     public bool HasPermissionRequestHook { get; init; }
 
+    public bool HasPostToolUseHook { get; init; }
+
     public bool HasPreToolUseHook { get; init; }
 
     public bool HasSessionEndHook { get; init; }
@@ -64,6 +66,7 @@ public sealed class GitHubCopilotHookInstallationInspection
             HasManagedHookEntries = HasManagedHookEntries,
             HasNotificationHook = HasNotificationHook,
             HasPermissionRequestHook = HasPermissionRequestHook,
+            HasPostToolUseHook = HasPostToolUseHook,
             HasPreToolUseHook = HasPreToolUseHook,
             HasSessionEndHook = HasSessionEndHook,
             HasSessionStartHook = HasSessionStartHook,

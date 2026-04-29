@@ -15,6 +15,8 @@ internal sealed class LidGuardPipeRequest
 
     public int WatchedProcessIdentifier { get; init; }
 
+    public string SessionStateReason { get; init; } = string.Empty;
+
     public string WorkingDirectory { get; init; } = string.Empty;
 
     public bool HasSettings { get; init; }

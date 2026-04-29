@@ -19,6 +19,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
         (GitHubCopilotHookEventNames.SessionEnd, "Recording GitHub Copilot session end", string.Empty),
         (GitHubCopilotHookEventNames.UserPromptSubmitted, "Starting LidGuard turn protection", string.Empty),
         (GitHubCopilotHookEventNames.PreToolUse, "Blocking closed-lid ask_user prompt", string.Empty),
+        (GitHubCopilotHookEventNames.PostToolUse, "Recording GitHub Copilot tool completion activity", string.Empty),
         (GitHubCopilotHookEventNames.PermissionRequest, "Responding to closed-lid permission request", string.Empty),
         (GitHubCopilotHookEventNames.AgentStop, "Stopping LidGuard turn protection", string.Empty),
         (GitHubCopilotHookEventNames.ErrorOccurred, "Recording GitHub Copilot error telemetry", string.Empty),
@@ -105,6 +106,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
         var hasSessionEndHook = false;
         var hasUserPromptSubmittedHook = false;
         var hasPreToolUseHook = false;
+        var hasPostToolUseHook = false;
         var hasPermissionRequestHook = false;
         var hasAgentStopHook = false;
         var hasErrorOccurredHook = false;
@@ -160,6 +162,9 @@ public static class GitHubCopilotHookConfigurationJsonDocument
                 case GitHubCopilotHookEventNames.PreToolUse:
                     hasPreToolUseHook = hookEventInspection.HasManagedHook;
                     break;
+                case GitHubCopilotHookEventNames.PostToolUse:
+                    hasPostToolUseHook = hookEventInspection.HasManagedHook;
+                    break;
                 case GitHubCopilotHookEventNames.PermissionRequest:
                     hasPermissionRequestHook = hookEventInspection.HasManagedHook;
                     break;
@@ -179,6 +184,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
             && hasSessionEndHook
             && hasUserPromptSubmittedHook
             && hasPreToolUseHook
+            && hasPostToolUseHook
             && hasPermissionRequestHook
             && hasAgentStopHook
             && hasErrorOccurredHook
@@ -204,6 +210,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
             HasManagedHookEntries = hasManagedHookEntries,
             HasNotificationHook = hasNotificationHook,
             HasPermissionRequestHook = hasPermissionRequestHook,
+            HasPostToolUseHook = hasPostToolUseHook,
             HasPreToolUseHook = hasPreToolUseHook,
             HasSessionEndHook = hasSessionEndHook,
             HasSessionStartHook = hasSessionStartHook,
