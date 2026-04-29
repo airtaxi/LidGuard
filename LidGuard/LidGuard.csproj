@@ -25,15 +25,21 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageOutputPath>$(MSBuildProjectDirectory)\..\artifacts\packages</PackageOutputPath>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <UsesWmiLight>false</UsesWmiLight>
+    <UsesWmiLight Condition="'$(RuntimeIdentifier)' != '' and $([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win'))">true</UsesWmiLight>
+    <UsesWmiLight Condition="'$(RuntimeIdentifier)' == '' and '$(OS)' == 'Windows_NT'">true</UsesWmiLight>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\LidGuardLib.Commons\LidGuardLib.Commons.csproj" />
-    <ProjectReference Include="..\LidGuardLib.Windows\LidGuardLib.Windows.csproj" />
+    <ProjectReference Include="..\LidGuardLib.Windows\LidGuardLib.Windows.csproj" AdditionalProperties="LidGuardTargetRuntimeIdentifier=$(RuntimeIdentifier)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UsesWmiLight)' == 'true'">
+    <TrimmerRootAssembly Include="WmiLight" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>
-

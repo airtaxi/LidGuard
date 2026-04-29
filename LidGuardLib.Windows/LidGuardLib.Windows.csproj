@@ -10,6 +10,15 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
     <CsWin32RunAsBuildTask>true</CsWin32RunAsBuildTask>
+    <EffectiveTargetRuntimeIdentifier>$(LidGuardTargetRuntimeIdentifier)</EffectiveTargetRuntimeIdentifier>
+    <EffectiveTargetRuntimeIdentifier Condition="'$(EffectiveTargetRuntimeIdentifier)' == ''">$(RuntimeIdentifier)</EffectiveTargetRuntimeIdentifier>
+    <CurrentTargetPlatform>unknown</CurrentTargetPlatform>
+    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' != '' and $([System.String]::Copy('$(EffectiveTargetRuntimeIdentifier)').StartsWith('win'))">windows</CurrentTargetPlatform>
+    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' != '' and $([System.String]::Copy('$(EffectiveTargetRuntimeIdentifier)').StartsWith('linux'))">linux</CurrentTargetPlatform>
+    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' != '' and $([System.String]::Copy('$(EffectiveTargetRuntimeIdentifier)').StartsWith('osx'))">macOS</CurrentTargetPlatform>
+    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' == '' and '$(OS)' == 'Windows_NT'">windows</CurrentTargetPlatform>
+    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' == '' and $([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))">linux</CurrentTargetPlatform>
+    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' == '' and $([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))">macOS</CurrentTargetPlatform>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +26,28 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="**\*.windows.cs" />
+    <Compile Remove="**\*.linux.cs" />
+    <Compile Remove="**\*.macOS.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(CurrentTargetPlatform)' == 'windows'">
+    <Compile Include="**\*.windows.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(CurrentTargetPlatform)' == 'linux'">
+    <Compile Include="**\*.linux.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(CurrentTargetPlatform)' == 'macOS'">
+    <Compile Include="**\*.macOS.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.275" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(CurrentTargetPlatform)' == 'windows'">
+    <PackageReference Include="WmiLight" Version="7.2.0" />
   </ItemGroup>
 </Project>
