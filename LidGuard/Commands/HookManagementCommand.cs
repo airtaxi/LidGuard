@@ -61,19 +61,28 @@ internal static class HookManagementCommand
 
     public static int RemoveHook(IReadOnlyDictionary<string, string> options)
     {
-        if (!TrySelectSingleHookProvider(options, "Remove hooks for provider", out var provider, out var message))
+        if (!TrySelectHookProviders(options, "Remove hooks for provider", true, out var providers, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
         }
 
-        return provider switch
+        var exitCode = 0;
+        foreach (var provider in providers)
         {
-            AgentProvider.Codex => RemoveCodexHook(options),
-            AgentProvider.Claude => RemoveClaudeHook(options),
-            AgentProvider.GitHubCopilot => RemoveGitHubCopilotHook(options),
-            _ => WriteUnsupportedProvider()
-        };
+            if (providers.Count > 1) Console.WriteLine($"Removing {provider} hook...");
+            var providerExitCode = provider switch
+            {
+                AgentProvider.Codex => RemoveCodexHook(options),
+                AgentProvider.Claude => RemoveClaudeHook(options),
+                AgentProvider.GitHubCopilot => RemoveGitHubCopilotHook(options),
+                _ => WriteUnsupportedProvider()
+            };
+
+            if (providerExitCode != 0) exitCode = providerExitCode;
+        }
+
+        return exitCode;
     }
 
     public static int WriteHookEvents(IReadOnlyDictionary<string, string> options)
@@ -396,39 +405,6 @@ internal static class HookManagementCommand
 
         message = "Unsupported provider. Use codex, claude, copilot, or all.";
         return false;
-    }
-
-    private static bool TrySelectSingleHookProvider(
-        IReadOnlyDictionary<string, string> options,
-        string prompt,
-        out AgentProvider provider,
-        out string message)
-    {
-        provider = AgentProvider.Unknown;
-        message = string.Empty;
-
-        var providerText = GetOption(options, "provider");
-        if (string.IsNullOrWhiteSpace(providerText))
-        {
-            Console.Write($"{prompt} (codex, claude, copilot): ");
-            providerText = Console.ReadLine();
-            if (providerText is null)
-            {
-                message = "Input ended before a provider was selected.";
-                return false;
-            }
-        }
-
-        IReadOnlyList<AgentProvider> selectedProviders = [];
-        if (!TryParseHookProviderSelection(providerText, out selectedProviders, out message)) return false;
-        if (selectedProviders.Count != 1)
-        {
-            message = "A single provider is required. Use codex, claude, or copilot.";
-            return false;
-        }
-
-        provider = selectedProviders[0];
-        return true;
     }
 
     private static bool TryParseMaximumLineCount(IReadOnlyDictionary<string, string> options, out int maximumLineCount, out string message)

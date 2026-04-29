@@ -938,7 +938,7 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  {commandDisplayName} codex-hooks [--format config-toml|hooks-json] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} hook-status [--provider codex|claude|copilot|all] [--config <path>] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} hook-install [--provider codex|claude|copilot|all] [--config <path>] [--executable <path>]");
-        Console.WriteLine($"  {commandDisplayName} hook-remove [--provider codex|claude|copilot] [--config <path>] [--executable <path>]");
+        Console.WriteLine($"  {commandDisplayName} hook-remove [--provider codex|claude|copilot|all] [--config <path>] [--executable <path>]");
         Console.WriteLine($"  {commandDisplayName} hook-events [--provider codex|claude|copilot|all] [--count <number>]");
         Console.WriteLine($"  {commandDisplayName} preview-system-sound --name Asterisk|Beep|Exclamation|Hand|Question");
         Console.WriteLine($"  {commandDisplayName} {LidGuardMcpServerCommand.CommandName}");

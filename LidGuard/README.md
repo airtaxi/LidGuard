@@ -20,8 +20,10 @@ lidguard --help
 
 ```powershell
 lidguard hook-install
+lidguard hook-remove
 lidguard hook-install --provider all
 lidguard hook-status --provider all
+lidguard hook-remove --provider all
 lidguard hook-events --provider all
 lidguard hook-install --provider claude
 lidguard hook-status --provider claude
