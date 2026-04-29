@@ -505,30 +505,40 @@ internal static class LidGuardCommandLineApplication
 
     private static bool TryCreateInteractiveSettings(LidGuardSettings currentSettings, out LidGuardSettings settings, out string message)
     {
-        var normalizedSettings = LidGuardSettings.Normalize(currentSettings);
-        var powerRequest = normalizedSettings.PowerRequest ?? PowerRequestOptions.Default;
-        settings = normalizedSettings;
+        var normalizedStoredSettings = LidGuardSettings.Normalize(currentSettings);
+        var storedPowerRequest = normalizedStoredSettings.PowerRequest ?? PowerRequestOptions.Default;
+        var defaultSettings = LidGuardSettings.Normalize(LidGuardSettings.HeadlessRuntimeDefault);
+        var defaultPowerRequest = defaultSettings.PowerRequest ?? PowerRequestOptions.Default;
+        settings = normalizedStoredSettings;
         message = string.Empty;
 
-        if (!TryReadBooleanSetting("Prevent system sleep", powerRequest.PreventSystemSleep, out var preventSystemSleep, out message)) return false;
-        if (!TryReadBooleanSetting("Prevent away mode sleep", powerRequest.PreventAwayModeSleep, out var preventAwayModeSleep, out message)) return false;
-        if (!TryReadBooleanSetting("Prevent display sleep", powerRequest.PreventDisplaySleep, out var preventDisplaySleep, out message)) return false;
-        if (!TryReadBooleanSetting("Change lid action", normalizedSettings.ChangeLidAction, out var changeLidAction, out message)) return false;
-        if (!TryReadBooleanSetting("Watch parent process", normalizedSettings.WatchParentProcess, out var watchParentProcess, out message)) return false;
-        if (!TryReadSuspendModeSetting("Suspend mode", normalizedSettings.SuspendMode, out var suspendMode, out message)) return false;
+        if (!TryReadBooleanSetting("Prevent system sleep", storedPowerRequest.PreventSystemSleep, defaultPowerRequest.PreventSystemSleep, out var preventSystemSleep, out message)) return false;
+        if (!TryReadBooleanSetting("Prevent away mode sleep", storedPowerRequest.PreventAwayModeSleep, defaultPowerRequest.PreventAwayModeSleep, out var preventAwayModeSleep, out message)) return false;
+        if (!TryReadBooleanSetting("Prevent display sleep", storedPowerRequest.PreventDisplaySleep, defaultPowerRequest.PreventDisplaySleep, out var preventDisplaySleep, out message)) return false;
+        if (!TryReadBooleanSetting("Change lid action", normalizedStoredSettings.ChangeLidAction, defaultSettings.ChangeLidAction, out var changeLidAction, out message)) return false;
+        if (!TryReadBooleanSetting("Watch parent process", normalizedStoredSettings.WatchParentProcess, defaultSettings.WatchParentProcess, out var watchParentProcess, out message)) return false;
+        if (!TryReadSuspendModeSetting("Suspend mode", normalizedStoredSettings.SuspendMode, defaultSettings.SuspendMode, out var suspendMode, out message)) return false;
         if (!TryReadNonNegativeIntegerSetting(
             "Post-stop suspend delay seconds",
-            normalizedSettings.PostStopSuspendDelaySeconds,
+            normalizedStoredSettings.PostStopSuspendDelaySeconds,
+            defaultSettings.PostStopSuspendDelaySeconds,
             out var postStopSuspendDelaySeconds,
             out message))
             return false;
         if (!TryReadPostStopSuspendSoundSetting(
             "Post-stop suspend sound",
-            normalizedSettings.PostStopSuspendSound,
+            normalizedStoredSettings.PostStopSuspendSound,
+            defaultSettings.PostStopSuspendSound,
             out var postStopSuspendSound,
             out message))
             return false;
-        if (!TryReadClosedLidPermissionRequestDecisionSetting("Closed lid permission request decision", normalizedSettings.ClosedLidPermissionRequestDecision, out var closedLidPermissionRequestDecision, out message)) return false;
+        if (!TryReadClosedLidPermissionRequestDecisionSetting(
+            "Closed lid permission request decision",
+            normalizedStoredSettings.ClosedLidPermissionRequestDecision,
+            defaultSettings.ClosedLidPermissionRequestDecision,
+            out var closedLidPermissionRequestDecision,
+            out message))
+            return false;
 
         settings = new LidGuardSettings
         {
@@ -537,7 +547,7 @@ internal static class LidGuardCommandLineApplication
                 PreventSystemSleep = preventSystemSleep,
                 PreventAwayModeSleep = preventAwayModeSleep,
                 PreventDisplaySleep = preventDisplaySleep,
-                Reason = powerRequest.Reason
+                Reason = storedPowerRequest.Reason
             },
             ChangeLidAction = changeLidAction,
             SuspendMode = suspendMode,
@@ -550,11 +560,11 @@ internal static class LidGuardCommandLineApplication
         return true;
     }
 
-    private static bool TryReadBooleanSetting(string settingName, bool defaultValue, out bool value, out string message)
+    private static bool TryReadBooleanSetting(string settingName, bool storedValue, bool defaultValue, out bool value, out string message)
     {
-        value = defaultValue;
+        value = storedValue;
         message = string.Empty;
-        Console.Write($"{settingName} (default: {defaultValue}): ");
+        WriteInteractiveSettingPrompt(settingName, storedValue.ToString(), defaultValue.ToString());
 
         var valueText = Console.ReadLine();
         if (valueText is null)
@@ -570,11 +580,16 @@ internal static class LidGuardCommandLineApplication
         return false;
     }
 
-    private static bool TryReadSuspendModeSetting(string settingName, SystemSuspendMode defaultValue, out SystemSuspendMode value, out string message)
+    private static bool TryReadSuspendModeSetting(
+        string settingName,
+        SystemSuspendMode storedValue,
+        SystemSuspendMode defaultValue,
+        out SystemSuspendMode value,
+        out string message)
     {
-        value = defaultValue;
+        value = storedValue;
         message = string.Empty;
-        Console.Write($"{settingName} (default: {defaultValue}, candidates: Sleep, Hibernate): ");
+        WriteInteractiveSettingPrompt(settingName, storedValue.ToString(), defaultValue.ToString(), "candidates: Sleep, Hibernate");
 
         var valueText = Console.ReadLine();
         if (valueText is null)
@@ -585,24 +600,31 @@ internal static class LidGuardCommandLineApplication
 
         if (string.IsNullOrWhiteSpace(valueText)) return true;
 
-        value = valueText.Trim().ToLowerInvariant() switch
+        var normalizedValueText = valueText.Trim();
+        value = normalizedValueText.ToLowerInvariant() switch
         {
             "sleep" => SystemSuspendMode.Sleep,
             "hibernate" => SystemSuspendMode.Hibernate,
-            _ => defaultValue
+            _ => storedValue
         };
 
-        if (valueText.Trim().Equals(value.ToString(), StringComparison.OrdinalIgnoreCase)) return true;
+        if (normalizedValueText.Equals("sleep", StringComparison.OrdinalIgnoreCase)) return true;
+        if (normalizedValueText.Equals("hibernate", StringComparison.OrdinalIgnoreCase)) return true;
 
         message = $"{settingName} must be sleep or hibernate.";
         return false;
     }
 
-    private static bool TryReadNonNegativeIntegerSetting(string settingName, int defaultValue, out int value, out string message)
+    private static bool TryReadNonNegativeIntegerSetting(
+        string settingName,
+        int storedValue,
+        int defaultValue,
+        out int value,
+        out string message)
     {
-        value = defaultValue;
+        value = storedValue;
         message = string.Empty;
-        Console.Write($"{settingName} (default: {defaultValue}, 0 = immediate): ");
+        WriteInteractiveSettingPrompt(settingName, storedValue.ToString(), defaultValue.ToString(), "0 = immediate");
 
         var valueText = Console.ReadLine();
         if (valueText is null)
@@ -618,13 +640,22 @@ internal static class LidGuardCommandLineApplication
         return false;
     }
 
-    private static bool TryReadPostStopSuspendSoundSetting(string settingName, string defaultValue, out string value, out string message)
+    private static bool TryReadPostStopSuspendSoundSetting(
+        string settingName,
+        string storedValue,
+        string defaultValue,
+        out string value,
+        out string message)
     {
-        value = defaultValue;
+        value = storedValue;
         message = string.Empty;
+        var storedDisplayValue = PostStopSuspendSoundConfiguration.GetDisplayValue(storedValue);
         var defaultDisplayValue = PostStopSuspendSoundConfiguration.GetDisplayValue(defaultValue);
-        Console.Write(
-            $"{settingName} (default: {defaultDisplayValue}, use off to disable, SystemSounds: {DescribeSupportedPostStopSuspendSystemSounds()}, or a .wav path): ");
+        WriteInteractiveSettingPrompt(
+            settingName,
+            storedDisplayValue,
+            defaultDisplayValue,
+            $"use off to disable, SystemSounds: {DescribeSupportedPostStopSuspendSystemSounds()}, or a .wav path");
 
         var valueText = Console.ReadLine();
         if (valueText is null)
@@ -640,13 +671,14 @@ internal static class LidGuardCommandLineApplication
 
     private static bool TryReadClosedLidPermissionRequestDecisionSetting(
         string settingName,
+        ClosedLidPermissionRequestDecision storedValue,
         ClosedLidPermissionRequestDecision defaultValue,
         out ClosedLidPermissionRequestDecision value,
         out string message)
     {
-        value = defaultValue;
+        value = storedValue;
         message = string.Empty;
-        Console.Write($"{settingName} (default: {defaultValue}, candidates: Deny, Allow): ");
+        WriteInteractiveSettingPrompt(settingName, storedValue.ToString(), defaultValue.ToString(), "candidates: Deny, Allow");
 
         var valueText = Console.ReadLine();
         if (valueText is null)
@@ -657,6 +689,18 @@ internal static class LidGuardCommandLineApplication
 
         if (string.IsNullOrWhiteSpace(valueText)) return true;
         return TryParseClosedLidPermissionRequestDecision(valueText, out value, out message);
+    }
+
+    private static void WriteInteractiveSettingPrompt(
+        string settingName,
+        string storedValueText,
+        string defaultValueText,
+        string additionalDetails = "")
+    {
+        var prompt = $"{settingName} (stored: {storedValueText}, default: {defaultValueText}";
+        if (!string.IsNullOrWhiteSpace(additionalDetails)) prompt = $"{prompt}, {additionalDetails}";
+        prompt = $"{prompt}, press Enter to keep stored): ";
+        Console.Write(prompt);
     }
 
     private static bool TryParseInteractiveBoolean(string valueText, out bool value)
