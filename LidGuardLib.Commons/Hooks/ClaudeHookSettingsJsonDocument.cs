@@ -12,7 +12,6 @@ public static class ClaudeHookSettingsJsonDocument
     private const string PowerShellShellName = "powershell";
     private const string StartStatusMessage = "Starting LidGuard turn protection";
     private const string PermissionRequestStatusMessage = "Responding to closed-lid permission request";
-    private const string PermissionDeniedStatusMessage = "Recording permission denial";
     private const string StopStatusMessage = "Stopping LidGuard session protection";
     private static readonly JsonSerializerOptions s_jsonSerializerOptions = new() { WriteIndented = true };
     private static readonly (string HookEventName, string StatusMessage)[] s_requiredHookDefinitions =
@@ -21,7 +20,6 @@ public static class ClaudeHookSettingsJsonDocument
         (ClaudeHookEventNames.Stop, StopStatusMessage),
         (ClaudeHookEventNames.StopFailure, StopStatusMessage),
         (ClaudeHookEventNames.PermissionRequest, PermissionRequestStatusMessage),
-        (ClaudeHookEventNames.PermissionDenied, PermissionDeniedStatusMessage),
         (ClaudeHookEventNames.SessionEnd, StopStatusMessage)
     ];
 
@@ -93,7 +91,6 @@ public static class ClaudeHookSettingsJsonDocument
             || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Stop, hookCommand, out var stopInspection, out parseMessage)
             || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.StopFailure, hookCommand, out var stopFailureInspection, out parseMessage)
             || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PermissionRequest, hookCommand, out var permissionRequestInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PermissionDenied, hookCommand, out var permissionDeniedInspection, out parseMessage)
             || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SessionEnd, hookCommand, out var sessionEndInspection, out parseMessage))
         {
             return new ClaudeHookInstallationInspection
@@ -113,25 +110,21 @@ public static class ClaudeHookSettingsJsonDocument
             || stopInspection.HasManagedHook
             || stopFailureInspection.HasManagedHook
             || permissionRequestInspection.HasManagedHook
-            || permissionDeniedInspection.HasManagedHook
             || sessionEndInspection.HasManagedHook;
         var hasExpectedHookCommand = userPromptSubmitInspection.HasExpectedCommand
             && stopInspection.HasExpectedCommand
             && stopFailureInspection.HasExpectedCommand
             && permissionRequestInspection.HasExpectedCommand
-            && permissionDeniedInspection.HasExpectedCommand
             && sessionEndInspection.HasExpectedCommand;
         var hasExpectedHookShell = userPromptSubmitInspection.HasExpectedShell
             && stopInspection.HasExpectedShell
             && stopFailureInspection.HasExpectedShell
             && permissionRequestInspection.HasExpectedShell
-            && permissionDeniedInspection.HasExpectedShell
             && sessionEndInspection.HasExpectedShell;
         var isInstalled = userPromptSubmitInspection.HasManagedHook
             && stopInspection.HasManagedHook
             && stopFailureInspection.HasManagedHook
             && permissionRequestInspection.HasManagedHook
-            && permissionDeniedInspection.HasManagedHook
             && sessionEndInspection.HasManagedHook
             && hasExpectedHookCommand
             && hasExpectedHookShell;
@@ -154,7 +147,6 @@ public static class ClaudeHookSettingsJsonDocument
             HasStopHook = stopInspection.HasManagedHook,
             HasStopFailureHook = stopFailureInspection.HasManagedHook,
             HasPermissionRequestHook = permissionRequestInspection.HasManagedHook,
-            HasPermissionDeniedHook = permissionDeniedInspection.HasManagedHook,
             HasSessionEndHook = sessionEndInspection.HasManagedHook,
             Message = message
         };

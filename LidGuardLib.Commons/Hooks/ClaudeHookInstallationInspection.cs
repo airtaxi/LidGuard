@@ -32,8 +32,6 @@ public sealed class ClaudeHookInstallationInspection
 
     public bool HasPermissionRequestHook { get; init; }
 
-    public bool HasPermissionDeniedHook { get; init; }
-
     public bool HasSessionEndHook { get; init; }
 
     public string Message { get; init; } = string.Empty;

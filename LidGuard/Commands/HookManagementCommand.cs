@@ -244,7 +244,6 @@ internal static class HookManagementCommand
         Console.WriteLine($"  Stop hook: {inspection.HasStopHook}");
         Console.WriteLine($"  StopFailure hook: {inspection.HasStopFailureHook}");
         Console.WriteLine($"  PermissionRequest hook: {inspection.HasPermissionRequestHook}");
-        Console.WriteLine($"  PermissionDenied hook: {inspection.HasPermissionDeniedHook}");
         Console.WriteLine($"  SessionEnd hook: {inspection.HasSessionEndHook}");
         Console.WriteLine($"  All stop hooks: {inspection.HasAllStopHooks}");
         Console.WriteLine($"  Expected command: {inspection.HasExpectedHookCommand}");

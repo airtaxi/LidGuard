@@ -243,7 +243,6 @@ Reference:
 
 - Start event: `UserPromptSubmit`.
 - Permission decision event: `PermissionRequest`.
-- Permission observation event: `PermissionDenied`.
 - Stop events: `Stop`, `StopFailure`, `SessionEnd`.
 - Command path: `lidguard claude-hook` when the global tool is available on PATH, otherwise the current executable path plus `claude-hook`.
 - Snippet command: `lidguard claude-hooks --format settings-json`.
@@ -255,7 +254,6 @@ Reference:
 - `claude-hook` reads Claude hook JSON from stdin and maps `hook_event_name` to runtime IPC.
 - For `UserPromptSubmit`, it sends internal `start --provider claude`.
 - For `PermissionRequest`, it does not stop the runtime; it queries the runtime lid state and returns a structured allow/deny decision from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed.
-- For `PermissionDenied`, it only records diagnostics and leaves active session tracking intact.
 - For `Stop`, `StopFailure`, and `SessionEnd`, it sends internal `stop --provider claude`.
 - The analyzed Claude hook input provides `session_id` and `cwd`, but not a stable parent process id, so the current implementation resolves a process by working directory.
 - Claude `PermissionRequest` exits successfully with structured JSON stdout only for closed-lid decisions; when the lid is open, unknown, or runtime status is unavailable, it exits successfully with empty stdout. LidGuard records diagnostics locally and should not block the Claude task when a runtime request fails.
@@ -334,7 +332,7 @@ The Windows CLI hook receiving path is implemented for Codex and Claude Code. Pr
 9. ~~Add Codex hook parsing, snippet output, and managed config install/status helpers.~~
 10. ~~Map Codex `SessionEnd` to stop handling and handle `PermissionRequest` as a closed-lid-only settings-driven allow/deny decision.~~
 11. ~~Add Claude hook parsing, snippet output, and managed `settings.json` install/status helpers.~~
-12. ~~Map Claude `Stop`, `StopFailure`, and `SessionEnd` to stop handling, while handling `PermissionRequest` as a closed-lid-only settings-driven allow/deny decision and `PermissionDenied` as diagnostics only.~~
+12. ~~Map Claude `Stop`, `StopFailure`, and `SessionEnd` to stop handling, while handling `PermissionRequest` as a closed-lid-only settings-driven allow/deny decision.~~
 
 ## Design Constraints
 
@@ -349,6 +347,7 @@ The Windows CLI hook receiving path is implemented for Codex and Claude Code. Pr
 - Do not introduce reflection-heavy, dynamic-loading, or runtime-marshalling-dependent patterns unless there is a clear AOT-safe reason.
 - Do not reintroduce sleep idle timeout modification.
 - Use power plan writes only for behavior that power requests cannot cover, currently `LIDACTION`.
+- Before version 1.0.0, do not add migration-only legacy code for behavior or configuration that has not been publicly released.
 
 ## Failure Modes
 
