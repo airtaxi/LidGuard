@@ -18,10 +18,16 @@ public static class CodexHookConfigTomlDocument
     [
         CodexHookEventNames.UserPromptSubmit,
         CodexHookEventNames.PermissionRequest,
+        CodexHookEventNames.Stop
+    ];
+    private static readonly string[] s_requiredStopHookEventNames = [CodexHookEventNames.Stop];
+    private static readonly string[] s_knownHookEventNames =
+    [
+        CodexHookEventNames.UserPromptSubmit,
+        CodexHookEventNames.PermissionRequest,
         CodexHookEventNames.Stop,
         CodexHookEventNames.SessionEnd
     ];
-    private static readonly string[] s_stopHookEventNames = [CodexHookEventNames.Stop, CodexHookEventNames.SessionEnd];
 
     public static string CreateManagedHookBlock(string hookCommand)
     {
@@ -32,7 +38,7 @@ public static class CodexHookConfigTomlDocument
         AppendHookBlock(builder, CodexHookEventNames.UserPromptSubmit, tomlCommandLiteral, StartStatusMessage);
         builder.AppendLine();
         AppendHookBlock(builder, CodexHookEventNames.PermissionRequest, tomlCommandLiteral, PermissionRequestStatusMessage);
-        foreach (var hookEventName in s_stopHookEventNames)
+        foreach (var hookEventName in s_requiredStopHookEventNames)
         {
             builder.AppendLine();
             AppendHookBlock(builder, hookEventName, tomlCommandLiteral, StopStatusMessage);
@@ -52,15 +58,14 @@ public static class CodexHookConfigTomlDocument
     {
         var hasFeatureFlag = HasCodexHooksFeatureFlag(content);
         var hasManagedBlock = HasManagedHookBlock(content);
-        var hasCurrentManagedBlock = content.Contains(CreateManagedHookBlock(hookCommand), StringComparison.Ordinal);
+        var contentUsedForRequiredHookInspection = hasManagedBlock ? GetManagedHookBlockContent(content) : content;
         var hasUserPromptSubmitHook = ContainsHookBlock(content, CodexHookEventNames.UserPromptSubmit);
         var hasStopHook = ContainsHookBlock(content, CodexHookEventNames.Stop);
         var hasPermissionRequestHook = ContainsHookBlock(content, CodexHookEventNames.PermissionRequest);
         var hasSessionEndHook = ContainsHookBlock(content, CodexHookEventNames.SessionEnd);
-        var hasAllStopHooks = hasStopHook && hasSessionEndHook;
-        var hasExpectedHookCommand = HasAllRequiredHookCommands(content, command => command.Equals(hookCommand, StringComparison.Ordinal));
-        var hasValidHookCommand = HasAllRequiredHookCommands(content, IsLidGuardCodexHookCommand);
-        var isInstalled = hasFeatureFlag && (hasManagedBlock ? hasCurrentManagedBlock : hasValidHookCommand);
+        var hasExpectedHookCommand = HasAllRequiredHookCommands(contentUsedForRequiredHookInspection, command => command.Equals(hookCommand, StringComparison.Ordinal));
+        var hasValidHookCommand = HasAllRequiredHookCommands(contentUsedForRequiredHookInspection, IsLidGuardCodexHookCommand);
+        var isInstalled = hasFeatureFlag && hasValidHookCommand;
         var status = isInstalled ? CodexHookInstallationStatus.Installed : hasManagedBlock ? CodexHookInstallationStatus.NeedsUpdate : CodexHookInstallationStatus.NotInstalled;
         var message = isInstalled ? "Codex hook is installed." : hasManagedBlock ? "Codex hook is installed but needs update." : "Codex hook is not installed.";
 
@@ -282,7 +287,7 @@ public static class CodexHookConfigTomlDocument
         if (!trimmedLine.StartsWith(prefix, StringComparison.Ordinal) || !trimmedLine.EndsWith(suffix, StringComparison.Ordinal)) return false;
 
         var candidateHookEventName = trimmedLine[prefix.Length..^suffix.Length];
-        if (!IsRequiredHookEventName(candidateHookEventName)) return false;
+        if (!IsKnownHookEventName(candidateHookEventName)) return false;
 
         hookEventName = candidateHookEventName;
         return true;
@@ -298,7 +303,7 @@ public static class CodexHookConfigTomlDocument
         if (trimmedLine.EndsWith(".hooks]]", StringComparison.Ordinal)) return false;
 
         var candidateHookEventName = trimmedLine[prefix.Length..^suffix.Length];
-        if (!IsRequiredHookEventName(candidateHookEventName)) return false;
+        if (!IsKnownHookEventName(candidateHookEventName)) return false;
 
         hookEventName = candidateHookEventName;
         return true;
@@ -330,11 +335,11 @@ public static class CodexHookConfigTomlDocument
         return value;
     }
 
-    private static bool IsRequiredHookEventName(string hookEventName)
+    private static bool IsKnownHookEventName(string hookEventName)
     {
-        foreach (var requiredHookEventName in s_requiredHookEventNames)
+        foreach (var knownHookEventName in s_knownHookEventNames)
         {
-            if (requiredHookEventName.Equals(hookEventName, StringComparison.Ordinal)) return true;
+            if (knownHookEventName.Equals(hookEventName, StringComparison.Ordinal)) return true;
         }
 
         return false;
@@ -373,6 +378,16 @@ public static class CodexHookConfigTomlDocument
     {
         if (string.IsNullOrWhiteSpace(command)) return false;
         return command.Contains("lidguard", StringComparison.OrdinalIgnoreCase) && command.Contains("codex-hook", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string GetManagedHookBlockContent(string content)
+    {
+        var startIndex = content.IndexOf(ManagedBlockStartMarker, StringComparison.Ordinal);
+        var endIndex = content.IndexOf(ManagedBlockEndMarker, startIndex, StringComparison.Ordinal);
+        if (startIndex < 0 || endIndex < 0) return content;
+
+        endIndex += ManagedBlockEndMarker.Length;
+        return content[startIndex..endIndex];
     }
 
     private static string EnsureCodexHooksFeatureFlag(string content)

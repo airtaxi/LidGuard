@@ -237,7 +237,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `WindowsCodexHookInstaller`
   - Resolves `%USERPROFILE%\.codex\config.toml` or `CODEX_HOME\config.toml`.
   - Installs, removes, and inspects the LidGuard-managed Codex hook block.
-  - When no managed block marker exists, status and removal fall back to detecting valid `lidguard ... codex-hook` command entries in the required hook events.
+  - When no managed block marker exists, status falls back to detecting valid `lidguard ... codex-hook` command entries in the required hook events, while removal also cleans an optional `SessionEnd` hook when present.
   - Backs up existing config files before writing when configured.
 - `WindowsCodexHookEventLog`
   - Records Codex hook diagnostics.
@@ -265,15 +265,17 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 - Start event: `UserPromptSubmit`.
 - Permission decision event: `PermissionRequest`.
-- Stop events: `Stop`, `SessionEnd`.
+- Required stop event: `Stop`.
+- Optional compatibility stop event: `SessionEnd` when a Codex build emits it.
 - Command path: `lidguard codex-hook` when the global tool is available on PATH, otherwise the current executable path plus `codex-hook`.
 - Snippet command: `lidguard codex-hooks --format config-toml`.
 - Install/status/remove commands: `lidguard hook-install --provider codex`, `lidguard hook-status --provider codex`, and `lidguard hook-remove --provider codex`.
 - Codex may require `features.codex_hooks = true`.
+- `hook-install` and `hook-status` require `UserPromptSubmit`, `PermissionRequest`, and `Stop`; `SessionEnd` is optional and shown separately when present.
 - `codex-hook` reads Codex hook JSON from stdin and maps `hook_event_name` to runtime IPC.
 - For `UserPromptSubmit`, it sends internal `start --provider codex`.
 - For `PermissionRequest`, it does not stop the runtime; it queries the runtime lid state and returns a structured allow/deny decision from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed.
-- For `Stop` and `SessionEnd`, it sends internal `stop --provider codex`.
+- For `Stop`, and for `SessionEnd` when a Codex build emits it, it sends internal `stop --provider codex`.
 - Codex hook input does not provide a stable parent process id, so the current implementation resolves a process by working directory.
 - Codex `PermissionRequest` exits successfully with structured JSON stdout only for closed-lid decisions; when the lid is open, unknown, or runtime status is unavailable, it exits successfully with empty stdout. LidGuard records diagnostics locally and should not block the Codex task when a runtime request fails.
 - This behavior is based on analyzing the `openai/codex` `codex-rs` hook source: `exit 0` with empty stdout is treated as a no-op success, while non-empty stdout may be parsed as hook JSON or interpreted as plain-text context depending on the event.
@@ -383,7 +385,7 @@ The Windows CLI hook receiving path is implemented for Codex and Claude Code. Pr
 7. ~~Add settings loading for the headless runtime.~~
 8. ~~Add a solution file including `LidGuardLib.Commons`, `LidGuardLib.Windows`, and `LidGuard`.~~
 9. ~~Add Codex hook parsing, snippet output, and managed config install/remove/status helpers.~~
-10. ~~Map Codex `SessionEnd` to stop handling and handle `PermissionRequest` as a closed-lid-only settings-driven allow/deny decision.~~
+10. ~~Map Codex `Stop` to stop handling, keep `SessionEnd` as an optional compatibility stop trigger, and handle `PermissionRequest` as a closed-lid-only settings-driven allow/deny decision.~~
 11. ~~Add Claude hook parsing, snippet output, and managed `settings.json` install/remove/status helpers.~~
 12. ~~Map Claude `Stop`, `StopFailure`, and `SessionEnd` to stop handling, while handling `PermissionRequest` as a closed-lid-only settings-driven allow/deny decision.~~
 13. ~~Add a stdio MCP server that can read LidGuard settings and update multiple settings in one request.~~

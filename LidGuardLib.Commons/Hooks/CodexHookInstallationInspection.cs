@@ -36,6 +36,8 @@ public sealed class CodexHookInstallationInspection
 
     public string Message { get; init; } = string.Empty;
 
+    public bool HasRequiredStopHooks => HasStopHook;
+
     public bool HasAllStopHooks => HasStopHook && HasSessionEndHook;
 
     public bool IsInstalled => Status == CodexHookInstallationStatus.Installed;

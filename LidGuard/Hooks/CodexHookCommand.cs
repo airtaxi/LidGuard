@@ -157,9 +157,8 @@ internal static class CodexHookCommand
         var hookBlockDefinitions = new (string HookEventName, string StatusMessage)[]
         {
             (CodexHookEventNames.UserPromptSubmit, "Starting LidGuard turn protection"),
-            (CodexHookEventNames.Stop, "Stopping LidGuard session protection"),
             (CodexHookEventNames.PermissionRequest, "Responding to closed-lid permission request"),
-            (CodexHookEventNames.SessionEnd, "Stopping LidGuard session protection")
+            (CodexHookEventNames.Stop, "Stopping LidGuard session protection")
         };
 
         Console.WriteLine("{");
