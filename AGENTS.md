@@ -43,12 +43,13 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
   - Uses CsWin32 with `CsWin32RunAsBuildTask=true` and `DisableRuntimeMarshalling=true` for AOT compatibility.
 - `LidGuard`
   - .NET 10 console app targeting `net10.0`.
-  - Standalone hook-facing CLI plus in-process headless runtime.
+  - Standalone hook-facing CLI plus in-process headless runtime and stdio MCP server hosting.
   - Uses root namespace `LidGuard` and assembly/apphost name `lidguard`.
   - Prepared for .NET 10 RID-specific NativeAOT .NET tool distribution as NuGet package `lidguard` with tool command `lidguard`.
   - Supported package RIDs are `win-x64`, `win-x86`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, and `osx-arm64`.
   - Windows behavior is implemented; macOS/Linux currently print a support-planned message and return exit code `0`.
   - Uses a named pipe to send `start`, `stop`, `status`, `settings`, and `cleanup-orphans` requests to the runtime.
+  - Hosts the stdio MCP server through the `mcp-server` subcommand.
   - Stores default settings JSON at `%LOCALAPPDATA%\LidGuard\settings.json`.
 - `LidGuard.slnx`
   - Root solution file including `LidGuardLib.Commons`, `LidGuardLib.Windows`, and `LidGuard`.
@@ -81,7 +82,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - Broadcast values are `0x0 = lid closed` and `0x1 = lid opened`.
 - `WindowsLidSwitchNotificationRegistration` converts these values to `LidSwitchState`.
 - Immediate sleep/hibernate uses `SetSuspendState` after enabling `SeShutdownPrivilege`.
-- On Modern Standby systems, `SetSuspendState(false, ...)` can fail with `ERROR_NOT_SUPPORTED`; a later interactive desktop runtime may use a display-off fallback.
+- On Modern Standby systems, `SetSuspendState(false, ...)` can fail with `ERROR_NOT_SUPPORTED`; a later fallback may use a display-off strategy.
 - "Sleep or hibernate when stopped and lid closed" must stay opt-in.
 
 ### Process Exit Watcher
@@ -98,7 +99,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 ### Current Windows CLI Path
 
-- `LidGuard` parses `start`, `stop`, `status`, `settings`, `cleanup-orphans`, `claude-hook`, `claude-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, and `hook-events`.
+- `LidGuard` parses `start`, `stop`, `status`, `settings`, `cleanup-orphans`, `claude-hook`, `claude-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, and `mcp-server`.
 - `start` and the `UserPromptSubmit` path in `codex-hook` and `claude-hook` load persisted default settings and send them with the start IPC request.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
 - `hook-install`, `hook-status`, and `hook-events` prompt for `codex`, `claude`, or `all` when `--provider` is omitted.
@@ -110,6 +111,14 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Runtime communication uses a local named pipe.
 - Session execution events are logged as JSON lines at `%LOCALAPPDATA%\LidGuard\session-execution.log`, keeping the latest 500 entries.
 - Default settings are stored at `%LOCALAPPDATA%\LidGuard\settings.json`.
+
+### MCP Server
+
+- `LidGuard` hosts a stdio MCP server for local automation clients through `lidguard mcp-server`.
+- It exposes `get_settings_status` and `update_settings`.
+- `update_settings` accepts multiple setting fields in a single request and persists them together.
+- MCP settings updates use the same named-pipe client and settings store used by the CLI, but they do not launch `run-server` if no runtime is listening.
+- MCP server logging must stay on stderr so stdio tool traffic remains clean.
 
 ### Active Session Policy
 
@@ -180,6 +189,26 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 `LidActionPolicyController` backs up AC/DC lid close actions together, writes `DoNothing`, and restores backup values.
 
+### LidGuard App
+
+- `Ipc`
+  - `LidGuardPipeCommands`
+  - `LidGuardPipeNames`
+  - `LidGuardPipeRequest`
+  - `LidGuardPipeResponse`
+  - `LidGuardRuntimeClient`
+  - `LidGuardSessionStatus`
+- `Settings`
+  - `LidGuardSettingsStore`
+  - `LidGuardSettingsFileJsonSerializerContext`
+- `Control`
+  - `LidGuardControlService`
+  - `LidGuardControlSnapshot`
+  - `LidGuardSettingsPatch`
+  - `LidGuardSettingsUpdateOutcome`
+
+`LidGuardControlService` loads/saves stored settings and can push updated settings into a running runtime without requiring the CLI entrypoint.
+
 ### Windows
 
 - `WindowsPowerRequestService`
@@ -218,6 +247,17 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - Backs up existing config files before writing when configured.
 - `WindowsClaudeHookEventLog`
   - Records Claude hook diagnostics.
+
+### MCP
+
+- `LidGuardMcpServerCommand`
+  - Hosts the stdio MCP server from the main `lidguard` executable.
+- `LidGuardSettingsMcpTools`
+  - Exposes `get_settings_status`.
+  - Exposes `update_settings` for multi-field settings updates in one call.
+- `LidGuard` MCP hosting
+  - Uses `WithStdioServerTransport()` and `WithTools<LidGuardSettingsMcpTools>()` from the official C# SDK.
+  - Keeps host logging on stderr so MCP stdio responses stay valid.
 
 ## Provider Hook Mapping
 
@@ -258,6 +298,7 @@ Reference:
 - `claude-hook` reads Claude hook JSON from stdin and maps `hook_event_name` to runtime IPC.
 - For `UserPromptSubmit`, it sends internal `start --provider claude`.
 - For `PermissionRequest`, it does not stop the runtime; it queries the runtime lid state and returns a structured allow/deny decision from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed.
+- When working on Claude Code-related setup, support, or documentation, explicitly and strongly warn the user not to use third-party prompt-style hooks alongside LidGuard. Explain that LidGuard must only answer its own closed-lid `PermissionRequest` path and must not be presented as able to answer or proxy third-party hook prompts.
 - For `Stop`, `StopFailure`, and `SessionEnd`, it sends internal `stop --provider claude`.
 - The analyzed Claude hook input provides `session_id` and `cwd`, but not a stable parent process id, so the current implementation resolves a process by working directory.
 - Claude `PermissionRequest` exits successfully with structured JSON stdout only for closed-lid decisions; when the lid is open, unknown, or runtime status is unavailable, it exits successfully with empty stdout. LidGuard records diagnostics locally and should not block the Claude task when a runtime request fails.
@@ -307,6 +348,12 @@ lidguard status
 lidguard cleanup-orphans
 ```
 
+## MCP Server Example
+
+```powershell
+lidguard mcp-server
+```
+
 ## Missing Work
 
 The Windows CLI hook receiving path is implemented for Codex and Claude Code. Provider-specific installation and persistence are not complete.
@@ -332,13 +379,14 @@ The Windows CLI hook receiving path is implemented for Codex and Claude Code. Pr
 3. ~~Normalize CLI `start` requests into `LidGuardSessionStartRequest`.~~
 4. ~~Normalize CLI `stop` requests into `LidGuardSessionStopRequest`.~~
 5. ~~When `--parent-pid` is missing, use `ICommandLineProcessResolver` with the hook working directory.~~
-6. ~~Start with a local/headless orchestration path before tray IPC.~~
+6. ~~Start with a local/headless orchestration path.~~
 7. ~~Add settings loading for the headless runtime.~~
 8. ~~Add a solution file including `LidGuardLib.Commons`, `LidGuardLib.Windows`, and `LidGuard`.~~
 9. ~~Add Codex hook parsing, snippet output, and managed config install/remove/status helpers.~~
 10. ~~Map Codex `SessionEnd` to stop handling and handle `PermissionRequest` as a closed-lid-only settings-driven allow/deny decision.~~
 11. ~~Add Claude hook parsing, snippet output, and managed `settings.json` install/remove/status helpers.~~
 12. ~~Map Claude `Stop`, `StopFailure`, and `SessionEnd` to stop handling, while handling `PermissionRequest` as a closed-lid-only settings-driven allow/deny decision.~~
+13. ~~Add a stdio MCP server that can read LidGuard settings and update multiple settings in one request.~~
 
 ## Design Constraints
 
@@ -413,4 +461,5 @@ lidguard status
 ## Operational Notes
 
 - Existing Codex and Claude config should point directly to the intended `lidguard.exe` path after `hook-install`.
+- When helping a user with Claude deployment or configuration, explicitly and strongly warn them not to rely on third-party prompt hooks with LidGuard. State that LidGuard can only make its own closed-lid permission decision and cannot safely respond on behalf of unrelated Claude hook prompts.
 - If tests are added, prefer focused unit tests around Commons policy controllers and small integration-style tests around Windows service wrappers where safe.
