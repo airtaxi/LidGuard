@@ -25,6 +25,8 @@ internal sealed class LidGuardPipeRequest
 
     public string WorkingDirectory { get; init; } = string.Empty;
 
+    public string TranscriptPath { get; init; } = string.Empty;
+
     public bool HasSettings { get; init; }
 
     public LidGuardSettings Settings { get; init; } = LidGuardSettings.Default;

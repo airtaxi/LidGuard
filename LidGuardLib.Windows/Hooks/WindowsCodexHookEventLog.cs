@@ -19,7 +19,7 @@ public static class WindowsCodexHookEventLog
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
-        var details = $"source={Sanitize(hookInput.Source)} model={Sanitize(hookInput.Model)}";
+        var details = $"source={Sanitize(hookInput.Source)} model={Sanitize(hookInput.Model)} transcriptPath={Sanitize(hookInput.TranscriptPath)}";
         if (IsUserPromptSubmitEvent(hookInput.HookEventName)) details = $"{details} prompt={Sanitize(hookInput.Prompt)}";
 
         AppendLine(CreateLogLine(
@@ -39,7 +39,7 @@ public static class WindowsCodexHookEventLog
             hookInput.HookEventName,
             hookInput.SessionIdentifier,
             hookInput.WorkingDirectory,
-            $"command={Sanitize(commandName)} succeeded={succeeded} runtimeUnavailable={runtimeUnavailable} activeSessions={activeSessionCount} message={Sanitize(message)}"));
+            $"command={Sanitize(commandName)} transcriptPath={Sanitize(hookInput.TranscriptPath)} succeeded={succeeded} runtimeUnavailable={runtimeUnavailable} activeSessions={activeSessionCount} message={Sanitize(message)}"));
     }
 
     public static void AppendMessage(string message) => AppendLine(CreateLogLine("message", string.Empty, string.Empty, string.Empty, Sanitize(message)));

@@ -12,7 +12,8 @@ public sealed class LidGuardSessionSnapshot
         SoftLockReason = string.Empty,
         SoftLockedAt = null,
         WatchedProcessIdentifier = 0,
-        WorkingDirectory = string.Empty
+        WorkingDirectory = string.Empty,
+        TranscriptPath = string.Empty
     };
 
     public required string SessionIdentifier { get; init; }
@@ -32,6 +33,8 @@ public sealed class LidGuardSessionSnapshot
     public int WatchedProcessIdentifier { get; init; }
 
     public string WorkingDirectory { get; init; } = string.Empty;
+
+    public string TranscriptPath { get; init; } = string.Empty;
 
     public LidGuardSessionKey Key => new(Provider, SessionIdentifier, ProviderName);
 

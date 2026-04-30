@@ -13,4 +13,6 @@ public sealed class LidGuardSessionStartRequest
     public int WatchedProcessIdentifier { get; init; }
 
     public string WorkingDirectory { get; init; } = string.Empty;
+
+    public string TranscriptPath { get; init; } = string.Empty;
 }

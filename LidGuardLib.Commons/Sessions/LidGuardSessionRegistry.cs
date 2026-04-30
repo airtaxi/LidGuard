@@ -36,7 +36,8 @@ public sealed class LidGuardSessionRegistry
             SoftLockReason = string.Empty,
             SoftLockedAt = null,
             WatchedProcessIdentifier = request.WatchedProcessIdentifier,
-            WorkingDirectory = request.WorkingDirectory
+            WorkingDirectory = request.WorkingDirectory,
+            TranscriptPath = request.TranscriptPath
         };
 
         lock (_gate)
@@ -150,7 +151,8 @@ public sealed class LidGuardSessionRegistry
             SoftLockReason = softLockReason,
             SoftLockedAt = softLockedAt,
             WatchedProcessIdentifier = snapshot.WatchedProcessIdentifier,
-            WorkingDirectory = snapshot.WorkingDirectory
+            WorkingDirectory = snapshot.WorkingDirectory,
+            TranscriptPath = snapshot.TranscriptPath
         };
     }
 }

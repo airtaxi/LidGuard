@@ -121,6 +121,7 @@ internal static class CodexHookCommand
             Provider = AgentProvider.Codex,
             SessionIdentifier = GetSessionIdentifier(hookInput),
             WorkingDirectory = GetWorkingDirectory(hookInput),
+            TranscriptPath = hookInput.TranscriptPath,
             HasSettings = hasSettings,
             Settings = settings
         };

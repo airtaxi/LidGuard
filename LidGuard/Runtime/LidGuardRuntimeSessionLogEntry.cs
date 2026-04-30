@@ -26,6 +26,8 @@ internal sealed class LidGuardRuntimeSessionLogEntry
 
     public string WorkingDirectory { get; init; } = string.Empty;
 
+    public string TranscriptPath { get; init; } = string.Empty;
+
     public bool Succeeded { get; init; }
 
     public string Message { get; init; } = string.Empty;
