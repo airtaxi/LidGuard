@@ -12,6 +12,8 @@ public sealed class LidGuardSessionStartRequest
 
     public int WatchedProcessIdentifier { get; init; }
 
+    public LidGuardSessionWatchRegistrationKind WatchRegistrationKind { get; init; } = LidGuardSessionWatchRegistrationKind.None;
+
     public string WorkingDirectory { get; init; } = string.Empty;
 
     public string TranscriptPath { get; init; } = string.Empty;

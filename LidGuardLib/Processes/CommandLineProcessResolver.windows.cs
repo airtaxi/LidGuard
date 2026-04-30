@@ -52,7 +52,8 @@ public sealed partial class CommandLineProcessResolver : ICommandLineProcessReso
                 var processName = GetProcessName(process);
                 if (string.IsNullOrWhiteSpace(processName)) continue;
 
-                var score = GetProcessScore(provider, processName);
+                var isShellHosted = IsShellHostedCandidate(process.Id, processName);
+                var score = GetProcessScore(provider, processName, isShellHosted);
                 if (score == 0 && !s_commandLineProcessNames.Contains(processName)) continue;
 
                 if (!TryReadCurrentDirectory(process.Id, out var processWorkingDirectory)) continue;
@@ -64,6 +65,7 @@ public sealed partial class CommandLineProcessResolver : ICommandLineProcessReso
                     ProcessIdentifier = process.Id,
                     ProcessName = processName,
                     WorkingDirectory = processWorkingDirectory,
+                    IsShellHosted = isShellHosted,
                     Provider = provider,
                     StartedAt = GetStartedAt(process)
                 };
@@ -117,13 +119,58 @@ public sealed partial class CommandLineProcessResolver : ICommandLineProcessReso
         catch { return DateTimeOffset.MinValue; }
     }
 
-    private static int GetProcessScore(AgentProvider provider, string processName)
+    private static int GetProcessScore(AgentProvider provider, string processName, bool isShellHosted)
     {
-        if (provider == AgentProvider.Codex && processName.Equals("codex", StringComparison.OrdinalIgnoreCase)) return 100;
+        if (provider == AgentProvider.Codex)
+        {
+            if (processName.Equals("codex", StringComparison.OrdinalIgnoreCase)) return isShellHosted ? 200 : 100;
+            if (isShellHosted) return 150;
+        }
+
         if (provider == AgentProvider.Claude && processName.Equals("claude", StringComparison.OrdinalIgnoreCase)) return 100;
         if (provider == AgentProvider.GitHubCopilot && processName.Contains("copilot", StringComparison.OrdinalIgnoreCase)) return 100;
         if (s_commandLineProcessNames.Contains(processName)) return 50;
         return 0;
+    }
+
+    private static bool IsShellHostedCandidate(int processIdentifier, string processName)
+    {
+        if (IsShellHostProcessName(processName)) return true;
+        if (!TryReadParentProcessIdentifier(processIdentifier, out var parentProcessIdentifier) || parentProcessIdentifier <= 0) return false;
+
+        return TryGetProcessName(parentProcessIdentifier, out var parentProcessName) && IsShellHostProcessName(parentProcessName);
+    }
+
+    private static bool IsShellHostProcessName(string processName)
+        => processName.Equals("cmd", StringComparison.OrdinalIgnoreCase)
+            || processName.Equals("powershell", StringComparison.OrdinalIgnoreCase)
+            || processName.Equals("pwsh", StringComparison.OrdinalIgnoreCase);
+
+    private static bool TryReadParentProcessIdentifier(int processIdentifier, out int parentProcessIdentifier)
+    {
+        parentProcessIdentifier = 0;
+
+        var accessRights = PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_LIMITED_INFORMATION;
+        using var processHandle = PInvoke.OpenProcess_SafeHandle(accessRights, false, (uint)processIdentifier);
+        if (processHandle.IsInvalid) return false;
+
+        return RemoteProcessParametersReader.TryReadParentProcessIdentifier(processHandle, out parentProcessIdentifier);
+    }
+
+    private static bool TryGetProcessName(int processIdentifier, out string processName)
+    {
+        processName = string.Empty;
+
+        try
+        {
+            using var process = Process.GetProcessById(processIdentifier);
+            processName = GetProcessName(process);
+            return !string.IsNullOrWhiteSpace(processName);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static bool IsLidGuardUtilityProcess(int processIdentifier)
@@ -191,6 +238,28 @@ public sealed partial class CommandLineProcessResolver : ICommandLineProcessReso
             return TryReadUnicodeString(processHandle, commandLineString, out commandLine);
         }
 
+        public static bool TryReadParentProcessIdentifier(SafeFileHandle processHandle, out int parentProcessIdentifier)
+        {
+            parentProcessIdentifier = 0;
+
+            var processBasicInformation = default(ProcessBasicInformation);
+            var status = NtQueryInformationProcess(processHandle, ProcessBasicInformationClass, &processBasicInformation, (uint)sizeof(ProcessBasicInformation), out _);
+            if (status != 0) return false;
+            if (processBasicInformation.InheritedFromUniqueProcessIdentifier == IntPtr.Zero) return false;
+
+            if (IntPtr.Size == 8)
+            {
+                var parentProcessIdentifier64 = processBasicInformation.InheritedFromUniqueProcessIdentifier.ToInt64();
+                if (parentProcessIdentifier64 <= 0 || parentProcessIdentifier64 > int.MaxValue) return false;
+
+                parentProcessIdentifier = (int)parentProcessIdentifier64;
+                return true;
+            }
+
+            parentProcessIdentifier = processBasicInformation.InheritedFromUniqueProcessIdentifier.ToInt32();
+            return parentProcessIdentifier > 0;
+        }
+
         private static IntPtr ReadPointer(SafeFileHandle processHandle, IntPtr address)
         {
             if (IntPtr.Size == 8) return TryReadStructure(processHandle, address, out long pointerValue) ? (IntPtr)pointerValue : IntPtr.Zero;
@@ -243,7 +312,7 @@ public sealed partial class CommandLineProcessResolver : ICommandLineProcessReso
             public IntPtr Reserved2;
             public IntPtr Reserved3;
             public IntPtr UniqueProcessIdentifier;
-            public IntPtr Reserved4;
+            public IntPtr InheritedFromUniqueProcessIdentifier;
         }
 
         private struct RemoteUnicodeString

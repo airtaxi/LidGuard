@@ -102,14 +102,15 @@ internal sealed class LidGuardRuntimeCoordinator
             var codexTranscriptMonitoringRegistrationResult = request.Provider == AgentProvider.Codex
                 ? _codexSoftLockTranscriptMonitor.RegisterOrUpdateSession(request.SessionIdentifier, request.WorkingDirectory, request.TranscriptPath)
                 : new CodexTranscriptMonitoringRegistrationResult();
-            var watchedProcessIdentifier = ResolveWatchedProcessIdentifier(request);
+            var watchedProcessResolution = ResolveWatchedProcess(request);
             var startRequest = new LidGuardSessionStartRequest
             {
                 SessionIdentifier = request.SessionIdentifier,
                 Provider = request.Provider,
                 ProviderName = request.ProviderName,
                 StartedAt = DateTimeOffset.UtcNow,
-                WatchedProcessIdentifier = watchedProcessIdentifier,
+                WatchedProcessIdentifier = watchedProcessResolution.ProcessIdentifier,
+                WatchRegistrationKind = watchedProcessResolution.WatchRegistrationKind,
                 WorkingDirectory = request.WorkingDirectory,
                 TranscriptPath = codexTranscriptMonitoringRegistrationResult.ResolvedTranscriptPath
             };
@@ -331,24 +332,23 @@ internal sealed class LidGuardRuntimeCoordinator
         {
             var cleanupCount = 0;
             var cleanupFailureMessages = new List<string>();
+            var cleanedCodexWorkingDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var snapshot in _sessionRegistry.GetSnapshots())
             {
                 if (!snapshot.HasWatchedProcess) continue;
                 if (IsProcessRunning(snapshot.WatchedProcessIdentifier)) continue;
 
-                var stopResponse = StopInsideGate(
-                    new LidGuardSessionStopRequest
-                    {
-                        SessionIdentifier = snapshot.SessionIdentifier,
-                        Provider = snapshot.Provider,
-                        ProviderName = snapshot.ProviderName
-                    },
-                    $"Cleaned orphan session {snapshot.Key}.",
-                    "orphan-session-cleaned",
-                    LidGuardPipeCommands.CleanupOrphans);
+                if (ShouldCleanCodexWorkingDirectory(snapshot))
+                {
+                    var normalizedWorkingDirectory = NormalizeWorkingDirectory(snapshot.WorkingDirectory);
+                    if (!cleanedCodexWorkingDirectories.Add(normalizedWorkingDirectory)) continue;
+                }
+
+                var cleanupResult = CleanupWatchedProcessExitInsideGate(snapshot, LidGuardPipeCommands.CleanupOrphans, "orphan-session-cleaned");
+                var stopResponse = cleanupResult.Response;
 
                 if (!stopResponse.Succeeded) cleanupFailureMessages.Add(stopResponse.Message);
-                cleanupCount++;
+                cleanupCount += cleanupResult.RemovedSessionCount;
             }
 
             if (cleanupFailureMessages.Count > 0)
@@ -368,30 +368,43 @@ internal sealed class LidGuardRuntimeCoordinator
         }
     }
 
-    private int ResolveWatchedProcessIdentifier(LidGuardPipeRequest request)
+    private WatchedProcessResolution ResolveWatchedProcess(LidGuardPipeRequest request)
     {
-        if (request.WatchedProcessIdentifier > 0) return request.WatchedProcessIdentifier;
-        if (request.Provider == AgentProvider.Mcp) return 0;
-        if (!_settings.WatchParentProcess) return 0;
-        if (ShouldSkipImplicitCodexWatchdog(request)) return 0;
-        if (string.IsNullOrWhiteSpace(request.WorkingDirectory)) return 0;
+        if (request.WatchedProcessIdentifier > 0)
+            return new WatchedProcessResolution(
+                request.WatchedProcessIdentifier,
+                LidGuardSessionWatchRegistrationKind.ExplicitWatchedProcessIdentifier);
+
+        if (request.Provider == AgentProvider.Mcp) return WatchedProcessResolution.None;
+        if (!_settings.WatchParentProcess) return WatchedProcessResolution.None;
+        if (string.IsNullOrWhiteSpace(request.WorkingDirectory)) return WatchedProcessResolution.None;
 
         var resolveResult = _commandLineProcessResolver.FindForWorkingDirectory(request.WorkingDirectory, request.Provider);
-        return resolveResult.Succeeded ? resolveResult.Value.ProcessIdentifier : 0;
+        if (!resolveResult.Succeeded) return WatchedProcessResolution.None;
+
+        var resolvedCandidate = resolveResult.Value;
+        if (request.Provider == AgentProvider.Codex && !resolvedCandidate.IsShellHosted) return WatchedProcessResolution.None;
+
+        var watchRegistrationKind = request.Provider == AgentProvider.Codex
+            ? LidGuardSessionWatchRegistrationKind.CodexShellHostedWorkingDirectoryFallback
+            : LidGuardSessionWatchRegistrationKind.WorkingDirectoryFallback;
+        return new WatchedProcessResolution(resolvedCandidate.ProcessIdentifier, watchRegistrationKind);
     }
 
     private string CreateWatcherStatusMessage(LidGuardPipeRequest request, LidGuardSessionSnapshot snapshot)
     {
+        if (snapshot.WatchRegistrationKind == LidGuardSessionWatchRegistrationKind.CodexShellHostedWorkingDirectoryFallback)
+            return $" Watching process {snapshot.WatchedProcessIdentifier} through Codex shell-host fallback.";
         if (snapshot.HasWatchedProcess) return $" Watching process {snapshot.WatchedProcessIdentifier}.";
 
-        var shouldExplainSkippedCodexFallback = _settings.WatchParentProcess && ShouldSkipImplicitCodexWatchdog(request);
-        if (shouldExplainSkippedCodexFallback) return " Codex fallback watchdog is disabled without an explicit parent process id because Codex App helper sessions can bind the wrong process; a stop hook is required.";
+        var shouldExplainSkippedCodexFallback = request.Provider == AgentProvider.Codex
+            && request.WatchedProcessIdentifier <= 0
+            && _settings.WatchParentProcess;
+        if (shouldExplainSkippedCodexFallback)
+            return " Codex fallback watchdog only attaches when the resolved Codex process or its direct parent is cmd.exe, pwsh.exe, or powershell.exe; a stop hook is required.";
 
         return " No watched process was resolved; a stop hook is required.";
     }
-
-    private static bool ShouldSkipImplicitCodexWatchdog(LidGuardPipeRequest request)
-        => request.Provider == AgentProvider.Codex && request.WatchedProcessIdentifier <= 0;
 
     private LidGuardOperationResult UpdateSettingsInsideGate(LidGuardSettings settings)
     {
@@ -541,15 +554,7 @@ internal sealed class LidGuardRuntimeCoordinator
             await _gate.WaitAsync(CancellationToken.None);
             try
             {
-                StopInsideGate(
-                    new LidGuardSessionStopRequest
-                    {
-                        SessionIdentifier = snapshot.SessionIdentifier,
-                        Provider = snapshot.Provider,
-                        ProviderName = snapshot.ProviderName
-                    },
-                    $"Watched process exited for {snapshot.Key}.",
-                    "watched-process-exited");
+                CleanupWatchedProcessExitInsideGate(snapshot, LidGuardPipeCommands.Stop, "watched-process-exited");
             }
             finally
             {
@@ -1192,6 +1197,85 @@ internal sealed class LidGuardRuntimeCoordinator
         EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
         => $"{observedTemperatureCelsius} Celsius using {emergencyHibernationTemperatureMode} mode (threshold: {emergencyHibernationTemperatureCelsius} Celsius)";
 
+    private CleanupResult CleanupWatchedProcessExitInsideGate(LidGuardSessionSnapshot snapshot, string commandName, string eventName)
+    {
+        if (!ShouldCleanCodexWorkingDirectory(snapshot))
+        {
+            var successMessage = eventName == "watched-process-exited"
+                ? $"Watched process exited for {snapshot.Key}."
+                : $"Cleaned orphan session {snapshot.Key}.";
+            var stopResponse = StopInsideGate(
+                new LidGuardSessionStopRequest
+                {
+                    SessionIdentifier = snapshot.SessionIdentifier,
+                    Provider = snapshot.Provider,
+                    ProviderName = snapshot.ProviderName
+                },
+                successMessage,
+                eventName,
+                commandName);
+            var removedSessionCount = stopResponse.Succeeded && !stopResponse.Message.Contains("already stopped", StringComparison.Ordinal) ? 1 : 0;
+            return new CleanupResult(stopResponse, removedSessionCount);
+        }
+
+        var matchingSnapshots = _sessionRegistry
+            .GetSnapshots()
+            .Where(activeSnapshot => activeSnapshot.Provider == AgentProvider.Codex)
+            .Where(activeSnapshot => activeSnapshot.HasWatchedProcess)
+            .Where(activeSnapshot => WorkingDirectoriesMatch(activeSnapshot.WorkingDirectory, snapshot.WorkingDirectory))
+            .ToArray();
+        if (matchingSnapshots.Length == 0)
+        {
+            var alreadyStoppedResponse = CreateSuccessResponse($"Watched Codex working directory \"{snapshot.WorkingDirectory}\" is already stopped.");
+            return new CleanupResult(alreadyStoppedResponse, 0);
+        }
+
+        var lastResponse = CreateSuccessResponse(string.Empty);
+        foreach (var matchingSnapshot in matchingSnapshots)
+        {
+            var stopRequest = new LidGuardSessionStopRequest
+            {
+                SessionIdentifier = matchingSnapshot.SessionIdentifier,
+                Provider = matchingSnapshot.Provider,
+                ProviderName = matchingSnapshot.ProviderName
+            };
+            var successMessage = eventName == "watched-process-exited"
+                ? $"Watched process exited for {matchingSnapshot.Key}."
+                : $"Cleaned watched Codex session {matchingSnapshot.Key} for working directory \"{matchingSnapshot.WorkingDirectory}\".";
+            lastResponse = StopInsideGate(
+                stopRequest,
+                successMessage,
+                eventName,
+                commandName);
+            if (!lastResponse.Succeeded) return new CleanupResult(lastResponse, 0);
+        }
+
+        var finalSuccessMessage =
+            $"Cleaned {matchingSnapshots.Length} watched Codex session(s) for working directory \"{snapshot.WorkingDirectory}\" and left process=none Codex sessions untouched.";
+        if (TryExtractPostStopScheduleMessage(lastResponse.Message, out var postStopScheduleMessage))
+            finalSuccessMessage = $"{finalSuccessMessage} {postStopScheduleMessage}";
+
+        var successResponse = CreateSuccessResponse(finalSuccessMessage);
+        return new CleanupResult(successResponse, matchingSnapshots.Length);
+    }
+
+    private static bool ShouldCleanCodexWorkingDirectory(LidGuardSessionSnapshot snapshot)
+        => snapshot.Provider == AgentProvider.Codex
+            && snapshot.WatchRegistrationKind == LidGuardSessionWatchRegistrationKind.CodexShellHostedWorkingDirectoryFallback
+            && !string.IsNullOrWhiteSpace(snapshot.WorkingDirectory);
+
+    private static bool WorkingDirectoriesMatch(string leftWorkingDirectory, string rightWorkingDirectory)
+        => string.Equals(
+            NormalizeWorkingDirectory(leftWorkingDirectory),
+            NormalizeWorkingDirectory(rightWorkingDirectory),
+            StringComparison.OrdinalIgnoreCase);
+
+    private static string NormalizeWorkingDirectory(string workingDirectory)
+    {
+        try { return Path.TrimEndingDirectorySeparator(Path.GetFullPath(workingDirectory)); }
+        catch { return workingDirectory ?? string.Empty; }
+    }
+
     private static bool TryExtractPostStopScheduleMessage(string responseMessage, out string postStopScheduleMessage)
     {
         postStopScheduleMessage = string.Empty;
@@ -1454,5 +1538,14 @@ internal sealed class LidGuardRuntimeCoordinator
         string WorkingDirectory,
         string CommandName,
         string SessionStateReason);
+
+    private readonly record struct CleanupResult(LidGuardPipeResponse Response, int RemovedSessionCount);
+
+    private readonly record struct WatchedProcessResolution(
+        int ProcessIdentifier,
+        LidGuardSessionWatchRegistrationKind WatchRegistrationKind)
+    {
+        public static WatchedProcessResolution None { get; } = new(0, LidGuardSessionWatchRegistrationKind.None);
+    }
 }
 
