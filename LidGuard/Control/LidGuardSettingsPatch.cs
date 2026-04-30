@@ -17,6 +17,10 @@ public sealed class LidGuardSettingsPatch
 
     public bool? WatchParentProcess { get; init; }
 
+    public bool? EmergencyHibernationOnHighTemperature { get; init; }
+
+    public int? EmergencyHibernationTemperatureCelsius { get; init; }
+
     public SystemSuspendMode? SuspendMode { get; init; }
 
     public int? PostStopSuspendDelaySeconds { get; init; }

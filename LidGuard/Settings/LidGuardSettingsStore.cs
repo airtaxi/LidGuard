@@ -86,7 +86,9 @@ internal static class LidGuardSettingsStore
             PostStopSuspendSound = normalizedSettings.PostStopSuspendSound,
             PreSuspendWebhookUrl = normalizedSettings.PreSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = normalizedSettings.ClosedLidPermissionRequestDecision,
-            WatchParentProcess = normalizedSettings.WatchParentProcess
+            WatchParentProcess = normalizedSettings.WatchParentProcess,
+            EmergencyHibernationOnHighTemperature = normalizedSettings.EmergencyHibernationOnHighTemperature,
+            EmergencyHibernationTemperatureCelsius = normalizedSettings.EmergencyHibernationTemperatureCelsius
         };
     }
 

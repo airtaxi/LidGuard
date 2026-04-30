@@ -19,7 +19,9 @@ internal static class PreSuspendWebhookConfiguration
             PostStopSuspendSound = normalizedInputSettings.PostStopSuspendSound,
             PreSuspendWebhookUrl = preSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = normalizedInputSettings.ClosedLidPermissionRequestDecision,
-            WatchParentProcess = normalizedInputSettings.WatchParentProcess
+            WatchParentProcess = normalizedInputSettings.WatchParentProcess,
+            EmergencyHibernationOnHighTemperature = normalizedInputSettings.EmergencyHibernationOnHighTemperature,
+            EmergencyHibernationTemperatureCelsius = normalizedInputSettings.EmergencyHibernationTemperatureCelsius
         };
     }
 

@@ -13,7 +13,8 @@ internal static class SuspendWebhookSender
         string preSuspendWebhookUrl,
         SuspendWebhookReason reason,
         int softLockedSessionCount,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        TimeSpan? timeout = null)
     {
         if (!PreSuspendWebhookConfiguration.TryNormalizeConfiguredValue(preSuspendWebhookUrl, out var normalizedPreSuspendWebhookUrl, out var message))
             return LidGuardOperationResult.Failure(message);
@@ -30,10 +31,17 @@ internal static class SuspendWebhookSender
         {
             Content = new StringContent(requestContent, Encoding.UTF8, "application/json")
         };
+        using var timeoutCancellationTokenSource = timeout.HasValue ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken) : null;
+        var effectiveCancellationToken = cancellationToken;
+        if (timeoutCancellationTokenSource is not null)
+        {
+            timeoutCancellationTokenSource.CancelAfter(timeout.Value);
+            effectiveCancellationToken = timeoutCancellationTokenSource.Token;
+        }
 
         try
         {
-            using var response = await s_httpClient.SendAsync(requestMessage, cancellationToken);
+            using var response = await s_httpClient.SendAsync(requestMessage, effectiveCancellationToken);
             if (response.IsSuccessStatusCode) return LidGuardOperationResult.Success();
 
             return LidGuardOperationResult.Failure(

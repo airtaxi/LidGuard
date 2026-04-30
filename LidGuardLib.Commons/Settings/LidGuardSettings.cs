@@ -4,6 +4,10 @@ namespace LidGuardLib.Commons.Settings;
 
 public sealed class LidGuardSettings
 {
+    public const int MinimumEmergencyHibernationTemperatureCelsius = 70;
+    public const int MaximumEmergencyHibernationTemperatureCelsius = 110;
+    public const int DefaultEmergencyHibernationTemperatureCelsius = 93;
+
     public static LidGuardSettings Default { get; } = new();
 
     public static LidGuardSettings HeadlessRuntimeDefault { get; } = new()
@@ -28,11 +32,22 @@ public sealed class LidGuardSettings
 
     public bool WatchParentProcess { get; init; } = true;
 
+    public bool EmergencyHibernationOnHighTemperature { get; init; } = true;
+
+    public int EmergencyHibernationTemperatureCelsius { get; init; } = DefaultEmergencyHibernationTemperatureCelsius;
+
+    public static int ClampEmergencyHibernationTemperatureCelsius(int emergencyHibernationTemperatureCelsius)
+        => Math.Clamp(
+            emergencyHibernationTemperatureCelsius,
+            MinimumEmergencyHibernationTemperatureCelsius,
+            MaximumEmergencyHibernationTemperatureCelsius);
+
     public static LidGuardSettings Normalize(LidGuardSettings settings)
     {
         if (settings is null) return HeadlessRuntimeDefault;
 
         var powerRequest = settings.PowerRequest ?? PowerRequestOptions.Default;
+        var emergencyHibernationTemperatureCelsius = ClampEmergencyHibernationTemperatureCelsius(settings.EmergencyHibernationTemperatureCelsius);
         return new LidGuardSettings
         {
             PowerRequest = new PowerRequestOptions
@@ -48,7 +63,9 @@ public sealed class LidGuardSettings
             PostStopSuspendSound = string.IsNullOrWhiteSpace(settings.PostStopSuspendSound) ? string.Empty : settings.PostStopSuspendSound.Trim(),
             PreSuspendWebhookUrl = string.IsNullOrWhiteSpace(settings.PreSuspendWebhookUrl) ? string.Empty : settings.PreSuspendWebhookUrl.Trim(),
             ClosedLidPermissionRequestDecision = settings.ClosedLidPermissionRequestDecision,
-            WatchParentProcess = settings.WatchParentProcess
+            WatchParentProcess = settings.WatchParentProcess,
+            EmergencyHibernationOnHighTemperature = settings.EmergencyHibernationOnHighTemperature,
+            EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius
         };
     }
 }

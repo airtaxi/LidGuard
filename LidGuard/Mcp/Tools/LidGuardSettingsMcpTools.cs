@@ -77,6 +77,10 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         bool? changeLidAction = null,
         [Description("Set whether LidGuard watches the resolved parent process and cleans up when that process exits. Omit to keep the current value.")]
         bool? watchParentProcess = null,
+        [Description("Set whether LidGuard should request Emergency Hibernation when the guarded system temperature reaches the configured high-temperature threshold while the lid is closed. Omit to keep the current value.")]
+        bool? emergencyHibernationOnHighTemperature = null,
+        [Description("Set the Emergency Hibernation temperature threshold in Celsius. Stored and runtime values are clamped to 70 through 110. Omit to keep the current value.")]
+        int? emergencyHibernationTemperatureCelsius = null,
         [Description("Set the suspend mode LidGuard uses after the last session stops while the lid is closed. Omit to keep the current value.")]
         SystemSuspendMode? suspendMode = null,
         [Description("Set the post-stop suspend delay in seconds after the last session stops while the lid is closed. Use 0 for immediate suspend. Omit to keep the current value.")]
@@ -99,6 +103,8 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
             PreventDisplaySleep = preventDisplaySleep,
             ChangeLidAction = changeLidAction,
             WatchParentProcess = watchParentProcess,
+            EmergencyHibernationOnHighTemperature = emergencyHibernationOnHighTemperature,
+            EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius,
             SuspendMode = suspendMode,
             PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
             PostStopSuspendSound = postStopSuspendSound,

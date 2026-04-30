@@ -38,8 +38,11 @@ internal static class PostStopSuspendSoundConfiguration
             SuspendMode = normalizedInputSettings.SuspendMode,
             PostStopSuspendDelaySeconds = normalizedInputSettings.PostStopSuspendDelaySeconds,
             PostStopSuspendSound = normalizeResult.Value,
+            PreSuspendWebhookUrl = normalizedInputSettings.PreSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = normalizedInputSettings.ClosedLidPermissionRequestDecision,
-            WatchParentProcess = normalizedInputSettings.WatchParentProcess
+            WatchParentProcess = normalizedInputSettings.WatchParentProcess,
+            EmergencyHibernationOnHighTemperature = normalizedInputSettings.EmergencyHibernationOnHighTemperature,
+            EmergencyHibernationTemperatureCelsius = normalizedInputSettings.EmergencyHibernationTemperatureCelsius
         };
 
         message = string.Empty;

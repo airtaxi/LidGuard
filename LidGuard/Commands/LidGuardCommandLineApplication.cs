@@ -648,6 +648,18 @@ internal static class LidGuardCommandLineApplication
         if (!TryParseBooleanOption(options, basePowerRequest.PreventDisplaySleep, out var preventDisplaySleep, out message, "prevent-display-sleep", "display-required")) return false;
         if (!TryParseBooleanOption(options, baseSettings.ChangeLidAction, out var changeLidAction, out message, "change-lid-action", "lid-action")) return false;
         if (!TryParseBooleanOption(options, baseSettings.WatchParentProcess, out var watchParentProcess, out message, "watch-parent-process", "watch-parent")) return false;
+        if (!TryParseBooleanOption(
+            options,
+            baseSettings.EmergencyHibernationOnHighTemperature,
+            out var emergencyHibernationOnHighTemperature,
+            out message,
+            "emergency-hibernation-on-high-temperature")) return false;
+        if (!TryParseEmergencyHibernationTemperatureCelsiusOption(
+            options,
+            baseSettings.EmergencyHibernationTemperatureCelsius,
+            out var emergencyHibernationTemperatureCelsius,
+            out message))
+            return false;
         if (!TryParseSuspendModeOption(options, baseSettings.SuspendMode, out var suspendMode, out message)) return false;
         if (!TryParsePostStopSuspendDelaySecondsOption(options, baseSettings.PostStopSuspendDelaySeconds, out var postStopSuspendDelaySeconds, out message)) return false;
         var postStopSuspendSound = baseSettings.PostStopSuspendSound;
@@ -673,7 +685,9 @@ internal static class LidGuardCommandLineApplication
             PostStopSuspendSound = postStopSuspendSound,
             PreSuspendWebhookUrl = preSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
-            WatchParentProcess = watchParentProcess
+            WatchParentProcess = watchParentProcess,
+            EmergencyHibernationOnHighTemperature = emergencyHibernationOnHighTemperature,
+            EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius
         };
 
         return true;
@@ -693,6 +707,20 @@ internal static class LidGuardCommandLineApplication
         if (!TryReadBooleanSetting("Prevent display sleep", storedPowerRequest.PreventDisplaySleep, defaultPowerRequest.PreventDisplaySleep, out var preventDisplaySleep, out message)) return false;
         if (!TryReadBooleanSetting("Change lid action", normalizedStoredSettings.ChangeLidAction, defaultSettings.ChangeLidAction, out var changeLidAction, out message)) return false;
         if (!TryReadBooleanSetting("Watch parent process", normalizedStoredSettings.WatchParentProcess, defaultSettings.WatchParentProcess, out var watchParentProcess, out message)) return false;
+        if (!TryReadBooleanSetting(
+            "Emergency hibernation on high temperature",
+            normalizedStoredSettings.EmergencyHibernationOnHighTemperature,
+            defaultSettings.EmergencyHibernationOnHighTemperature,
+            out var emergencyHibernationOnHighTemperature,
+            out message))
+            return false;
+        if (!TryReadEmergencyHibernationTemperatureCelsiusSetting(
+            "Emergency hibernation temperature Celsius",
+            normalizedStoredSettings.EmergencyHibernationTemperatureCelsius,
+            defaultSettings.EmergencyHibernationTemperatureCelsius,
+            out var emergencyHibernationTemperatureCelsius,
+            out message))
+            return false;
         if (!TryReadSuspendModeSetting("Suspend mode", normalizedStoredSettings.SuspendMode, defaultSettings.SuspendMode, out var suspendMode, out message)) return false;
         if (!TryReadNonNegativeIntegerSetting(
             "Post-stop suspend delay seconds",
@@ -731,7 +759,9 @@ internal static class LidGuardCommandLineApplication
             PostStopSuspendSound = postStopSuspendSound,
             PreSuspendWebhookUrl = normalizedStoredSettings.PreSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
-            WatchParentProcess = watchParentProcess
+            WatchParentProcess = watchParentProcess,
+            EmergencyHibernationOnHighTemperature = emergencyHibernationOnHighTemperature,
+            EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius
         };
 
         return true;
@@ -814,6 +844,39 @@ internal static class LidGuardCommandLineApplication
         if (int.TryParse(valueText.Trim(), out value) && value >= 0) return true;
 
         message = $"{settingName} must be a non-negative integer.";
+        return false;
+    }
+
+    private static bool TryReadEmergencyHibernationTemperatureCelsiusSetting(
+        string settingName,
+        int storedValue,
+        int defaultValue,
+        out int value,
+        out string message)
+    {
+        value = storedValue;
+        message = string.Empty;
+        WriteInteractiveSettingPrompt(
+            settingName,
+            storedValue.ToString(),
+            defaultValue.ToString(),
+            $"range: {LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius}-{LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius}");
+
+        var valueText = Console.ReadLine();
+        if (valueText is null)
+        {
+            message = $"Input ended before {settingName} was entered.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(valueText)) return true;
+        if (int.TryParse(valueText.Trim(), out value)
+            && value >= LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius
+            && value <= LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius)
+            return true;
+
+        message =
+            $"{settingName} must be an integer from {LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius} through {LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius}.";
         return false;
     }
 
@@ -1043,6 +1106,25 @@ internal static class LidGuardCommandLineApplication
         return false;
     }
 
+    private static bool TryParseEmergencyHibernationTemperatureCelsiusOption(
+        IReadOnlyDictionary<string, string> options,
+        int defaultValue,
+        out int emergencyHibernationTemperatureCelsius,
+        out string message)
+    {
+        emergencyHibernationTemperatureCelsius = defaultValue;
+        message = string.Empty;
+        if (!TryGetOption(options, out var emergencyHibernationTemperatureCelsiusText, "emergency-hibernation-temperature-celsius")) return true;
+        if (int.TryParse(emergencyHibernationTemperatureCelsiusText.Trim(), out emergencyHibernationTemperatureCelsius)
+            && emergencyHibernationTemperatureCelsius >= LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius
+            && emergencyHibernationTemperatureCelsius <= LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius)
+            return true;
+
+        message =
+            $"The emergency-hibernation-temperature-celsius option must be an integer from {LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius} through {LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius}.";
+        return false;
+    }
+
     private static string GetWorkingDirectory(IReadOnlyDictionary<string, string> options)
     {
         var workingDirectory = GetOption(options, "working-directory", "cwd");
@@ -1116,6 +1198,8 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  Prevent display sleep: {powerRequest.PreventDisplaySleep}");
         Console.WriteLine($"  Change lid action: {normalizedSettings.ChangeLidAction}");
         Console.WriteLine($"  Watch parent process: {normalizedSettings.WatchParentProcess}");
+        Console.WriteLine($"  Emergency hibernation on high temperature: {normalizedSettings.EmergencyHibernationOnHighTemperature}");
+        Console.WriteLine($"  Emergency hibernation temperature Celsius: {normalizedSettings.EmergencyHibernationTemperatureCelsius}");
         Console.WriteLine($"  Suspend mode: {normalizedSettings.SuspendMode}");
         Console.WriteLine($"  Post-stop suspend delay seconds: {normalizedSettings.PostStopSuspendDelaySeconds}");
         Console.WriteLine($"  Post-stop suspend sound: {PostStopSuspendSoundConfiguration.GetDisplayValue(normalizedSettings.PostStopSuspendSound)}");

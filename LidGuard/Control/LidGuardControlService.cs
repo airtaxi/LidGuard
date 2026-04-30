@@ -184,6 +184,8 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
                 normalizedPreSuspendWebhookUrl);
         }
 
+        updatedStoredSettings = LidGuardSettings.Normalize(updatedStoredSettings);
+
         if (!LidGuardSettingsStore.TrySave(updatedStoredSettings, out message))
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
 
@@ -265,7 +267,9 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             PostStopSuspendSound = settingsPatch.PostStopSuspendSound ?? normalizedBaseSettings.PostStopSuspendSound,
             PreSuspendWebhookUrl = settingsPatch.PreSuspendWebhookUrl ?? normalizedBaseSettings.PreSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = settingsPatch.ClosedLidPermissionRequestDecision ?? normalizedBaseSettings.ClosedLidPermissionRequestDecision,
-            WatchParentProcess = settingsPatch.WatchParentProcess ?? normalizedBaseSettings.WatchParentProcess
+            WatchParentProcess = settingsPatch.WatchParentProcess ?? normalizedBaseSettings.WatchParentProcess,
+            EmergencyHibernationOnHighTemperature = settingsPatch.EmergencyHibernationOnHighTemperature ?? normalizedBaseSettings.EmergencyHibernationOnHighTemperature,
+            EmergencyHibernationTemperatureCelsius = settingsPatch.EmergencyHibernationTemperatureCelsius ?? normalizedBaseSettings.EmergencyHibernationTemperatureCelsius
         };
     }
 
@@ -379,6 +383,8 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         AppendChange(changes, previousStoredSettings.PostStopSuspendSound, updatedStoredSettings.PostStopSuspendSound, "postStopSuspendSound");
         AppendChange(changes, previousStoredSettings.PreSuspendWebhookUrl, updatedStoredSettings.PreSuspendWebhookUrl, "preSuspendWebhookUrl");
         AppendChange(changes, previousStoredSettings.ClosedLidPermissionRequestDecision, updatedStoredSettings.ClosedLidPermissionRequestDecision, "closedLidPermissionRequestDecision");
+        AppendChange(changes, previousStoredSettings.EmergencyHibernationOnHighTemperature, updatedStoredSettings.EmergencyHibernationOnHighTemperature, "emergencyHibernationOnHighTemperature");
+        AppendChange(changes, previousStoredSettings.EmergencyHibernationTemperatureCelsius, updatedStoredSettings.EmergencyHibernationTemperatureCelsius, "emergencyHibernationTemperatureCelsius");
 
         return [.. changes];
     }

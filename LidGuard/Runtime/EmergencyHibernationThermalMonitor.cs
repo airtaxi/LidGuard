@@ -1,0 +1,95 @@
+using LidGuardLib.Commons.Power;
+using LidGuardLib.Commons.Settings;
+using LidGuardLib.Power;
+
+namespace LidGuard.Runtime;
+
+internal sealed class EmergencyHibernationThermalMonitor(
+    Func<EmergencyHibernationThermalMonitorState> emergencyHibernationThermalMonitorStateProvider,
+    Func<EmergencyHibernationThermalThresholdReachedContext, Task> emergencyHibernationThresholdReachedAsync)
+{
+    private static readonly TimeSpan s_pollInterval = TimeSpan.FromSeconds(10);
+    private readonly object _gate = new();
+    private CancellationTokenSource _monitorCancellationTokenSource;
+
+    public void Cancel()
+    {
+        CancellationTokenSource cancellationTokenSource;
+
+        lock (_gate)
+        {
+            cancellationTokenSource = _monitorCancellationTokenSource;
+            if (cancellationTokenSource is null) return;
+            _monitorCancellationTokenSource = null;
+        }
+
+        cancellationTokenSource.Cancel();
+        cancellationTokenSource.Dispose();
+    }
+
+    public void EnsureStarted()
+    {
+        lock (_gate)
+        {
+            if (_monitorCancellationTokenSource is not null) return;
+
+            _monitorCancellationTokenSource = new CancellationTokenSource();
+            _ = MonitorAsync(_monitorCancellationTokenSource.Token);
+        }
+    }
+
+    private async Task MonitorAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var periodicTimer = new PeriodicTimer(s_pollInterval);
+
+            while (await periodicTimer.WaitForNextTickAsync(cancellationToken))
+            {
+                var emergencyHibernationThermalMonitorState = emergencyHibernationThermalMonitorStateProvider();
+                if (!emergencyHibernationThermalMonitorState.ProtectionApplied) continue;
+                if (!emergencyHibernationThermalMonitorState.EmergencyHibernationOnHighTemperature) continue;
+                if (emergencyHibernationThermalMonitorState.LidSwitchState != LidSwitchState.Closed) continue;
+                if (!OperatingSystem.IsWindowsVersionAtLeast(6, 1)) continue;
+
+                var emergencyHibernationTemperatureCelsius = LidGuardSettings.ClampEmergencyHibernationTemperatureCelsius(
+                    emergencyHibernationThermalMonitorState.EmergencyHibernationTemperatureCelsius);
+                var observedTemperatureCelsius = SystemThermalInformation.GetSystemThermalInformation();
+                if (!observedTemperatureCelsius.HasValue) continue;
+                if (observedTemperatureCelsius.Value < emergencyHibernationTemperatureCelsius) continue;
+
+                await NotifyEmergencyHibernationThresholdReachedAsync(
+                    new EmergencyHibernationThermalThresholdReachedContext(
+                        observedTemperatureCelsius.Value,
+                        emergencyHibernationTemperatureCelsius),
+                    emergencyHibernationThresholdReachedAsync);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private static async Task NotifyEmergencyHibernationThresholdReachedAsync(
+        EmergencyHibernationThermalThresholdReachedContext emergencyHibernationThermalThresholdReachedContext,
+        Func<EmergencyHibernationThermalThresholdReachedContext, Task> emergencyHibernationThresholdReachedAsync)
+    {
+        try
+        {
+            await emergencyHibernationThresholdReachedAsync(emergencyHibernationThermalThresholdReachedContext);
+        }
+        catch
+        {
+        }
+    }
+}
+
+internal readonly record struct EmergencyHibernationThermalMonitorState(
+    bool ProtectionApplied,
+    bool EmergencyHibernationOnHighTemperature,
+    LidSwitchState LidSwitchState,
+    int EmergencyHibernationTemperatureCelsius);
+
+internal readonly record struct EmergencyHibernationThermalThresholdReachedContext(
+    int ObservedTemperatureCelsius,
+    int ThresholdTemperatureCelsius);

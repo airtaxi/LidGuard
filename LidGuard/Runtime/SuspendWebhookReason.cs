@@ -6,5 +6,6 @@ namespace LidGuard.Runtime;
 internal enum SuspendWebhookReason
 {
     Completed = 0,
-    SoftLocked = 1
+    SoftLocked = 1,
+    EmergencyHibernation = 2
 }

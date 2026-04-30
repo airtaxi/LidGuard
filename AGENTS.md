@@ -36,6 +36,7 @@ The goal is to keep Windows awake while at least one tracked agent session still
 - The suspend mode remains user-selectable: Sleep by default, Hibernate optional.
 - The post-stop suspend delay remains user-selectable: 10 seconds by default, `0` for immediate suspend.
 - The post-stop suspend sound remains optional: off by default, with supported SystemSounds names or a playable `.wav` path.
+- While keep-awake protection is applied and the laptop lid is closed, an optional Emergency Hibernation thermal monitor should poll every 10 seconds and request immediate hibernation when the system temperature reaches the configured threshold.
 
 The key design rule is to treat normal idle sleep and lid-close sleep as separate problems. Power requests handle idle sleep. `LIDACTION` policy backup/change/restore handles lid-close behavior because standard sleep-prevention APIs cannot reliably block a user lid-close action.
 
@@ -99,6 +100,16 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - If a post-stop suspend sound is configured, LidGuard should wait for the delay first, then play the configured sound to completion, then re-check the lid/session state before requesting suspend.
 - If a pre-suspend webhook URL is configured, LidGuard should POST JSON before requesting suspend. The body must include `reason`, and soft-lock-triggered suspend must also include the soft-locked session count.
 
+### Emergency Hibernation Thermal Monitor
+
+- Emergency Hibernation uses `SystemThermalInformation.GetSystemThermalInformation()` to read the highest available system thermal-zone temperature in Celsius.
+- The thermal monitor only runs while shared keep-awake protection is applied and the lid is closed.
+- The thermal poll interval is fixed at 10 seconds.
+- The Emergency Hibernation threshold is configurable, defaults to 93 Celsius, and must always be clamped to 70 through 110 Celsius before runtime use.
+- When the observed temperature reaches the clamped threshold, LidGuard should cancel any pending post-stop suspend, send the pre-suspend webhook with `reason = EmergencyHibernation` using a 5-second timeout, then immediately request hibernate.
+- Emergency Hibernation ignores the regular suspend mode, post-stop suspend delay, and post-stop suspend sound settings.
+- Emergency Hibernation webhook timeout or failure must not block the immediate hibernation request.
+
 ### Process Exit Watcher
 
 Hook stop events may be missed, so LidGuard also watches the agent process.
@@ -119,6 +130,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `remove-session` manually removes active sessions by session identifier; when `--provider` is omitted, it removes every active session whose session identifier matches. When `--provider mcp` is used, `--provider-name` can narrow the removal to one MCP-backed provider; omitting `--provider-name` removes every MCP-backed session that shares that session identifier.
 - `remove-pre-suspend-webhook` clears the configured pre-suspend webhook URL and reports when no webhook is currently configured.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
+- `settings` also exposes `--emergency-hibernation-on-high-temperature` and `--emergency-hibernation-temperature-celsius`; the threshold option accepts 70 through 110 only.
 - `hook-install`, `hook-status`, `hook-remove`, and `hook-events` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
 - `mcp-status`, `mcp-install`, and `mcp-remove` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
 - `provider-mcp-status`, `provider-mcp-install`, and `provider-mcp-remove` work on a caller-supplied JSON config file path instead of using Codex, Claude Code, or GitHub Copilot CLI-specific MCP registration commands.
@@ -166,6 +178,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `AgentProvider.Mcp` sessions do not auto-resolve a watched process from the working directory, because model-managed Provider MCP sessions do not reliably identify one owning CLI process.
 - `AgentProvider.Codex` sessions also do not auto-resolve a watched process from the working directory when no explicit watched process id is supplied, because Codex App can spawn short-lived helper model sessions in the same working directory and the fallback can bind the wrong process.
 - Optional lid action changes are backed up once and restored after the last active session stops.
+- While shared protection remains applied and the lid is closed, the Emergency Hibernation thermal monitor polls every 10 seconds and stops automatically once protection is restored or disabled.
 - Multiple stop signals for the same session should not cause repeated cleanup side effects.
 - Persistent pending backup state is still missing and is the next resilience priority.
 
@@ -179,6 +192,8 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Post-stop suspend mode: Sleep by default, Hibernate optional.
 - Post-stop suspend sound: off by default.
 - Pre-suspend webhook URL: off by default.
+- Emergency Hibernation on high temperature: enabled by default.
+- Emergency Hibernation temperature threshold: 93 Celsius by default, clamped to 70 through 110.
 - Closed-lid PermissionRequest decision: Deny by default, Allow optional.
 - PermissionRequest hooks only emit a structured allow/deny decision when the runtime reports the lid is closed; otherwise they return empty stdout so the provider's default permission flow continues.
 - Claude and GitHub Copilot CLI closed-lid `PermissionRequest` outputs also set `interrupt: true`. Even if another provider later uses a similar JSON shape, keep hook DTOs separate per provider instead of sharing one output type across providers.
@@ -202,6 +217,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - `LidGuardSettings`
   - `LidGuardSettings.Default`
   - `LidGuardSettings.HeadlessRuntimeDefault`
+  - `LidGuardSettings.ClampEmergencyHibernationTemperatureCelsius`
   - `LidGuardSettings.Normalize`
 - `Results`
   - `LidGuardOperationResult`
@@ -256,6 +272,9 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - `LidGuardSessionRemovalOutcome`
   - `LidGuardSettingsPatch`
   - `LidGuardSettingsUpdateOutcome`
+- `Runtime`
+  - `CodexSoftLockTranscriptMonitor`
+  - `EmergencyHibernationThermalMonitor`
 
 `LidGuardControlService` loads/saves stored settings and can push updated settings into a running runtime without requiring the CLI entrypoint.
 
@@ -314,7 +333,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `LidGuardSettingsMcpTools`
   - Exposes `get_settings_status`.
   - Exposes `list_sessions` for active-session listing without the full settings payload.
-  - Exposes `update_settings` for multi-field settings updates in one call.
+  - Exposes `update_settings` for multi-field settings updates in one call, including Emergency Hibernation temperature settings.
   - Exposes `remove_session` for manual active-session deletion by session identifier, with optional provider and MCP provider-name filters.
   - Exposes `set_session_soft_lock` and `clear_session_soft_lock` for provider/session-targeted soft-lock control.
 - `LidGuardProviderMcpTools`
