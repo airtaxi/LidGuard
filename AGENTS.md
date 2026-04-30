@@ -112,6 +112,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 - `LidGuard` parses `start`, `stop`, `remove-pre-suspend-webhook`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `mcp-server`, and `provider-mcp-server`.
 - `start`, the `UserPromptSubmit` path in `codex-hook` and `claude-hook`, and the `userPromptSubmitted` path in `copilot-hook` load persisted default settings and send them with the start IPC request.
+- `remove-session --all` manually removes every active session currently tracked by the runtime.
 - `remove-session` manually removes active sessions by session identifier; when `--provider` is omitted, it removes every active session whose session identifier matches. When `--provider mcp` is used, `--provider-name` can narrow the removal to one MCP-backed provider; omitting `--provider-name` removes every MCP-backed session that shares that session identifier.
 - `remove-pre-suspend-webhook` clears the configured pre-suspend webhook URL and reports when no webhook is currently configured.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
@@ -442,6 +443,7 @@ Reference:
 lidguard start --provider codex --session "<session-id>" --parent-pid 1234
 lidguard stop --provider codex --session "<session-id>"
 lidguard remove-pre-suspend-webhook
+lidguard remove-session --all
 lidguard remove-session --session "<session-id>"
 lidguard remove-session --session "<session-id>" --provider codex
 lidguard start --provider claude --session "<session-id>"

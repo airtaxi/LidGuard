@@ -28,6 +28,7 @@ lidguard provider-mcp-status --config "<json-path>"
 lidguard provider-mcp-install --config "<json-path>" --provider-name "<name>"
 lidguard provider-mcp-remove --config "<json-path>"
 lidguard remove-pre-suspend-webhook
+lidguard remove-session --all
 lidguard remove-session --session "<session-id>"
 lidguard remove-session --session "<session-id>" --provider codex
 lidguard hook-install --provider all

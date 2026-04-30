@@ -485,6 +485,35 @@ internal static class LidGuardCommandLineApplication
         request = new LidGuardPipeRequest();
         message = string.Empty;
 
+        if (!TryParseBooleanOption(options, false, out var removeAllSessions, out message, "all")) return false;
+        if (removeAllSessions)
+        {
+            if (TryGetOption(options, out _, "session", "session-id", "session-identifier"))
+            {
+                message = "The --all option cannot be combined with --session.";
+                return false;
+            }
+
+            if (TryGetOption(options, out _, "provider"))
+            {
+                message = "The --all option cannot be combined with --provider.";
+                return false;
+            }
+
+            if (TryGetOption(options, out _, "provider-name"))
+            {
+                message = "The --all option cannot be combined with --provider-name.";
+                return false;
+            }
+
+            request = new LidGuardPipeRequest
+            {
+                Command = LidGuardPipeCommands.RemoveSession,
+                MatchAllSessions = true
+            };
+            return true;
+        }
+
         var sessionIdentifier = GetOption(options, "session", "session-id", "session-identifier");
         if (string.IsNullOrWhiteSpace(sessionIdentifier))
         {
@@ -1103,6 +1132,7 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  {commandDisplayName} start --provider codex|claude|copilot|custom|mcp --session <id> [--provider-name <name>] [--parent-pid <pid>] [--working-directory <path>]");
         Console.WriteLine($"  {commandDisplayName} stop --provider codex|claude|copilot|custom|mcp --session <id> [--provider-name <name>]");
         Console.WriteLine($"  {commandDisplayName} {LidGuardPipeCommands.RemovePreSuspendWebhook}");
+        Console.WriteLine($"  {commandDisplayName} remove-session --all");
         Console.WriteLine($"  {commandDisplayName} remove-session --session <id> [--provider codex|claude|copilot|custom|mcp|unknown] [--provider-name <name>]");
         Console.WriteLine($"  {commandDisplayName} claude-hook");
         Console.WriteLine($"  {commandDisplayName} claude-hooks [--format settings-json|hooks-json] [--executable <path>]");

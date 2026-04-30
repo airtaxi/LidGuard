@@ -285,6 +285,7 @@ internal sealed class LidGuardRuntimeCoordinator(
         await _gate.WaitAsync(cancellationToken);
         try
         {
+            if (request.MatchAllSessions) return RemoveAllSessionsInsideGate(request);
             if (request.MatchAllProvidersForSessionIdentifier) return RemoveSessionsMatchingSessionIdentifierInsideGate(request);
             if (request.MatchAllProviderNamesForSessionIdentifier) return RemoveSessionsMatchingProviderInsideGate(request);
 
@@ -304,6 +305,19 @@ internal sealed class LidGuardRuntimeCoordinator(
         {
             _gate.Release();
         }
+    }
+
+    private LidGuardPipeResponse RemoveAllSessionsInsideGate(LidGuardPipeRequest request)
+    {
+        var activeSnapshots = _sessionRegistry.GetSnapshots().ToArray();
+        if (activeSnapshots.Length == 0)
+        {
+            var alreadyStoppedResponse = CreateSuccessResponse("There are no active sessions to remove.");
+            AppendSessionLog("session-remove-already-stopped", request, alreadyStoppedResponse);
+            return alreadyStoppedResponse;
+        }
+
+        return RemoveSnapshotsInsideGate(request, activeSnapshots, $"Removed all {activeSnapshots.Length} active session(s).");
     }
 
     private async Task<LidGuardPipeResponse> CleanupOrphansAsync(CancellationToken cancellationToken)
@@ -528,28 +542,10 @@ internal sealed class LidGuardRuntimeCoordinator(
             return alreadyStoppedResponse;
         }
 
-        var lastResponse = CreateSuccessResponse(string.Empty);
-        foreach (var matchingSnapshot in matchingSnapshots)
-        {
-            var stopRequest = new LidGuardSessionStopRequest
-            {
-                SessionIdentifier = matchingSnapshot.SessionIdentifier,
-                Provider = matchingSnapshot.Provider
-            };
-            lastResponse = StopInsideGate(
-                stopRequest,
-                $"Removed {matchingSnapshot.Key}.",
-                "session-removed",
-                LidGuardPipeCommands.RemoveSession);
-            if (!lastResponse.Succeeded) return lastResponse;
-        }
-
-        var successMessage = matchingSnapshots.Length == 1
-            ? lastResponse.Message
-            : $"Removed {matchingSnapshots.Length} session(s) matching session id \"{request.SessionIdentifier}\".";
-        if (matchingSnapshots.Length > 1 && TryExtractPostStopScheduleMessage(lastResponse.Message, out var postStopScheduleMessage))
-            successMessage = $"{successMessage} {postStopScheduleMessage}";
-        return CreateSuccessResponse(successMessage);
+        return RemoveSnapshotsInsideGate(
+            request,
+            matchingSnapshots,
+            $"Removed {matchingSnapshots.Length} session(s) matching session id \"{request.SessionIdentifier}\".");
     }
 
     private LidGuardPipeResponse RemoveSessionsMatchingProviderInsideGate(LidGuardPipeRequest request)
@@ -574,6 +570,17 @@ internal sealed class LidGuardRuntimeCoordinator(
             return alreadyStoppedResponse;
         }
 
+        return RemoveSnapshotsInsideGate(
+            request,
+            matchingSnapshots,
+            $"Removed {matchingSnapshots.Length} session(s) matching {AgentProviderDisplay.CreateProviderDisplayText(request.Provider, request.ProviderName)} session id \"{request.SessionIdentifier}\".");
+    }
+
+    private LidGuardPipeResponse RemoveSnapshotsInsideGate(
+        LidGuardPipeRequest request,
+        LidGuardSessionSnapshot[] matchingSnapshots,
+        string multipleRemovalSuccessMessage)
+    {
         var lastResponse = CreateSuccessResponse(string.Empty);
         foreach (var matchingSnapshot in matchingSnapshots)
         {
@@ -591,9 +598,7 @@ internal sealed class LidGuardRuntimeCoordinator(
             if (!lastResponse.Succeeded) return lastResponse;
         }
 
-        var successMessage = matchingSnapshots.Length == 1
-            ? lastResponse.Message
-            : $"Removed {matchingSnapshots.Length} session(s) matching {AgentProviderDisplay.CreateProviderDisplayText(request.Provider, request.ProviderName)} session id \"{request.SessionIdentifier}\".";
+        var successMessage = matchingSnapshots.Length == 1 ? lastResponse.Message : multipleRemovalSuccessMessage;
         if (matchingSnapshots.Length > 1 && TryExtractPostStopScheduleMessage(lastResponse.Message, out var postStopScheduleMessage))
             successMessage = $"{successMessage} {postStopScheduleMessage}";
         return CreateSuccessResponse(successMessage);
