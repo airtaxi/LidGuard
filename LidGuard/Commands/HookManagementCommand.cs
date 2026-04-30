@@ -16,7 +16,7 @@ internal static class HookManagementCommand
 
         ManagedProviderSelection.ResolveAvailableProviders(
             selectedProviders,
-            GetProviderConfigurationRootCandidatePaths,
+            ManagedProviderConfigurationRoots.GetHookCandidatePaths,
             out var providers,
             out var skippedProviderMessages);
 
@@ -52,7 +52,7 @@ internal static class HookManagementCommand
 
         ManagedProviderSelection.ResolveAvailableProviders(
             selectedProviders,
-            GetProviderConfigurationRootCandidatePaths,
+            ManagedProviderConfigurationRoots.GetHookCandidatePaths,
             out var providers,
             out var skippedProviderMessages);
 
@@ -87,7 +87,7 @@ internal static class HookManagementCommand
 
         ManagedProviderSelection.ResolveAvailableProviders(
             selectedProviders,
-            GetProviderConfigurationRootCandidatePaths,
+            ManagedProviderConfigurationRoots.GetHookCandidatePaths,
             out var providers,
             out var skippedProviderMessages);
 
@@ -128,7 +128,7 @@ internal static class HookManagementCommand
 
         ManagedProviderSelection.ResolveAvailableProviders(
             selectedProviders,
-            GetProviderConfigurationRootCandidatePaths,
+            ManagedProviderConfigurationRoots.GetHookCandidatePaths,
             out var providers,
             out var skippedProviderMessages);
 
@@ -247,22 +247,6 @@ internal static class HookManagementCommand
         return result.Succeeded ? 0 : 1;
     }
 
-    private static IReadOnlyList<string> GetProviderConfigurationRootCandidatePaths(AgentProvider provider)
-    {
-        return provider switch
-        {
-            AgentProvider.Codex => [CodexHookInstaller.GetDefaultCodexConfigurationDirectoryPath()],
-            AgentProvider.Claude => [ClaudeHookInstaller.GetDefaultClaudeConfigurationDirectoryPath()],
-            AgentProvider.GitHubCopilot =>
-            [
-                GitHubCopilotHookInstaller.GetDefaultGitHubCopilotConfigurationDirectoryPath(),
-                Path.Combine(Environment.CurrentDirectory, ".github", "hooks"),
-                Path.Combine(Environment.CurrentDirectory, ".github", "copilot")
-            ],
-            _ => []
-        };
-    }
-
     private static int RemoveCodexHook(IReadOnlyDictionary<string, string> options)
     {
         var installer = new CodexHookInstaller();
@@ -343,7 +327,7 @@ internal static class HookManagementCommand
     {
         request = null;
         message = string.Empty;
-        var configurationFilePath = GetOption(options, "config", "configuration", "configuration-file");
+        var configurationFilePath = CommandOptionReader.GetOption(options, "config", "configuration", "configuration-file");
         request = installer.CreateDefaultRequest(configurationFilePath);
         return true;
     }
@@ -357,7 +341,7 @@ internal static class HookManagementCommand
         request = null;
         message = string.Empty;
 
-        var configurationFilePath = GetOption(options, "config", "configuration", "configuration-file");
+        var configurationFilePath = CommandOptionReader.GetOption(options, "config", "configuration", "configuration-file");
         request = installer.CreateDefaultRequest(configurationFilePath);
         return true;
     }
@@ -371,7 +355,7 @@ internal static class HookManagementCommand
         request = null;
         message = string.Empty;
 
-        var configurationFilePath = GetOption(options, "config", "configuration", "configuration-file");
+        var configurationFilePath = CommandOptionReader.GetOption(options, "config", "configuration", "configuration-file");
         request = installer.CreateDefaultRequest(configurationFilePath);
         return true;
     }
@@ -387,7 +371,7 @@ internal static class HookManagementCommand
         message = string.Empty;
 
         if (!ManagedProviderSelection.TrySelectProviders(options, prompt, out providers, out message)) return false;
-        if (!rejectSharedConfigurationFile || providers.Count < 2 || string.IsNullOrWhiteSpace(GetOption(options, "config", "configuration", "configuration-file"))) return true;
+        if (!rejectSharedConfigurationFile || providers.Count < 2 || string.IsNullOrWhiteSpace(CommandOptionReader.GetOption(options, "config", "configuration", "configuration-file"))) return true;
 
         message = "The config option cannot be used with all providers because each provider has a different configuration file.";
         return false;
@@ -398,7 +382,7 @@ internal static class HookManagementCommand
         maximumLineCount = 50;
         message = string.Empty;
 
-        var countText = GetOption(options, "count", "lines", "take");
+        var countText = CommandOptionReader.GetOption(options, "count", "lines", "take");
         if (string.IsNullOrWhiteSpace(countText)) return true;
         if (int.TryParse(countText, out maximumLineCount) && maximumLineCount > 0) return true;
 
@@ -502,14 +486,5 @@ internal static class HookManagementCommand
         return 1;
     }
 
-    private static string GetOption(IReadOnlyDictionary<string, string> options, params string[] optionNames)
-    {
-        foreach (var optionName in optionNames)
-        {
-            if (options.TryGetValue(optionName, out var optionValue)) return optionValue;
-        }
-
-        return string.Empty;
-    }
 }
 

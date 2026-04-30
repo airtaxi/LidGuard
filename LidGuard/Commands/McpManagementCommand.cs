@@ -1,8 +1,4 @@
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using LidGuard.Mcp;
 using LidGuardLib.Commons.Sessions;
 using LidGuardLib.Hooks;
@@ -12,8 +8,6 @@ namespace LidGuard.Commands;
 internal static class McpManagementCommand
 {
     private const string ManagedMcpServerName = "lidguard";
-    private const string ClaudeUserConfigurationFileName = ".claude.json";
-    private const string CopilotMcpConfigurationFileName = "mcp-config.json";
 
     public static int WriteMcpStatus(IReadOnlyDictionary<string, string> options)
     {
@@ -25,7 +19,7 @@ internal static class McpManagementCommand
 
         ManagedProviderSelection.ResolveAvailableProviders(
             selectedProviders,
-            GetProviderConfigurationRootCandidatePaths,
+            ManagedProviderConfigurationRoots.GetMcpCandidatePaths,
             out var providers,
             out var skippedProviderMessages);
 
@@ -62,7 +56,7 @@ internal static class McpManagementCommand
 
         ManagedProviderSelection.ResolveAvailableProviders(
             selectedProviders,
-            GetProviderConfigurationRootCandidatePaths,
+            ManagedProviderConfigurationRoots.GetMcpCandidatePaths,
             out var providers,
             out var skippedProviderMessages);
 
@@ -98,7 +92,7 @@ internal static class McpManagementCommand
 
         ManagedProviderSelection.ResolveAvailableProviders(
             selectedProviders,
-            GetProviderConfigurationRootCandidatePaths,
+            ManagedProviderConfigurationRoots.GetMcpCandidatePaths,
             out var providers,
             out var skippedProviderMessages);
 
@@ -139,59 +133,6 @@ internal static class McpManagementCommand
         };
     }
 
-    private static string DescribeJsonArray(JsonObject jsonObject, string propertyName)
-    {
-        if (jsonObject[propertyName] is not JsonArray jsonArray || jsonArray.Count == 0) return "<none>";
-
-        var values = new List<string>();
-        foreach (var item in jsonArray)
-        {
-            if (item is JsonValue jsonValue && jsonValue.TryGetValue<string>(out var stringValue))
-            {
-                values.Add(stringValue);
-            }
-            else
-            {
-                values.Add(item?.ToJsonString() ?? "null");
-            }
-        }
-
-        return string.Join(" | ", values);
-    }
-
-    private static IReadOnlyList<string> GetProviderCliCandidatePaths(AgentProvider provider)
-    {
-        var localApplicationDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var wingetLinksDirectoryPath = Path.Combine(localApplicationDataPath, "Microsoft", "WinGet", "Links");
-
-        return provider switch
-        {
-            AgentProvider.Codex =>
-            [
-                "codex",
-                Path.Combine(wingetLinksDirectoryPath, "codex.exe"),
-                Path.Combine(localApplicationDataPath, "Programs", "OpenAI", "Codex", "bin", "codex.exe")
-            ],
-            AgentProvider.Claude =>
-            [
-                "claude",
-                Path.Combine(wingetLinksDirectoryPath, "claude.exe")
-            ],
-            AgentProvider.GitHubCopilot =>
-            [
-                "copilot",
-                Path.Combine(wingetLinksDirectoryPath, "copilot.exe")
-            ],
-            _ => []
-        };
-    }
-
-    private static string GetJsonStringProperty(JsonObject jsonObject, string propertyName)
-    {
-        var valueNode = jsonObject[propertyName];
-        return valueNode is JsonValue jsonValue && jsonValue.TryGetValue<string>(out var value) ? value : string.Empty;
-    }
-
     private static string GetJsonStatusMessage(
         string configurationFilePath,
         bool configurationFileExists,
@@ -206,47 +147,9 @@ internal static class McpManagementCommand
         return "LidGuard MCP server is registered.";
     }
 
-    private static string GetCodexMcpConfigurationFilePath() => CodexHookInstaller.GetDefaultCodexConfigurationFilePath();
-
-    private static IReadOnlyList<string> GetProviderConfigurationRootCandidatePaths(AgentProvider provider)
-    {
-        var userProfilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        return provider switch
-        {
-            AgentProvider.Codex =>
-            [
-                CodexHookInstaller.GetDefaultCodexConfigurationDirectoryPath(),
-                CodexHookInstaller.GetDefaultCodexConfigurationFilePath()
-            ],
-            AgentProvider.Claude =>
-            [
-                Path.Combine(userProfilePath, ClaudeUserConfigurationFileName),
-                ClaudeHookInstaller.GetDefaultClaudeConfigurationDirectoryPath()
-            ],
-            AgentProvider.GitHubCopilot =>
-            [
-                Path.Combine(GitHubCopilotHookInstaller.GetDefaultGitHubCopilotConfigurationDirectoryPath(), CopilotMcpConfigurationFileName),
-                GitHubCopilotHookInstaller.GetDefaultGitHubCopilotConfigurationDirectoryPath()
-            ],
-            _ => []
-        };
-    }
-
-    private static string GetProviderCliDisplayText(AgentProvider provider, bool hasProviderCli, string providerCliExecutablePath)
-    {
-        if (hasProviderCli && !string.IsNullOrWhiteSpace(providerCliExecutablePath)) return providerCliExecutablePath;
-        return string.Join(" | ", GetProviderCliCandidatePaths(provider));
-    }
-
-    private static string GetUserProfileFilePath(string fileName)
-    {
-        var userProfilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        return Path.Combine(userProfilePath, fileName);
-    }
-
     private static int InstallProviderMcp(AgentProvider provider, string managedExecutableReference)
     {
-        if (!TryResolveProviderCliExecutablePath(provider, out var providerCliExecutablePath, out var message))
+        if (!ManagedProviderCliResolver.TryResolveProviderCliExecutablePath(provider, out var providerCliExecutablePath, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -259,12 +162,12 @@ internal static class McpManagementCommand
             return 1;
         }
 
-        return RunProviderProcess(providerCliExecutablePath, processArguments);
+        return ManagedProviderCliResolver.RunProviderProcess(providerCliExecutablePath, processArguments);
     }
 
     private static int RemoveProviderMcp(AgentProvider provider)
     {
-        if (!TryResolveProviderCliExecutablePath(provider, out var providerCliExecutablePath, out var message))
+        if (!ManagedProviderCliResolver.TryResolveProviderCliExecutablePath(provider, out var providerCliExecutablePath, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -277,42 +180,7 @@ internal static class McpManagementCommand
             return 1;
         }
 
-        return RunProviderProcess(providerCliExecutablePath, processArguments);
-    }
-
-    private static int RunProviderProcess(string fileName, IReadOnlyList<string> arguments)
-    {
-        try
-        {
-            var processStartInfo = new ProcessStartInfo
-            {
-                FileName = fileName,
-                UseShellExecute = false,
-                WorkingDirectory = Environment.CurrentDirectory
-            };
-
-            foreach (var argument in arguments) processStartInfo.ArgumentList.Add(argument);
-
-            using var process = new Process { StartInfo = processStartInfo };
-            if (!process.Start())
-            {
-                Console.Error.WriteLine($"Failed to start process: {fileName}");
-                return 1;
-            }
-
-            process.WaitForExit();
-            return process.ExitCode;
-        }
-        catch (Win32Exception exception)
-        {
-            Console.Error.WriteLine(exception.Message);
-            return 1;
-        }
-        catch (InvalidOperationException exception)
-        {
-            Console.Error.WriteLine(exception.Message);
-            return 1;
-        }
+        return ManagedProviderCliResolver.RunProviderProcess(providerCliExecutablePath, processArguments);
     }
 
     private static bool TryGetCodexMcpServerSectionContent(string configurationContent, out string sectionContent)
@@ -344,80 +212,11 @@ internal static class McpManagementCommand
         return true;
     }
 
-    private static bool TryGetJsonMcpServerEntry(string configurationContent, out JsonObject serverObject, out string message)
-    {
-        serverObject = new JsonObject();
-        message = string.Empty;
-
-        JsonObject rootObject;
-        try
-        {
-            var rootNode = JsonNode.Parse(configurationContent, documentOptions: new JsonDocumentOptions
-            {
-                AllowTrailingCommas = true,
-                CommentHandling = JsonCommentHandling.Skip
-            });
-
-            if (rootNode is not JsonObject existingRootObject)
-            {
-                message = "Configuration root is not a JSON object.";
-                return false;
-            }
-
-            rootObject = existingRootObject;
-        }
-        catch (JsonException exception)
-        {
-            message = $"Configuration JSON is invalid: {exception.Message}";
-            return false;
-        }
-
-        if (rootObject["mcpServers"] is not JsonObject mcpServersObject)
-        {
-            message = "The mcpServers object was not found.";
-            return false;
-        }
-
-        if (mcpServersObject[ManagedMcpServerName] is not JsonObject existingServerObject)
-        {
-            message = $"No MCP server named '{ManagedMcpServerName}' was found.";
-            return false;
-        }
-
-        serverObject = existingServerObject;
-        return true;
-    }
-
-    private static bool TryResolveProviderCliDisplayText(AgentProvider provider, out bool hasProviderCli, out string providerCliDisplayText)
-    {
-        hasProviderCli = TryResolveProviderCliExecutablePath(provider, out var providerCliExecutablePath, out _);
-        providerCliDisplayText = GetProviderCliDisplayText(provider, hasProviderCli, providerCliExecutablePath);
-        return hasProviderCli;
-    }
-
-    private static bool TryResolveProviderCliExecutablePath(AgentProvider provider, out string providerCliExecutablePath, out string message)
-    {
-        providerCliExecutablePath = string.Empty;
-        message = string.Empty;
-
-        foreach (var candidatePath in GetProviderCliCandidatePaths(provider))
-        {
-            if (!HookCommandUtilities.HookExecutableExists(candidatePath)) continue;
-
-            providerCliExecutablePath = HookCommandUtilities.NormalizeHookExecutableReference(candidatePath);
-            return true;
-        }
-
-        message =
-            $"Provider CLI not found: {ManagedProviderSelection.GetProviderDisplayName(provider)} (checked: {string.Join(" | ", GetProviderCliCandidatePaths(provider))})";
-        return false;
-    }
-
     private static int WriteClaudeMcpStatus()
     {
-        var configurationFilePath = GetUserProfileFilePath(ClaudeUserConfigurationFileName);
+        var configurationFilePath = ManagedProviderConfigurationRoots.ClaudeUserConfigurationFilePath;
         var configurationFileExists = File.Exists(configurationFilePath);
-        TryResolveProviderCliDisplayText(AgentProvider.Claude, out var hasProviderCli, out var providerCliDisplayText);
+        ManagedProviderCliResolver.TryResolveProviderCliDisplayText(AgentProvider.Claude, out var hasProviderCli, out var providerCliDisplayText);
         var hasServerEntry = false;
         var containsMcpServerCommand = false;
         var serverType = string.Empty;
@@ -429,13 +228,13 @@ internal static class McpManagementCommand
         if (configurationFileExists)
         {
             var configurationContent = File.ReadAllText(configurationFilePath);
-            if (TryGetJsonMcpServerEntry(configurationContent, out var serverObject, out message))
+            if (McpConfigurationJsonUtilities.TryGetJsonMcpServerEntry(configurationContent, ManagedMcpServerName, out var serverObject, out message))
             {
                 hasServerEntry = true;
-                serverType = GetJsonStringProperty(serverObject, "type");
-                serverCommand = GetJsonStringProperty(serverObject, "command");
-                serverArguments = DescribeJsonArray(serverObject, "args");
-                serverUrl = GetJsonStringProperty(serverObject, "url");
+                serverType = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "type");
+                serverCommand = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "command");
+                serverArguments = McpConfigurationJsonUtilities.DescribeJsonArray(serverObject, "args");
+                serverUrl = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "url");
                 containsMcpServerCommand =
                     serverCommand.Contains("lidguard", StringComparison.OrdinalIgnoreCase) &&
                     serverArguments.Contains(LidGuardMcpServerCommand.CommandName, StringComparison.OrdinalIgnoreCase);
@@ -460,9 +259,9 @@ internal static class McpManagementCommand
 
     private static int WriteCodexMcpStatus()
     {
-        var configurationFilePath = GetCodexMcpConfigurationFilePath();
+        var configurationFilePath = CodexHookInstaller.GetDefaultCodexConfigurationFilePath();
         var configurationFileExists = File.Exists(configurationFilePath);
-        TryResolveProviderCliDisplayText(AgentProvider.Codex, out var hasProviderCli, out var providerCliDisplayText);
+        ManagedProviderCliResolver.TryResolveProviderCliDisplayText(AgentProvider.Codex, out var hasProviderCli, out var providerCliDisplayText);
         var hasServerEntry = false;
         var containsMcpServerCommand = false;
         var message = string.Empty;
@@ -501,11 +300,9 @@ internal static class McpManagementCommand
 
     private static int WriteGitHubCopilotMcpStatus()
     {
-        var configurationFilePath = Path.Combine(
-            GitHubCopilotHookInstaller.GetDefaultGitHubCopilotConfigurationDirectoryPath(),
-            CopilotMcpConfigurationFileName);
+        var configurationFilePath = ManagedProviderConfigurationRoots.GitHubCopilotMcpConfigurationFilePath;
         var configurationFileExists = File.Exists(configurationFilePath);
-        TryResolveProviderCliDisplayText(AgentProvider.GitHubCopilot, out var hasProviderCli, out var providerCliDisplayText);
+        ManagedProviderCliResolver.TryResolveProviderCliDisplayText(AgentProvider.GitHubCopilot, out var hasProviderCli, out var providerCliDisplayText);
         var hasServerEntry = false;
         var containsMcpServerCommand = false;
         var serverType = string.Empty;
@@ -517,13 +314,13 @@ internal static class McpManagementCommand
         if (configurationFileExists)
         {
             var configurationContent = File.ReadAllText(configurationFilePath);
-            if (TryGetJsonMcpServerEntry(configurationContent, out var serverObject, out message))
+            if (McpConfigurationJsonUtilities.TryGetJsonMcpServerEntry(configurationContent, ManagedMcpServerName, out var serverObject, out message))
             {
                 hasServerEntry = true;
-                serverType = GetJsonStringProperty(serverObject, "type");
-                serverCommand = GetJsonStringProperty(serverObject, "command");
-                serverArguments = DescribeJsonArray(serverObject, "args");
-                serverUrl = GetJsonStringProperty(serverObject, "url");
+                serverType = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "type");
+                serverCommand = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "command");
+                serverArguments = McpConfigurationJsonUtilities.DescribeJsonArray(serverObject, "args");
+                serverUrl = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "url");
                 containsMcpServerCommand =
                     serverCommand.Contains("lidguard", StringComparison.OrdinalIgnoreCase) &&
                     serverArguments.Contains(LidGuardMcpServerCommand.CommandName, StringComparison.OrdinalIgnoreCase);
