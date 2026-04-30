@@ -16,6 +16,7 @@
 - `Plan.md` was removed to avoid duplicated planning content.
 - When changing core behavior, update this file instead of reintroducing duplicated design notes elsewhere.
 - Any future repository-wide README that documents Provider MCP or model-managed MCP session flows must explicitly state that the behavior is not guaranteed, because correct operation depends entirely on the model choosing to call the LidGuard MCP tools at the right times.
+- Any future repository-wide README that documents Codex hook/session lifecycle behavior must explicitly state that Codex App can spawn short-lived helper model sessions in the same working directory, so LidGuard intentionally does not use working-directory-only watchdog fallback for Codex unless a stable watched process id is supplied.
 
 ## Product Goal
 
@@ -101,7 +102,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 Hook stop events may be missed, so LidGuard also watches the agent process.
 
 - Prefer a provided parent process id when hooks can supply one.
-- When parent process id is missing, use `ICommandLineProcessResolver` with the hook working directory.
+- When parent process id is missing, use `ICommandLineProcessResolver` with the hook working directory only for providers where that fallback is reliable enough; Codex currently skips the implicit fallback because Codex App helper sessions can cause false cleanup.
 - On Windows, open the target process with synchronize/query rights and wait with `WaitForSingleObject`.
 - Treat the first cleanup signal as authoritative; later stop/watchdog events for the same session should be harmless.
 - If a provider launches a short-lived wrapper that exits before the real agent, provider-specific process selection may need follow-up work.
@@ -160,6 +161,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - When all remaining active sessions are soft-locked, LidGuard treats the runtime as suspend-eligible even before those sessions emit stop events.
 - Provider activity such as new tool execution clears that session's current soft-lock state.
 - `AgentProvider.Mcp` sessions do not auto-resolve a watched process from the working directory, because model-managed Provider MCP sessions do not reliably identify one owning CLI process.
+- `AgentProvider.Codex` sessions also do not auto-resolve a watched process from the working directory when no explicit watched process id is supplied, because Codex App can spawn short-lived helper model sessions in the same working directory and the fallback can bind the wrong process.
 - Optional lid action changes are backed up once and restored after the last active session stops.
 - Multiple stop signals for the same session should not cause repeated cleanup side effects.
 - Persistent pending backup state is still missing and is the next resilience priority.
@@ -356,7 +358,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - For `PermissionRequest`, it does not stop the runtime; it queries the runtime lid state and returns a structured allow/deny decision from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed.
 - For `Stop`, and for `SessionEnd` when a Codex build emits it, it sends internal `stop --provider codex`.
 - Notification-driven soft-lock detection is currently unsupported for Codex because the current public hook surface does not expose a comparable `Notification` event. Future support can be added if Codex exposes notification or machine-readable pending-state hooks later.
-- Codex hook input does not provide a stable parent process id, so the current implementation resolves a process by working directory.
+- Codex hook input does not provide a stable parent process id. LidGuard therefore only uses an explicit watched process id for Codex and intentionally skips working-directory-only watchdog fallback, because Codex App can spawn short-lived helper model sessions such as title generation in the same working directory.
 - Codex `PermissionRequest` exits successfully with structured JSON stdout only for closed-lid decisions; when the lid is open, unknown, or runtime status is unavailable, it exits successfully with empty stdout. LidGuard records diagnostics locally and should not block the Codex task when a runtime request fails.
 - This behavior is based on analyzing the `openai/codex` `codex-rs` hook source: `exit 0` with empty stdout is treated as a no-op success, while non-empty stdout may be parsed as hook JSON or interpreted as plain-text context depending on the event.
 

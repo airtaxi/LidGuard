@@ -104,7 +104,7 @@ internal sealed class LidGuardRuntimeCoordinator(
             CancelPendingSuspend();
             StartWatcher(snapshot);
 
-            var watchMessage = snapshot.HasWatchedProcess ? $" Watching process {snapshot.WatchedProcessIdentifier}." : " No watched process was resolved; a stop hook is required.";
+            var watchMessage = CreateWatcherStatusMessage(request, snapshot);
             var successResponse = CreateSuccessResponse($"Started {snapshot.Key}.{watchMessage}");
             AppendSessionLog("session-started", request, successResponse, snapshot.WatchedProcessIdentifier);
             return successResponse;
@@ -369,11 +369,25 @@ internal sealed class LidGuardRuntimeCoordinator(
         if (request.WatchedProcessIdentifier > 0) return request.WatchedProcessIdentifier;
         if (request.Provider == AgentProvider.Mcp) return 0;
         if (!_settings.WatchParentProcess) return 0;
+        if (ShouldSkipImplicitCodexWatchdog(request)) return 0;
         if (string.IsNullOrWhiteSpace(request.WorkingDirectory)) return 0;
 
         var resolveResult = commandLineProcessResolver.FindForWorkingDirectory(request.WorkingDirectory, request.Provider);
         return resolveResult.Succeeded ? resolveResult.Value.ProcessIdentifier : 0;
     }
+
+    private string CreateWatcherStatusMessage(LidGuardPipeRequest request, LidGuardSessionSnapshot snapshot)
+    {
+        if (snapshot.HasWatchedProcess) return $" Watching process {snapshot.WatchedProcessIdentifier}.";
+
+        var shouldExplainSkippedCodexFallback = _settings.WatchParentProcess && ShouldSkipImplicitCodexWatchdog(request);
+        if (shouldExplainSkippedCodexFallback) return " Codex fallback watchdog is disabled without an explicit parent process id because Codex App helper sessions can bind the wrong process; a stop hook is required.";
+
+        return " No watched process was resolved; a stop hook is required.";
+    }
+
+    private static bool ShouldSkipImplicitCodexWatchdog(LidGuardPipeRequest request)
+        => request.Provider == AgentProvider.Codex && request.WatchedProcessIdentifier <= 0;
 
     private LidGuardOperationResult UpdateSettingsInsideGate(LidGuardSettings settings)
     {
