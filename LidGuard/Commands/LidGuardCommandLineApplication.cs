@@ -55,7 +55,7 @@ internal static class LidGuardCommandLineApplication
             LidGuardPipeCommands.RemoveSession => await SendRemoveSessionAsync(options),
             LidGuardPipeCommands.Status => await SendStatusAsync(),
             LidGuardPipeCommands.CleanupOrphans => await SendCleanupOrphansAsync(),
-            LidGuardPipeCommands.CurrentTemperature => WriteCurrentTemperature(),
+            LidGuardPipeCommands.CurrentTemperature => WriteCurrentTemperature(options),
             LidGuardPipeCommands.Settings => await SendSettingsAsync(options, runtimePlatform),
             LidGuardPipeCommands.PreviewSystemSound => await PreviewSystemSoundAsync(options, runtimePlatform),
             LidGuardPipeCommands.ClaudeHooks => ClaudeHookCommand.WriteHookSnippet(options),
@@ -261,7 +261,7 @@ internal static class LidGuardCommandLineApplication
         return WriteResponse(response);
     }
 
-    private static int WriteCurrentTemperature()
+    private static int WriteCurrentTemperature(IReadOnlyDictionary<string, string> options)
     {
         if (!OperatingSystem.IsWindowsVersionAtLeast(6, 1))
         {
@@ -269,14 +269,22 @@ internal static class LidGuardCommandLineApplication
             return 0;
         }
 
-        var currentTemperatureCelsius = GetCurrentTemperatureCelsius();
+        if (!TryResolveCurrentTemperatureMode(options, out var emergencyHibernationTemperatureMode, out var message))
+        {
+            Console.Error.WriteLine(message);
+            return 1;
+        }
+
+        var currentTemperatureCelsius = GetCurrentTemperatureCelsius(emergencyHibernationTemperatureMode);
         if (!currentTemperatureCelsius.HasValue)
         {
-            Console.WriteLine("Current recognized system temperature is unavailable from Windows thermal-zone information.");
+            Console.WriteLine(
+                $"Current recognized system temperature is unavailable from Windows thermal-zone information using {DescribeEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode)} mode.");
             return 0;
         }
 
-        Console.WriteLine($"Current recognized system temperature: {currentTemperatureCelsius.Value} Celsius");
+        Console.WriteLine(
+            $"Current recognized system temperature using {DescribeEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode)} mode: {currentTemperatureCelsius.Value} Celsius");
         return 0;
     }
 
@@ -453,7 +461,8 @@ internal static class LidGuardCommandLineApplication
     }
 
     [SupportedOSPlatform("windows6.1")]
-    private static int? GetCurrentTemperatureCelsius() => SystemThermalInformation.GetSystemThermalInformation();
+    private static int? GetCurrentTemperatureCelsius(EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
+        => SystemThermalInformation.GetSystemTemperatureCelsius(emergencyHibernationTemperatureMode);
 
     private static bool TryCreateSessionRequest(
         IReadOnlyDictionary<string, string> options,
@@ -679,6 +688,12 @@ internal static class LidGuardCommandLineApplication
             out var emergencyHibernationOnHighTemperature,
             out message,
             "emergency-hibernation-on-high-temperature")) return false;
+        if (!TryParseEmergencyHibernationTemperatureModeOption(
+            options,
+            baseSettings.EmergencyHibernationTemperatureMode,
+            out var emergencyHibernationTemperatureMode,
+            out message))
+            return false;
         if (!TryParseEmergencyHibernationTemperatureCelsiusOption(
             options,
             baseSettings.EmergencyHibernationTemperatureCelsius,
@@ -712,6 +727,7 @@ internal static class LidGuardCommandLineApplication
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess,
             EmergencyHibernationOnHighTemperature = emergencyHibernationOnHighTemperature,
+            EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode,
             EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius
         };
 
@@ -737,6 +753,13 @@ internal static class LidGuardCommandLineApplication
             normalizedStoredSettings.EmergencyHibernationOnHighTemperature,
             defaultSettings.EmergencyHibernationOnHighTemperature,
             out var emergencyHibernationOnHighTemperature,
+            out message))
+            return false;
+        if (!TryReadEmergencyHibernationTemperatureModeSetting(
+            "Emergency hibernation temperature mode",
+            normalizedStoredSettings.EmergencyHibernationTemperatureMode,
+            defaultSettings.EmergencyHibernationTemperatureMode,
+            out var emergencyHibernationTemperatureMode,
             out message))
             return false;
         if (!TryReadEmergencyHibernationTemperatureCelsiusSetting(
@@ -786,6 +809,7 @@ internal static class LidGuardCommandLineApplication
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess,
             EmergencyHibernationOnHighTemperature = emergencyHibernationOnHighTemperature,
+            EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode,
             EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius
         };
 
@@ -902,6 +926,31 @@ internal static class LidGuardCommandLineApplication
 
         message =
             $"{settingName} must be an integer from {LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius} through {LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius}.";
+        return false;
+    }
+
+    private static bool TryReadEmergencyHibernationTemperatureModeSetting(
+        string settingName,
+        EmergencyHibernationTemperatureMode storedValue,
+        EmergencyHibernationTemperatureMode defaultValue,
+        out EmergencyHibernationTemperatureMode value,
+        out string message)
+    {
+        value = storedValue;
+        message = string.Empty;
+        WriteInteractiveSettingPrompt(settingName, storedValue.ToString(), defaultValue.ToString(), "candidates: Low, Average, High");
+
+        var valueText = Console.ReadLine();
+        if (valueText is null)
+        {
+            message = $"Input ended before {settingName} was entered.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(valueText)) return true;
+        if (TryParseEmergencyHibernationTemperatureMode(valueText, out value)) return true;
+
+        message = $"{settingName} must be low, average, or high.";
         return false;
     }
 
@@ -1150,6 +1199,74 @@ internal static class LidGuardCommandLineApplication
         return false;
     }
 
+    private static bool TryParseEmergencyHibernationTemperatureModeOption(
+        IReadOnlyDictionary<string, string> options,
+        EmergencyHibernationTemperatureMode defaultValue,
+        out EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode,
+        out string message)
+    {
+        emergencyHibernationTemperatureMode = defaultValue;
+        message = string.Empty;
+        if (!TryGetOption(options, out var emergencyHibernationTemperatureModeText, "emergency-hibernation-temperature-mode")) return true;
+        if (TryParseEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureModeText, out emergencyHibernationTemperatureMode)) return true;
+
+        message = "The emergency-hibernation-temperature-mode option must be low, average, or high.";
+        return false;
+    }
+
+    private static bool TryResolveCurrentTemperatureMode(
+        IReadOnlyDictionary<string, string> options,
+        out EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode,
+        out string message)
+    {
+        emergencyHibernationTemperatureMode = LidGuardSettings.HeadlessRuntimeDefault.EmergencyHibernationTemperatureMode;
+        message = string.Empty;
+        if (!TryGetOption(options, out var temperatureModeText, "temperature-mode"))
+            return TryLoadCurrentTemperatureModeFromSettings(out emergencyHibernationTemperatureMode, out message);
+
+        if (string.IsNullOrWhiteSpace(temperatureModeText) || temperatureModeText.Trim().Equals("default", StringComparison.OrdinalIgnoreCase))
+            return TryLoadCurrentTemperatureModeFromSettings(out emergencyHibernationTemperatureMode, out message);
+        if (TryParseEmergencyHibernationTemperatureMode(temperatureModeText, out emergencyHibernationTemperatureMode)) return true;
+
+        message = "The temperature-mode option must be default, low, average, or high.";
+        return false;
+    }
+
+    private static bool TryLoadCurrentTemperatureModeFromSettings(
+        out EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode,
+        out string message)
+    {
+        emergencyHibernationTemperatureMode = LidGuardSettings.HeadlessRuntimeDefault.EmergencyHibernationTemperatureMode;
+        message = string.Empty;
+        if (!LidGuardSettingsStore.TryLoadExistingOrDefault(out var settings, out _, out message)) return false;
+
+        emergencyHibernationTemperatureMode = LidGuardSettings.Normalize(settings).EmergencyHibernationTemperatureMode;
+        return true;
+    }
+
+    private static bool TryParseEmergencyHibernationTemperatureMode(
+        string emergencyHibernationTemperatureModeText,
+        out EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
+    {
+        emergencyHibernationTemperatureMode = EmergencyHibernationTemperatureMode.Average;
+        if (string.IsNullOrWhiteSpace(emergencyHibernationTemperatureModeText)) return false;
+
+        switch (emergencyHibernationTemperatureModeText.Trim().ToLowerInvariant())
+        {
+            case "low":
+                emergencyHibernationTemperatureMode = EmergencyHibernationTemperatureMode.Low;
+                return true;
+            case "average":
+                emergencyHibernationTemperatureMode = EmergencyHibernationTemperatureMode.Average;
+                return true;
+            case "high":
+                emergencyHibernationTemperatureMode = EmergencyHibernationTemperatureMode.High;
+                return true;
+            default:
+                return false;
+        }
+    }
+
     private static string GetWorkingDirectory(IReadOnlyDictionary<string, string> options)
     {
         var workingDirectory = GetOption(options, "working-directory", "cwd");
@@ -1224,6 +1341,7 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"  Change lid action: {normalizedSettings.ChangeLidAction}");
         Console.WriteLine($"  Watch parent process: {normalizedSettings.WatchParentProcess}");
         Console.WriteLine($"  Emergency hibernation on high temperature: {normalizedSettings.EmergencyHibernationOnHighTemperature}");
+        Console.WriteLine($"  Emergency hibernation temperature mode: {normalizedSettings.EmergencyHibernationTemperatureMode}");
         Console.WriteLine($"  Emergency hibernation temperature Celsius: {normalizedSettings.EmergencyHibernationTemperatureCelsius}");
         Console.WriteLine($"  Suspend mode: {normalizedSettings.SuspendMode}");
         Console.WriteLine($"  Post-stop suspend delay seconds: {normalizedSettings.PostStopSuspendDelaySeconds}");
@@ -1284,6 +1402,9 @@ internal static class LidGuardCommandLineApplication
     }
 
     private static string DescribeSupportedPostStopSuspendSystemSounds() => string.Join(", ", s_supportedPostStopSuspendSystemSoundNames);
+
+    private static string DescribeEmergencyHibernationTemperatureMode(EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
+        => emergencyHibernationTemperatureMode.ToString();
 
     private static string DescribeSoftLockStatus(LidGuardSessionStatus session)
     {

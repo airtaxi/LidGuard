@@ -49,20 +49,22 @@ lidguard cleanup-orphans
 ```powershell
 lidguard settings
 lidguard settings --change-lid-action true --suspend-mode hibernate
+lidguard settings --emergency-hibernation-temperature-mode average
 lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
 lidguard remove-pre-suspend-webhook
 lidguard preview-system-sound --name Asterisk
 ```
 
-Running `settings` with no options starts interactive editing. Use `remove-pre-suspend-webhook` to clear a configured webhook URL.
+Running `settings` with no options starts interactive editing. Emergency Hibernation temperature mode defaults to `Average`, and you can change it to `Low`, `Average`, or `High`. Use `remove-pre-suspend-webhook` to clear a configured webhook URL.
 
 ## Diagnostics
 
 ```powershell
 lidguard current-temperature
+lidguard current-temperature --temperature-mode high
 ```
 
-`current-temperature` prints the highest system thermal-zone temperature currently recognized by Windows in Celsius, or reports when the value is unavailable.
+`current-temperature` prints the current recognized system thermal-zone temperature in Celsius using the selected aggregation mode. Use `--temperature-mode default|low|average|high` to reuse the saved setting or override it for one command. When the settings file does not exist yet, `default` falls back to LidGuard's `Average` headless runtime default.
 
 ## Hook Integration
 

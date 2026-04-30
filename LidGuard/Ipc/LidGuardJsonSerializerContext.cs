@@ -12,6 +12,7 @@ namespace LidGuard.Ipc;
 [JsonSerializable(typeof(LidGuardPipeResponse))]
 [JsonSerializable(typeof(LidGuardSessionStatus[]))]
 [JsonSerializable(typeof(ClosedLidPermissionRequestDecision))]
+[JsonSerializable(typeof(EmergencyHibernationTemperatureMode))]
 [JsonSerializable(typeof(LidSwitchState))]
 [JsonSerializable(typeof(LidGuardSettings))]
 [JsonSerializable(typeof(PowerRequestOptions))]

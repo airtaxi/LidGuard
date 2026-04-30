@@ -34,6 +34,8 @@ public sealed class LidGuardSettings
 
     public bool EmergencyHibernationOnHighTemperature { get; init; } = true;
 
+    public EmergencyHibernationTemperatureMode EmergencyHibernationTemperatureMode { get; init; } = EmergencyHibernationTemperatureMode.Average;
+
     public int EmergencyHibernationTemperatureCelsius { get; init; } = DefaultEmergencyHibernationTemperatureCelsius;
 
     public static int ClampEmergencyHibernationTemperatureCelsius(int emergencyHibernationTemperatureCelsius)
@@ -47,6 +49,7 @@ public sealed class LidGuardSettings
         if (settings is null) return HeadlessRuntimeDefault;
 
         var powerRequest = settings.PowerRequest ?? PowerRequestOptions.Default;
+        var emergencyHibernationTemperatureMode = NormalizeEmergencyHibernationTemperatureMode(settings.EmergencyHibernationTemperatureMode);
         var emergencyHibernationTemperatureCelsius = ClampEmergencyHibernationTemperatureCelsius(settings.EmergencyHibernationTemperatureCelsius);
         return new LidGuardSettings
         {
@@ -65,7 +68,16 @@ public sealed class LidGuardSettings
             ClosedLidPermissionRequestDecision = settings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settings.WatchParentProcess,
             EmergencyHibernationOnHighTemperature = settings.EmergencyHibernationOnHighTemperature,
+            EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode,
             EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius
         };
     }
+
+    private static EmergencyHibernationTemperatureMode NormalizeEmergencyHibernationTemperatureMode(EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
+        => emergencyHibernationTemperatureMode switch
+        {
+            EmergencyHibernationTemperatureMode.Low => EmergencyHibernationTemperatureMode.Low,
+            EmergencyHibernationTemperatureMode.High => EmergencyHibernationTemperatureMode.High,
+            _ => EmergencyHibernationTemperatureMode.Average
+        };
 }

@@ -54,14 +54,16 @@ internal sealed class EmergencyHibernationThermalMonitor(
 
                 var emergencyHibernationTemperatureCelsius = LidGuardSettings.ClampEmergencyHibernationTemperatureCelsius(
                     emergencyHibernationThermalMonitorState.EmergencyHibernationTemperatureCelsius);
-                var observedTemperatureCelsius = SystemThermalInformation.GetSystemThermalInformation();
+                var emergencyHibernationTemperatureMode = emergencyHibernationThermalMonitorState.TemperatureMode;
+                var observedTemperatureCelsius = SystemThermalInformation.GetSystemTemperatureCelsius(emergencyHibernationTemperatureMode);
                 if (!observedTemperatureCelsius.HasValue) continue;
                 if (observedTemperatureCelsius.Value < emergencyHibernationTemperatureCelsius) continue;
 
                 await NotifyEmergencyHibernationThresholdReachedAsync(
                     new EmergencyHibernationThermalThresholdReachedContext(
                         observedTemperatureCelsius.Value,
-                        emergencyHibernationTemperatureCelsius),
+                        emergencyHibernationTemperatureCelsius,
+                        emergencyHibernationTemperatureMode),
                     emergencyHibernationThresholdReachedAsync);
             }
         }
@@ -88,8 +90,10 @@ internal readonly record struct EmergencyHibernationThermalMonitorState(
     bool ProtectionApplied,
     bool EmergencyHibernationOnHighTemperature,
     LidSwitchState LidSwitchState,
+    EmergencyHibernationTemperatureMode TemperatureMode,
     int EmergencyHibernationTemperatureCelsius);
 
 internal readonly record struct EmergencyHibernationThermalThresholdReachedContext(
     int ObservedTemperatureCelsius,
-    int ThresholdTemperatureCelsius);
+    int ThresholdTemperatureCelsius,
+    EmergencyHibernationTemperatureMode ObservedTemperatureMode);

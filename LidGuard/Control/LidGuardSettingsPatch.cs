@@ -19,6 +19,8 @@ public sealed class LidGuardSettingsPatch
 
     public bool? EmergencyHibernationOnHighTemperature { get; init; }
 
+    public EmergencyHibernationTemperatureMode? EmergencyHibernationTemperatureMode { get; init; }
+
     public int? EmergencyHibernationTemperatureCelsius { get; init; }
 
     public SystemSuspendMode? SuspendMode { get; init; }

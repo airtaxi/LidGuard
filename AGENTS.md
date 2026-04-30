@@ -102,7 +102,8 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 
 ### Emergency Hibernation Thermal Monitor
 
-- Emergency Hibernation uses `SystemThermalInformation.GetSystemThermalInformation()` to read the highest available system thermal-zone temperature in Celsius.
+- Emergency Hibernation uses `SystemThermalInformation.GetSystemTemperatureCelsius(EmergencyHibernationTemperatureMode)` to read the selected available system thermal-zone temperature in Celsius.
+- Emergency Hibernation temperature mode is configurable as Low, Average, or High, and defaults to Average.
 - The thermal monitor only runs while shared keep-awake protection is applied and the lid is closed.
 - The thermal poll interval is fixed at 10 seconds.
 - The Emergency Hibernation threshold is configurable, defaults to 93 Celsius, and must always be clamped to 70 through 110 Celsius before runtime use.
@@ -129,9 +130,9 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `remove-session --all` manually removes every active session currently tracked by the runtime.
 - `remove-session` manually removes active sessions by session identifier; when `--provider` is omitted, it removes every active session whose session identifier matches. When `--provider mcp` is used, `--provider-name` can narrow the removal to one MCP-backed provider; omitting `--provider-name` removes every MCP-backed session that shares that session identifier.
 - `remove-pre-suspend-webhook` clears the configured pre-suspend webhook URL and reports when no webhook is currently configured.
-- `current-temperature` prints the highest system thermal-zone temperature currently recognized by Windows in Celsius, or reports when thermal-zone data is unavailable.
+- `current-temperature` prints the currently recognized system thermal-zone temperature in Celsius using the selected aggregation mode, or reports when thermal-zone data is unavailable.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
-- `settings` also exposes `--emergency-hibernation-on-high-temperature` and `--emergency-hibernation-temperature-celsius`; the threshold option accepts 70 through 110 only.
+- `settings` also exposes `--emergency-hibernation-on-high-temperature`, `--emergency-hibernation-temperature-mode`, and `--emergency-hibernation-temperature-celsius`; the threshold option accepts 70 through 110 only.
 - `hook-install`, `hook-status`, `hook-remove`, and `hook-events` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
 - `mcp-status`, `mcp-install`, and `mcp-remove` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
 - `provider-mcp-status`, `provider-mcp-install`, and `provider-mcp-remove` work on a caller-supplied JSON config file path instead of using Codex, Claude Code, or GitHub Copilot CLI-specific MCP registration commands.
@@ -194,6 +195,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Post-stop suspend sound: off by default.
 - Pre-suspend webhook URL: off by default.
 - Emergency Hibernation on high temperature: enabled by default.
+- Emergency Hibernation temperature mode: Average by default, with Low and High optional.
 - Emergency Hibernation temperature threshold: 93 Celsius by default, clamped to 70 through 110.
 - Closed-lid PermissionRequest decision: Deny by default, Allow optional.
 - PermissionRequest hooks only emit a structured allow/deny decision when the runtime reports the lid is closed; otherwise they return empty stdout so the provider's default permission flow continues.
@@ -215,6 +217,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - `LidGuardSessionRegistry`
 - `Settings`
   - `ClosedLidPermissionRequestDecision`
+  - `EmergencyHibernationTemperatureMode`
   - `LidGuardSettings`
   - `LidGuardSettings.Default`
   - `LidGuardSettings.HeadlessRuntimeDefault`
@@ -511,8 +514,10 @@ lidguard provider-mcp-install --config "C:\path\to\mcp.json" --provider-name "Ex
 lidguard provider-mcp-remove --config "C:\path\to\mcp.json"
 lidguard provider-mcp-server --provider-name "ExampleProvider"
 lidguard current-temperature
+lidguard current-temperature --temperature-mode high
 lidguard preview-system-sound --name Asterisk
 lidguard settings
+lidguard settings --emergency-hibernation-temperature-mode average
 lidguard settings --change-lid-action true
 lidguard settings --post-stop-suspend-delay-seconds 0
 lidguard settings --post-stop-suspend-sound Asterisk
@@ -576,6 +581,7 @@ The Windows CLI hook receiving path is implemented for Codex, Claude Code, and G
 20. ~~Map GitHub Copilot CLI `userPromptSubmitted` and `agentStop` to start/stop handling, handle `permissionRequest` as a closed-lid-only settings-driven allow/deny decision with `interrupt: true`, and deny closed-lid `preToolUse` `ask_user`.~~
 21. ~~Add runtime-led Claude/GitHub Copilot soft-lock orchestration driven by provider notifications, with per-session soft-lock state and activity-based clearing.~~
 22. ~~Add a `current-temperature` CLI command for reporting the current Windows-recognized system thermal-zone temperature.~~
+23. ~~Add Emergency Hibernation temperature mode selection with Low/Average/High settings and a `current-temperature` mode override.~~
 
 ## Design Constraints
 

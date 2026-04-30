@@ -269,6 +269,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             ClosedLidPermissionRequestDecision = settingsPatch.ClosedLidPermissionRequestDecision ?? normalizedBaseSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settingsPatch.WatchParentProcess ?? normalizedBaseSettings.WatchParentProcess,
             EmergencyHibernationOnHighTemperature = settingsPatch.EmergencyHibernationOnHighTemperature ?? normalizedBaseSettings.EmergencyHibernationOnHighTemperature,
+            EmergencyHibernationTemperatureMode = settingsPatch.EmergencyHibernationTemperatureMode ?? normalizedBaseSettings.EmergencyHibernationTemperatureMode,
             EmergencyHibernationTemperatureCelsius = settingsPatch.EmergencyHibernationTemperatureCelsius ?? normalizedBaseSettings.EmergencyHibernationTemperatureCelsius
         };
     }
@@ -384,6 +385,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         AppendChange(changes, previousStoredSettings.PreSuspendWebhookUrl, updatedStoredSettings.PreSuspendWebhookUrl, "preSuspendWebhookUrl");
         AppendChange(changes, previousStoredSettings.ClosedLidPermissionRequestDecision, updatedStoredSettings.ClosedLidPermissionRequestDecision, "closedLidPermissionRequestDecision");
         AppendChange(changes, previousStoredSettings.EmergencyHibernationOnHighTemperature, updatedStoredSettings.EmergencyHibernationOnHighTemperature, "emergencyHibernationOnHighTemperature");
+        AppendChange(changes, previousStoredSettings.EmergencyHibernationTemperatureMode, updatedStoredSettings.EmergencyHibernationTemperatureMode, "emergencyHibernationTemperatureMode");
         AppendChange(changes, previousStoredSettings.EmergencyHibernationTemperatureCelsius, updatedStoredSettings.EmergencyHibernationTemperatureCelsius, "emergencyHibernationTemperatureCelsius");
 
         return [.. changes];

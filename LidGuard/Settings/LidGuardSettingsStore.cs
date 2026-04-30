@@ -27,20 +27,22 @@ internal static class LidGuardSettingsStore
             return TrySave(settings, out message);
         }
 
-        try
+        return TryLoad(settingsFilePath, out settings, out message);
+    }
+
+    public static bool TryLoadExistingOrDefault(out LidGuardSettings settings, out bool settingsFileExists, out string message)
+    {
+        var settingsFilePath = GetDefaultSettingsFilePath();
+        if (!File.Exists(settingsFilePath))
         {
-            var content = File.ReadAllText(settingsFilePath);
-            var loadedSettings = JsonSerializer.Deserialize(content, LidGuardSettingsFileJsonSerializerContext.Default.LidGuardSettings);
-            settings = MigrateLoadedSettings(content, loadedSettings);
+            settings = LidGuardSettings.HeadlessRuntimeDefault;
+            settingsFileExists = false;
             message = string.Empty;
             return true;
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
-        {
-            settings = LidGuardSettings.HeadlessRuntimeDefault;
-            message = $"Failed to read LidGuard settings from {settingsFilePath}: {exception.Message}";
-            return false;
-        }
+
+        settingsFileExists = true;
+        return TryLoad(settingsFilePath, out settings, out message);
     }
 
     public static bool TrySave(LidGuardSettings settings, out string message)
@@ -88,8 +90,27 @@ internal static class LidGuardSettingsStore
             ClosedLidPermissionRequestDecision = normalizedSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = normalizedSettings.WatchParentProcess,
             EmergencyHibernationOnHighTemperature = normalizedSettings.EmergencyHibernationOnHighTemperature,
+            EmergencyHibernationTemperatureMode = normalizedSettings.EmergencyHibernationTemperatureMode,
             EmergencyHibernationTemperatureCelsius = normalizedSettings.EmergencyHibernationTemperatureCelsius
         };
+    }
+
+    private static bool TryLoad(string settingsFilePath, out LidGuardSettings settings, out string message)
+    {
+        try
+        {
+            var content = File.ReadAllText(settingsFilePath);
+            var loadedSettings = JsonSerializer.Deserialize(content, LidGuardSettingsFileJsonSerializerContext.Default.LidGuardSettings);
+            settings = MigrateLoadedSettings(content, loadedSettings);
+            message = string.Empty;
+            return true;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
+        {
+            settings = LidGuardSettings.HeadlessRuntimeDefault;
+            message = $"Failed to read LidGuard settings from {settingsFilePath}: {exception.Message}";
+            return false;
+        }
     }
 
     private static bool HasPowerRequestProperty(string content, string propertyName)

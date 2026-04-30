@@ -947,6 +947,7 @@ internal sealed class LidGuardRuntimeCoordinator
         EmergencyHibernationThermalThresholdReachedContext emergencyHibernationThermalThresholdReachedContext)
     {
         var emergencyHibernationTemperatureCelsius = emergencyHibernationThermalThresholdReachedContext.ThresholdTemperatureCelsius;
+        var emergencyHibernationTemperatureMode = emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureMode;
 
         await _gate.WaitAsync(CancellationToken.None);
         try
@@ -954,13 +955,15 @@ internal sealed class LidGuardRuntimeCoordinator
             if (!TryValidateEmergencyHibernationStateInsideGate(
                 emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius,
                 out emergencyHibernationTemperatureCelsius,
+                out emergencyHibernationTemperatureMode,
                 out var canceledMessage))
             {
                 AppendEmergencyHibernationLog(
                     "emergency-hibernation-canceled",
                     CreateSuccessResponse(canceledMessage),
                     emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius,
-                    emergencyHibernationTemperatureCelsius);
+                    emergencyHibernationTemperatureCelsius,
+                    emergencyHibernationTemperatureMode);
                 return;
             }
 
@@ -968,9 +971,10 @@ internal sealed class LidGuardRuntimeCoordinator
             AppendEmergencyHibernationLog(
                 "emergency-hibernation-thermal-detected",
                 CreateSuccessResponse(
-                    $"Detected high system temperature {DescribeEmergencyHibernationTemperature(emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius, emergencyHibernationTemperatureCelsius)}. Requesting Emergency Hibernation."),
+                    $"Detected high system temperature {DescribeEmergencyHibernationTemperature(emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode)}. Requesting Emergency Hibernation."),
                 emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius,
-                emergencyHibernationTemperatureCelsius);
+                emergencyHibernationTemperatureCelsius,
+                emergencyHibernationTemperatureMode);
         }
         finally
         {
@@ -979,15 +983,18 @@ internal sealed class LidGuardRuntimeCoordinator
 
         await SendEmergencyHibernationWebhookAsync(
             emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius,
-            emergencyHibernationTemperatureCelsius);
+            emergencyHibernationTemperatureCelsius,
+            emergencyHibernationTemperatureMode);
         await RequestEmergencyHibernationAsync(
             emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius,
-            emergencyHibernationTemperatureCelsius);
+            emergencyHibernationTemperatureCelsius,
+            emergencyHibernationTemperatureMode);
     }
 
     private async Task SendEmergencyHibernationWebhookAsync(
         int observedTemperatureCelsius,
-        int emergencyHibernationTemperatureCelsius)
+        int emergencyHibernationTemperatureCelsius,
+        EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
     {
         string preSuspendWebhookUrl;
 
@@ -1016,7 +1023,8 @@ internal sealed class LidGuardRuntimeCoordinator
                 "emergency-hibernation-webhook-failed",
                 CreateFailureResponse(sendResult),
                 observedTemperatureCelsius,
-                emergencyHibernationTemperatureCelsius);
+                emergencyHibernationTemperatureCelsius,
+                emergencyHibernationTemperatureMode);
         }
         finally
         {
@@ -1026,7 +1034,8 @@ internal sealed class LidGuardRuntimeCoordinator
 
     private async Task RequestEmergencyHibernationAsync(
         int observedTemperatureCelsius,
-        int emergencyHibernationTemperatureCelsius)
+        int emergencyHibernationTemperatureCelsius,
+        EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
     {
         await _gate.WaitAsync(CancellationToken.None);
         try
@@ -1034,22 +1043,25 @@ internal sealed class LidGuardRuntimeCoordinator
             if (!TryValidateEmergencyHibernationStateInsideGate(
                 observedTemperatureCelsius,
                 out emergencyHibernationTemperatureCelsius,
+                out emergencyHibernationTemperatureMode,
                 out var canceledMessage))
             {
                 AppendEmergencyHibernationLog(
                     "emergency-hibernation-canceled",
                     CreateSuccessResponse(canceledMessage),
                     observedTemperatureCelsius,
-                    emergencyHibernationTemperatureCelsius);
+                    emergencyHibernationTemperatureCelsius,
+                    emergencyHibernationTemperatureMode);
                 return;
             }
 
             AppendEmergencyHibernationLog(
                 "emergency-hibernation-requesting",
                 CreateSuccessResponse(
-                    $"Requesting Emergency Hibernation because system temperature reached {DescribeEmergencyHibernationTemperature(observedTemperatureCelsius, emergencyHibernationTemperatureCelsius)}."),
+                    $"Requesting Emergency Hibernation because system temperature reached {DescribeEmergencyHibernationTemperature(observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode)}."),
                 observedTemperatureCelsius,
-                emergencyHibernationTemperatureCelsius);
+                emergencyHibernationTemperatureCelsius,
+                emergencyHibernationTemperatureMode);
         }
         finally
         {
@@ -1066,7 +1078,8 @@ internal sealed class LidGuardRuntimeCoordinator
                 "emergency-hibernation-failed",
                 CreateFailureResponse(hibernationResult),
                 observedTemperatureCelsius,
-                emergencyHibernationTemperatureCelsius);
+                emergencyHibernationTemperatureCelsius,
+                emergencyHibernationTemperatureMode);
         }
         finally
         {
@@ -1079,14 +1092,17 @@ internal sealed class LidGuardRuntimeCoordinator
             _protectionApplied,
             _settings.EmergencyHibernationOnHighTemperature,
             _lidStateSource.CurrentState,
+            _settings.EmergencyHibernationTemperatureMode,
             LidGuardSettings.ClampEmergencyHibernationTemperatureCelsius(_settings.EmergencyHibernationTemperatureCelsius));
 
     private bool TryValidateEmergencyHibernationStateInsideGate(
         int observedTemperatureCelsius,
         out int emergencyHibernationTemperatureCelsius,
+        out EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode,
         out string message)
     {
         emergencyHibernationTemperatureCelsius = LidGuardSettings.ClampEmergencyHibernationTemperatureCelsius(_settings.EmergencyHibernationTemperatureCelsius);
+        emergencyHibernationTemperatureMode = _settings.EmergencyHibernationTemperatureMode;
         message = string.Empty;
 
         if (!_protectionApplied)
@@ -1111,7 +1127,7 @@ internal sealed class LidGuardRuntimeCoordinator
         if (observedTemperatureCelsius < emergencyHibernationTemperatureCelsius)
         {
             message =
-                $"Skipped Emergency Hibernation because the observed temperature {DescribeEmergencyHibernationTemperature(observedTemperatureCelsius, emergencyHibernationTemperatureCelsius)} is no longer above the current threshold.";
+                $"Skipped Emergency Hibernation because the observed temperature {DescribeEmergencyHibernationTemperature(observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode)} is no longer above the current threshold.";
             return false;
         }
 
@@ -1172,8 +1188,9 @@ internal sealed class LidGuardRuntimeCoordinator
 
     private static string DescribeEmergencyHibernationTemperature(
         int observedTemperatureCelsius,
-        int emergencyHibernationTemperatureCelsius)
-        => $"{observedTemperatureCelsius} Celsius (threshold: {emergencyHibernationTemperatureCelsius} Celsius)";
+        int emergencyHibernationTemperatureCelsius,
+        EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
+        => $"{observedTemperatureCelsius} Celsius using {emergencyHibernationTemperatureMode} mode (threshold: {emergencyHibernationTemperatureCelsius} Celsius)";
 
     private static bool TryExtractPostStopScheduleMessage(string responseMessage, out string postStopScheduleMessage)
     {
@@ -1203,14 +1220,15 @@ internal sealed class LidGuardRuntimeCoordinator
         string eventName,
         LidGuardPipeResponse response,
         int observedTemperatureCelsius,
-        int emergencyHibernationTemperatureCelsius)
+        int emergencyHibernationTemperatureCelsius,
+        EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
     {
         LidGuardRuntimeSessionLogStore.Append(new LidGuardRuntimeSessionLogEntry
         {
             EventName = eventName,
             Command = EmergencyHibernationMonitorCommandName,
             Succeeded = response.Succeeded,
-            Message = $"{response.Message} Observed temperature: {DescribeEmergencyHibernationTemperature(observedTemperatureCelsius, emergencyHibernationTemperatureCelsius)}.",
+            Message = $"{response.Message} Observed temperature: {DescribeEmergencyHibernationTemperature(observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode)}.",
             ActiveSessionCount = response.ActiveSessionCount
         });
     }

@@ -23,6 +23,8 @@ namespace LidGuard.Mcp;
 [JsonSerializable(typeof(LidSwitchState))]
 [JsonSerializable(typeof(ClosedLidPermissionRequestDecision))]
 [JsonSerializable(typeof(ClosedLidPermissionRequestDecision?))]
+[JsonSerializable(typeof(EmergencyHibernationTemperatureMode))]
+[JsonSerializable(typeof(EmergencyHibernationTemperatureMode?))]
 [JsonSerializable(typeof(PowerRequestOptions))]
 [JsonSerializable(typeof(SystemSuspendMode))]
 [JsonSerializable(typeof(SystemSuspendMode?))]
