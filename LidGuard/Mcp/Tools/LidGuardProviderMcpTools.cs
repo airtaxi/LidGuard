@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using LidGuard.Control;
+using LidGuard.Ipc;
 using LidGuard.Mcp.Models;
 using LidGuardLib.Commons.Sessions;
 using ModelContextProtocol;
@@ -15,17 +16,16 @@ public sealed class LidGuardProviderMcpTools(
     [McpServerTool(
         Name = "provider_start_session",
         Destructive = false,
-        Idempotent = true,
+        Idempotent = false,
         OpenWorld = false,
         UseStructuredContent = true),
-     Description("Call this before you start processing a new user prompt for this MCP-managed provider session. Use the provider's own session id when available. If the provider does not expose one, generate a stable session id yourself and keep reusing it until you truly stop the session.")]
+     Description("Call this once when you are starting a brand-new LidGuard Provider MCP session before autonomous work begins. Do not invent or supply a session identifier here. LidGuard generates an 8-character lowercase hexadecimal session identifier from the first block of a new GUID, starts tracking it, and returns that exact value in both requestedSessionIdentifier and sessionIdentifierToReuse. Save that returned identifier and reuse it verbatim with provider_set_soft_lock, provider_clear_soft_lock, and provider_stop_session until the work is truly complete. If you are resuming after a previous soft lock, do not call this again; call provider_clear_soft_lock with the earlier returned session id instead.")]
     public async Task<LidGuardSessionCommandToolResponse> StartSession(
-        [Description("The provider session identifier to keep using across turns until the task is truly complete.")]
-        string sessionIdentifier,
         [Description("Optional working directory for the current task. Pass it when the provider can expose the active project folder.")]
         string workingDirectory = null,
         CancellationToken cancellationToken = default)
     {
+        var sessionIdentifier = CreateGeneratedSessionIdentifier();
         var result = await controlService.StartSessionAsync(
             sessionIdentifier,
             AgentProvider.Mcp,
@@ -44,9 +44,9 @@ public sealed class LidGuardProviderMcpTools(
         Idempotent = true,
         OpenWorld = false,
         UseStructuredContent = true),
-     Description("Call this before the turn ends only when the work is truly complete and this session no longer needs LidGuard protection. If you are ending the turn because you need the user's next input, prefer provider_set_soft_lock instead.")]
+     Description("Call this only when the work is truly complete and this ongoing Provider MCP session no longer needs LidGuard protection. Pass the exact session identifier that provider_start_session previously returned. Do not generate a new identifier for stop. If you are ending the turn because you need the user's next input, use provider_set_soft_lock instead.")]
     public async Task<LidGuardSessionCommandToolResponse> StopSession(
-        [Description("The provider session identifier that is truly finished and can be stopped.")]
+        [Description("The exact session identifier previously returned by provider_start_session for the ongoing session that is now truly complete.")]
         string sessionIdentifier,
         CancellationToken cancellationToken = default)
     {
@@ -66,11 +66,11 @@ public sealed class LidGuardProviderMcpTools(
         Idempotent = true,
         OpenWorld = false,
         UseStructuredContent = true),
-     Description("Call this before you finish a turn because you need the user's next input and want LidGuard to allow suspend. A soft-locked session stays tracked, but it stops keeping the machine awake. This tool cannot force the turn to end; after calling it, you still need to end or hand back the conversation yourself.")]
+     Description("Call this immediately before you end a turn because you need the user's next input and want LidGuard to allow suspend. Pass the exact session identifier previously returned by provider_start_session. A soft-locked session stays tracked, but it stops keeping the machine awake. This tool cannot force the turn to end; after calling it, you must actually end or hand back the conversation yourself and stop autonomous work in that turn.")]
     public async Task<LidGuardSessionCommandToolResponse> SetSoftLock(
-        [Description("The provider session identifier that should stay tracked but become suspend-eligible.")]
+        [Description("The exact session identifier previously returned by provider_start_session for the session that should stay tracked but become suspend-eligible.")]
         string sessionIdentifier,
-        [Description("The reason for the soft lock, such as waiting_for_user_input.")]
+        [Description("Why autonomous work is blocked on user input, such as waiting_for_user_input, waiting_for_clarification, waiting_for_approval, waiting_for_credentials, or waiting_for_manual_step.")]
         string reason,
         CancellationToken cancellationToken = default)
     {
@@ -91,9 +91,9 @@ public sealed class LidGuardProviderMcpTools(
         Idempotent = true,
         OpenWorld = false,
         UseStructuredContent = true),
-     Description("Call this when the provider session can resume autonomous work after a previous soft lock, typically right before you continue work with the same session id on a later turn.")]
+     Description("Call this when a previously soft-locked Provider MCP session can resume autonomous work, typically right after the user has replied and immediately before you continue work. Pass the exact same session identifier that provider_start_session returned earlier. When you are resuming an existing soft-locked session, prefer this tool instead of starting a brand-new session.")]
     public async Task<LidGuardSessionCommandToolResponse> ClearSoftLock(
-        [Description("The provider session identifier whose previous soft lock should be cleared.")]
+        [Description("The exact session identifier previously returned by provider_start_session for the session whose earlier soft lock should be cleared.")]
         string sessionIdentifier,
         [Description("Optional reason describing why the session can resume work, such as resumed_after_user_reply.")]
         string reason = null,
@@ -113,20 +113,26 @@ public sealed class LidGuardProviderMcpTools(
     private static LidGuardSessionCommandToolResponse CreateSessionCommandToolResponse(LidGuardSessionCommandOutcome outcome)
     {
         var scope = $"{AgentProviderDisplay.CreateProviderDisplayText(outcome.RequestedProvider, outcome.RequestedProviderName)}:{outcome.RequestedSessionIdentifier}";
+        var reuseSummary = outcome.RequestedCommand == LidGuardPipeCommands.Start
+            ? $" Reuse session id '{outcome.RequestedSessionIdentifier}' verbatim with provider_set_soft_lock, provider_clear_soft_lock, and provider_stop_session until the work is truly complete."
+            : string.Empty;
         var summary = outcome.Snapshot.RuntimeReachable
-            ? $"{outcome.RuntimeMessage} Runtime now tracks {outcome.Snapshot.ActiveSessionCount} active session(s) after handling {scope}."
+            ? $"{outcome.RuntimeMessage} Runtime now tracks {outcome.Snapshot.ActiveSessionCount} active session(s) after handling {scope}.{reuseSummary}"
             : outcome.Snapshot.RuntimeUnavailable
-                ? $"{outcome.RuntimeMessage} Runtime is not running after handling {scope}."
-                : $"{outcome.RuntimeMessage} Runtime status after handling {scope} is unavailable: {outcome.Snapshot.RuntimeMessage}";
+                ? $"{outcome.RuntimeMessage} Runtime is not running after handling {scope}.{reuseSummary}"
+                : $"{outcome.RuntimeMessage} Runtime status after handling {scope} is unavailable: {outcome.Snapshot.RuntimeMessage}.{reuseSummary}";
 
         return new LidGuardSessionCommandToolResponse
         {
             Summary = summary,
             RequestedCommand = outcome.RequestedCommand,
             RequestedSessionIdentifier = outcome.RequestedSessionIdentifier,
+            SessionIdentifierToReuse = outcome.RequestedSessionIdentifier,
             RequestedProvider = outcome.RequestedProvider,
             RequestedProviderName = outcome.RequestedProviderName,
             Snapshot = outcome.Snapshot
         };
     }
+
+    private static string CreateGeneratedSessionIdentifier() => Guid.NewGuid().ToString("N")[..8];
 }

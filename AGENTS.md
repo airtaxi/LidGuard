@@ -165,8 +165,10 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `provider-mcp-install` and `provider-mcp-remove` directly edit a caller-supplied JSON config file and register or remove a managed stdio server entry for `provider-mcp-server`; this path intentionally does not use Codex, Claude Code, or GitHub Copilot CLI-specific MCP registration commands.
 - `provider-mcp-install` uses the same MCP executable selection policy as `mcp-install`: prefer the current `lidguard.exe` path over the Windows `.cmd` shim.
 - The Provider MCP server exposes `provider_start_session`, `provider_stop_session`, `provider_set_soft_lock`, and `provider_clear_soft_lock`.
-- `provider_start_session` is intended to be called before a provider begins processing a user prompt, while `provider_stop_session` is intended to be called before a turn ends only when the work is truly complete.
+- `provider_start_session` is intended to be called once before a brand-new provider session begins autonomous work. It generates an 8-character lowercase hexadecimal `sessionIdentifier` from the first block of a new GUID and returns that value for reuse.
+- The model must reuse the exact `sessionIdentifier` returned by `provider_start_session` in `provider_set_soft_lock`, `provider_clear_soft_lock`, and `provider_stop_session` until the work is truly complete.
 - `provider_set_soft_lock` is intended to be called before a turn ends because the model needs user input and wants LidGuard to release keep-awake protection. The tool itself cannot end the turn; the model still has to stop or hand back the conversation after calling it.
+- When resuming a previously soft-locked Provider MCP session after a user reply, the model should call `provider_clear_soft_lock` with the earlier returned `sessionIdentifier` instead of starting a brand-new session.
 - Provider MCP behavior is inherently model-dependent. LidGuard cannot guarantee that a model will call these tools at the right times, so this integration should always be documented as best-effort rather than guaranteed.
 - MCP settings updates use the same named-pipe client and settings store used by the CLI, but they do not launch `run-server` if no runtime is listening.
 - MCP server logging must stay on stderr so stdio tool traffic remains clean.
@@ -359,16 +361,18 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 - Provider enum: `AgentProvider.Mcp`.
 - Provider sessions are distinguished by both `sessionId` and `providerName`.
-- The external provider must supply a stable session identifier to the model when possible. If it cannot, the model should generate a stable identifier and keep reusing it until the session is truly complete.
+- `provider_start_session` generates a stable Provider MCP `sessionId` by taking the first 8 lowercase hexadecimal characters from a new GUID and returns that value to the model.
+- The model must keep reusing the exact `sessionId` returned by `provider_start_session` until the session is truly complete.
 - Provider MCP install/remove/status commands are `lidguard provider-mcp-status --config <json-path>`, `lidguard provider-mcp-install --config <json-path> --provider-name <name>`, and `lidguard provider-mcp-remove --config <json-path>`.
 - Provider MCP config is edited directly as JSON and does not reuse the Codex, Claude Code, or GitHub Copilot CLI-specific MCP registration flows.
 - Provider MCP server command: `lidguard provider-mcp-server --provider-name <name>`.
 - Provider MCP start tool: `provider_start_session`.
 - Provider MCP stop tool: `provider_stop_session`.
 - Provider MCP soft-lock tools: `provider_set_soft_lock` and `provider_clear_soft_lock`.
-- `provider_start_session` should be described to the model as a pre-user-prompt call.
+- `provider_start_session` should be described to the model as a brand-new-session call that auto-generates the reusable `sessionId`.
 - `provider_stop_session` should be described to the model as a pre-turn-end call only when the work is truly complete.
 - `provider_set_soft_lock` should explain the soft-lock concept and instruct the model to call it before ending a turn that is about to wait for user input. The description must also explain that the tool cannot end the turn on the model's behalf.
+- `provider_clear_soft_lock` should instruct the model to resume the earlier returned `sessionId` after the user replies, instead of minting a new session.
 - Because all Provider MCP behavior depends on model compliance, do not promise or document it as guaranteed behavior.
 
 ## Provider Hook Mapping

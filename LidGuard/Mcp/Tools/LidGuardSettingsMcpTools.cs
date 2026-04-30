@@ -259,6 +259,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
             Summary = CreateSessionCommandSummary(outcome),
             RequestedCommand = outcome.RequestedCommand,
             RequestedSessionIdentifier = outcome.RequestedSessionIdentifier,
+            SessionIdentifierToReuse = outcome.RequestedSessionIdentifier,
             RequestedProvider = outcome.RequestedProvider,
             RequestedProviderName = outcome.RequestedProviderName,
             Snapshot = outcome.Snapshot

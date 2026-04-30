@@ -15,6 +15,9 @@ public sealed class LidGuardSessionCommandToolResponse
     [Description("The session identifier that was targeted by the command.")]
     public string RequestedSessionIdentifier { get; init; } = string.Empty;
 
+    [Description("The exact session identifier value to reuse verbatim in later LidGuard session tools for the same ongoing session.")]
+    public string SessionIdentifierToReuse { get; init; } = string.Empty;
+
     [Description("The provider that was targeted by the command.")]
     public AgentProvider RequestedProvider { get; init; } = AgentProvider.Unknown;
 
