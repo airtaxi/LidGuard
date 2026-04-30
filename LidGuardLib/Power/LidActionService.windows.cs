@@ -5,10 +5,10 @@ using LidGuardLib.Commons.Services;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 
-namespace LidGuardLib.Windows.Power;
+namespace LidGuardLib.Power;
 
 [SupportedOSPlatform("windows6.1")]
-public sealed class WindowsLidActionService : ILidActionService
+public sealed class LidActionService : ILidActionService
 {
     private static readonly Guid s_systemButtonSubgroupIdentifier = new("4f971e89-eebd-4455-a8de-9e59040e7347");
     private static readonly Guid s_lidActionSettingIdentifier = new("5ca83367-6e45-459f-a27b-476b1d01c936");

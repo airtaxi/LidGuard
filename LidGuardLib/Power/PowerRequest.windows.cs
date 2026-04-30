@@ -4,10 +4,10 @@ using Microsoft.Win32.SafeHandles;
 using Windows.Win32;
 using Windows.Win32.System.Power;
 
-namespace LidGuardLib.Windows.Power;
+namespace LidGuardLib.Power;
 
 [SupportedOSPlatform("windows6.1")]
-internal sealed class WindowsPowerRequest(
+internal sealed class PowerRequest(
     SafeFileHandle handle,
     bool hasSystemRequest,
     bool hasAwayModeRequest,

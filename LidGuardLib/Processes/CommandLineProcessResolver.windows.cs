@@ -9,10 +9,10 @@ using Microsoft.Win32.SafeHandles;
 using Windows.Win32;
 using Windows.Win32.System.Threading;
 
-namespace LidGuardLib.Windows.Processes;
+namespace LidGuardLib.Processes;
 
 [SupportedOSPlatform("windows6.1")]
-public sealed partial class WindowsCommandLineProcessResolver : ICommandLineProcessResolver
+public sealed partial class CommandLineProcessResolver : ICommandLineProcessResolver
 {
     private static readonly HashSet<string> s_commandLineProcessNames = new(StringComparer.OrdinalIgnoreCase)
     {

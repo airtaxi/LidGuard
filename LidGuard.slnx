@@ -5,7 +5,7 @@
     <Platform Name="x86" />
   </Configurations>
   <Project Path="LidGuardLib.Commons/LidGuardLib.Commons.csproj" />
-  <Project Path="LidGuardLib.Windows/LidGuardLib.Windows.csproj" />
+  <Project Path="LidGuardLib/LidGuardLib.csproj" />
   <Project Path="LidGuard/LidGuard.csproj" />
 </Solution>
 

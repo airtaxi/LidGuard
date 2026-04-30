@@ -7,10 +7,10 @@ using Windows.Win32.Foundation;
 using Windows.Win32.System.Power;
 using Windows.Win32.UI.WindowsAndMessaging;
 
-namespace LidGuardLib.Windows.Power;
+namespace LidGuardLib.Power;
 
 [SupportedOSPlatform("windows6.1")]
-internal sealed unsafe partial class WindowsLidStateSource : ILidStateSource, IDisposable
+internal sealed unsafe partial class LidStateSource : ILidStateSource, IDisposable
 {
     private const uint PowerBroadcastSettingChange = 0x8013;
     private static readonly delegate* unmanaged<IntPtr, uint, IntPtr, uint> s_powerSettingCallback = &HandlePowerSettingChanged;
@@ -21,7 +21,7 @@ internal sealed unsafe partial class WindowsLidStateSource : ILidStateSource, ID
 
     public LidSwitchState CurrentState => (LidSwitchState)Volatile.Read(ref _currentStateValue);
 
-    public WindowsLidStateSource()
+    public LidStateSource()
     {
         if (!OperatingSystem.IsWindowsVersionAtLeast(6, 2)) return;
 
@@ -33,7 +33,7 @@ internal sealed unsafe partial class WindowsLidStateSource : ILidStateSource, ID
             Context = GCHandle.ToIntPtr(_contextHandle)
         };
 
-        var lidSwitchStateChangeIdentifier = WindowsLidSwitchNotificationRegistration.LidSwitchStateChangeIdentifier;
+        var lidSwitchStateChangeIdentifier = LidSwitchNotificationRegistration.LidSwitchStateChangeIdentifier;
         var lidSwitchStateChangeIdentifierPointer = &lidSwitchStateChangeIdentifier;
         {
             void* registrationHandleValue = null;
@@ -74,13 +74,13 @@ internal sealed unsafe partial class WindowsLidStateSource : ILidStateSource, ID
         try
         {
             var contextHandle = GCHandle.FromIntPtr(context);
-            if (contextHandle.Target is not WindowsLidStateSource lidStateSource) return 0;
+            if (contextHandle.Target is not LidStateSource lidStateSource) return 0;
 
             var powerBroadcastSetting = (PowerBroadcastSetting*)setting;
             if (powerBroadcastSetting->DataLength < sizeof(uint)) return 0;
-            if (powerBroadcastSetting->PowerSetting != WindowsLidSwitchNotificationRegistration.LidSwitchStateChangeIdentifier) return 0;
+            if (powerBroadcastSetting->PowerSetting != LidSwitchNotificationRegistration.LidSwitchStateChangeIdentifier) return 0;
 
-            var lidSwitchState = WindowsLidSwitchNotificationRegistration.FromPowerBroadcastValue(powerBroadcastSetting->Data);
+            var lidSwitchState = LidSwitchNotificationRegistration.FromPowerBroadcastValue(powerBroadcastSetting->Data);
             Volatile.Write(ref lidStateSource._currentStateValue, (int)lidSwitchState);
         }
         catch (Exception exception) when (exception is InvalidOperationException or InvalidCastException or ArgumentException) { }

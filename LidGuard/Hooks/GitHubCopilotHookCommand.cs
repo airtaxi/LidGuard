@@ -4,7 +4,7 @@ using LidGuardLib.Commons.Hooks;
 using LidGuardLib.Commons.Power;
 using LidGuardLib.Commons.Sessions;
 using LidGuardLib.Commons.Settings;
-using LidGuardLib.Windows.Hooks;
+using LidGuardLib.Hooks;
 
 namespace LidGuard.Hooks;
 
@@ -18,24 +18,24 @@ internal static class GitHubCopilotHookCommand
     {
         if (!TryParseConfiguredHookEventName(commandLineArguments, out var configuredHookEventName))
         {
-            WindowsGitHubCopilotHookEventLog.AppendMessage("LidGuard GitHub Copilot hook requires --event <name>.");
+            GitHubCopilotHookEventLog.AppendMessage("LidGuard GitHub Copilot hook requires --event <name>.");
             return 0;
         }
 
         var hookInputJson = await Console.In.ReadToEndAsync();
         if (string.IsNullOrWhiteSpace(hookInputJson))
         {
-            WindowsGitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook received empty input for event '{configuredHookEventName}'.");
+            GitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook received empty input for event '{configuredHookEventName}'.");
             return 0;
         }
 
         if (!GitHubCopilotHookInput.TryParse(hookInputJson, out var hookInput, out var parseMessage))
         {
-            WindowsGitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook could not parse {configuredHookEventName}: {parseMessage}");
+            GitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook could not parse {configuredHookEventName}: {parseMessage}");
             return 0;
         }
 
-        WindowsGitHubCopilotHookEventLog.AppendReceived(configuredHookEventName, hookInput);
+        GitHubCopilotHookEventLog.AppendReceived(configuredHookEventName, hookInput);
         if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.Notification, StringComparison.Ordinal))
             return await HandleNotificationAsync(configuredHookEventName, hookInput);
         if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.UserPromptSubmitted, StringComparison.Ordinal)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Start, configuredHookEventName, hookInput);
@@ -51,14 +51,14 @@ internal static class GitHubCopilotHookCommand
         var format = GetOption(options, "format");
         if (string.IsNullOrWhiteSpace(format)) format = ConfigurationJsonFormat;
 
-        var executablePath = WindowsHookCommandUtilities.GetDefaultHookExecutableReference();
+        var executablePath = HookCommandUtilities.GetDefaultHookExecutableReference();
         if (string.IsNullOrWhiteSpace(executablePath))
         {
             Console.Error.WriteLine("A default LidGuard hook executable or command name could not be resolved.");
             return 1;
         }
 
-        var hookCommand = WindowsHookCommandUtilities.CreateHookCommand(executablePath, LidGuardPipeCommands.CopilotHook);
+        var hookCommand = HookCommandUtilities.CreateHookCommand(executablePath, LidGuardPipeCommands.CopilotHook);
         var hookCommandsByEvent = GitHubCopilotHookConfigurationJsonDocument.CreateManagedHookCommands(hookCommand);
 
         if (format.Equals(ConfigurationJsonFormat, StringComparison.OrdinalIgnoreCase) || format.Equals("json", StringComparison.OrdinalIgnoreCase))
@@ -112,7 +112,7 @@ internal static class GitHubCopilotHookCommand
         {
             if (!LidGuardSettingsStore.TryLoadOrCreate(out settings, out var settingsMessage))
             {
-                WindowsGitHubCopilotHookEventLog.AppendMessage(settingsMessage);
+                GitHubCopilotHookEventLog.AppendMessage(settingsMessage);
                 return 0;
             }
 
@@ -131,7 +131,7 @@ internal static class GitHubCopilotHookCommand
 
         var startRuntimeIfUnavailable = commandName == LidGuardPipeCommands.Start;
         var response = await new LidGuardRuntimeClient().SendAsync(request, startRuntimeIfUnavailable);
-        WindowsGitHubCopilotHookEventLog.AppendRuntimeResult(
+        GitHubCopilotHookEventLog.AppendRuntimeResult(
             configuredHookEventName,
             hookInput,
             commandName,
@@ -178,17 +178,17 @@ internal static class GitHubCopilotHookCommand
         var response = await new LidGuardRuntimeClient().SendAsync(new LidGuardPipeRequest { Command = LidGuardPipeCommands.Status }, false);
         if (!response.Succeeded)
         {
-            WindowsGitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook skipped preToolUse ask_user guard because runtime status is unavailable: {response.Message}");
+            GitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook skipped preToolUse ask_user guard because runtime status is unavailable: {response.Message}");
             return 0;
         }
 
         if (response.LidSwitchState != LidSwitchState.Closed)
         {
-            WindowsGitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook left ask_user to Copilot because the lid state is {response.LidSwitchState}.");
+            GitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook left ask_user to Copilot because the lid state is {response.LidSwitchState}.");
             return 0;
         }
 
-        WindowsGitHubCopilotHookEventLog.AppendMessage("LidGuard GitHub Copilot hook denied closed-lid ask_user.");
+        GitHubCopilotHookEventLog.AppendMessage("LidGuard GitHub Copilot hook denied closed-lid ask_user.");
         return GitHubCopilotClosedLidAskUserPreToolUseOutput.Write();
     }
 
@@ -197,17 +197,17 @@ internal static class GitHubCopilotHookCommand
         var response = await new LidGuardRuntimeClient().SendAsync(new LidGuardPipeRequest { Command = LidGuardPipeCommands.Status }, false);
         if (!response.Succeeded)
         {
-            WindowsGitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook skipped permissionRequest decision because runtime status is unavailable: {response.Message}");
+            GitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook skipped permissionRequest decision because runtime status is unavailable: {response.Message}");
             return 0;
         }
 
         if (response.LidSwitchState != LidSwitchState.Closed)
         {
-            WindowsGitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook left permissionRequest to Copilot because the lid state is {response.LidSwitchState}.");
+            GitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook left permissionRequest to Copilot because the lid state is {response.LidSwitchState}.");
             return 0;
         }
 
-        WindowsGitHubCopilotHookEventLog.AppendMessage(
+        GitHubCopilotHookEventLog.AppendMessage(
             $"LidGuard GitHub Copilot hook handled closed-lid permissionRequest for tool '{hookInput.ToolName}' with {response.Settings.ClosedLidPermissionRequestDecision}.");
         return GitHubCopilotClosedLidPermissionRequestDecisionOutput.Write(response.Settings);
     }
@@ -260,7 +260,7 @@ internal static class GitHubCopilotHookCommand
         };
 
         var response = await new LidGuardRuntimeClient().SendAsync(request, false);
-        WindowsGitHubCopilotHookEventLog.AppendRuntimeResult(
+        GitHubCopilotHookEventLog.AppendRuntimeResult(
             configuredHookEventName,
             hookInput,
             commandName,

@@ -3,9 +3,9 @@ using System.Text.Json.Nodes;
 using LidGuardLib.Commons.Hooks;
 using LidGuardLib.Commons.Sessions;
 
-namespace LidGuardLib.Windows.Hooks;
+namespace LidGuardLib.Hooks;
 
-public sealed class WindowsGitHubCopilotHookInstaller
+public sealed class GitHubCopilotHookInstaller
 {
     private const string CopilotConfigurationDirectoryEnvironmentVariableName = "COPILOT_HOME";
     private const string CopilotConfigurationDirectoryName = ".copilot";
@@ -25,7 +25,7 @@ public sealed class WindowsGitHubCopilotHookInstaller
         ArgumentNullException.ThrowIfNull(request);
 
         var normalizedRequest = NormalizeRequest(request);
-        var hookCommand = WindowsHookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
+        var hookCommand = HookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
         var expectedHookCommands = GitHubCopilotHookConfigurationJsonDocument.CreateManagedHookCommands(hookCommand);
         var configurationFileExists = File.Exists(normalizedRequest.ConfigurationFilePath);
         var conflictingAgentStopHookSources = FindConflictingAgentStopHookSources(normalizedRequest);
@@ -74,7 +74,7 @@ public sealed class WindowsGitHubCopilotHookInstaller
             return GitHubCopilotHookInstallationResult.Failure(unsupportedInspection, unsupportedInspection.Message);
         }
 
-        if (!WindowsHookCommandUtilities.HookExecutableExists(normalizedRequest.HookExecutablePath))
+        if (!HookCommandUtilities.HookExecutableExists(normalizedRequest.HookExecutablePath))
         {
             var missingExecutableInspection = Inspect(normalizedRequest);
             return GitHubCopilotHookInstallationResult.Failure(
@@ -82,7 +82,7 @@ public sealed class WindowsGitHubCopilotHookInstaller
                 $"Hook executable or command does not exist: {normalizedRequest.HookExecutablePath}");
         }
 
-        var hookCommand = WindowsHookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
+        var hookCommand = HookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
         var hookCommandsByEvent = GitHubCopilotHookConfigurationJsonDocument.CreateManagedHookCommands(hookCommand);
         var configurationFileExists = File.Exists(normalizedRequest.ConfigurationFilePath);
         var originalContent = configurationFileExists ? File.ReadAllText(normalizedRequest.ConfigurationFilePath) : string.Empty;
@@ -104,7 +104,7 @@ public sealed class WindowsGitHubCopilotHookInstaller
         var backupFilePath = string.Empty;
         if (configurationFileExists && normalizedRequest.CreateBackup)
         {
-            backupFilePath = WindowsHookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
+            backupFilePath = HookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
             File.Copy(normalizedRequest.ConfigurationFilePath, backupFilePath, false);
         }
 
@@ -149,7 +149,7 @@ public sealed class WindowsGitHubCopilotHookInstaller
         var backupFilePath = string.Empty;
         if (normalizedRequest.CreateBackup)
         {
-            backupFilePath = WindowsHookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
+            backupFilePath = HookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
             File.Copy(normalizedRequest.ConfigurationFilePath, backupFilePath, false);
         }
 
@@ -166,7 +166,7 @@ public sealed class WindowsGitHubCopilotHookInstaller
             ConfigurationFilePath = string.IsNullOrWhiteSpace(configurationFilePath)
                 ? GetDefaultGitHubCopilotHooksConfigurationFilePath()
                 : Path.GetFullPath(configurationFilePath),
-            HookExecutablePath = WindowsHookCommandUtilities.GetDefaultHookExecutableReference(),
+            HookExecutablePath = HookCommandUtilities.GetDefaultHookExecutableReference(),
             HookCommandName = "copilot-hook",
             Provider = AgentProvider.GitHubCopilot
         };
@@ -301,8 +301,8 @@ public sealed class WindowsGitHubCopilotHookInstaller
             CreateBackup = request.CreateBackup,
             HookCommandName = string.IsNullOrWhiteSpace(request.HookCommandName) ? "copilot-hook" : request.HookCommandName,
             HookExecutablePath = string.IsNullOrWhiteSpace(request.HookExecutablePath)
-                ? WindowsHookCommandUtilities.GetDefaultHookExecutableReference()
-                : WindowsHookCommandUtilities.NormalizeHookExecutableReference(request.HookExecutablePath),
+                ? HookCommandUtilities.GetDefaultHookExecutableReference()
+                : HookCommandUtilities.NormalizeHookExecutableReference(request.HookExecutablePath),
             Provider = request.Provider
         };
     }

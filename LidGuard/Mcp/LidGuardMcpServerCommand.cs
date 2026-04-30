@@ -1,6 +1,6 @@
 using LidGuard.Control;
 using LidGuard.Mcp.Tools;
-using LidGuardLib.Windows.Platform;
+using LidGuardLib.Platform;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -14,7 +14,7 @@ internal static class LidGuardMcpServerCommand
 
     public static async Task<int> RunAsync(string[] commandLineArguments)
     {
-        var runtimePlatform = new WindowsLidGuardRuntimePlatform();
+        var runtimePlatform = new LidGuardRuntimePlatform();
         var postStopSuspendSoundPlayerResult = runtimePlatform.CreatePostStopSuspendSoundPlayer();
         if (!postStopSuspendSoundPlayerResult.Succeeded)
         {

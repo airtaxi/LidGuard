@@ -47,9 +47,11 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
   - Nullable is intentionally not enabled in the csproj.
   - `ImplicitUsings` is enabled.
   - NativeAOT/trimming compatibility flags are enabled.
-- `LidGuardLib.Windows`
-  - .NET 10 Windows implementation library targeting `net10.0`.
-  - Windows-only implementations.
+- `LidGuardLib`
+  - .NET 10 library targeting `net10.0`.
+  - Shared provider/hook utilities live in regular `*.cs` files.
+  - Windows-specific runtime/process/power implementations live in `*.windows.cs`.
+  - Linux/macOS placeholder files exist only for the minimal public surface currently needed to keep cross-platform builds compiling.
   - Uses CsWin32 with `CsWin32RunAsBuildTask=true` and `DisableRuntimeMarshalling=true` for AOT compatibility.
 - `LidGuard`
   - .NET 10 console app targeting `net10.0`.
@@ -62,7 +64,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
   - Hosts the stdio MCP server through the `mcp-server` subcommand.
   - Stores default settings JSON at `%LOCALAPPDATA%\LidGuard\settings.json`.
 - `LidGuard.slnx`
-  - Root solution file including `LidGuardLib.Commons`, `LidGuardLib.Windows`, and `LidGuard`.
+  - Root solution file including `LidGuardLib.Commons`, `LidGuardLib`, and `LidGuard`.
 
 ## Technical Design
 
@@ -90,7 +92,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 
 - Lid open/close notification uses `GUID_LIDSWITCH_STATE_CHANGE`.
 - Broadcast values are `0x0 = lid closed` and `0x1 = lid opened`.
-- `WindowsLidSwitchNotificationRegistration` converts these values to `LidSwitchState`.
+- `LidSwitchNotificationRegistration` converts these values to `LidSwitchState`.
 - Immediate sleep/hibernate uses `SetSuspendState` after enabling `SeShutdownPrivilege`.
 - On Modern Standby systems, `SetSuspendState(false, ...)` can fail with `ERROR_NOT_SUPPORTED`; a later fallback may use a display-off strategy.
 - After the last active session stops, a closed lid should always trigger suspend after the configured post-stop delay using the configured suspend mode. A delay of `0` means immediate suspend.
@@ -259,48 +261,48 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 ### Windows
 
-- `WindowsPowerRequestService`
+- `PowerRequestService`
   - Uses `PowerCreateRequest`, `PowerSetRequest`, `PowerClearRequest`.
   - Supports system-required, away-mode-required, and display-required requests.
-- `WindowsLidActionService`
+- `LidActionService`
   - Reads/writes active power plan `LIDACTION`.
-- `WindowsProcessExitWatcher`
+- `ProcessExitWatcher`
   - Opens a process with synchronize/query rights.
   - Waits with `WaitForSingleObject`.
-- `WindowsCommandLineProcessResolver`
+- `CommandLineProcessResolver`
   - Used when a hook does not provide a parent process id.
   - Finds CLI-like processes whose current working directory matches the hook working directory.
   - Excludes transient LidGuard utility processes whose command line is running `codex-hook`, `claude-hook`, `copilot-hook`, `mcp-server`, or `provider-mcp-server`, so MCP launcher wrappers are never treated as watched agent processes.
   - Reads the remote process current directory from the process PEB instead of using WMI, to stay AOT-friendly.
   - Candidate process names include `codex`, `claude`, `copilot`, `cmd`, `pwsh`, `powershell`, `node`, `dotnet`, and `gh`.
-- `WindowsLidSwitchNotificationRegistration`
+- `LidSwitchNotificationRegistration`
   - Registers `GUID_LIDSWITCH_STATE_CHANGE`.
   - Converts broadcast values to `LidSwitchState`.
-- `WindowsSystemSuspendService`
+- `SystemSuspendService`
   - Enables `SeShutdownPrivilege`.
   - Calls `SetSuspendState` for sleep/hibernate.
-- `WindowsLidGuardRuntimePlatform`
+- `LidGuardRuntimePlatform`
   - Adapts Windows power/process services into the Commons runtime platform abstraction.
   - Reports unsupported platforms before Windows-only services are constructed.
-- `WindowsCodexHookInstaller`
+- `CodexHookInstaller`
   - Resolves `%USERPROFILE%\.codex\config.toml` or `CODEX_HOME\config.toml`.
   - Installs, removes, and inspects the LidGuard-managed Codex hook block.
   - When no managed block marker exists, status falls back to detecting valid `lidguard ... codex-hook` command entries in the required hook events, while removal also cleans an optional `SessionEnd` hook when present.
   - Backs up existing config files before writing when configured.
-- `WindowsCodexHookEventLog`
+- `CodexHookEventLog`
   - Records Codex hook diagnostics.
-- `WindowsClaudeHookInstaller`
+- `ClaudeHookInstaller`
   - Resolves `CLAUDE_CONFIG_DIR\settings.json` or `%USERPROFILE%\.claude\settings.json`.
   - Installs, removes, and inspects the LidGuard-managed Claude hook entries in `settings.json`.
   - Backs up existing config files before writing when configured.
-- `WindowsClaudeHookEventLog`
+- `ClaudeHookEventLog`
   - Records Claude hook diagnostics.
-- `WindowsGitHubCopilotHookInstaller`
+- `GitHubCopilotHookInstaller`
   - Resolves `COPILOT_HOME\hooks\lidguard-copilot-cli.json` or `%USERPROFILE%\.copilot\hooks\lidguard-copilot-cli.json`.
   - Installs, removes, and inspects the LidGuard-managed global GitHub Copilot CLI hook file by default.
   - Scans user-level hooks, user settings, repository hooks, and repository Copilot settings for non-LidGuard `agentStop` hooks and warns about continuation risk.
   - Backs up existing hook files before writing when configured.
-- `WindowsGitHubCopilotHookEventLog`
+- `GitHubCopilotHookEventLog`
   - Records GitHub Copilot CLI hook diagnostics.
 
 ### MCP
@@ -526,13 +528,13 @@ The Windows CLI hook receiving path is implemented for Codex, Claude Code, and G
 ## Completed Work
 
 1. ~~Add a Windows hook-facing CLI project.~~
-2. ~~Keep Windows-only process and power behavior in `LidGuardLib.Windows`.~~
+2. ~~Keep Windows-only process and power behavior in `LidGuardLib`.~~
 3. ~~Normalize CLI `start` requests into `LidGuardSessionStartRequest`.~~
 4. ~~Normalize CLI `stop` requests into `LidGuardSessionStopRequest`.~~
 5. ~~When `--parent-pid` is missing, use `ICommandLineProcessResolver` with the hook working directory.~~
 6. ~~Start with a local/headless orchestration path.~~
 7. ~~Add settings loading for the headless runtime.~~
-8. ~~Add a solution file including `LidGuardLib.Commons`, `LidGuardLib.Windows`, and `LidGuard`.~~
+8. ~~Add a solution file including `LidGuardLib.Commons`, `LidGuardLib`, and `LidGuard`.~~
 9. ~~Add Codex hook parsing, snippet output, and managed config install/remove/status helpers.~~
 10. ~~Map Codex `Stop` to stop handling, keep `SessionEnd` as an optional compatibility stop trigger, and handle `PermissionRequest` as a closed-lid-only settings-driven allow/deny decision.~~
 11. ~~Add Claude hook parsing, snippet output, and managed `settings.json` install/remove/status helpers.~~
@@ -550,7 +552,7 @@ The Windows CLI hook receiving path is implemented for Codex, Claude Code, and G
 ## Design Constraints
 
 - Keep cross-platform-capable logic in `LidGuardLib.Commons`.
-- Keep Windows API calls and Windows-only assumptions in `LidGuardLib.Windows`.
+- Keep Windows API calls and Windows-only assumptions in `LidGuardLib` `*.windows.cs` files.
 - Do not enable Nullable in the current library csproj files unless the user explicitly asks.
 - Keep `ImplicitUsings` enabled.
 - Keep NativeAOT/trimming compatibility in mind.

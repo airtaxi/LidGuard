@@ -1,9 +1,9 @@
 using System.Text;
 using LidGuardLib.Commons.Hooks;
 
-namespace LidGuardLib.Windows.Hooks;
+namespace LidGuardLib.Hooks;
 
-public static class WindowsCodexHookEventLog
+public static class CodexHookEventLog
 {
     private const string LogDirectoryName = "LidGuard";
     private const string LogFileName = "codex-hook-events.log";

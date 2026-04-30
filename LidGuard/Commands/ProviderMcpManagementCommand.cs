@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using LidGuard.Mcp;
-using LidGuardLib.Windows.Hooks;
+using LidGuardLib.Hooks;
 
 namespace LidGuard.Commands;
 
@@ -23,9 +23,9 @@ internal static class ProviderMcpManagementCommand
             return 1;
         }
 
-        var managedExecutableReference = WindowsHookCommandUtilities.GetDefaultMcpExecutableReference();
+        var managedExecutableReference = HookCommandUtilities.GetDefaultMcpExecutableReference();
 
-        if (!WindowsHookCommandUtilities.HookExecutableExists(managedExecutableReference))
+        if (!HookCommandUtilities.HookExecutableExists(managedExecutableReference))
         {
             Console.Error.WriteLine($"LidGuard executable or command does not exist: {managedExecutableReference}");
             return 1;

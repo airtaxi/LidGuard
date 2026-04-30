@@ -38,7 +38,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LidGuardLib.Commons\LidGuardLib.Commons.csproj" />
-    <ProjectReference Include="..\LidGuardLib.Windows\LidGuardLib.Windows.csproj" AdditionalProperties="LidGuardTargetRuntimeIdentifier=$(RuntimeIdentifier)" />
+    <ProjectReference Include="..\LidGuardLib\LidGuardLib.csproj" AdditionalProperties="LidGuardTargetRuntimeIdentifier=$(RuntimeIdentifier)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(UsesWmiLight)' == 'true'">

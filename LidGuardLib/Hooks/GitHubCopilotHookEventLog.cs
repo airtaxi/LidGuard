@@ -1,9 +1,9 @@
 using System.Text;
 using LidGuardLib.Commons.Hooks;
 
-namespace LidGuardLib.Windows.Hooks;
+namespace LidGuardLib.Hooks;
 
-public static class WindowsGitHubCopilotHookEventLog
+public static class GitHubCopilotHookEventLog
 {
     private const string LogDirectoryName = "LidGuard";
     private const string LogFileName = "copilot-hook-events.log";

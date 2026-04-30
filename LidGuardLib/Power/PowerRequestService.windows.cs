@@ -8,10 +8,10 @@ using Windows.Win32.Foundation;
 using Windows.Win32.System.Power;
 using Windows.Win32.System.Threading;
 
-namespace LidGuardLib.Windows.Power;
+namespace LidGuardLib.Power;
 
 [SupportedOSPlatform("windows6.1")]
-public sealed class WindowsPowerRequestService : IPowerRequestService
+public sealed class PowerRequestService : IPowerRequestService
 {
     public unsafe LidGuardOperationResult<ILidGuardPowerRequest> Create(PowerRequestOptions options)
     {
@@ -40,7 +40,7 @@ public sealed class WindowsPowerRequestService : IPowerRequestService
                 return LidGuardOperationResult<ILidGuardPowerRequest>.Failure("Failed to create a Windows power request.", nativeErrorCode);
             }
 
-            var powerRequest = new WindowsPowerRequest(handle, options.PreventSystemSleep, options.PreventAwayModeSleep, options.PreventDisplaySleep);
+            var powerRequest = new PowerRequest(handle, options.PreventSystemSleep, options.PreventAwayModeSleep, options.PreventDisplaySleep);
 
             if (options.PreventSystemSleep && !PInvoke.PowerSetRequest(handle, POWER_REQUEST_TYPE.PowerRequestSystemRequired))
             {

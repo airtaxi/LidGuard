@@ -1,9 +1,9 @@
 using LidGuardLib.Commons.Hooks;
 using LidGuardLib.Commons.Sessions;
 
-namespace LidGuardLib.Windows.Hooks;
+namespace LidGuardLib.Hooks;
 
-public sealed class WindowsClaudeHookInstaller
+public sealed class ClaudeHookInstaller
 {
     private const string ClaudeConfigurationDirectoryEnvironmentVariableName = "CLAUDE_CONFIG_DIR";
     private const string ClaudeConfigurationDirectoryName = ".claude";
@@ -14,7 +14,7 @@ public sealed class WindowsClaudeHookInstaller
         ArgumentNullException.ThrowIfNull(request);
 
         var normalizedRequest = NormalizeRequest(request);
-        var hookCommand = WindowsHookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
+        var hookCommand = HookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
         var configurationFileExists = File.Exists(normalizedRequest.ConfigurationFilePath);
         var content = configurationFileExists ? File.ReadAllText(normalizedRequest.ConfigurationFilePath) : string.Empty;
         if (!configurationFileExists)
@@ -58,13 +58,13 @@ public sealed class WindowsClaudeHookInstaller
             return ClaudeHookInstallationResult.Failure(unsupportedInspection, unsupportedInspection.Message);
         }
 
-        if (!WindowsHookCommandUtilities.HookExecutableExists(normalizedRequest.HookExecutablePath))
+        if (!HookCommandUtilities.HookExecutableExists(normalizedRequest.HookExecutablePath))
         {
             var missingExecutableInspection = Inspect(normalizedRequest);
             return ClaudeHookInstallationResult.Failure(missingExecutableInspection, $"Hook executable or command does not exist: {normalizedRequest.HookExecutablePath}");
         }
 
-        var hookCommand = WindowsHookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
+        var hookCommand = HookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
         var configurationFileExists = File.Exists(normalizedRequest.ConfigurationFilePath);
         var originalContent = configurationFileExists ? File.ReadAllText(normalizedRequest.ConfigurationFilePath) : string.Empty;
         var currentInspection = Inspect(normalizedRequest);
@@ -85,7 +85,7 @@ public sealed class WindowsClaudeHookInstaller
         var backupFilePath = string.Empty;
         if (configurationFileExists && normalizedRequest.CreateBackup)
         {
-            backupFilePath = WindowsHookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
+            backupFilePath = HookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
             File.Copy(normalizedRequest.ConfigurationFilePath, backupFilePath, false);
         }
 
@@ -130,7 +130,7 @@ public sealed class WindowsClaudeHookInstaller
         var backupFilePath = string.Empty;
         if (normalizedRequest.CreateBackup)
         {
-            backupFilePath = WindowsHookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
+            backupFilePath = HookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
             File.Copy(normalizedRequest.ConfigurationFilePath, backupFilePath, false);
         }
 
@@ -146,7 +146,7 @@ public sealed class WindowsClaudeHookInstaller
         {
             Provider = AgentProvider.Claude,
             ConfigurationFilePath = string.IsNullOrWhiteSpace(configurationFilePath) ? GetDefaultClaudeConfigurationFilePath() : Path.GetFullPath(configurationFilePath),
-            HookExecutablePath = WindowsHookCommandUtilities.GetDefaultHookExecutableReference(),
+            HookExecutablePath = HookCommandUtilities.GetDefaultHookExecutableReference(),
             HookCommandName = "claude-hook"
         };
     }
@@ -172,7 +172,7 @@ public sealed class WindowsClaudeHookInstaller
         {
             Provider = request.Provider,
             ConfigurationFilePath = string.IsNullOrWhiteSpace(request.ConfigurationFilePath) ? GetDefaultClaudeConfigurationFilePath() : Path.GetFullPath(request.ConfigurationFilePath),
-            HookExecutablePath = string.IsNullOrWhiteSpace(request.HookExecutablePath) ? WindowsHookCommandUtilities.GetDefaultHookExecutableReference() : WindowsHookCommandUtilities.NormalizeHookExecutableReference(request.HookExecutablePath),
+            HookExecutablePath = string.IsNullOrWhiteSpace(request.HookExecutablePath) ? HookCommandUtilities.GetDefaultHookExecutableReference() : HookCommandUtilities.NormalizeHookExecutableReference(request.HookExecutablePath),
             HookCommandName = string.IsNullOrWhiteSpace(request.HookCommandName) ? "claude-hook" : request.HookCommandName,
             CreateBackup = request.CreateBackup
         };

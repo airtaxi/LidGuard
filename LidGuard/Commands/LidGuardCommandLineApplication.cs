@@ -9,7 +9,7 @@ using LidGuardLib.Commons.Platform;
 using LidGuardLib.Commons.Power;
 using LidGuardLib.Commons.Sessions;
 using LidGuardLib.Commons.Settings;
-using LidGuardLib.Windows.Platform;
+using LidGuardLib.Platform;
 
 namespace LidGuard.Commands;
 
@@ -19,7 +19,7 @@ internal static class LidGuardCommandLineApplication
 
     public static async Task<int> RunAsync(string[] commandLineArguments)
     {
-        var runtimePlatform = new WindowsLidGuardRuntimePlatform();
+        var runtimePlatform = new LidGuardRuntimePlatform();
         if (!runtimePlatform.IsSupported) return WriteUnsupportedPlatform(runtimePlatform);
 
         if (commandLineArguments.Length == 0) return WriteHelp(1);

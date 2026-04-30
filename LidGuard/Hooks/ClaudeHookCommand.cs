@@ -5,7 +5,7 @@ using LidGuardLib.Commons.Hooks;
 using LidGuardLib.Commons.Power;
 using LidGuardLib.Commons.Sessions;
 using LidGuardLib.Commons.Settings;
-using LidGuardLib.Windows.Hooks;
+using LidGuardLib.Hooks;
 
 namespace LidGuard.Hooks;
 
@@ -19,7 +19,7 @@ internal static class ClaudeHookCommand
         var hookInputJson = await Console.In.ReadToEndAsync();
         if (string.IsNullOrWhiteSpace(hookInputJson))
         {
-            WindowsClaudeHookEventLog.AppendMessage("LidGuard Claude hook received empty input.");
+            ClaudeHookEventLog.AppendMessage("LidGuard Claude hook received empty input.");
             return 0;
         }
 
@@ -30,17 +30,17 @@ internal static class ClaudeHookCommand
         }
         catch (JsonException exception)
         {
-            WindowsClaudeHookEventLog.AppendMessage($"LidGuard Claude hook could not parse input: {exception.Message}");
+            ClaudeHookEventLog.AppendMessage($"LidGuard Claude hook could not parse input: {exception.Message}");
             return 0;
         }
 
         if (hookInput is null)
         {
-            WindowsClaudeHookEventLog.AppendMessage("LidGuard Claude hook could not parse input.");
+            ClaudeHookEventLog.AppendMessage("LidGuard Claude hook could not parse input.");
             return 0;
         }
 
-        WindowsClaudeHookEventLog.AppendReceived(hookInput);
+        ClaudeHookEventLog.AppendReceived(hookInput);
         var hookEventName = hookInput.HookEventName.Trim();
         if (hookEventName.Equals(ClaudeHookEventNames.Notification, StringComparison.Ordinal))
             return await HandleNotificationAsync(hookInput);
@@ -61,14 +61,14 @@ internal static class ClaudeHookCommand
         var format = GetOption(options, "format");
         if (string.IsNullOrWhiteSpace(format)) format = SettingsJsonFormat;
 
-        var executablePath = WindowsHookCommandUtilities.GetDefaultHookExecutableReference();
+        var executablePath = HookCommandUtilities.GetDefaultHookExecutableReference();
         if (string.IsNullOrWhiteSpace(executablePath))
         {
             Console.Error.WriteLine("A default LidGuard hook executable or command name could not be resolved.");
             return 1;
         }
 
-        var hookCommand = WindowsHookCommandUtilities.CreateHookCommand(executablePath, LidGuardPipeCommands.ClaudeHook);
+        var hookCommand = HookCommandUtilities.CreateHookCommand(executablePath, LidGuardPipeCommands.ClaudeHook);
 
         if (format.Equals(SettingsJsonFormat, StringComparison.OrdinalIgnoreCase) || format.Equals("json", StringComparison.OrdinalIgnoreCase))
         {
@@ -91,17 +91,17 @@ internal static class ClaudeHookCommand
         var response = await new LidGuardRuntimeClient().SendAsync(new LidGuardPipeRequest { Command = LidGuardPipeCommands.Status }, false);
         if (!response.Succeeded)
         {
-            WindowsClaudeHookEventLog.AppendMessage($"LidGuard Claude hook skipped PermissionRequest decision because runtime status is unavailable: {response.Message}");
+            ClaudeHookEventLog.AppendMessage($"LidGuard Claude hook skipped PermissionRequest decision because runtime status is unavailable: {response.Message}");
             return 0;
         }
 
         if (response.LidSwitchState != LidSwitchState.Closed)
         {
-            WindowsClaudeHookEventLog.AppendMessage($"LidGuard Claude hook left PermissionRequest to Claude because the lid state is {response.LidSwitchState}.");
+            ClaudeHookEventLog.AppendMessage($"LidGuard Claude hook left PermissionRequest to Claude because the lid state is {response.LidSwitchState}.");
             return 0;
         }
 
-        WindowsClaudeHookEventLog.AppendMessage($"LidGuard Claude hook handled closed-lid PermissionRequest with {response.Settings.ClosedLidPermissionRequestDecision}.");
+        ClaudeHookEventLog.AppendMessage($"LidGuard Claude hook handled closed-lid PermissionRequest with {response.Settings.ClosedLidPermissionRequestDecision}.");
         return ClaudeClosedLidPermissionRequestDecisionOutput.Write(response.Settings);
     }
 
@@ -110,17 +110,17 @@ internal static class ClaudeHookCommand
         var response = await new LidGuardRuntimeClient().SendAsync(new LidGuardPipeRequest { Command = LidGuardPipeCommands.Status }, false);
         if (!response.Succeeded)
         {
-            WindowsClaudeHookEventLog.AppendMessage($"LidGuard Claude hook skipped Elicitation decision because runtime status is unavailable: {response.Message}");
+            ClaudeHookEventLog.AppendMessage($"LidGuard Claude hook skipped Elicitation decision because runtime status is unavailable: {response.Message}");
             return 0;
         }
 
         if (response.LidSwitchState != LidSwitchState.Closed)
         {
-            WindowsClaudeHookEventLog.AppendMessage($"LidGuard Claude hook left Elicitation to Claude because the lid state is {response.LidSwitchState}.");
+            ClaudeHookEventLog.AppendMessage($"LidGuard Claude hook left Elicitation to Claude because the lid state is {response.LidSwitchState}.");
             return 0;
         }
 
-        WindowsClaudeHookEventLog.AppendMessage("LidGuard Claude hook canceled closed-lid Elicitation.");
+        ClaudeHookEventLog.AppendMessage("LidGuard Claude hook canceled closed-lid Elicitation.");
         return ClaudeClosedLidElicitationOutput.Write();
     }
 
@@ -134,7 +134,7 @@ internal static class ClaudeHookCommand
         {
             if (!LidGuardSettingsStore.TryLoadOrCreate(out settings, out var settingsMessage))
             {
-                WindowsClaudeHookEventLog.AppendMessage(settingsMessage);
+                ClaudeHookEventLog.AppendMessage(settingsMessage);
                 return 0;
             }
 
@@ -153,7 +153,7 @@ internal static class ClaudeHookCommand
 
         var startRuntimeIfUnavailable = commandName == LidGuardPipeCommands.Start;
         var response = await new LidGuardRuntimeClient().SendAsync(request, startRuntimeIfUnavailable);
-        WindowsClaudeHookEventLog.AppendRuntimeResult(hookInput, commandName, response.Succeeded, response.RuntimeUnavailable, response.ActiveSessionCount, response.Message);
+        ClaudeHookEventLog.AppendRuntimeResult(hookInput, commandName, response.Succeeded, response.RuntimeUnavailable, response.ActiveSessionCount, response.Message);
         return 0;
     }
 
@@ -187,7 +187,7 @@ internal static class ClaudeHookCommand
         };
 
         var response = await new LidGuardRuntimeClient().SendAsync(request, false);
-        WindowsClaudeHookEventLog.AppendRuntimeResult(hookInput, commandName, response.Succeeded, response.RuntimeUnavailable, response.ActiveSessionCount, response.Message);
+        ClaudeHookEventLog.AppendRuntimeResult(hookInput, commandName, response.Succeeded, response.RuntimeUnavailable, response.ActiveSessionCount, response.Message);
         return 0;
     }
 

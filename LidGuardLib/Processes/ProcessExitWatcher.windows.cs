@@ -6,10 +6,10 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.Threading;
 
-namespace LidGuardLib.Windows.Processes;
+namespace LidGuardLib.Processes;
 
 [SupportedOSPlatform("windows6.1")]
-public sealed class WindowsProcessExitWatcher : IProcessExitWatcher
+public sealed class ProcessExitWatcher : IProcessExitWatcher
 {
     public async Task<LidGuardOperationResult> WaitForExitAsync(int processIdentifier, TimeSpan checkInterval, CancellationToken cancellationToken = default)
     {

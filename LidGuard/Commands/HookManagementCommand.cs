@@ -1,6 +1,6 @@
 using LidGuardLib.Commons.Hooks;
 using LidGuardLib.Commons.Sessions;
-using LidGuardLib.Windows.Hooks;
+using LidGuardLib.Hooks;
 
 namespace LidGuard.Commands;
 
@@ -140,9 +140,9 @@ internal static class HookManagementCommand
         {
             var eventLines = provider switch
             {
-                AgentProvider.Codex => WindowsCodexHookEventLog.ReadRecentLines(maximumLineCount),
-                AgentProvider.Claude => WindowsClaudeHookEventLog.ReadRecentLines(maximumLineCount),
-                AgentProvider.GitHubCopilot => WindowsGitHubCopilotHookEventLog.ReadRecentLines(maximumLineCount),
+                AgentProvider.Codex => CodexHookEventLog.ReadRecentLines(maximumLineCount),
+                AgentProvider.Claude => ClaudeHookEventLog.ReadRecentLines(maximumLineCount),
+                AgentProvider.GitHubCopilot => GitHubCopilotHookEventLog.ReadRecentLines(maximumLineCount),
                 _ => null
             };
 
@@ -171,7 +171,7 @@ internal static class HookManagementCommand
 
     private static int WriteCodexHookStatus(IReadOnlyDictionary<string, string> options)
     {
-        var installer = new WindowsCodexHookInstaller();
+        var installer = new CodexHookInstaller();
         if (!TryCreateCodexHookInstallationRequest(options, installer, out var request, out var message))
         {
             Console.Error.WriteLine(message);
@@ -185,7 +185,7 @@ internal static class HookManagementCommand
 
     private static int WriteClaudeHookStatus(IReadOnlyDictionary<string, string> options)
     {
-        var installer = new WindowsClaudeHookInstaller();
+        var installer = new ClaudeHookInstaller();
         if (!TryCreateClaudeHookInstallationRequest(options, installer, out var request, out var message))
         {
             Console.Error.WriteLine(message);
@@ -199,7 +199,7 @@ internal static class HookManagementCommand
 
     private static int WriteGitHubCopilotHookStatus(IReadOnlyDictionary<string, string> options)
     {
-        var installer = new WindowsGitHubCopilotHookInstaller();
+        var installer = new GitHubCopilotHookInstaller();
         if (!TryCreateGitHubCopilotHookInstallationRequest(options, installer, out var request, out var message))
         {
             Console.Error.WriteLine(message);
@@ -213,7 +213,7 @@ internal static class HookManagementCommand
 
     private static int InstallCodexHook(IReadOnlyDictionary<string, string> options)
     {
-        var installer = new WindowsCodexHookInstaller();
+        var installer = new CodexHookInstaller();
         if (!TryCreateCodexHookInstallationRequest(options, installer, out var request, out var message))
         {
             Console.Error.WriteLine(message);
@@ -231,7 +231,7 @@ internal static class HookManagementCommand
 
     private static int InstallGitHubCopilotHook(IReadOnlyDictionary<string, string> options)
     {
-        var installer = new WindowsGitHubCopilotHookInstaller();
+        var installer = new GitHubCopilotHookInstaller();
         if (!TryCreateGitHubCopilotHookInstallationRequest(options, installer, out var request, out var message))
         {
             Console.Error.WriteLine(message);
@@ -251,11 +251,11 @@ internal static class HookManagementCommand
     {
         return provider switch
         {
-            AgentProvider.Codex => [WindowsCodexHookInstaller.GetDefaultCodexConfigurationDirectoryPath()],
-            AgentProvider.Claude => [WindowsClaudeHookInstaller.GetDefaultClaudeConfigurationDirectoryPath()],
+            AgentProvider.Codex => [CodexHookInstaller.GetDefaultCodexConfigurationDirectoryPath()],
+            AgentProvider.Claude => [ClaudeHookInstaller.GetDefaultClaudeConfigurationDirectoryPath()],
             AgentProvider.GitHubCopilot =>
             [
-                WindowsGitHubCopilotHookInstaller.GetDefaultGitHubCopilotConfigurationDirectoryPath(),
+                GitHubCopilotHookInstaller.GetDefaultGitHubCopilotConfigurationDirectoryPath(),
                 Path.Combine(Environment.CurrentDirectory, ".github", "hooks"),
                 Path.Combine(Environment.CurrentDirectory, ".github", "copilot")
             ],
@@ -265,7 +265,7 @@ internal static class HookManagementCommand
 
     private static int RemoveCodexHook(IReadOnlyDictionary<string, string> options)
     {
-        var installer = new WindowsCodexHookInstaller();
+        var installer = new CodexHookInstaller();
         if (!TryCreateCodexHookInstallationRequest(options, installer, out var request, out var message))
         {
             Console.Error.WriteLine(message);
@@ -283,7 +283,7 @@ internal static class HookManagementCommand
 
     private static int RemoveGitHubCopilotHook(IReadOnlyDictionary<string, string> options)
     {
-        var installer = new WindowsGitHubCopilotHookInstaller();
+        var installer = new GitHubCopilotHookInstaller();
         if (!TryCreateGitHubCopilotHookInstallationRequest(options, installer, out var request, out var message))
         {
             Console.Error.WriteLine(message);
@@ -301,7 +301,7 @@ internal static class HookManagementCommand
 
     private static int InstallClaudeHook(IReadOnlyDictionary<string, string> options)
     {
-        var installer = new WindowsClaudeHookInstaller();
+        var installer = new ClaudeHookInstaller();
         if (!TryCreateClaudeHookInstallationRequest(options, installer, out var request, out var message))
         {
             Console.Error.WriteLine(message);
@@ -319,7 +319,7 @@ internal static class HookManagementCommand
 
     private static int RemoveClaudeHook(IReadOnlyDictionary<string, string> options)
     {
-        var installer = new WindowsClaudeHookInstaller();
+        var installer = new ClaudeHookInstaller();
         if (!TryCreateClaudeHookInstallationRequest(options, installer, out var request, out var message))
         {
             Console.Error.WriteLine(message);
@@ -337,7 +337,7 @@ internal static class HookManagementCommand
 
     private static bool TryCreateCodexHookInstallationRequest(
         IReadOnlyDictionary<string, string> options,
-        WindowsCodexHookInstaller installer,
+        CodexHookInstaller installer,
         out CodexHookInstallationRequest request,
         out string message)
     {
@@ -350,7 +350,7 @@ internal static class HookManagementCommand
 
     private static bool TryCreateGitHubCopilotHookInstallationRequest(
         IReadOnlyDictionary<string, string> options,
-        WindowsGitHubCopilotHookInstaller installer,
+        GitHubCopilotHookInstaller installer,
         out GitHubCopilotHookInstallationRequest request,
         out string message)
     {
@@ -364,7 +364,7 @@ internal static class HookManagementCommand
 
     private static bool TryCreateClaudeHookInstallationRequest(
         IReadOnlyDictionary<string, string> options,
-        WindowsClaudeHookInstaller installer,
+        ClaudeHookInstaller installer,
         out ClaudeHookInstallationRequest request,
         out string message)
     {
@@ -490,9 +490,9 @@ internal static class HookManagementCommand
 
     private static string GetHookLogFilePath(AgentProvider provider)
     {
-        if (provider == AgentProvider.Codex) return WindowsCodexHookEventLog.GetDefaultLogFilePath();
-        if (provider == AgentProvider.Claude) return WindowsClaudeHookEventLog.GetDefaultLogFilePath();
-        if (provider == AgentProvider.GitHubCopilot) return WindowsGitHubCopilotHookEventLog.GetDefaultLogFilePath();
+        if (provider == AgentProvider.Codex) return CodexHookEventLog.GetDefaultLogFilePath();
+        if (provider == AgentProvider.Claude) return ClaudeHookEventLog.GetDefaultLogFilePath();
+        if (provider == AgentProvider.GitHubCopilot) return GitHubCopilotHookEventLog.GetDefaultLogFilePath();
         return string.Empty;
     }
 

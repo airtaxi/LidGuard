@@ -1,6 +1,6 @@
-namespace LidGuardLib.Windows.Hooks;
+namespace LidGuardLib.Hooks;
 
-public static class WindowsHookCommandUtilities
+public static class HookCommandUtilities
 {
     public static string GetDefaultHookExecutableReference()
     {

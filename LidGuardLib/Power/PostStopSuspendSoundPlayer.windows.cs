@@ -5,10 +5,10 @@ using System.Runtime.Versioning;
 using LidGuardLib.Commons.Results;
 using LidGuardLib.Commons.Services;
 
-namespace LidGuardLib.Windows.Power;
+namespace LidGuardLib.Power;
 
 [SupportedOSPlatform("windows6.1")]
-public sealed partial class WindowsPostStopSuspendSoundPlayer : IPostStopSuspendSoundPlayer
+public sealed partial class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPlayer
 {
     private const uint SoundFlagAlias = 0x00010000;
     private const uint SoundFlagSynchronous = 0x00000000;

@@ -5,7 +5,7 @@ using LidGuardLib.Commons.Hooks;
 using LidGuardLib.Commons.Power;
 using LidGuardLib.Commons.Sessions;
 using LidGuardLib.Commons.Settings;
-using LidGuardLib.Windows.Hooks;
+using LidGuardLib.Hooks;
 
 namespace LidGuard.Hooks;
 
@@ -19,7 +19,7 @@ internal static class CodexHookCommand
         var hookInputJson = await Console.In.ReadToEndAsync();
         if (string.IsNullOrWhiteSpace(hookInputJson))
         {
-            WindowsCodexHookEventLog.AppendMessage("LidGuard Codex hook received empty input.");
+            CodexHookEventLog.AppendMessage("LidGuard Codex hook received empty input.");
             return 0;
         }
 
@@ -30,17 +30,17 @@ internal static class CodexHookCommand
         }
         catch (JsonException exception)
         {
-            WindowsCodexHookEventLog.AppendMessage($"LidGuard Codex hook could not parse input: {exception.Message}");
+            CodexHookEventLog.AppendMessage($"LidGuard Codex hook could not parse input: {exception.Message}");
             return 0;
         }
 
         if (hookInput is null)
         {
-            WindowsCodexHookEventLog.AppendMessage("LidGuard Codex hook could not parse input.");
+            CodexHookEventLog.AppendMessage("LidGuard Codex hook could not parse input.");
             return 0;
         }
 
-        WindowsCodexHookEventLog.AppendReceived(hookInput);
+        CodexHookEventLog.AppendReceived(hookInput);
         var hookEventName = hookInput.HookEventName.Trim();
         if (hookEventName.Equals(CodexHookEventNames.UserPromptSubmit, StringComparison.Ordinal)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Start, hookInput);
         if (hookEventName.Equals(CodexHookEventNames.PermissionRequest, StringComparison.Ordinal)) return await WriteClosedLidPermissionRequestDecisionAsync();
@@ -54,14 +54,14 @@ internal static class CodexHookCommand
         var format = GetOption(options, "format");
         if (string.IsNullOrWhiteSpace(format)) format = ConfigTomlFormat;
 
-        var executablePath = WindowsHookCommandUtilities.GetDefaultHookExecutableReference();
+        var executablePath = HookCommandUtilities.GetDefaultHookExecutableReference();
         if (string.IsNullOrWhiteSpace(executablePath))
         {
             Console.Error.WriteLine("A default LidGuard hook executable or command name could not be resolved.");
             return 1;
         }
 
-        var hookCommand = WindowsHookCommandUtilities.CreateHookCommand(executablePath, LidGuardPipeCommands.CodexHook);
+        var hookCommand = HookCommandUtilities.CreateHookCommand(executablePath, LidGuardPipeCommands.CodexHook);
 
         if (format.Equals(ConfigTomlFormat, StringComparison.OrdinalIgnoreCase) || format.Equals("toml", StringComparison.OrdinalIgnoreCase))
         {
@@ -84,17 +84,17 @@ internal static class CodexHookCommand
         var response = await new LidGuardRuntimeClient().SendAsync(new LidGuardPipeRequest { Command = LidGuardPipeCommands.Status }, false);
         if (!response.Succeeded)
         {
-            WindowsCodexHookEventLog.AppendMessage($"LidGuard Codex hook skipped PermissionRequest decision because runtime status is unavailable: {response.Message}");
+            CodexHookEventLog.AppendMessage($"LidGuard Codex hook skipped PermissionRequest decision because runtime status is unavailable: {response.Message}");
             return 0;
         }
 
         if (response.LidSwitchState != LidSwitchState.Closed)
         {
-            WindowsCodexHookEventLog.AppendMessage($"LidGuard Codex hook left PermissionRequest to Codex because the lid state is {response.LidSwitchState}.");
+            CodexHookEventLog.AppendMessage($"LidGuard Codex hook left PermissionRequest to Codex because the lid state is {response.LidSwitchState}.");
             return 0;
         }
 
-        WindowsCodexHookEventLog.AppendMessage($"LidGuard Codex hook handled closed-lid PermissionRequest with {response.Settings.ClosedLidPermissionRequestDecision}.");
+        CodexHookEventLog.AppendMessage($"LidGuard Codex hook handled closed-lid PermissionRequest with {response.Settings.ClosedLidPermissionRequestDecision}.");
         return CodexClosedLidPermissionRequestDecisionOutput.Write(response.Settings);
     }
 
@@ -108,7 +108,7 @@ internal static class CodexHookCommand
         {
             if (!LidGuardSettingsStore.TryLoadOrCreate(out settings, out var settingsMessage))
             {
-                WindowsCodexHookEventLog.AppendMessage(settingsMessage);
+                CodexHookEventLog.AppendMessage(settingsMessage);
                 return 0;
             }
 
@@ -128,7 +128,7 @@ internal static class CodexHookCommand
 
         var startRuntimeIfUnavailable = commandName == LidGuardPipeCommands.Start;
         var response = await new LidGuardRuntimeClient().SendAsync(request, startRuntimeIfUnavailable);
-        WindowsCodexHookEventLog.AppendRuntimeResult(hookInput, commandName, response.Succeeded, response.RuntimeUnavailable, response.ActiveSessionCount, response.Message);
+        CodexHookEventLog.AppendRuntimeResult(hookInput, commandName, response.Succeeded, response.RuntimeUnavailable, response.ActiveSessionCount, response.Message);
         return 0;
     }
 

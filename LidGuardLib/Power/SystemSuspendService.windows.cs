@@ -9,10 +9,10 @@ using Windows.Win32.Foundation;
 using Windows.Win32.Security;
 using Windows.Win32.System.Power;
 
-namespace LidGuardLib.Windows.Power;
+namespace LidGuardLib.Power;
 
 [SupportedOSPlatform("windows6.1")]
-public sealed class WindowsSystemSuspendService : ISystemSuspendService
+public sealed class SystemSuspendService : ISystemSuspendService
 {
     private const int ErrorNotAllAssigned = 1300;
     private const int ErrorNotSupported = 50;

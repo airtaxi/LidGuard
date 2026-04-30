@@ -3,12 +3,12 @@ using LidGuardLib.Commons.Platform;
 using LidGuardLib.Commons.Power;
 using LidGuardLib.Commons.Results;
 using LidGuardLib.Commons.Services;
-using LidGuardLib.Windows.Power;
-using LidGuardLib.Windows.Processes;
+using LidGuardLib.Power;
+using LidGuardLib.Processes;
 
-namespace LidGuardLib.Windows.Platform;
+namespace LidGuardLib.Platform;
 
-public sealed class WindowsLidGuardRuntimePlatform : ILidGuardRuntimePlatform
+public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
 {
     public bool IsSupported => OperatingSystem.IsWindowsVersionAtLeast(6, 1);
 
@@ -21,14 +21,14 @@ public sealed class WindowsLidGuardRuntimePlatform : ILidGuardRuntimePlatform
         var postStopSuspendSoundPlayerResult = CreatePostStopSuspendSoundPlayer();
         if (!postStopSuspendSoundPlayerResult.Succeeded) return LidGuardOperationResult<LidGuardRuntimeServiceSet>.Failure(postStopSuspendSoundPlayerResult.Message);
 
-        var lidActionService = new WindowsLidActionService();
+        var lidActionService = new LidActionService();
         var lidStateSource = CreateLidStateSource();
         var serviceSet = new LidGuardRuntimeServiceSet(
-            new WindowsPowerRequestService(),
-            new WindowsCommandLineProcessResolver(),
-            new WindowsProcessExitWatcher(),
+            new PowerRequestService(),
+            new CommandLineProcessResolver(),
+            new ProcessExitWatcher(),
             new LidActionPolicyController(lidActionService),
-            new WindowsSystemSuspendService(),
+            new SystemSuspendService(),
             postStopSuspendSoundPlayerResult.Value,
             lidStateSource);
 
@@ -38,9 +38,9 @@ public sealed class WindowsLidGuardRuntimePlatform : ILidGuardRuntimePlatform
     public LidGuardOperationResult<IPostStopSuspendSoundPlayer> CreatePostStopSuspendSoundPlayer()
     {
         if (!OperatingSystem.IsWindowsVersionAtLeast(6, 1)) return LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Failure(UnsupportedMessage);
-        return LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Success(new WindowsPostStopSuspendSoundPlayer());
+        return LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Success(new PostStopSuspendSoundPlayer());
     }
 
     [SupportedOSPlatform("windows6.1")]
-    private static ILidStateSource CreateLidStateSource() => new WindowsLidStateSource();
+    private static ILidStateSource CreateLidStateSource() => new LidStateSource();
 }

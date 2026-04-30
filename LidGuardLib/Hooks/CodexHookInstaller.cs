@@ -1,9 +1,9 @@
 using LidGuardLib.Commons.Hooks;
 using LidGuardLib.Commons.Sessions;
 
-namespace LidGuardLib.Windows.Hooks;
+namespace LidGuardLib.Hooks;
 
-public sealed class WindowsCodexHookInstaller
+public sealed class CodexHookInstaller
 {
     private const string CodexConfigurationDirectoryName = ".codex";
     private const string CodexConfigurationFileName = "config.toml";
@@ -13,7 +13,7 @@ public sealed class WindowsCodexHookInstaller
         ArgumentNullException.ThrowIfNull(request);
 
         var normalizedRequest = NormalizeRequest(request);
-        var hookCommand = WindowsHookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
+        var hookCommand = HookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
         var configurationFileExists = File.Exists(normalizedRequest.ConfigurationFilePath);
         var content = configurationFileExists ? File.ReadAllText(normalizedRequest.ConfigurationFilePath) : string.Empty;
         if (!configurationFileExists)
@@ -65,7 +65,7 @@ public sealed class WindowsCodexHookInstaller
             return CodexHookInstallationResult.Failure(missingExecutableInspection, $"Hook executable or command does not exist: {normalizedRequest.HookExecutablePath}");
         }
 
-        var hookCommand = WindowsHookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
+        var hookCommand = HookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
         var configurationFileExists = File.Exists(normalizedRequest.ConfigurationFilePath);
         var originalContent = configurationFileExists ? File.ReadAllText(normalizedRequest.ConfigurationFilePath) : string.Empty;
         var currentInspection = configurationFileExists
@@ -93,7 +93,7 @@ public sealed class WindowsCodexHookInstaller
         var backupFilePath = string.Empty;
         if (configurationFileExists && normalizedRequest.CreateBackup)
         {
-            backupFilePath = WindowsHookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
+            backupFilePath = HookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
             File.Copy(normalizedRequest.ConfigurationFilePath, backupFilePath, false);
         }
 
@@ -134,7 +134,7 @@ public sealed class WindowsCodexHookInstaller
         var backupFilePath = string.Empty;
         if (normalizedRequest.CreateBackup)
         {
-            backupFilePath = WindowsHookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
+            backupFilePath = HookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
             File.Copy(normalizedRequest.ConfigurationFilePath, backupFilePath, false);
         }
 
@@ -151,7 +151,7 @@ public sealed class WindowsCodexHookInstaller
             Provider = AgentProvider.Codex,
             Format = CodexHookConfigurationFormat.ConfigToml,
             ConfigurationFilePath = string.IsNullOrWhiteSpace(configurationFilePath) ? GetDefaultCodexConfigurationFilePath() : Path.GetFullPath(configurationFilePath),
-            HookExecutablePath = WindowsHookCommandUtilities.GetDefaultHookExecutableReference(),
+            HookExecutablePath = HookCommandUtilities.GetDefaultHookExecutableReference(),
             HookCommandName = "codex-hook"
         };
     }
@@ -178,11 +178,11 @@ public sealed class WindowsCodexHookInstaller
             Provider = request.Provider,
             Format = request.Format,
             ConfigurationFilePath = string.IsNullOrWhiteSpace(request.ConfigurationFilePath) ? GetDefaultCodexConfigurationFilePath() : Path.GetFullPath(request.ConfigurationFilePath),
-            HookExecutablePath = string.IsNullOrWhiteSpace(request.HookExecutablePath) ? WindowsHookCommandUtilities.GetDefaultHookExecutableReference() : WindowsHookCommandUtilities.NormalizeHookExecutableReference(request.HookExecutablePath),
+            HookExecutablePath = string.IsNullOrWhiteSpace(request.HookExecutablePath) ? HookCommandUtilities.GetDefaultHookExecutableReference() : HookCommandUtilities.NormalizeHookExecutableReference(request.HookExecutablePath),
             HookCommandName = string.IsNullOrWhiteSpace(request.HookCommandName) ? "codex-hook" : request.HookCommandName,
             CreateBackup = request.CreateBackup
         };
     }
 
-    private static bool HookExecutableExists(string executableReference) => WindowsHookCommandUtilities.HookExecutableExists(executableReference);
+    private static bool HookExecutableExists(string executableReference) => HookCommandUtilities.HookExecutableExists(executableReference);
 }

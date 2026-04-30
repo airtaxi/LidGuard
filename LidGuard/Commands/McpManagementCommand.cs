@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using LidGuard.Mcp;
 using LidGuardLib.Commons.Sessions;
-using LidGuardLib.Windows.Hooks;
+using LidGuardLib.Hooks;
 
 namespace LidGuard.Commands;
 
@@ -69,8 +69,8 @@ internal static class McpManagementCommand
         ManagedProviderSelection.WriteSkippedProviderMessages(skippedProviderMessages);
         if (providers.Count == 0) return ManagedProviderSelection.WriteNoAvailableProvidersFound();
 
-        var managedExecutableReference = WindowsHookCommandUtilities.GetDefaultMcpExecutableReference();
-        if (!WindowsHookCommandUtilities.HookExecutableExists(managedExecutableReference))
+        var managedExecutableReference = HookCommandUtilities.GetDefaultMcpExecutableReference();
+        if (!HookCommandUtilities.HookExecutableExists(managedExecutableReference))
         {
             Console.Error.WriteLine($"LidGuard executable or command does not exist: {managedExecutableReference}");
             return 1;
@@ -206,7 +206,7 @@ internal static class McpManagementCommand
         return "LidGuard MCP server is registered.";
     }
 
-    private static string GetCodexMcpConfigurationFilePath() => WindowsCodexHookInstaller.GetDefaultCodexConfigurationFilePath();
+    private static string GetCodexMcpConfigurationFilePath() => CodexHookInstaller.GetDefaultCodexConfigurationFilePath();
 
     private static IReadOnlyList<string> GetProviderConfigurationRootCandidatePaths(AgentProvider provider)
     {
@@ -215,18 +215,18 @@ internal static class McpManagementCommand
         {
             AgentProvider.Codex =>
             [
-                WindowsCodexHookInstaller.GetDefaultCodexConfigurationDirectoryPath(),
-                WindowsCodexHookInstaller.GetDefaultCodexConfigurationFilePath()
+                CodexHookInstaller.GetDefaultCodexConfigurationDirectoryPath(),
+                CodexHookInstaller.GetDefaultCodexConfigurationFilePath()
             ],
             AgentProvider.Claude =>
             [
                 Path.Combine(userProfilePath, ClaudeUserConfigurationFileName),
-                WindowsClaudeHookInstaller.GetDefaultClaudeConfigurationDirectoryPath()
+                ClaudeHookInstaller.GetDefaultClaudeConfigurationDirectoryPath()
             ],
             AgentProvider.GitHubCopilot =>
             [
-                Path.Combine(WindowsGitHubCopilotHookInstaller.GetDefaultGitHubCopilotConfigurationDirectoryPath(), CopilotMcpConfigurationFileName),
-                WindowsGitHubCopilotHookInstaller.GetDefaultGitHubCopilotConfigurationDirectoryPath()
+                Path.Combine(GitHubCopilotHookInstaller.GetDefaultGitHubCopilotConfigurationDirectoryPath(), CopilotMcpConfigurationFileName),
+                GitHubCopilotHookInstaller.GetDefaultGitHubCopilotConfigurationDirectoryPath()
             ],
             _ => []
         };
@@ -402,9 +402,9 @@ internal static class McpManagementCommand
 
         foreach (var candidatePath in GetProviderCliCandidatePaths(provider))
         {
-            if (!WindowsHookCommandUtilities.HookExecutableExists(candidatePath)) continue;
+            if (!HookCommandUtilities.HookExecutableExists(candidatePath)) continue;
 
-            providerCliExecutablePath = WindowsHookCommandUtilities.NormalizeHookExecutableReference(candidatePath);
+            providerCliExecutablePath = HookCommandUtilities.NormalizeHookExecutableReference(candidatePath);
             return true;
         }
 
@@ -502,7 +502,7 @@ internal static class McpManagementCommand
     private static int WriteGitHubCopilotMcpStatus()
     {
         var configurationFilePath = Path.Combine(
-            WindowsGitHubCopilotHookInstaller.GetDefaultGitHubCopilotConfigurationDirectoryPath(),
+            GitHubCopilotHookInstaller.GetDefaultGitHubCopilotConfigurationDirectoryPath(),
             CopilotMcpConfigurationFileName);
         var configurationFileExists = File.Exists(configurationFilePath);
         TryResolveProviderCliDisplayText(AgentProvider.GitHubCopilot, out var hasProviderCli, out var providerCliDisplayText);
