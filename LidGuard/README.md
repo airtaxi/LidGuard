@@ -60,10 +60,13 @@ Running `settings` with no options starts interactive editing. Emergency Hiberna
 ## Diagnostics
 
 ```powershell
+lidguard current-lid-state
 lidguard current-monitor-count
 lidguard current-temperature
 lidguard current-temperature --temperature-mode high
 ```
+
+`current-lid-state` prints the current lid switch state as `Open`, `Closed`, or `Unknown` using the same Windows lid-state source LidGuard uses for closed-lid policy decisions.
 
 `current-monitor-count` prints the current desktop-visible monitor count using the same Windows `SM_CMONITORS` check LidGuard uses for closed-lid suspend policy decisions.
 

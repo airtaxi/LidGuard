@@ -160,6 +160,13 @@ internal static class LidGuardHelpContent
             [],
             [
                 new LidGuardHelpCommand(
+                    $"{commandDisplayName} {LidGuardPipeCommands.CurrentLidState}",
+                    "Report the current lid switch state using the same Windows lid-state source LidGuard uses for closed-lid policy decisions.",
+                    [],
+                    [
+                        "This reports Open, Closed, or Unknown based on the current `GUID_LIDSWITCH_STATE_CHANGE` value."
+                    ]),
+                new LidGuardHelpCommand(
                     $"{commandDisplayName} {LidGuardPipeCommands.CurrentMonitorCount}",
                     "Report the current desktop-visible monitor count using the same Windows monitor visibility check LidGuard uses for closed-lid policy decisions.",
                     [],

@@ -7,6 +7,7 @@ internal static class LidGuardPipeCommands
     public const string ClaudeHooks = "claude-hooks";
     public const string CopilotHook = "copilot-hook";
     public const string CopilotHooks = "copilot-hooks";
+    public const string CurrentLidState = "current-lid-state";
     public const string CodexHook = "codex-hook";
     public const string CodexHooks = "codex-hooks";
     public const string CurrentMonitorCount = "current-monitor-count";

@@ -55,6 +55,7 @@ internal static class LidGuardCommandLineApplication
             LidGuardPipeCommands.RemoveSession => await SendRemoveSessionAsync(options),
             LidGuardPipeCommands.Status => await SendStatusAsync(),
             LidGuardPipeCommands.CleanupOrphans => await SendCleanupOrphansAsync(),
+            LidGuardPipeCommands.CurrentLidState => WriteCurrentLidState(runtimePlatform),
             LidGuardPipeCommands.CurrentMonitorCount => WriteCurrentMonitorCount(runtimePlatform),
             LidGuardPipeCommands.CurrentTemperature => WriteCurrentTemperature(options),
             LidGuardPipeCommands.Settings => await SendSettingsAsync(options, runtimePlatform),
@@ -302,6 +303,31 @@ internal static class LidGuardCommandLineApplication
         using var serviceSet = serviceSetResult.Value;
         var visibleDisplayMonitorCount = serviceSet.VisibleDisplayMonitorCountProvider.GetVisibleDisplayMonitorCount();
         Console.WriteLine($"Current desktop-visible monitor count: {visibleDisplayMonitorCount}");
+        return 0;
+    }
+
+    private static int WriteCurrentLidState(ILidGuardRuntimePlatform runtimePlatform)
+    {
+        var serviceSetResult = runtimePlatform.CreateRuntimeServiceSet();
+        if (!serviceSetResult.Succeeded)
+        {
+            Console.Error.WriteLine(serviceSetResult.Message);
+            return 1;
+        }
+
+        using var serviceSet = serviceSetResult.Value;
+        var lidSwitchState = serviceSet.LidStateSource.CurrentState;
+        if (lidSwitchState == LidSwitchState.Unknown)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            while (lidSwitchState == LidSwitchState.Unknown && stopwatch.Elapsed < TimeSpan.FromMilliseconds(500))
+            {
+                Thread.Sleep(25);
+                lidSwitchState = serviceSet.LidStateSource.CurrentState;
+            }
+        }
+
+        Console.WriteLine($"Current lid state: {lidSwitchState}");
         return 0;
     }
 
