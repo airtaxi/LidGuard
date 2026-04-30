@@ -529,6 +529,12 @@ lidguard cleanup-orphans
 lidguard mcp-server
 ```
 
+## Local Packaging Note
+
+- `pack-local-reinstall.bat` can fail once because of transient Windows Defender file-lock interference.
+- Retry the script before taking any broader recovery action; when this specific issue is the cause, a retry is typically enough.
+- Do not bring down any build server just because the first `pack-local-reinstall.bat` attempt failed with this known Defender issue.
+
 ## Missing Work
 
 The Windows CLI hook receiving path is implemented for Codex, Claude Code, and GitHub Copilot CLI. Remaining work is now focused on resilience and verification.

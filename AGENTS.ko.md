@@ -534,6 +534,12 @@ lidguard cleanup-orphans
 lidguard mcp-server
 ```
 
+## 로컬 패키징 메모
+
+- `pack-local-reinstall.bat`는 일시적인 Windows Defender 파일 잠금 간섭 때문에 한 번 정도 실패할 수 있다.
+- 이 경우에는 더 큰 복구 작업에 들어가기 전에 먼저 스크립트를 재시도해야 하며, 원인이 이 알려진 Defender 이슈라면 보통 재시도만으로 해결된다.
+- 알려진 Defender 이슈로 첫 `pack-local-reinstall.bat` 시도가 실패했다는 이유만으로 build server를 내릴 필요는 없다.
+
 ## 남은 작업
 
 Windows CLI hook 수신 경로는 Codex, Claude Code, GitHub Copilot CLI까지 구현되어 있다. 남은 작업은 이제 resilience와 검증에 더 가깝다.
