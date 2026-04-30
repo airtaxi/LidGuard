@@ -23,9 +23,7 @@ internal static class ProviderMcpManagementCommand
             return 1;
         }
 
-        var managedExecutableReference = GetOption(options, "executable");
-        if (string.IsNullOrWhiteSpace(managedExecutableReference)) managedExecutableReference = WindowsHookCommandUtilities.GetDefaultMcpExecutableReference();
-        else managedExecutableReference = WindowsHookCommandUtilities.NormalizeHookExecutableReference(managedExecutableReference);
+        var managedExecutableReference = WindowsHookCommandUtilities.GetDefaultMcpExecutableReference();
 
         if (!WindowsHookCommandUtilities.HookExecutableExists(managedExecutableReference))
         {

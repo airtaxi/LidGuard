@@ -144,14 +144,14 @@ public sealed class WindowsCodexHookInstaller
         return CodexHookInstallationResult.Success(inspection, true, "Codex hook removed.", backupFilePath);
     }
 
-    public CodexHookInstallationRequest CreateDefaultRequest(string hookExecutablePath = "", string configurationFilePath = "")
+    public CodexHookInstallationRequest CreateDefaultRequest(string configurationFilePath = "")
     {
         return new CodexHookInstallationRequest
         {
             Provider = AgentProvider.Codex,
             Format = CodexHookConfigurationFormat.ConfigToml,
             ConfigurationFilePath = string.IsNullOrWhiteSpace(configurationFilePath) ? GetDefaultCodexConfigurationFilePath() : Path.GetFullPath(configurationFilePath),
-            HookExecutablePath = string.IsNullOrWhiteSpace(hookExecutablePath) ? WindowsHookCommandUtilities.GetDefaultHookExecutableReference() : WindowsHookCommandUtilities.NormalizeHookExecutableReference(hookExecutablePath),
+            HookExecutablePath = WindowsHookCommandUtilities.GetDefaultHookExecutableReference(),
             HookCommandName = "codex-hook"
         };
     }

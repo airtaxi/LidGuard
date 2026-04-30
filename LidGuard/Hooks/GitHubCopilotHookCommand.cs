@@ -51,11 +51,10 @@ internal static class GitHubCopilotHookCommand
         var format = GetOption(options, "format");
         if (string.IsNullOrWhiteSpace(format)) format = ConfigurationJsonFormat;
 
-        var executablePath = GetOption(options, "executable", "exe", "path");
-        if (string.IsNullOrWhiteSpace(executablePath)) executablePath = WindowsHookCommandUtilities.GetDefaultHookExecutableReference();
+        var executablePath = WindowsHookCommandUtilities.GetDefaultHookExecutableReference();
         if (string.IsNullOrWhiteSpace(executablePath))
         {
-            Console.Error.WriteLine("An executable path or command name is required. Use --executable <path>.");
+            Console.Error.WriteLine("A default LidGuard hook executable or command name could not be resolved.");
             return 1;
         }
 

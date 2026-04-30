@@ -344,8 +344,7 @@ internal static class HookManagementCommand
         request = null;
         message = string.Empty;
         var configurationFilePath = GetOption(options, "config", "configuration", "configuration-file");
-        var hookExecutablePath = GetOption(options, "executable", "hook-executable", "path");
-        request = installer.CreateDefaultRequest(hookExecutablePath, configurationFilePath);
+        request = installer.CreateDefaultRequest(configurationFilePath);
         return true;
     }
 
@@ -359,8 +358,7 @@ internal static class HookManagementCommand
         message = string.Empty;
 
         var configurationFilePath = GetOption(options, "config", "configuration", "configuration-file");
-        var hookExecutablePath = GetOption(options, "executable", "hook-executable", "path");
-        request = installer.CreateDefaultRequest(hookExecutablePath, configurationFilePath);
+        request = installer.CreateDefaultRequest(configurationFilePath);
         return true;
     }
 
@@ -374,8 +372,7 @@ internal static class HookManagementCommand
         message = string.Empty;
 
         var configurationFilePath = GetOption(options, "config", "configuration", "configuration-file");
-        var hookExecutablePath = GetOption(options, "executable", "hook-executable", "path");
-        request = installer.CreateDefaultRequest(hookExecutablePath, configurationFilePath);
+        request = installer.CreateDefaultRequest(configurationFilePath);
         return true;
     }
 

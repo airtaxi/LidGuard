@@ -143,7 +143,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `set_session_soft_lock` and `clear_session_soft_lock` are general-purpose tools that accept provider and session identifier inputs, so non-MCP providers can also use MCP-driven soft-lock control when they can supply those values.
 - `LidGuard` also hosts a separate stdio Provider MCP server through `lidguard provider-mcp-server --provider-name <name>`.
 - `provider-mcp-install` and `provider-mcp-remove` directly edit a caller-supplied JSON config file and register or remove a managed stdio server entry for `provider-mcp-server`; this path intentionally does not use Codex, Claude Code, or GitHub Copilot CLI-specific MCP registration commands.
-- `provider-mcp-install` uses the same MCP executable selection policy as `mcp-install`: prefer the current `lidguard.exe` path over the Windows `.cmd` shim unless the caller supplies `--executable`.
+- `provider-mcp-install` uses the same MCP executable selection policy as `mcp-install`: prefer the current `lidguard.exe` path over the Windows `.cmd` shim.
 - The Provider MCP server exposes `provider_start_session`, `provider_stop_session`, `provider_set_soft_lock`, and `provider_clear_soft_lock`.
 - `provider_start_session` is intended to be called before a provider begins processing a user prompt, while `provider_stop_session` is intended to be called before a turn ends only when the work is truly complete.
 - `provider_set_soft_lock` is intended to be called before a turn ends because the model needs user input and wants LidGuard to release keep-awake protection. The tool itself cannot end the turn; the model still has to stop or hand back the conversation after calling it.
