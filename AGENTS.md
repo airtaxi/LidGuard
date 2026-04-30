@@ -28,15 +28,15 @@ The goal is to keep Windows awake while at least one tracked agent session still
 - LidGuard detects and tracks active sessions.
 - Claude Code and GitHub Copilot CLI sessions can enter a runtime-managed soft-lock state when provider notifications show the agent is waiting on user input.
 - While at least one non-soft-locked session is active, Windows should not enter idle sleep through `PowerRequestSystemRequired` and `PowerRequestAwayModeRequired`.
-- If every remaining active session is soft-locked, LidGuard should release temporary keep-awake protection, restore any temporary lid policy change, and start the configured suspend flow when the lid is closed.
+- If every remaining active session is soft-locked, LidGuard should release temporary keep-awake protection, restore any temporary lid policy change, and start the configured suspend flow only when the lid is closed and no visible display monitors remain attached to the desktop.
 - Optional settings temporarily change the active power plan's lid close action to `Do Nothing`.
 - When sessions stop, all temporary power settings must be restored to the user's original values.
-- After the last active session stops, LidGuard should always request suspend when the laptop lid is closed.
+- After the last active session stops, LidGuard should always request suspend when the laptop lid is closed and no visible display monitors remain attached to the desktop.
 - If active sessions remain but all of them are soft-locked, LidGuard should follow the same suspend path without waiting for stop hooks.
 - The suspend mode remains user-selectable: Sleep by default, Hibernate optional.
 - The post-stop suspend delay remains user-selectable: 10 seconds by default, `0` for immediate suspend.
 - The post-stop suspend sound remains optional: off by default, with supported SystemSounds names or a playable `.wav` path.
-- While keep-awake protection is applied and the laptop lid is closed, an optional Emergency Hibernation thermal monitor should poll every 10 seconds and request immediate hibernation when the system temperature reaches the configured threshold.
+- While keep-awake protection is applied and the laptop lid is closed with no visible display monitors remaining on the desktop, an optional Emergency Hibernation thermal monitor should poll every 10 seconds and request immediate hibernation when the system temperature reaches the configured threshold.
 
 The key design rule is to treat normal idle sleep and lid-close sleep as separate problems. Power requests handle idle sleep. `LIDACTION` policy backup/change/restore handles lid-close behavior because standard sleep-prevention APIs cannot reliably block a user lid-close action.
 
@@ -94,9 +94,10 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - Lid open/close notification uses `GUID_LIDSWITCH_STATE_CHANGE`.
 - Broadcast values are `0x0 = lid closed` and `0x1 = lid opened`.
 - `LidSwitchNotificationRegistration` converts these values to `LidSwitchState`.
+- Closed-lid policy decisions also read `GetSystemMetrics(SM_CMONITORS)`, and LidGuard only treats the machine as suspend-eligible for lid-close policy when `LidSwitchState` is `Closed` and the visible display monitor count is `0`.
 - Immediate sleep/hibernate uses `SetSuspendState` after enabling `SeShutdownPrivilege`.
 - On Modern Standby systems, `SetSuspendState(false, ...)` can fail with `ERROR_NOT_SUPPORTED`; a later fallback may use a display-off strategy.
-- After the last active session stops, a closed lid should always trigger suspend after the configured post-stop delay using the configured suspend mode. A delay of `0` means immediate suspend.
+- After the last active session stops, LidGuard should request suspend after the configured post-stop delay using the configured suspend mode only when the lid is closed and the visible display monitor count is `0`. A delay of `0` means immediate suspend.
 - If a post-stop suspend sound is configured, LidGuard should wait for the delay first, then play the configured sound to completion, then re-check the lid/session state before requesting suspend.
 - If a pre-suspend webhook URL is configured, LidGuard should POST JSON before requesting suspend. The body must include `reason`, and soft-lock-triggered suspend must also include the soft-locked session count.
 
@@ -104,7 +105,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 
 - Emergency Hibernation uses `SystemThermalInformation.GetSystemTemperatureCelsius(EmergencyHibernationTemperatureMode)` to read the selected available system thermal-zone temperature in Celsius.
 - Emergency Hibernation temperature mode is configurable as Low, Average, or High, and defaults to Average.
-- The thermal monitor only runs while shared keep-awake protection is applied and the lid is closed.
+- The thermal monitor only runs while shared keep-awake protection is applied, the lid is closed, and the visible display monitor count is `0`.
 - The thermal poll interval is fixed at 10 seconds.
 - The Emergency Hibernation threshold is configurable, defaults to 93 Celsius, and must always be clamped to 70 through 110 Celsius before runtime use.
 - When the observed temperature reaches the clamped threshold, LidGuard should cancel any pending post-stop suspend, send the pre-suspend webhook with `reason = EmergencyHibernation` using a 5-second timeout, then immediately request hibernate.
@@ -125,11 +126,12 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 ### Current Windows CLI Path
 
-- `LidGuard` parses `start`, `stop`, `remove-pre-suspend-webhook`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `current-temperature`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `mcp-server`, and `provider-mcp-server`.
+- `LidGuard` parses `start`, `stop`, `remove-pre-suspend-webhook`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `current-monitor-count`, `current-temperature`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `mcp-server`, and `provider-mcp-server`.
 - `start`, the `UserPromptSubmit` path in `codex-hook` and `claude-hook`, and the `userPromptSubmitted` path in `copilot-hook` load persisted default settings and send them with the start IPC request.
 - `remove-session --all` manually removes every active session currently tracked by the runtime.
 - `remove-session` manually removes active sessions by session identifier; when `--provider` is omitted, it removes every active session whose session identifier matches. When `--provider mcp` is used, `--provider-name` can narrow the removal to one MCP-backed provider; omitting `--provider-name` removes every MCP-backed session that shares that session identifier.
 - `remove-pre-suspend-webhook` clears the configured pre-suspend webhook URL and reports when no webhook is currently configured.
+- `current-monitor-count` prints the current desktop-visible monitor count using the same `GetSystemMetrics(SM_CMONITORS)` check LidGuard uses for closed-lid policy decisions.
 - `current-temperature` prints the currently recognized system thermal-zone temperature in Celsius using the selected aggregation mode, or reports when thermal-zone data is unavailable.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
 - `settings` also exposes `--emergency-hibernation-on-high-temperature`, `--emergency-hibernation-temperature-mode`, and `--emergency-hibernation-temperature-celsius`; the threshold option accepts 70 through 110 only.
@@ -199,9 +201,9 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Emergency Hibernation temperature mode: Average by default, with Low and High optional.
 - Emergency Hibernation temperature threshold: 93 Celsius by default, clamped to 70 through 110.
 - Closed-lid PermissionRequest decision: Deny by default, Allow optional.
-- PermissionRequest hooks only emit a structured allow/deny decision when the runtime reports the lid is closed; otherwise they return empty stdout so the provider's default permission flow continues.
+- PermissionRequest hooks only emit a structured allow/deny decision when the runtime reports `LidSwitchState = Closed` and `VisibleDisplayMonitorCount = 0`; otherwise they return empty stdout so the provider's default permission flow continues.
 - Claude and GitHub Copilot CLI closed-lid `PermissionRequest` outputs also set `interrupt: true`. Even if another provider later uses a similar JSON shape, keep hook DTOs separate per provider instead of sharing one output type across providers.
-- Claude `Elicitation` hooks emit a structured `cancel` only when the runtime reports the lid is closed; otherwise they return empty stdout so Claude's default elicitation flow continues.
+- Claude `Elicitation` hooks emit a structured `cancel` only when the runtime reports `LidSwitchState = Closed` and `VisibleDisplayMonitorCount = 0`; otherwise they return empty stdout so Claude's default elicitation flow continues.
 - Parent process watchdog: enabled.
 
 ## Implemented Components
@@ -238,6 +240,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - `IProcessExitWatcher`
   - `ICommandLineProcessResolver`
   - `ILidStateSource`
+  - `IVisibleDisplayMonitorCountProvider`
 - `Power`
   - `PowerRequestOptions`
   - `PowerLine`
@@ -288,6 +291,8 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `PowerRequestService`
   - Uses `PowerCreateRequest`, `PowerSetRequest`, `PowerClearRequest`.
   - Supports system-required, away-mode-required, and display-required requests.
+- `VisibleDisplayMonitorCountProvider`
+  - Reads the desktop-visible monitor count with `GetSystemMetrics(SM_CMONITORS)`.
 - `LidActionService`
   - Reads/writes active power plan `LIDACTION`.
 - `ProcessExitWatcher`
@@ -382,12 +387,12 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `hook-install` and `hook-status` require `UserPromptSubmit`, `PermissionRequest`, and `Stop`; `SessionEnd` is optional and shown separately when present.
 - `codex-hook` reads Codex hook JSON from stdin and maps `hook_event_name` to runtime IPC.
 - For `UserPromptSubmit`, it sends internal `start --provider codex`.
-- For `PermissionRequest`, it does not stop the runtime; it queries the runtime lid state and returns a structured allow/deny decision from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed.
+- For `PermissionRequest`, it does not stop the runtime; it queries the runtime lid state and visible display monitor count and returns a structured allow/deny decision from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed and the visible display monitor count is `0`.
 - For `Stop`, and for `SessionEnd` when a Codex build emits it, it sends internal `stop --provider codex`.
 - Notification-driven soft-lock detection is currently unsupported for Codex because the current public hook surface does not expose a comparable `Notification` event. Future support can be added if Codex exposes notification or machine-readable pending-state hooks later.
 - Because Codex lacks a notification-style soft-lock clear signal, LidGuard records `transcript_path` from `UserPromptSubmit` and uses transcript JSONL monitoring as a Codex-only exception path. Once a Codex session is already soft-locked, five actual transcript growth events clear that soft lock. If `transcript_path` is missing, LidGuard falls back to a unique `~/.codex/sessions` transcript match by session id.
 - Codex hook input does not provide a stable parent process id. LidGuard therefore prefers an explicit watched process id for Codex, but when none is supplied it can still use a working-directory fallback if the resolved Codex candidate process is shell-hosted through `cmd.exe`, `pwsh.exe`, or `powershell.exe` as the process itself or its direct parent. That cleanup path never removes `process=none` Codex sessions.
-- Codex `PermissionRequest` exits successfully with structured JSON stdout only for closed-lid decisions; when the lid is open, unknown, or runtime status is unavailable, it exits successfully with empty stdout. LidGuard records diagnostics locally and should not block the Codex task when a runtime request fails.
+- Codex `PermissionRequest` exits successfully with structured JSON stdout only for effective closed-lid decisions; when the lid is open, unknown, any visible display monitor remains active, or runtime status is unavailable, it exits successfully with empty stdout. LidGuard records diagnostics locally and should not block the Codex task when a runtime request fails.
 - This behavior is based on analyzing the `openai/codex` `codex-rs` hook source: `exit 0` with empty stdout is treated as a no-op success, while non-empty stdout may be parsed as hook JSON or interpreted as plain-text context depending on the event.
 
 Reference:
@@ -416,14 +421,14 @@ Reference:
 - `claude-hook` reads Claude hook JSON from stdin and maps `hook_event_name` to runtime IPC.
 - For `UserPromptSubmit`, it sends internal `start --provider claude`.
 - For `PreToolUse`, `PostToolUse`, and `PostToolUseFailure`, it records provider activity and clears the current session soft-lock state for non-`AskUserQuestion` tools.
-- For `Elicitation`, it does not stop the runtime; it queries the runtime lid state and returns a structured `cancel` only when the lid is closed.
+- For `Elicitation`, it does not stop the runtime; it queries the runtime lid state and visible display monitor count and returns a structured `cancel` only when the lid is closed and the visible display monitor count is `0`.
 - For `Notification`, `permission_prompt` and `elicitation_dialog` mark the session soft-locked, while `elicitation_complete` and `elicitation_response` clear the current soft-lock state.
-- For `PermissionRequest`, it does not stop the runtime; it queries the runtime lid state and returns a Claude-specific structured allow/deny decision with `interrupt: true` from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed.
+- For `PermissionRequest`, it does not stop the runtime; it queries the runtime lid state and visible display monitor count and returns a Claude-specific structured allow/deny decision with `interrupt: true` from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed and the visible display monitor count is `0`.
 - When working on Claude Code-related setup, support, or documentation, explicitly and strongly warn the user not to use third-party prompt-style hooks alongside LidGuard. Explain that LidGuard must only answer its own closed-lid `PermissionRequest` and `Elicitation` paths and must not be presented as able to answer or proxy third-party hook prompts.
 - For `Stop`, `StopFailure`, and `SessionEnd`, it sends internal `stop --provider claude`.
 - The analyzed Claude hook input provides `session_id` and `cwd`, but not a stable parent process id, so the current implementation resolves a process by working directory.
-- Claude `Elicitation` exits successfully with structured JSON stdout only for closed-lid `cancel`; when the lid is open, unknown, or runtime status is unavailable, it exits successfully with empty stdout. LidGuard records diagnostics locally and should not block the Claude task when a runtime request fails.
-- Claude `PermissionRequest` exits successfully with structured JSON stdout only for closed-lid decisions; when the lid is open, unknown, or runtime status is unavailable, it exits successfully with empty stdout. LidGuard records diagnostics locally and should not block the Claude task when a runtime request fails.
+- Claude `Elicitation` exits successfully with structured JSON stdout only for effective closed-lid `cancel`; when the lid is open, unknown, any visible display monitor remains active, or runtime status is unavailable, it exits successfully with empty stdout. LidGuard records diagnostics locally and should not block the Claude task when a runtime request fails.
+- Claude `PermissionRequest` exits successfully with structured JSON stdout only for effective closed-lid decisions; when the lid is open, unknown, any visible display monitor remains active, or runtime status is unavailable, it exits successfully with empty stdout. LidGuard records diagnostics locally and should not block the Claude task when a runtime request fails.
 
 Reference:
 
@@ -452,15 +457,15 @@ Reference:
 - Even if a future GitHub Copilot CLI hook output ends up looking similar to another provider's current hook JSON, keep a dedicated GitHub Copilot CLI hook output type. Hook contracts are provider-specific and are not standardized across CLIs.
 - `copilot-hook` takes the configured event name from the command line because camelCase GitHub Copilot CLI hook payloads do not consistently include the event name in stdin JSON.
 - For `userPromptSubmitted`, it sends internal `start --provider copilot`.
-- For `permissionRequest`, it does not stop the runtime; it queries the runtime lid state and returns a GitHub Copilot CLI allow/deny decision from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed, and it includes `interrupt: true`.
-- For `preToolUse`, it does not stop the runtime; it denies `ask_user` only when the lid is closed, so the agent cannot soft-lock waiting for user input that cannot be answered, and it clears the current session soft-lock state for non-`ask_user` tools.
+- For `permissionRequest`, it does not stop the runtime; it queries the runtime lid state and visible display monitor count and returns a GitHub Copilot CLI allow/deny decision from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed and the visible display monitor count is `0`, and it includes `interrupt: true`.
+- For `preToolUse`, it does not stop the runtime; it denies `ask_user` only when the lid is closed and the visible display monitor count is `0`, so the agent cannot soft-lock waiting for user input that cannot be answered, and it clears the current session soft-lock state for non-`ask_user` tools.
 - For `postToolUse`, it records tool completion activity and clears the current session soft-lock state for non-`ask_user` tools.
 - For `notification`, it marks the session soft-locked when GitHub Copilot CLI reports `permission_prompt` or `elicitation_dialog`.
 - For `agentStop`, it sends internal `stop --provider copilot`.
 - For `sessionStart`, `sessionEnd`, and `errorOccurred`, it records telemetry only.
 - GitHub Copilot CLI hook input currently does not provide a stable parent process id in the documented payloads, so the current implementation resolves a process by working directory.
-- GitHub Copilot CLI `permissionRequest` exits successfully with structured JSON stdout only for closed-lid decisions; when the lid is open, unknown, or runtime status is unavailable, it exits successfully with empty stdout so the normal permission flow continues.
-- GitHub Copilot CLI `preToolUse` exits successfully with structured JSON stdout only for closed-lid `ask_user` denial; otherwise it exits successfully with empty stdout so normal tool handling continues.
+- GitHub Copilot CLI `permissionRequest` exits successfully with structured JSON stdout only for effective closed-lid decisions; when the lid is open, unknown, any visible display monitor remains active, or runtime status is unavailable, it exits successfully with empty stdout so the normal permission flow continues.
+- GitHub Copilot CLI `preToolUse` exits successfully with structured JSON stdout only for effective closed-lid `ask_user` denial; otherwise it exits successfully with empty stdout so normal tool handling continues.
 
 Reference:
 
@@ -514,6 +519,7 @@ lidguard provider-mcp-status --config "C:\path\to\mcp.json"
 lidguard provider-mcp-install --config "C:\path\to\mcp.json" --provider-name "ExampleProvider"
 lidguard provider-mcp-remove --config "C:\path\to\mcp.json"
 lidguard provider-mcp-server --provider-name "ExampleProvider"
+lidguard current-monitor-count
 lidguard current-temperature
 lidguard current-temperature --temperature-mode high
 lidguard preview-system-sound --name Asterisk

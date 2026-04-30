@@ -20,6 +20,7 @@ internal sealed class LidGuardRuntimeCoordinator
     private readonly IPostStopSuspendSoundPlayer _postStopSuspendSoundPlayer;
     private readonly ISystemSuspendService _systemSuspendService;
     private readonly ILidStateSource _lidStateSource;
+    private readonly IVisibleDisplayMonitorCountProvider _visibleDisplayMonitorCountProvider;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly LidGuardSessionRegistry _sessionRegistry = new();
     private readonly Dictionary<LidGuardSessionKey, CancellationTokenSource> _watcherCancellationTokenSources = [];
@@ -42,7 +43,8 @@ internal sealed class LidGuardRuntimeCoordinator
         LidActionPolicyController lidActionPolicyController,
         ISystemSuspendService systemSuspendService,
         IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer,
-        ILidStateSource lidStateSource)
+        ILidStateSource lidStateSource,
+        IVisibleDisplayMonitorCountProvider visibleDisplayMonitorCountProvider)
     {
         _powerRequestService = powerRequestService;
         _commandLineProcessResolver = commandLineProcessResolver;
@@ -50,6 +52,7 @@ internal sealed class LidGuardRuntimeCoordinator
         _postStopSuspendSoundPlayer = postStopSuspendSoundPlayer;
         _systemSuspendService = systemSuspendService;
         _lidStateSource = lidStateSource;
+        _visibleDisplayMonitorCountProvider = visibleDisplayMonitorCountProvider;
         _pendingLidActionBackupManager = new LidGuardPendingLidActionBackupManager(lidActionPolicyController);
         _codexSoftLockTranscriptMonitor = new CodexSoftLockTranscriptMonitor(HandleCodexTranscriptActivityThresholdReachedAsync);
         _emergencyHibernationThermalMonitor = new EmergencyHibernationThermalMonitor(
@@ -703,17 +706,10 @@ internal sealed class LidGuardRuntimeCoordinator
         string successMessage,
         int activeSessionCount)
     {
-        var lidSwitchState = _lidStateSource.CurrentState;
-        if (lidSwitchState == LidSwitchState.Open)
+        var closedLidPolicyApplicability = EvaluateClosedLidPolicyApplicability("suspend");
+        if (!closedLidPolicyApplicability.IsApplicable)
         {
-            var response = CreateSuccessResponse("Skipped suspend because the lid is open.");
-            AppendSessionLog($"{eventName}-suspend-skipped", pendingSuspendContext, response, snapshot);
-            return CreateSuccessResponse(successMessage);
-        }
-
-        if (lidSwitchState != LidSwitchState.Closed)
-        {
-            var response = CreateSuccessResponse("Skipped suspend because the lid state is unknown.");
+            var response = CreateSuccessResponse(closedLidPolicyApplicability.Message);
             AppendSessionLog($"{eventName}-suspend-skipped", pendingSuspendContext, response, snapshot);
             return CreateSuccessResponse(successMessage);
         }
@@ -771,10 +767,10 @@ internal sealed class LidGuardRuntimeCoordinator
                     return;
                 }
 
-                var lidSwitchState = _lidStateSource.CurrentState;
-                if (lidSwitchState != LidSwitchState.Closed)
+                var closedLidPolicyApplicability = EvaluateClosedLidPolicyApplicability("suspend");
+                if (!closedLidPolicyApplicability.IsApplicable)
                 {
-                    var canceledResponse = CreateSuccessResponse($"Skipped suspend because the lid state is {lidSwitchState} before suspend ran.");
+                    var canceledResponse = CreateSuccessResponse(closedLidPolicyApplicability.Message);
                     AppendSessionLog($"{eventName}-suspend-canceled", pendingSuspendContext, canceledResponse, snapshot);
                     return;
                 }
@@ -822,10 +818,10 @@ internal sealed class LidGuardRuntimeCoordinator
                 return;
             }
 
-            var lidSwitchState = _lidStateSource.CurrentState;
-            if (lidSwitchState != LidSwitchState.Closed)
+            var closedLidPolicyApplicability = EvaluateClosedLidPolicyApplicability("suspend");
+            if (!closedLidPolicyApplicability.IsApplicable)
             {
-                var canceledResponse = CreateSuccessResponse($"Skipped suspend because the lid state is {lidSwitchState} before suspend was requested.");
+                var canceledResponse = CreateSuccessResponse(closedLidPolicyApplicability.Message);
                 AppendSessionLog($"{eventName}-suspend-canceled", pendingSuspendContext, canceledResponse, snapshot);
                 return;
             }
@@ -1093,12 +1089,17 @@ internal sealed class LidGuardRuntimeCoordinator
     }
 
     private EmergencyHibernationThermalMonitorState CreateEmergencyHibernationThermalMonitorState()
-        => new(
+    {
+        var closedLidPolicyApplicability = EvaluateClosedLidPolicyApplicability("Emergency Hibernation");
+        return new EmergencyHibernationThermalMonitorState(
             _protectionApplied,
             _settings.EmergencyHibernationOnHighTemperature,
-            _lidStateSource.CurrentState,
+            closedLidPolicyApplicability.IsApplicable,
+            closedLidPolicyApplicability.LidSwitchState,
+            closedLidPolicyApplicability.VisibleDisplayMonitorCount,
             _settings.EmergencyHibernationTemperatureMode,
             LidGuardSettings.ClampEmergencyHibernationTemperatureCelsius(_settings.EmergencyHibernationTemperatureCelsius));
+    }
 
     private bool TryValidateEmergencyHibernationStateInsideGate(
         int observedTemperatureCelsius,
@@ -1122,10 +1123,10 @@ internal sealed class LidGuardRuntimeCoordinator
             return false;
         }
 
-        var lidSwitchState = _lidStateSource.CurrentState;
-        if (lidSwitchState != LidSwitchState.Closed)
+        var closedLidPolicyApplicability = EvaluateClosedLidPolicyApplicability("Emergency Hibernation");
+        if (!closedLidPolicyApplicability.IsApplicable)
         {
-            message = $"Skipped Emergency Hibernation because the lid state is {lidSwitchState}.";
+            message = closedLidPolicyApplicability.Message;
             return false;
         }
 
@@ -1142,13 +1143,26 @@ internal sealed class LidGuardRuntimeCoordinator
     private LidGuardPipeResponse CreateSuccessResponse(string message)
     {
         var snapshots = _sessionRegistry.GetSnapshots();
-        return LidGuardPipeResponse.Success(message, snapshots.Count, CreateSessionStatuses(snapshots), _settings, _lidStateSource.CurrentState);
+        var currentLidAndDisplayState = GetCurrentLidAndDisplayState();
+        return LidGuardPipeResponse.Success(
+            message,
+            snapshots.Count,
+            CreateSessionStatuses(snapshots),
+            _settings,
+            currentLidAndDisplayState.LidSwitchState,
+            currentLidAndDisplayState.VisibleDisplayMonitorCount);
     }
 
     private LidGuardPipeResponse CreateFailureResponse(LidGuardOperationResult result)
     {
         var snapshots = _sessionRegistry.GetSnapshots();
-        return LidGuardPipeResponse.Failure(CreateResultMessage(result), snapshots.Count);
+        var currentLidAndDisplayState = GetCurrentLidAndDisplayState();
+        return LidGuardPipeResponse.Failure(
+            CreateResultMessage(result),
+            snapshots.Count,
+            false,
+            currentLidAndDisplayState.LidSwitchState,
+            currentLidAndDisplayState.VisibleDisplayMonitorCount);
     }
 
     private static LidGuardSessionStatus[] CreateSessionStatuses(IReadOnlyList<LidGuardSessionSnapshot> snapshots)
@@ -1180,6 +1194,50 @@ internal sealed class LidGuardRuntimeCoordinator
         return $"{result.Message} Native error: {result.NativeErrorCode}.";
     }
 
+    private ClosedLidPolicyApplicability EvaluateClosedLidPolicyApplicability(string actionName)
+        => EvaluateClosedLidPolicyApplicability(actionName, GetCurrentLidAndDisplayState());
+
+    private CurrentLidAndDisplayState GetCurrentLidAndDisplayState()
+        => new(_lidStateSource.CurrentState, _visibleDisplayMonitorCountProvider.GetVisibleDisplayMonitorCount());
+
+    private static ClosedLidPolicyApplicability EvaluateClosedLidPolicyApplicability(
+        string actionName,
+        CurrentLidAndDisplayState currentLidAndDisplayState)
+    {
+        if (currentLidAndDisplayState.LidSwitchState == LidSwitchState.Open)
+        {
+            return new ClosedLidPolicyApplicability(
+                false,
+                currentLidAndDisplayState.LidSwitchState,
+                currentLidAndDisplayState.VisibleDisplayMonitorCount,
+                $"Skipped {actionName} because the lid is open.");
+        }
+
+        if (currentLidAndDisplayState.LidSwitchState != LidSwitchState.Closed)
+        {
+            return new ClosedLidPolicyApplicability(
+                false,
+                currentLidAndDisplayState.LidSwitchState,
+                currentLidAndDisplayState.VisibleDisplayMonitorCount,
+                $"Skipped {actionName} because the lid state is {currentLidAndDisplayState.LidSwitchState}.");
+        }
+
+        if (currentLidAndDisplayState.VisibleDisplayMonitorCount > 0)
+        {
+            return new ClosedLidPolicyApplicability(
+                false,
+                currentLidAndDisplayState.LidSwitchState,
+                currentLidAndDisplayState.VisibleDisplayMonitorCount,
+                $"Skipped {actionName} because {currentLidAndDisplayState.VisibleDisplayMonitorCount} visible display monitor(s) are active while the lid is closed.");
+        }
+
+        return new ClosedLidPolicyApplicability(
+            true,
+            currentLidAndDisplayState.LidSwitchState,
+            currentLidAndDisplayState.VisibleDisplayMonitorCount,
+            string.Empty);
+    }
+
     private static string DescribePostStopSuspendDelay(int postStopSuspendDelaySeconds)
         => postStopSuspendDelaySeconds == 0 ? "immediately" : $"in {postStopSuspendDelaySeconds} second(s)";
 
@@ -1188,8 +1246,8 @@ internal sealed class LidGuardRuntimeCoordinator
 
     private static string DescribeSuspendReason(int activeSessionCount)
         => activeSessionCount == 0
-            ? "because the lid is closed after the last session stopped."
-            : "because the lid is closed and all remaining sessions are soft-locked.";
+            ? "because the lid is closed, no visible display monitors remain, and the last session stopped."
+            : "because the lid is closed, no visible display monitors remain, and all remaining sessions are soft-locked.";
 
     private static string DescribeEmergencyHibernationTemperature(
         int observedTemperatureCelsius,
@@ -1540,6 +1598,16 @@ internal sealed class LidGuardRuntimeCoordinator
         string SessionStateReason);
 
     private readonly record struct CleanupResult(LidGuardPipeResponse Response, int RemovedSessionCount);
+
+    private readonly record struct ClosedLidPolicyApplicability(
+        bool IsApplicable,
+        LidSwitchState LidSwitchState,
+        int VisibleDisplayMonitorCount,
+        string Message);
+
+    private readonly record struct CurrentLidAndDisplayState(
+        LidSwitchState LidSwitchState,
+        int VisibleDisplayMonitorCount);
 
     private readonly record struct WatchedProcessResolution(
         int ProcessIdentifier,

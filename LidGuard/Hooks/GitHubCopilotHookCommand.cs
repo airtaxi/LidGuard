@@ -1,7 +1,6 @@
 using LidGuard.Ipc;
 using LidGuard.Settings;
 using LidGuardLib.Commons.Hooks;
-using LidGuardLib.Commons.Power;
 using LidGuardLib.Commons.Sessions;
 using LidGuardLib.Commons.Settings;
 using LidGuardLib.Hooks;
@@ -182,9 +181,10 @@ internal static class GitHubCopilotHookCommand
             return 0;
         }
 
-        if (response.LidSwitchState != LidSwitchState.Closed)
+        if (!ClosedLidPolicyStatus.IsActive(response))
         {
-            GitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook left ask_user to Copilot because the lid state is {response.LidSwitchState}.");
+            GitHubCopilotHookEventLog.AppendMessage(
+                $"LidGuard GitHub Copilot hook left ask_user to Copilot because {ClosedLidPolicyStatus.DescribeInactiveReason(response)}.");
             return 0;
         }
 
@@ -201,9 +201,10 @@ internal static class GitHubCopilotHookCommand
             return 0;
         }
 
-        if (response.LidSwitchState != LidSwitchState.Closed)
+        if (!ClosedLidPolicyStatus.IsActive(response))
         {
-            GitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook left permissionRequest to Copilot because the lid state is {response.LidSwitchState}.");
+            GitHubCopilotHookEventLog.AppendMessage(
+                $"LidGuard GitHub Copilot hook left permissionRequest to Copilot because {ClosedLidPolicyStatus.DescribeInactiveReason(response)}.");
             return 0;
         }
 

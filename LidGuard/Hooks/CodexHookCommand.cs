@@ -2,7 +2,6 @@ using System.Text.Json;
 using LidGuard.Ipc;
 using LidGuard.Settings;
 using LidGuardLib.Commons.Hooks;
-using LidGuardLib.Commons.Power;
 using LidGuardLib.Commons.Sessions;
 using LidGuardLib.Commons.Settings;
 using LidGuardLib.Hooks;
@@ -88,9 +87,10 @@ internal static class CodexHookCommand
             return 0;
         }
 
-        if (response.LidSwitchState != LidSwitchState.Closed)
+        if (!ClosedLidPolicyStatus.IsActive(response))
         {
-            CodexHookEventLog.AppendMessage($"LidGuard Codex hook left PermissionRequest to Codex because the lid state is {response.LidSwitchState}.");
+            CodexHookEventLog.AppendMessage(
+                $"LidGuard Codex hook left PermissionRequest to Codex because {ClosedLidPolicyStatus.DescribeInactiveReason(response)}.");
             return 0;
         }
 

@@ -225,6 +225,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
                 RuntimeMessage = response.Message,
                 ActiveSessionCount = response.ActiveSessionCount,
                 LidSwitchState = LidSwitchState.Unknown,
+                VisibleDisplayMonitorCount = response.VisibleDisplayMonitorCount,
                 Sessions = []
             };
         }
@@ -240,6 +241,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             RuntimeSettings = LidGuardSettings.Normalize(response.Settings),
             ActiveSessionCount = response.ActiveSessionCount,
             LidSwitchState = response.LidSwitchState,
+            VisibleDisplayMonitorCount = response.VisibleDisplayMonitorCount,
             Sessions = response.Sessions
         };
     }

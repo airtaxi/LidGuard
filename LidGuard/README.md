@@ -60,9 +60,12 @@ Running `settings` with no options starts interactive editing. Emergency Hiberna
 ## Diagnostics
 
 ```powershell
+lidguard current-monitor-count
 lidguard current-temperature
 lidguard current-temperature --temperature-mode high
 ```
+
+`current-monitor-count` prints the current desktop-visible monitor count using the same Windows `SM_CMONITORS` check LidGuard uses for closed-lid suspend policy decisions.
 
 `current-temperature` prints the current recognized system thermal-zone temperature in Celsius using the selected aggregation mode. Use `--temperature-mode default|low|average|high` to reuse the saved setting or override it for one command. When the settings file does not exist yet, `default` falls back to LidGuard's `Average` headless runtime default.
 

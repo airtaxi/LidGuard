@@ -160,6 +160,13 @@ internal static class LidGuardHelpContent
             [],
             [
                 new LidGuardHelpCommand(
+                    $"{commandDisplayName} {LidGuardPipeCommands.CurrentMonitorCount}",
+                    "Report the current desktop-visible monitor count using the same Windows monitor visibility check LidGuard uses for closed-lid policy decisions.",
+                    [],
+                    [
+                        "This uses `GetSystemMetrics(SM_CMONITORS)` and reports the number of monitors currently attached to the desktop."
+                    ]),
+                new LidGuardHelpCommand(
                     $"{commandDisplayName} {LidGuardPipeCommands.CurrentTemperature} [--temperature-mode default|low|average|high]",
                     "Report the current recognized system thermal-zone temperature in Celsius using the selected aggregation mode.",
                     [

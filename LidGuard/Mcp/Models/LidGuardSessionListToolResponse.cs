@@ -24,6 +24,9 @@ public sealed class LidGuardSessionListToolResponse
     [Description("The current lid switch state reported by the runtime.")]
     public LidSwitchState LidSwitchState { get; init; } = LidSwitchState.Unknown;
 
+    [Description("The number of visible display monitors currently attached to the desktop.")]
+    public int VisibleDisplayMonitorCount { get; init; }
+
     [Description("The active LidGuard sessions currently tracked by the runtime.")]
     public LidGuardSessionStatus[] Sessions { get; init; } = [];
 }

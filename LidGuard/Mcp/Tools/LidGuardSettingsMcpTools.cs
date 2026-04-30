@@ -53,6 +53,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
             RuntimeMessage = result.Value.RuntimeMessage,
             ActiveSessionCount = result.Value.ActiveSessionCount,
             LidSwitchState = result.Value.LidSwitchState,
+            VisibleDisplayMonitorCount = result.Value.VisibleDisplayMonitorCount,
             Sessions = result.Value.Sessions
         };
     }

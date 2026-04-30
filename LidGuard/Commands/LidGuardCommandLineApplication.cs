@@ -55,6 +55,7 @@ internal static class LidGuardCommandLineApplication
             LidGuardPipeCommands.RemoveSession => await SendRemoveSessionAsync(options),
             LidGuardPipeCommands.Status => await SendStatusAsync(),
             LidGuardPipeCommands.CleanupOrphans => await SendCleanupOrphansAsync(),
+            LidGuardPipeCommands.CurrentMonitorCount => WriteCurrentMonitorCount(runtimePlatform),
             LidGuardPipeCommands.CurrentTemperature => WriteCurrentTemperature(options),
             LidGuardPipeCommands.Settings => await SendSettingsAsync(options, runtimePlatform),
             LidGuardPipeCommands.PreviewSystemSound => await PreviewSystemSoundAsync(options, runtimePlatform),
@@ -106,7 +107,8 @@ internal static class LidGuardCommandLineApplication
                 serviceSet.LidActionPolicyController,
                 serviceSet.SystemSuspendService,
                 serviceSet.PostStopSuspendSoundPlayer,
-                serviceSet.LidStateSource);
+                serviceSet.LidStateSource,
+                serviceSet.VisibleDisplayMonitorCountProvider);
 
             var pipeServer = new LidGuardPipeServer(runtimeCoordinator);
 
@@ -285,6 +287,21 @@ internal static class LidGuardCommandLineApplication
 
         Console.WriteLine(
             $"Current recognized system temperature using {DescribeEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode)} mode: {currentTemperatureCelsius.Value} Celsius");
+        return 0;
+    }
+
+    private static int WriteCurrentMonitorCount(ILidGuardRuntimePlatform runtimePlatform)
+    {
+        var serviceSetResult = runtimePlatform.CreateRuntimeServiceSet();
+        if (!serviceSetResult.Succeeded)
+        {
+            Console.Error.WriteLine(serviceSetResult.Message);
+            return 1;
+        }
+
+        using var serviceSet = serviceSetResult.Value;
+        var visibleDisplayMonitorCount = serviceSet.VisibleDisplayMonitorCountProvider.GetVisibleDisplayMonitorCount();
+        Console.WriteLine($"Current desktop-visible monitor count: {visibleDisplayMonitorCount}");
         return 0;
     }
 
@@ -1313,6 +1330,7 @@ internal static class LidGuardCommandLineApplication
         if (!string.IsNullOrWhiteSpace(response.Message)) Console.WriteLine(response.Message);
         Console.WriteLine($"Active sessions: {response.ActiveSessionCount}");
         Console.WriteLine($"Lid state: {response.LidSwitchState}");
+        Console.WriteLine($"Visible display monitor count: {response.VisibleDisplayMonitorCount}");
 
         if (includeSessions)
         {

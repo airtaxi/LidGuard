@@ -24,5 +24,7 @@ public sealed class LidGuardControlSnapshot
 
     public LidSwitchState LidSwitchState { get; init; } = LidSwitchState.Unknown;
 
+    public int VisibleDisplayMonitorCount { get; init; }
+
     public LidGuardSessionStatus[] Sessions { get; init; } = [];
 }

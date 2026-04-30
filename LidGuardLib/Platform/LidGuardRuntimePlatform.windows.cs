@@ -30,7 +30,8 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
             new LidActionPolicyController(lidActionService),
             new SystemSuspendService(),
             postStopSuspendSoundPlayerResult.Value,
-            lidStateSource);
+            lidStateSource,
+            new VisibleDisplayMonitorCountProvider());
 
         return LidGuardOperationResult<LidGuardRuntimeServiceSet>.Success(serviceSet);
     }

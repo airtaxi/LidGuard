@@ -2,7 +2,6 @@ using System.Text.Json;
 using LidGuard.Ipc;
 using LidGuard.Settings;
 using LidGuardLib.Commons.Hooks;
-using LidGuardLib.Commons.Power;
 using LidGuardLib.Commons.Sessions;
 using LidGuardLib.Commons.Settings;
 using LidGuardLib.Hooks;
@@ -95,9 +94,10 @@ internal static class ClaudeHookCommand
             return 0;
         }
 
-        if (response.LidSwitchState != LidSwitchState.Closed)
+        if (!ClosedLidPolicyStatus.IsActive(response))
         {
-            ClaudeHookEventLog.AppendMessage($"LidGuard Claude hook left PermissionRequest to Claude because the lid state is {response.LidSwitchState}.");
+            ClaudeHookEventLog.AppendMessage(
+                $"LidGuard Claude hook left PermissionRequest to Claude because {ClosedLidPolicyStatus.DescribeInactiveReason(response)}.");
             return 0;
         }
 
@@ -114,9 +114,10 @@ internal static class ClaudeHookCommand
             return 0;
         }
 
-        if (response.LidSwitchState != LidSwitchState.Closed)
+        if (!ClosedLidPolicyStatus.IsActive(response))
         {
-            ClaudeHookEventLog.AppendMessage($"LidGuard Claude hook left Elicitation to Claude because the lid state is {response.LidSwitchState}.");
+            ClaudeHookEventLog.AppendMessage(
+                $"LidGuard Claude hook left Elicitation to Claude because {ClosedLidPolicyStatus.DescribeInactiveReason(response)}.");
             return 0;
         }
 

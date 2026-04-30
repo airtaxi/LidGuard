@@ -49,7 +49,7 @@ internal sealed class EmergencyHibernationThermalMonitor(
                 var emergencyHibernationThermalMonitorState = emergencyHibernationThermalMonitorStateProvider();
                 if (!emergencyHibernationThermalMonitorState.ProtectionApplied) continue;
                 if (!emergencyHibernationThermalMonitorState.EmergencyHibernationOnHighTemperature) continue;
-                if (emergencyHibernationThermalMonitorState.LidSwitchState != LidSwitchState.Closed) continue;
+                if (!emergencyHibernationThermalMonitorState.ClosedLidPolicyActive) continue;
                 if (!OperatingSystem.IsWindowsVersionAtLeast(6, 1)) continue;
 
                 var emergencyHibernationTemperatureCelsius = LidGuardSettings.ClampEmergencyHibernationTemperatureCelsius(
@@ -89,7 +89,9 @@ internal sealed class EmergencyHibernationThermalMonitor(
 internal readonly record struct EmergencyHibernationThermalMonitorState(
     bool ProtectionApplied,
     bool EmergencyHibernationOnHighTemperature,
+    bool ClosedLidPolicyActive,
     LidSwitchState LidSwitchState,
+    int VisibleDisplayMonitorCount,
     EmergencyHibernationTemperatureMode TemperatureMode,
     int EmergencyHibernationTemperatureCelsius);
 
