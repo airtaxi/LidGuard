@@ -561,46 +561,11 @@ lidguard mcp-server
 
 ## 남은 작업
 
-Windows CLI hook 수신 경로는 Codex, Claude Code, GitHub Copilot CLI까지 구현되어 있다. 남은 작업은 이제 resilience와 검증에 더 가깝다.
+Windows CLI hook 수신 경로는 Codex, Claude Code, GitHub Copilot CLI까지 구현되어 있다. 남은 작업은 이제 lifecycle polish와 자동 회귀 검증에 더 가깝다.
 
-- Crash recovery를 위한 persistent pending backup state를 추가한다. 강제 runtime crash가 활성 전원 계획을 `DoNothing`에 고정한 채 남기면 안 되므로 추천되는 즉시 다음 작업이다.
 - Runtime idle shutdown lifecycle 정책을 추가한다.
-- 최신 Codex CLI와 Codex Desktop/App에서 Codex hook 동작을 검증한다.
-- 최종 provider 연동 전에 분석한 Claude Code hook stdout 동작을 최신 배포판에서도 다시 검증한다.
-- 최종 provider 연동 전에 문서로 확인한 GitHub Copilot CLI hook 출력 동작을 최신 CLI 빌드에서도 다시 검증한다.
-- 최신 GitHub Copilot CLI 빌드에서 user-level `~/.copilot/hooks/` 로딩과 inline `~/.copilot/settings.json` hook 조합 동작을 다시 검증한다.
-- GitHub Copilot CLI hook에서 parent process id를 얻을 수 있는지 검증한다.
-- Claude Code Windows hook에서 parent process id를 얻을 수 있는지 검증한다.
-- GitHub Copilot CLI session id 안정성을 검증한다.
-- `PowerReadACValueIndex`/`PowerReadDCValueIndex`가 일반 사용자 권한에서 읽기/쓰기가 되는지 검증한다.
-- Group Policy 또는 MDM으로 전원 설정이 막힌 경우의 fallback 메시지를 검증한다.
+- 이미 수동 테스트가 완료된 provider/Windows 동작에 대한 자동 회귀 테스트 또는 검증 스크립트를 추가한다. 대상은 최신 Codex hook 동작, Claude Code hook stdout 동작, GitHub Copilot CLI hook 출력 동작, GitHub Copilot CLI user-level `~/.copilot/hooks/` 로딩과 inline `~/.copilot/settings.json` hook 조합, GitHub Copilot CLI session id 안정성, 일반 사용자 권한의 `PowerReadACValueIndex`/`PowerReadDCValueIndex` 읽기/쓰기 동작, Group Policy 또는 MDM으로 전원 설정이 막힌 경우의 fallback 메시지다.
 - Codex가 향후 notification 또는 기계가 읽을 수 있는 pending-state hook 표면을 제공할 때만 direct Codex soft-lock 지원을 추가한다.
-
-## 완료된 작업
-
-1. ~~Windows hook-facing CLI project 추가.~~
-2. ~~Windows-only process/power 동작을 `LidGuardLib`에 유지.~~
-3. ~~CLI `start` 요청을 `LidGuardSessionStartRequest`로 정규화.~~
-4. ~~CLI `stop` 요청을 `LidGuardSessionStopRequest`로 정규화.~~
-5. ~~`--parent-pid`가 없을 때 hook working directory와 `ICommandLineProcessResolver` 사용.~~
-6. ~~Local/headless orchestration path부터 구현.~~
-7. ~~Headless runtime 설정 로딩 추가.~~
-8. ~~`LidGuardLib.Commons`, `LidGuardLib`, `LidGuard`를 포함하는 solution 파일 추가.~~
-9. ~~Codex hook parsing, snippet output, managed config install/remove/status helper 추가.~~
-10. ~~Codex `Stop`을 stop 처리로 매핑하고, `SessionEnd`는 선택적 호환 stop trigger로 유지하며, `PermissionRequest`를 덮개 닫힘 상태에서만 설정 기반 allow/deny 결정으로 처리.~~
-11. ~~Claude hook parsing, snippet output, managed `settings.json` install/remove/status helper 추가.~~
-12. ~~Claude `Stop`, `StopFailure`, `SessionEnd`를 stop 처리로 매핑하고, `PermissionRequest`는 덮개 닫힘 상태에서만 설정 기반 allow/deny 결정으로 처리.~~
-13. ~~LidGuard 설정을 조회하고 여러 설정을 한 번에 바꿀 수 있는 stdio MCP 서버 추가.~~
-14. ~~닫힌 덮개 상태의 MCP elicitation 요청을 취소하는 Claude `Elicitation` hook guard 추가.~~
-15. ~~마지막 세션 종료 시 덮개가 닫혀 있으면 항상 suspend를 요청하되, Sleep/Hibernate 모드 선택은 유지.~~
-16. ~~post-stop suspend 지연 시간을 설정 가능하게 만들고, 기본값을 10초로 두며 `0`은 즉시 suspend로 처리.~~
-17. ~~SystemSounds 또는 `.wav`를 사용하는 선택적 post-stop suspend 완료 소리를 추가하고, suspend 전에 그 재생이 끝날 때까지 기다리도록 구현.~~
-18. ~~지원되는 SystemSounds 이름을 미리 들어볼 수 있는 `preview-system-sound` CLI 커맨드 추가.~~
-19. ~~GitHub Copilot CLI hook parsing, snippet output, managed global hook install/remove/status helper 추가.~~
-20. ~~GitHub Copilot CLI `userPromptSubmitted`와 `agentStop`을 start/stop 처리로 매핑하고, `permissionRequest`를 `interrupt: true`가 포함된 closed-lid-only settings-driven allow/deny 결정으로 처리하며, closed-lid `preToolUse` `ask_user`를 deny.~~
-21. ~~Provider notification을 기반으로 Claude/GitHub Copilot soft-lock을 runtime 주도로 오케스트레이션하고, 세션별 soft-lock 상태와 activity 기반 해제를 추가.~~
-22. ~~현재 Windows가 인식하는 system thermal-zone 온도를 출력하는 `current-temperature` CLI 커맨드 추가.~~
-23. ~~Low/Average/High Emergency Hibernation 온도 기준 선택과 `current-temperature` 기준 override 추가.~~
 
 ## 설계 제약
 

@@ -556,46 +556,11 @@ lidguard mcp-server
 
 ## Missing Work
 
-The Windows CLI hook receiving path is implemented for Codex, Claude Code, and GitHub Copilot CLI. Remaining work is now focused on resilience and verification.
+The Windows CLI hook receiving path is implemented for Codex, Claude Code, and GitHub Copilot CLI. Remaining work is now focused on lifecycle polish and automated regression coverage.
 
-- Add persistent pending backup state for crash recovery. This is the recommended immediate next task because a forced runtime crash must not leave the active power plan stuck at `DoNothing`.
 - Add runtime lifecycle policy for idle shutdown.
-- Verify Codex hook behavior on the latest Codex CLI and Codex Desktop/App.
-- Verify the analyzed Claude Code hook stdout behavior against the latest released Claude Code build before finalizing provider integration.
-- Verify the documented GitHub Copilot CLI hook output behavior against the latest CLI build before finalizing provider integration.
-- Verify user-level `~/.copilot/hooks/` loading and inline `~/.copilot/settings.json` hook composition against the latest GitHub Copilot CLI build.
-- Verify parent process id availability for GitHub Copilot CLI hooks.
-- Verify parent process id availability for Claude Code Windows hooks.
-- Verify GitHub Copilot CLI session id stability.
-- Verify `PowerReadACValueIndex`/`PowerReadDCValueIndex` read/write behavior under normal user permissions.
-- Verify Group Policy or MDM blocked power settings and fallback messages.
+- Add automated regression tests or verification scripts for the already manually verified provider/Windows behavior: latest Codex hook behavior, Claude Code hook stdout behavior, GitHub Copilot CLI hook output behavior, GitHub Copilot CLI user-level `~/.copilot/hooks/` loading and inline `~/.copilot/settings.json` hook composition, GitHub Copilot CLI session id stability, `PowerReadACValueIndex`/`PowerReadDCValueIndex` read/write behavior under normal user permissions, and Group Policy or MDM blocked power setting fallback messages.
 - Add direct Codex soft-lock support only if Codex later exposes a notification or machine-readable pending-state hook surface.
-
-## Completed Work
-
-1. ~~Add a Windows hook-facing CLI project.~~
-2. ~~Keep Windows-only process and power behavior in `LidGuardLib`.~~
-3. ~~Normalize CLI `start` requests into `LidGuardSessionStartRequest`.~~
-4. ~~Normalize CLI `stop` requests into `LidGuardSessionStopRequest`.~~
-5. ~~When `--parent-pid` is missing, use `ICommandLineProcessResolver` with the hook working directory.~~
-6. ~~Start with a local/headless orchestration path.~~
-7. ~~Add settings loading for the headless runtime.~~
-8. ~~Add a solution file including `LidGuardLib.Commons`, `LidGuardLib`, and `LidGuard`.~~
-9. ~~Add Codex hook parsing, snippet output, and managed config install/remove/status helpers.~~
-10. ~~Map Codex `Stop` to stop handling, keep `SessionEnd` as an optional compatibility stop trigger, and handle `PermissionRequest` as a closed-lid-only settings-driven allow/deny decision.~~
-11. ~~Add Claude hook parsing, snippet output, and managed `settings.json` install/remove/status helpers.~~
-12. ~~Map Claude `Stop`, `StopFailure`, and `SessionEnd` to stop handling, while handling `PermissionRequest` as a closed-lid-only settings-driven allow/deny decision.~~
-13. ~~Add a stdio MCP server that can read LidGuard settings and update multiple settings in one request.~~
-14. ~~Add a Claude `Elicitation` hook guard that cancels closed-lid MCP elicitation requests.~~
-15. ~~Always request suspend after the last session stops while the lid is closed, while keeping Sleep/Hibernate mode selectable.~~
-16. ~~Add a configurable post-stop suspend delay with a default of 10 seconds and `0` for immediate suspend.~~
-17. ~~Add an optional post-stop suspend completion sound with SystemSounds or `.wav` support, and wait for it before suspend.~~
-18. ~~Add a `preview-system-sound` CLI command for auditioning supported SystemSounds names.~~
-19. ~~Add GitHub Copilot CLI hook parsing, snippet output, and managed global hook install/remove/status helpers.~~
-20. ~~Map GitHub Copilot CLI `userPromptSubmitted` and `agentStop` to start/stop handling, handle `permissionRequest` as a closed-lid-only settings-driven allow/deny decision with `interrupt: true`, and deny closed-lid `preToolUse` `ask_user`.~~
-21. ~~Add runtime-led Claude/GitHub Copilot soft-lock orchestration driven by provider notifications, with per-session soft-lock state and activity-based clearing.~~
-22. ~~Add a `current-temperature` CLI command for reporting the current Windows-recognized system thermal-zone temperature.~~
-23. ~~Add Emergency Hibernation temperature mode selection with Low/Average/High settings and a `current-temperature` mode override.~~
 
 ## Design Constraints
 
