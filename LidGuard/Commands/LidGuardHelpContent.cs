@@ -16,6 +16,7 @@ internal static class LidGuardHelpContent
             CreateUsageSection(commandDisplayName),
             CreateSessionControlSection(commandDisplayName),
             CreateSettingsAndSuspendSection(commandDisplayName, supportedPostStopSuspendSystemSounds),
+            CreateDiagnosticsSection(commandDisplayName),
             CreateHookIntegrationSection(commandDisplayName),
             CreateMcpIntegrationSection(commandDisplayName),
             CreateManagedAndInternalCommandsSection(commandDisplayName),
@@ -147,6 +148,22 @@ internal static class LidGuardHelpContent
                         new LidGuardHelpOption("--name <sound>", "Required. Allowed values: Asterisk, Beep, Exclamation, Hand, or Question.")
                     ],
                     [])
+            ]);
+    }
+
+    private static LidGuardHelpSection CreateDiagnosticsSection(string commandDisplayName)
+    {
+        return new LidGuardHelpSection(
+            "Diagnostics",
+            [],
+            [
+                new LidGuardHelpCommand(
+                    $"{commandDisplayName} {LidGuardPipeCommands.CurrentTemperature}",
+                    "Report the current highest system thermal-zone temperature recognized by Windows in Celsius.",
+                    [],
+                    [
+                        "If Windows does not currently expose thermal-zone temperature data, the command reports that the value is unavailable."
+                    ])
             ]);
     }
 

@@ -56,6 +56,14 @@ lidguard preview-system-sound --name Asterisk
 
 Running `settings` with no options starts interactive editing. Use `remove-pre-suspend-webhook` to clear a configured webhook URL.
 
+## Diagnostics
+
+```powershell
+lidguard current-temperature
+```
+
+`current-temperature` prints the highest system thermal-zone temperature currently recognized by Windows in Celsius, or reports when the value is unavailable.
+
 ## Hook Integration
 
 ```powershell

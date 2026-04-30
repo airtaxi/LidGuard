@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.Versioning;
 using LidGuard.Control;
 using LidGuard.Hooks;
 using LidGuard.Ipc;
@@ -10,6 +11,7 @@ using LidGuardLib.Commons.Power;
 using LidGuardLib.Commons.Sessions;
 using LidGuardLib.Commons.Settings;
 using LidGuardLib.Platform;
+using LidGuardLib.Power;
 
 namespace LidGuard.Commands;
 
@@ -53,6 +55,7 @@ internal static class LidGuardCommandLineApplication
             LidGuardPipeCommands.RemoveSession => await SendRemoveSessionAsync(options),
             LidGuardPipeCommands.Status => await SendStatusAsync(),
             LidGuardPipeCommands.CleanupOrphans => await SendCleanupOrphansAsync(),
+            LidGuardPipeCommands.CurrentTemperature => WriteCurrentTemperature(),
             LidGuardPipeCommands.Settings => await SendSettingsAsync(options, runtimePlatform),
             LidGuardPipeCommands.PreviewSystemSound => await PreviewSystemSoundAsync(options, runtimePlatform),
             LidGuardPipeCommands.ClaudeHooks => ClaudeHookCommand.WriteHookSnippet(options),
@@ -258,6 +261,25 @@ internal static class LidGuardCommandLineApplication
         return WriteResponse(response);
     }
 
+    private static int WriteCurrentTemperature()
+    {
+        if (!OperatingSystem.IsWindowsVersionAtLeast(6, 1))
+        {
+            Console.WriteLine("Current recognized system temperature is unavailable on this platform.");
+            return 0;
+        }
+
+        var currentTemperatureCelsius = GetCurrentTemperatureCelsius();
+        if (!currentTemperatureCelsius.HasValue)
+        {
+            Console.WriteLine("Current recognized system temperature is unavailable from Windows thermal-zone information.");
+            return 0;
+        }
+
+        Console.WriteLine($"Current recognized system temperature: {currentTemperatureCelsius.Value} Celsius");
+        return 0;
+    }
+
     private static async Task<int> SendSettingsAsync(IReadOnlyDictionary<string, string> options, ILidGuardRuntimePlatform runtimePlatform)
     {
         if (!LidGuardSettingsStore.TryLoadOrCreate(out var currentSettings, out var loadMessage))
@@ -429,6 +451,9 @@ internal static class LidGuardCommandLineApplication
         Console.WriteLine($"Played system sound: {normalizedSystemSoundName}");
         return 0;
     }
+
+    [SupportedOSPlatform("windows6.1")]
+    private static int? GetCurrentTemperatureCelsius() => SystemThermalInformation.GetSystemThermalInformation();
 
     private static bool TryCreateSessionRequest(
         IReadOnlyDictionary<string, string> options,
