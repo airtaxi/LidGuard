@@ -276,11 +276,12 @@ internal static class LidGuardHelpContent
                     ]),
                 new LidGuardHelpCommand(
                     $"{commandDisplayName} mcp-install [--provider codex|claude|copilot|all]",
-                    "Register the managed stdio MCP server named lidguard with the selected provider CLI.",
+                    "Register or refresh the managed stdio MCP server named lidguard with the selected provider CLI.",
                     [
                         new LidGuardHelpOption("--provider <provider>", "Optional. Allowed values: codex, claude, copilot, or all. When omitted, LidGuard prompts for a provider.")
                     ],
                     [
+                        "If an existing managed LidGuard MCP server is found, mcp-install removes it first and then installs the current command.",
                         "With --provider all, only providers whose default configuration roots already exist are processed. Missing providers are reported and skipped."
                     ]),
                 new LidGuardHelpCommand(

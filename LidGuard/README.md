@@ -97,7 +97,7 @@ lidguard provider-mcp-install --config "<json-path>" --provider-name "<name>"
 lidguard provider-mcp-remove --config "<json-path>"
 ```
 
-If `--provider` is omitted on `mcp-status`, `mcp-install`, or `mcp-remove`, LidGuard prompts for a provider. With `--provider all`, LidGuard only processes providers whose default configuration roots already exist and reports missing providers as skipped.
+If `--provider` is omitted on `mcp-status`, `mcp-install`, or `mcp-remove`, LidGuard prompts for a provider. Re-running `mcp-install` refreshes an existing managed LidGuard MCP server by removing it first and then installing the current command. With `--provider all`, LidGuard only processes providers whose default configuration roots already exist and reports missing providers as skipped.
 
 ## Managed / Internal Commands
 

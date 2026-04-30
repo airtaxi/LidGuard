@@ -9,6 +9,23 @@ internal static class McpManagementCommand
 {
     private const string ManagedMcpServerName = "lidguard";
 
+    private readonly record struct ManagedMcpInspectionResult(
+        AgentProvider Provider,
+        string ConfigurationFilePath,
+        bool ConfigurationFileExists,
+        bool HasProviderCli,
+        string ProviderCliDisplayText,
+        bool HasNamedServerEntry,
+        bool MatchesManagedMcpServer,
+        string ServerType,
+        string ServerCommand,
+        string ServerArguments,
+        string ServerUrl,
+        string Message)
+    {
+        public bool IsManagedMcpServerInstalled => HasNamedServerEntry && MatchesManagedMcpServer;
+    }
+
     public static int WriteMcpStatus(IReadOnlyDictionary<string, string> options)
     {
         if (!ManagedProviderSelection.TrySelectProviders(options, "Show MCP server status for provider", out var selectedProviders, out var message))
@@ -31,13 +48,9 @@ internal static class McpManagementCommand
         {
             if (providers.Count > 1) Console.WriteLine($"{ManagedProviderSelection.GetProviderDisplayName(provider)} MCP status:");
 
-            var providerExitCode = provider switch
-            {
-                AgentProvider.Codex => WriteCodexMcpStatus(),
-                AgentProvider.Claude => WriteClaudeMcpStatus(),
-                AgentProvider.GitHubCopilot => WriteGitHubCopilotMcpStatus(),
-                _ => WriteUnsupportedProvider()
-            };
+            var providerExitCode = TryInspectProviderMcp(provider, out var inspectionResult)
+                ? WriteProviderMcpStatus(inspectionResult)
+                : WriteUnsupportedProvider();
 
             if (providerExitCode != 0) exitCode = providerExitCode;
             if (providers.Count > 1) Console.WriteLine();
@@ -74,7 +87,9 @@ internal static class McpManagementCommand
         foreach (var provider in providers)
         {
             if (providers.Count > 1) Console.WriteLine($"Installing {ManagedProviderSelection.GetProviderDisplayName(provider)} MCP server...");
-            var providerExitCode = InstallProviderMcp(provider, managedExecutableReference);
+            var providerExitCode = TryInspectProviderMcp(provider, out var inspectionResult)
+                ? InstallProviderMcp(provider, managedExecutableReference, inspectionResult)
+                : WriteUnsupportedProvider();
             if (providerExitCode != 0) exitCode = providerExitCode;
             if (providers.Count > 1) Console.WriteLine();
         }
@@ -133,21 +148,43 @@ internal static class McpManagementCommand
         };
     }
 
-    private static string GetJsonStatusMessage(
+    private static string GetStatusMessage(
         string configurationFilePath,
         bool configurationFileExists,
         bool hasServerEntry,
-        bool containsMcpServerCommand,
+        bool matchesManagedMcpServer,
         string parseMessage)
     {
         if (!configurationFileExists) return $"Configuration file does not exist: {configurationFilePath}";
         if (!string.IsNullOrWhiteSpace(parseMessage)) return parseMessage;
         if (!hasServerEntry) return $"No MCP server named '{ManagedMcpServerName}' was found.";
-        if (!containsMcpServerCommand) return $"The MCP server '{ManagedMcpServerName}' exists but does not point at '{LidGuardMcpServerCommand.CommandName}'.";
+        if (!matchesManagedMcpServer) return $"The MCP server '{ManagedMcpServerName}' exists but does not point at '{LidGuardMcpServerCommand.CommandName}'.";
         return "LidGuard MCP server is registered.";
     }
 
-    private static int InstallProviderMcp(AgentProvider provider, string managedExecutableReference)
+    private static int InstallProviderMcp(
+        AgentProvider provider,
+        string managedExecutableReference,
+        ManagedMcpInspectionResult inspectionResult)
+    {
+        if (inspectionResult.IsManagedMcpServerInstalled)
+        {
+            Console.WriteLine(
+                $"Existing managed LidGuard MCP server found for {ManagedProviderSelection.GetProviderDisplayName(provider)}. Refreshing registration...");
+
+            var removeExitCode = RemoveProviderMcp(provider);
+            if (removeExitCode != 0)
+            {
+                Console.Error.WriteLine(
+                    $"Skipping {ManagedProviderSelection.GetProviderDisplayName(provider)} MCP install because removing the existing managed registration failed.");
+                return removeExitCode;
+            }
+        }
+
+        return AddProviderMcp(provider, managedExecutableReference);
+    }
+
+    private static int AddProviderMcp(AgentProvider provider, string managedExecutableReference)
     {
         if (!ManagedProviderCliResolver.TryResolveProviderCliExecutablePath(provider, out var providerCliExecutablePath, out var message))
         {
@@ -183,6 +220,93 @@ internal static class McpManagementCommand
         return ManagedProviderCliResolver.RunProviderProcess(providerCliExecutablePath, processArguments);
     }
 
+    private static ManagedMcpInspectionResult InspectCodexMcp()
+    {
+        var configurationFilePath = CodexHookInstaller.GetDefaultCodexConfigurationFilePath();
+        var configurationFileExists = File.Exists(configurationFilePath);
+        ManagedProviderCliResolver.TryResolveProviderCliDisplayText(AgentProvider.Codex, out var hasProviderCli, out var providerCliDisplayText);
+        var hasServerEntry = false;
+        var matchesManagedMcpServer = false;
+        var message = string.Empty;
+
+        if (configurationFileExists)
+        {
+            var configurationContent = File.ReadAllText(configurationFilePath);
+            if (TryGetCodexMcpServerSectionContent(configurationContent, out var sectionContent))
+            {
+                hasServerEntry = true;
+                matchesManagedMcpServer = sectionContent.Contains(LidGuardMcpServerCommand.CommandName, StringComparison.OrdinalIgnoreCase);
+            }
+            else
+            {
+                message = $"No MCP server named '{ManagedMcpServerName}' was found.";
+            }
+        }
+        else
+        {
+            message = $"Configuration file does not exist: {configurationFilePath}";
+        }
+
+        return new ManagedMcpInspectionResult(
+            AgentProvider.Codex,
+            configurationFilePath,
+            configurationFileExists,
+            hasProviderCli,
+            providerCliDisplayText,
+            hasServerEntry,
+            matchesManagedMcpServer,
+            string.Empty,
+            string.Empty,
+            "<none>",
+            string.Empty,
+            GetStatusMessage(configurationFilePath, configurationFileExists, hasServerEntry, matchesManagedMcpServer, message));
+    }
+
+    private static ManagedMcpInspectionResult InspectJsonProviderMcp(
+        AgentProvider provider,
+        string configurationFilePath)
+    {
+        var configurationFileExists = File.Exists(configurationFilePath);
+        ManagedProviderCliResolver.TryResolveProviderCliDisplayText(provider, out var hasProviderCli, out var providerCliDisplayText);
+        var hasServerEntry = false;
+        var matchesManagedMcpServer = false;
+        var serverType = string.Empty;
+        var serverCommand = string.Empty;
+        var serverArguments = "<none>";
+        var serverUrl = string.Empty;
+        var message = string.Empty;
+
+        if (configurationFileExists)
+        {
+            var configurationContent = File.ReadAllText(configurationFilePath);
+            if (McpConfigurationJsonUtilities.TryGetJsonMcpServerEntry(configurationContent, ManagedMcpServerName, out var serverObject, out message))
+            {
+                hasServerEntry = true;
+                serverType = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "type");
+                serverCommand = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "command");
+                serverArguments = McpConfigurationJsonUtilities.DescribeJsonArray(serverObject, "args");
+                serverUrl = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "url");
+                matchesManagedMcpServer =
+                    serverCommand.Contains("lidguard", StringComparison.OrdinalIgnoreCase) &&
+                    serverArguments.Contains(LidGuardMcpServerCommand.CommandName, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        return new ManagedMcpInspectionResult(
+            provider,
+            configurationFilePath,
+            configurationFileExists,
+            hasProviderCli,
+            providerCliDisplayText,
+            hasServerEntry,
+            matchesManagedMcpServer,
+            serverType,
+            serverCommand,
+            serverArguments,
+            serverUrl,
+            GetStatusMessage(configurationFilePath, configurationFileExists, hasServerEntry, matchesManagedMcpServer, message));
+    }
+
     private static bool TryGetCodexMcpServerSectionContent(string configurationContent, out string sectionContent)
     {
         sectionContent = string.Empty;
@@ -212,166 +336,37 @@ internal static class McpManagementCommand
         return true;
     }
 
-    private static int WriteClaudeMcpStatus()
+    private static bool TryInspectProviderMcp(AgentProvider provider, out ManagedMcpInspectionResult inspectionResult)
     {
-        var configurationFilePath = ManagedProviderConfigurationRoots.ClaudeUserConfigurationFilePath;
-        var configurationFileExists = File.Exists(configurationFilePath);
-        ManagedProviderCliResolver.TryResolveProviderCliDisplayText(AgentProvider.Claude, out var hasProviderCli, out var providerCliDisplayText);
-        var hasServerEntry = false;
-        var containsMcpServerCommand = false;
-        var serverType = string.Empty;
-        var serverCommand = string.Empty;
-        var serverArguments = "<none>";
-        var serverUrl = string.Empty;
-        var message = string.Empty;
-
-        if (configurationFileExists)
+        inspectionResult = provider switch
         {
-            var configurationContent = File.ReadAllText(configurationFilePath);
-            if (McpConfigurationJsonUtilities.TryGetJsonMcpServerEntry(configurationContent, ManagedMcpServerName, out var serverObject, out message))
-            {
-                hasServerEntry = true;
-                serverType = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "type");
-                serverCommand = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "command");
-                serverArguments = McpConfigurationJsonUtilities.DescribeJsonArray(serverObject, "args");
-                serverUrl = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "url");
-                containsMcpServerCommand =
-                    serverCommand.Contains("lidguard", StringComparison.OrdinalIgnoreCase) &&
-                    serverArguments.Contains(LidGuardMcpServerCommand.CommandName, StringComparison.OrdinalIgnoreCase);
-            }
-        }
+            AgentProvider.Codex => InspectCodexMcp(),
+            AgentProvider.Claude => InspectJsonProviderMcp(AgentProvider.Claude, ManagedProviderConfigurationRoots.ClaudeUserConfigurationFilePath),
+            AgentProvider.GitHubCopilot => InspectJsonProviderMcp(AgentProvider.GitHubCopilot, ManagedProviderConfigurationRoots.GitHubCopilotMcpConfigurationFilePath),
+            _ => default
+        };
 
-        WriteJsonMcpStatus(
-            AgentProvider.Claude,
-            configurationFilePath,
-            configurationFileExists,
-            hasProviderCli,
-            providerCliDisplayText,
-            hasServerEntry,
-            containsMcpServerCommand,
-            serverType,
-            serverCommand,
-            serverArguments,
-            serverUrl,
-            GetJsonStatusMessage(configurationFilePath, configurationFileExists, hasServerEntry, containsMcpServerCommand, message));
-        return 0;
+        return provider is AgentProvider.Codex or AgentProvider.Claude or AgentProvider.GitHubCopilot;
     }
 
-    private static int WriteCodexMcpStatus()
-    {
-        var configurationFilePath = CodexHookInstaller.GetDefaultCodexConfigurationFilePath();
-        var configurationFileExists = File.Exists(configurationFilePath);
-        ManagedProviderCliResolver.TryResolveProviderCliDisplayText(AgentProvider.Codex, out var hasProviderCli, out var providerCliDisplayText);
-        var hasServerEntry = false;
-        var containsMcpServerCommand = false;
-        var message = string.Empty;
-
-        if (configurationFileExists)
-        {
-            var configurationContent = File.ReadAllText(configurationFilePath);
-            if (TryGetCodexMcpServerSectionContent(configurationContent, out var sectionContent))
-            {
-                hasServerEntry = true;
-                containsMcpServerCommand = sectionContent.Contains(LidGuardMcpServerCommand.CommandName, StringComparison.OrdinalIgnoreCase);
-            }
-            else
-            {
-                message = $"No MCP server named '{ManagedMcpServerName}' was found.";
-            }
-        }
-        else
-        {
-            message = $"Configuration file does not exist: {configurationFilePath}";
-        }
-
-        Console.WriteLine("MCP installation:");
-        Console.WriteLine($"  Provider: {AgentProvider.Codex}");
-        Console.WriteLine($"  Installed: {hasServerEntry}");
-        Console.WriteLine($"  Config: {configurationFilePath}");
-        Console.WriteLine($"  Config exists: {configurationFileExists}");
-        Console.WriteLine($"  CLI available: {hasProviderCli}");
-        Console.WriteLine($"  CLI: {providerCliDisplayText}");
-        Console.WriteLine($"  Server name: {ManagedMcpServerName}");
-        Console.WriteLine($"  Managed server entry: {hasServerEntry}");
-        Console.WriteLine($"  Contains mcp-server command: {containsMcpServerCommand}");
-        Console.WriteLine($"  Message: {GetJsonStatusMessage(configurationFilePath, configurationFileExists, hasServerEntry, containsMcpServerCommand, message)}");
-        return 0;
-    }
-
-    private static int WriteGitHubCopilotMcpStatus()
-    {
-        var configurationFilePath = ManagedProviderConfigurationRoots.GitHubCopilotMcpConfigurationFilePath;
-        var configurationFileExists = File.Exists(configurationFilePath);
-        ManagedProviderCliResolver.TryResolveProviderCliDisplayText(AgentProvider.GitHubCopilot, out var hasProviderCli, out var providerCliDisplayText);
-        var hasServerEntry = false;
-        var containsMcpServerCommand = false;
-        var serverType = string.Empty;
-        var serverCommand = string.Empty;
-        var serverArguments = "<none>";
-        var serverUrl = string.Empty;
-        var message = string.Empty;
-
-        if (configurationFileExists)
-        {
-            var configurationContent = File.ReadAllText(configurationFilePath);
-            if (McpConfigurationJsonUtilities.TryGetJsonMcpServerEntry(configurationContent, ManagedMcpServerName, out var serverObject, out message))
-            {
-                hasServerEntry = true;
-                serverType = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "type");
-                serverCommand = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "command");
-                serverArguments = McpConfigurationJsonUtilities.DescribeJsonArray(serverObject, "args");
-                serverUrl = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "url");
-                containsMcpServerCommand =
-                    serverCommand.Contains("lidguard", StringComparison.OrdinalIgnoreCase) &&
-                    serverArguments.Contains(LidGuardMcpServerCommand.CommandName, StringComparison.OrdinalIgnoreCase);
-            }
-        }
-
-        WriteJsonMcpStatus(
-            AgentProvider.GitHubCopilot,
-            configurationFilePath,
-            configurationFileExists,
-            hasProviderCli,
-            providerCliDisplayText,
-            hasServerEntry,
-            containsMcpServerCommand,
-            serverType,
-            serverCommand,
-            serverArguments,
-            serverUrl,
-            GetJsonStatusMessage(configurationFilePath, configurationFileExists, hasServerEntry, containsMcpServerCommand, message));
-        return 0;
-    }
-
-    private static void WriteJsonMcpStatus(
-        AgentProvider provider,
-        string configurationFilePath,
-        bool configurationFileExists,
-        bool hasProviderCli,
-        string providerCliDisplayText,
-        bool hasServerEntry,
-        bool containsMcpServerCommand,
-        string serverType,
-        string serverCommand,
-        string serverArguments,
-        string serverUrl,
-        string message)
+    private static int WriteProviderMcpStatus(ManagedMcpInspectionResult inspectionResult)
     {
         Console.WriteLine("MCP installation:");
-        Console.WriteLine($"  Provider: {provider}");
-        Console.WriteLine($"  Installed: {hasServerEntry}");
-        Console.WriteLine($"  Config: {configurationFilePath}");
-        Console.WriteLine($"  Config exists: {configurationFileExists}");
-        Console.WriteLine($"  CLI available: {hasProviderCli}");
-        Console.WriteLine($"  CLI: {providerCliDisplayText}");
+        Console.WriteLine($"  Provider: {inspectionResult.Provider}");
+        Console.WriteLine($"  Installed: {inspectionResult.HasNamedServerEntry}");
+        Console.WriteLine($"  Config: {inspectionResult.ConfigurationFilePath}");
+        Console.WriteLine($"  Config exists: {inspectionResult.ConfigurationFileExists}");
+        Console.WriteLine($"  CLI available: {inspectionResult.HasProviderCli}");
+        Console.WriteLine($"  CLI: {inspectionResult.ProviderCliDisplayText}");
         Console.WriteLine($"  Server name: {ManagedMcpServerName}");
-        Console.WriteLine($"  Managed server entry: {hasServerEntry}");
-        Console.WriteLine($"  Transport: {(string.IsNullOrWhiteSpace(serverType) ? "<none>" : serverType)}");
-        Console.WriteLine($"  Command: {(string.IsNullOrWhiteSpace(serverCommand) ? "<none>" : serverCommand)}");
-        Console.WriteLine($"  Args: {serverArguments}");
-        Console.WriteLine($"  Url: {(string.IsNullOrWhiteSpace(serverUrl) ? "<none>" : serverUrl)}");
-        Console.WriteLine($"  Contains mcp-server command: {containsMcpServerCommand}");
-        Console.WriteLine($"  Message: {message}");
+        Console.WriteLine($"  Managed server entry: {inspectionResult.HasNamedServerEntry}");
+        Console.WriteLine($"  Transport: {(string.IsNullOrWhiteSpace(inspectionResult.ServerType) ? "<none>" : inspectionResult.ServerType)}");
+        Console.WriteLine($"  Command: {(string.IsNullOrWhiteSpace(inspectionResult.ServerCommand) ? "<none>" : inspectionResult.ServerCommand)}");
+        Console.WriteLine($"  Args: {inspectionResult.ServerArguments}");
+        Console.WriteLine($"  Url: {(string.IsNullOrWhiteSpace(inspectionResult.ServerUrl) ? "<none>" : inspectionResult.ServerUrl)}");
+        Console.WriteLine($"  Contains mcp-server command: {inspectionResult.MatchesManagedMcpServer}");
+        Console.WriteLine($"  Message: {inspectionResult.Message}");
+        return 0;
     }
 
     private static int WriteUnsupportedProvider()

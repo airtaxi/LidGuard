@@ -155,6 +155,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `LidGuard` hosts a stdio MCP server for local automation clients through `lidguard mcp-server`.
 - `mcp-status` inspects the provider's global/user MCP configuration and reports whether the `lidguard` server entry is present and still points at `mcp-server`.
 - `mcp-install` and `mcp-remove` register or remove the user/global LidGuard stdio MCP server named `lidguard` for Codex, Claude Code, and GitHub Copilot CLI.
+- `mcp-install` refreshes an already installed managed LidGuard MCP registration by removing the existing provider entry first, then reinstalling it with the current command and arguments.
 - `mcp-install` prefers the current `lidguard.exe` path over the Windows `.cmd` shim when registering stdio MCP servers, because shim wrapper processes can remain visible under MCP clients and should not be mistaken for agent work.
 - The regular MCP server exposes `get_settings_status`, `list_sessions`, `update_settings`, `remove_session`, `set_session_soft_lock`, and `clear_session_soft_lock`.
 - `list_sessions` returns the active session list plus runtime lid/session state without the full settings payload.
