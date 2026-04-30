@@ -1127,54 +1127,36 @@ internal static class LidGuardCommandLineApplication
     private static int WriteHelp(int exitCode)
     {
         var commandDisplayName = GetCommandDisplayName();
+        var helpSections = LidGuardHelpContent.CreateSections(
+            commandDisplayName,
+            LidGuardSettingsStore.GetDefaultSettingsFilePath(),
+            LidGuardRuntimeSessionLogStore.GetDefaultLogFilePath(),
+            DescribeSupportedPostStopSuspendSystemSounds());
 
-        Console.WriteLine("Usage:");
-        Console.WriteLine($"  {commandDisplayName} start --provider codex|claude|copilot|custom|mcp --session <id> [--provider-name <name>] [--parent-pid <pid>] [--working-directory <path>]");
-        Console.WriteLine($"  {commandDisplayName} stop --provider codex|claude|copilot|custom|mcp --session <id> [--provider-name <name>]");
-        Console.WriteLine($"  {commandDisplayName} {LidGuardPipeCommands.RemovePreSuspendWebhook}");
-        Console.WriteLine($"  {commandDisplayName} remove-session --all");
-        Console.WriteLine($"  {commandDisplayName} remove-session --session <id> [--provider codex|claude|copilot|custom|mcp|unknown] [--provider-name <name>]");
-        Console.WriteLine($"  {commandDisplayName} claude-hook");
-        Console.WriteLine($"  {commandDisplayName} claude-hooks [--format settings-json|hooks-json]");
-        Console.WriteLine($"  {commandDisplayName} copilot-hook --event sessionStart|sessionEnd|userPromptSubmitted|preToolUse|postToolUse|permissionRequest|agentStop|errorOccurred|notification");
-        Console.WriteLine($"  {commandDisplayName} copilot-hooks [--format config-json|hooks-json]");
-        Console.WriteLine($"  {commandDisplayName} codex-hook");
-        Console.WriteLine($"  {commandDisplayName} codex-hooks [--format config-toml|hooks-json]");
-        Console.WriteLine($"  {commandDisplayName} hook-status [--provider codex|claude|copilot|all] [--config <path>]");
-        Console.WriteLine($"  {commandDisplayName} hook-install [--provider codex|claude|copilot|all] [--config <path>]");
-        Console.WriteLine($"  {commandDisplayName} hook-remove [--provider codex|claude|copilot|all] [--config <path>]");
-        Console.WriteLine($"  {commandDisplayName} hook-events [--provider codex|claude|copilot|all] [--count <number>]");
-        Console.WriteLine($"  {commandDisplayName} mcp-status [--provider codex|claude|copilot|all]");
-        Console.WriteLine($"  {commandDisplayName} mcp-install [--provider codex|claude|copilot|all]");
-        Console.WriteLine($"  {commandDisplayName} mcp-remove [--provider codex|claude|copilot|all]");
-        Console.WriteLine("                           With --provider all, only providers with existing default configuration roots are processed.");
-        Console.WriteLine("                           Missing providers are reported and skipped.");
-        Console.WriteLine($"  {commandDisplayName} {LidGuardPipeCommands.ProviderMcpStatus} --config <json-path> [--server-name <name>]");
-        Console.WriteLine($"  {commandDisplayName} {LidGuardPipeCommands.ProviderMcpInstall} --config <json-path> --provider-name <name> [--server-name <name>]");
-        Console.WriteLine($"  {commandDisplayName} {LidGuardPipeCommands.ProviderMcpRemove} --config <json-path> [--server-name <name>]");
-        Console.WriteLine($"  {commandDisplayName} preview-system-sound --name Asterisk|Beep|Exclamation|Hand|Question");
-        Console.WriteLine($"  {commandDisplayName} {LidGuardMcpServerCommand.CommandName}");
-        Console.WriteLine($"  {commandDisplayName} {ProviderMcpServerCommand.CommandName} --provider-name <name>");
-        Console.WriteLine($"  {commandDisplayName} settings");
-        Console.WriteLine($"  {commandDisplayName} settings [--reset true] [--change-lid-action true|false]");
-        Console.WriteLine("                           [--prevent-system-sleep true|false] [--prevent-away-mode-sleep true|false] [--prevent-display-sleep true|false]");
-        Console.WriteLine("                           [--watch-parent-process true|false]");
-        Console.WriteLine("                           [--suspend-mode sleep|hibernate] [--post-stop-suspend-delay-seconds <number>]");
-        Console.WriteLine("                           [--post-stop-suspend-sound off|Asterisk|Beep|Exclamation|Hand|Question|<wav-path>]");
-        Console.WriteLine("                           [--pre-suspend-webhook-url <http-or-https-url>]");
-        Console.WriteLine("                           [--closed-lid-permission-request-decision deny|allow]");
-        Console.WriteLine("                           [--power-request-reason <text>]");
-        Console.WriteLine("                           Post-stop suspend delay defaults to 10 seconds; use 0 for immediate suspend.");
-        Console.WriteLine($"                           Post-stop suspend sound defaults to off. Supported SystemSounds: {DescribeSupportedPostStopSuspendSystemSounds()}.");
-        Console.WriteLine($"                           Use {LidGuardPipeCommands.RemovePreSuspendWebhook} to remove the pre-suspend webhook URL.");
-        Console.WriteLine("                           Pre-suspend webhook URL must be an absolute HTTP or HTTPS URL when set.");
-        Console.WriteLine("                           WAV paths must point to an existing playable .wav file.");
-        Console.WriteLine($"  {commandDisplayName} status");
-        Console.WriteLine($"  {commandDisplayName} cleanup-orphans");
-        Console.WriteLine();
-        Console.WriteLine($"Settings file: {LidGuardSettingsStore.GetDefaultSettingsFilePath()}");
-        Console.WriteLine($"Session log: {LidGuardRuntimeSessionLogStore.GetDefaultLogFilePath()}");
+        foreach (var helpSection in helpSections) WriteHelpSection(helpSection);
         return exitCode;
+    }
+
+    private static void WriteHelpSection(LidGuardHelpSection helpSection)
+    {
+        Console.WriteLine($"{helpSection.Title}:");
+        foreach (var detail in helpSection.Details) Console.WriteLine($"  {detail}");
+
+        for (var commandIndex = 0; commandIndex < helpSection.Commands.Count; commandIndex++)
+        {
+            if (helpSection.Details.Count > 0 || commandIndex > 0) Console.WriteLine();
+            WriteHelpCommand(helpSection.Commands[commandIndex]);
+        }
+
+        Console.WriteLine();
+    }
+
+    private static void WriteHelpCommand(LidGuardHelpCommand helpCommand)
+    {
+        Console.WriteLine($"  {helpCommand.Synopsis}");
+        Console.WriteLine($"    {helpCommand.Description}");
+        foreach (var helpOption in helpCommand.Options) Console.WriteLine($"    {helpOption.Label}: {helpOption.Description}");
+        foreach (var note in helpCommand.Notes) Console.WriteLine($"    Note: {note}");
     }
 
     private static string GetCommandDisplayName()

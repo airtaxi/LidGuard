@@ -16,54 +16,84 @@ After installation, run:
 lidguard --help
 ```
 
-## Common Commands
+## Usage
 
 ```powershell
-lidguard hook-install
-lidguard hook-remove
-lidguard mcp-status
-lidguard mcp-install
-lidguard mcp-remove
-lidguard provider-mcp-status --config "<json-path>"
-lidguard provider-mcp-install --config "<json-path>" --provider-name "<name>"
-lidguard provider-mcp-remove --config "<json-path>"
-lidguard remove-pre-suspend-webhook
+lidguard <command> [options]
+```
+
+Use `--name value` or `--name=value` for options. Boolean options accept `true/false`, `yes/no`, `on/off`, and `1/0`.
+
+For the full command and parameter reference, run:
+
+```powershell
+lidguard --help
+```
+
+## Session Control
+
+```powershell
+lidguard start --provider codex --session "<session-id>"
+lidguard stop --provider codex --session "<session-id>"
 lidguard remove-session --all
 lidguard remove-session --session "<session-id>"
 lidguard remove-session --session "<session-id>" --provider codex
-lidguard hook-install --provider all
-lidguard hook-status --provider all
-lidguard hook-remove --provider all
-lidguard hook-events --provider all
-lidguard mcp-status --provider all
-lidguard mcp-install --provider all
-lidguard mcp-remove --provider all
-lidguard hook-install --provider claude
-lidguard hook-status --provider claude
-lidguard hook-remove --provider claude
-lidguard mcp-status --provider claude
-lidguard mcp-install --provider claude
-lidguard mcp-remove --provider claude
-lidguard hook-install --provider copilot
-lidguard hook-status --provider copilot
-lidguard hook-remove --provider copilot
-lidguard mcp-status --provider copilot
-lidguard mcp-install --provider copilot
-lidguard mcp-remove --provider copilot
-lidguard hook-install --provider codex
+lidguard status
+lidguard cleanup-orphans
+```
+
+`start` and `stop` require `--provider`. `--session` is optional; when omitted, LidGuard derives a fallback session identifier from the provider display name and normalized working directory.
+
+## Settings & Suspend
+
+```powershell
+lidguard settings
+lidguard settings --change-lid-action true --suspend-mode hibernate
+lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
+lidguard remove-pre-suspend-webhook
+lidguard preview-system-sound --name Asterisk
+```
+
+Running `settings` with no options starts interactive editing. Use `remove-pre-suspend-webhook` to clear a configured webhook URL.
+
+## Hook Integration
+
+```powershell
 lidguard hook-status --provider codex
+lidguard hook-install --provider codex
 lidguard hook-remove --provider codex
+lidguard hook-events --provider codex --count 20
+lidguard codex-hooks
+lidguard claude-hooks
+lidguard copilot-hooks
+```
+
+If `--provider` is omitted on `hook-status`, `hook-install`, `hook-remove`, or `hook-events`, LidGuard prompts for a provider. With `--provider all`, LidGuard only processes providers whose default configuration roots already exist and reports missing providers as skipped.
+
+## MCP Integration
+
+```powershell
 lidguard mcp-status --provider codex
 lidguard mcp-install --provider codex
 lidguard mcp-remove --provider codex
-lidguard provider-mcp-server --provider-name "<name>"
-lidguard mcp-server
-lidguard settings
-lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
-lidguard status
+lidguard provider-mcp-status --config "<json-path>"
+lidguard provider-mcp-install --config "<json-path>" --provider-name "<name>"
+lidguard provider-mcp-remove --config "<json-path>"
 ```
 
-With `--provider all`, LidGuard only processes providers whose default configuration roots already exist, and reports missing providers as skipped.
+If `--provider` is omitted on `mcp-status`, `mcp-install`, or `mcp-remove`, LidGuard prompts for a provider. With `--provider all`, LidGuard only processes providers whose default configuration roots already exist and reports missing providers as skipped.
+
+## Managed / Internal Commands
+
+```powershell
+lidguard mcp-server
+lidguard provider-mcp-server --provider-name "<name>"
+lidguard codex-hook
+lidguard claude-hook
+lidguard copilot-hook --event notification
+```
+
+These commands are primarily intended for managed integrations and stdio hosts rather than direct everyday CLI use.
 
 ## Settings and Logs
 
