@@ -11,6 +11,7 @@ namespace LidGuard.Runtime;
 internal sealed class LidGuardRuntimeCoordinator
 {
     private const string SessionTimeoutCommandName = "session-timeout";
+    private const string CodexTranscriptTurnAbortedCommandName = "codex-transcript-turn-aborted";
 
     private static readonly TimeSpan s_processWatchInterval = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan s_emergencyHibernationWebhookTimeout = TimeSpan.FromSeconds(5);
@@ -50,7 +51,9 @@ internal sealed class LidGuardRuntimeCoordinator
         _lidStateSource = lidStateSource;
         _visibleDisplayMonitorCountProvider = visibleDisplayMonitorCountProvider;
         _protectionCoordinator = new LidGuardProtectionCoordinator(powerRequestService, lidActionPolicyController);
-        _codexSoftLockTranscriptMonitor = new CodexSoftLockTranscriptMonitor(HandleCodexTranscriptActivityThresholdReachedAsync);
+        _codexSoftLockTranscriptMonitor = new CodexSoftLockTranscriptMonitor(
+            HandleCodexTranscriptActivityDetectedAsync,
+            HandleCodexTranscriptTurnAbortedAsync);
         _emergencyHibernationThermalMonitor = new EmergencyHibernationThermalMonitor(
             CreateEmergencyHibernationThermalMonitorState,
             HandleEmergencyHibernationThresholdReachedAsync);
@@ -1595,22 +1598,46 @@ internal sealed class LidGuardRuntimeCoordinator
         LidGuardRuntimeLogWriter.AppendSessionLog(eventName, request, response, snapshot);
     }
 
-    private async Task HandleCodexTranscriptActivityThresholdReachedAsync(CodexTranscriptActivityThresholdReachedContext transcriptActivityThresholdReachedContext)
+    private async Task HandleCodexTranscriptActivityDetectedAsync(CodexTranscriptActivityDetectedContext transcriptActivityDetectedContext)
     {
         var request = new LidGuardPipeRequest
         {
             Command = LidGuardPipeCommands.MarkSessionActive,
             Provider = AgentProvider.Codex,
-            SessionIdentifier = transcriptActivityThresholdReachedContext.SessionKey.SessionIdentifier,
-            SessionStateReason = $"codex_transcript_activity_threshold_reached:{transcriptActivityThresholdReachedContext.ActualContentIncreaseCount}",
-            WorkingDirectory = transcriptActivityThresholdReachedContext.WorkingDirectory,
-            TranscriptPath = transcriptActivityThresholdReachedContext.TranscriptPath
+            SessionIdentifier = transcriptActivityDetectedContext.SessionKey.SessionIdentifier,
+            SessionStateReason = "codex_transcript_activity_detected",
+            WorkingDirectory = transcriptActivityDetectedContext.WorkingDirectory,
+            TranscriptPath = transcriptActivityDetectedContext.TranscriptPath
         };
 
         await _gate.WaitAsync(CancellationToken.None);
         try
         {
             MarkSessionActiveInsideGate(request);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    private async Task HandleCodexTranscriptTurnAbortedAsync(CodexTranscriptTurnAbortedContext transcriptTurnAbortedContext)
+    {
+        var request = new LidGuardSessionStopRequest
+        {
+            Provider = AgentProvider.Codex,
+            SessionIdentifier = transcriptTurnAbortedContext.SessionKey.SessionIdentifier,
+            ProviderName = transcriptTurnAbortedContext.SessionKey.ProviderName
+        };
+
+        await _gate.WaitAsync(CancellationToken.None);
+        try
+        {
+            StopInsideGate(
+                request,
+                $"Stopped {transcriptTurnAbortedContext.SessionKey} because the Codex transcript reported turn_aborted.",
+                CodexTranscriptTurnAbortedCommandName,
+                CodexTranscriptTurnAbortedCommandName);
         }
         finally
         {
