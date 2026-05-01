@@ -1,4 +1,4 @@
-# Codex Instructions - LidGuard
+﻿# Codex Instructions - LidGuard
 
 ## Mandatory Rules
 
@@ -32,6 +32,7 @@ The goal is to keep Windows awake while at least one tracked agent session still
 - Optional settings temporarily change the active power plan's lid close action to `Do Nothing`.
 - When sessions stop, all temporary power settings must be restored to the user's original values.
 - After the last active session stops, LidGuard should always request suspend when the laptop lid is closed and no visible display monitors remain attached to the desktop.
+- Once the active session count reaches `0`, the server runtime should exit immediately after any in-flight suspend or cleanup work finishes.
 - If active sessions remain but all of them are soft-locked, LidGuard should follow the same suspend path without waiting for stop hooks.
 - The suspend mode remains user-selectable: Sleep by default, Hibernate optional.
 - The post-stop suspend delay remains user-selectable: 10 seconds by default, `0` for immediate suspend.
@@ -126,7 +127,9 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 ### Current Windows CLI Path
 
-- `LidGuard` parses `start`, `stop`, `remove-pre-suspend-webhook`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `current-lid-state`, `current-monitor-count`, `current-temperature`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `mcp-server`, and `provider-mcp-server`.
+- `LidGuard` parses `help`, `start`, `stop`, `remove-pre-suspend-webhook`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `current-lid-state`, `current-monitor-count`, `current-temperature`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `mcp-server`, and `provider-mcp-server`.
+- `help` prints the full help reference, and `help <command>` prints focused help for one command or recognized command alias.
+- `<command> --help` uses the same help metadata and returns before the target command validates options or performs command-specific work.
 - `start`, the `UserPromptSubmit` path in `codex-hook` and `claude-hook`, and the `userPromptSubmitted` path in `copilot-hook` load persisted default settings and send them with the start IPC request.
 - `remove-session --all` manually removes every active session currently tracked by the runtime.
 - `remove-session` manually removes active sessions by session identifier; when `--provider` is omitted, it removes every active session whose session identifier matches. When `--provider mcp` is used, `--provider-name` can narrow the removal to one MCP-backed provider; omitting `--provider-name` removes every MCP-backed session that shares that session identifier.
@@ -189,6 +192,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Optional lid action changes are backed up once and restored after the last active session stops.
 - While shared protection remains applied and the lid is closed, the Emergency Hibernation thermal monitor polls every 10 seconds and stops automatically once protection is restored or disabled.
 - Multiple stop signals for the same session should not cause repeated cleanup side effects.
+- When the active session count reaches `0`, the runtime should shut down immediately once no post-stop suspend request, lid-action restore, pre-suspend webhook, post-stop sound, or equivalent cleanup work remains pending.
 - Persistent pending backup state is still missing and is the next resilience priority.
 
 ### Settings Defaults
@@ -558,7 +562,7 @@ lidguard mcp-server
 
 The Windows CLI hook receiving path is implemented for Codex, Claude Code, and GitHub Copilot CLI. Remaining work is now focused on lifecycle polish and automated regression coverage.
 
-- Add runtime lifecycle policy for idle shutdown.
+- Implement immediate runtime shutdown after the last session stops once the remaining post-stop cleanup work is complete.
 - Add automated regression tests or verification scripts for the already manually verified provider/Windows behavior: latest Codex hook behavior, Claude Code hook stdout behavior, GitHub Copilot CLI hook output behavior, GitHub Copilot CLI user-level `~/.copilot/hooks/` loading and inline `~/.copilot/settings.json` hook composition, GitHub Copilot CLI session id stability, `PowerReadACValueIndex`/`PowerReadDCValueIndex` read/write behavior under normal user permissions, and Group Policy or MDM blocked power setting fallback messages.
 - Add direct Codex soft-lock support only if Codex later exposes a notification or machine-readable pending-state hook surface.
 

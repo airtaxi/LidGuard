@@ -1,4 +1,4 @@
-using LidGuard.Ipc;
+﻿using LidGuard.Ipc;
 using LidGuard.Runtime;
 using LidGuard.Settings;
 using LidGuardLib.Commons.Power;
@@ -61,15 +61,30 @@ internal static class LidGuardCommandConsole
 
     public static int WriteHelp(int exitCode)
     {
-        var commandDisplayName = GetCommandDisplayName();
-        var helpSections = LidGuardHelpContent.CreateSections(
-            commandDisplayName,
-            LidGuardSettingsStore.GetDefaultSettingsFilePath(),
-            LidGuardRuntimeSessionLogStore.GetDefaultLogFilePath(),
-            LidGuardSupportedSystemSounds.Describe());
-
-        foreach (var helpSection in helpSections) WriteHelpSection(helpSection);
+        var helpDocument = CreateHelpDocument();
+        foreach (var helpSection in LidGuardHelpContent.CreateAllSections(helpDocument)) WriteHelpSection(helpSection);
         return exitCode;
+    }
+
+    public static int WriteHelpForCommand(string commandName)
+    {
+        if (TryWriteHelpForCommand(commandName, out var exitCode)) return exitCode;
+        return WriteUnknownCommand(commandName);
+    }
+
+    public static bool TryWriteHelpForCommand(string commandName, out int exitCode)
+    {
+        var helpDocument = CreateHelpDocument();
+        if (!LidGuardHelpContent.TryFindCommand(helpDocument, commandName, out var commandEntry))
+        {
+            exitCode = 1;
+            return false;
+        }
+
+        foreach (var helpSection in LidGuardHelpContent.CreateCommandSections(helpDocument, commandEntry)) WriteHelpSection(helpSection);
+
+        exitCode = 0;
+        return true;
     }
 
     public static string GetCommandDisplayName()
@@ -86,6 +101,13 @@ internal static class LidGuardCommandConsole
         Console.Error.WriteLine($"Unknown command: {commandName}");
         return WriteHelp(1);
     }
+
+    private static LidGuardHelpDocument CreateHelpDocument()
+        => LidGuardHelpContent.CreateDocument(
+            GetCommandDisplayName(),
+            LidGuardSettingsStore.GetDefaultSettingsFilePath(),
+            LidGuardRuntimeSessionLogStore.GetDefaultLogFilePath(),
+            LidGuardSupportedSystemSounds.Describe());
 
     private static void WriteHelpSection(LidGuardHelpSection helpSection)
     {

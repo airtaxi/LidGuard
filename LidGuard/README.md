@@ -1,4 +1,4 @@
-# LidGuard CLI
+﻿# LidGuard CLI
 
 LidGuard is a command-line tool for long-running local AI coding agent sessions. Windows protection is currently implemented; macOS and Linux support is planned and currently exits successfully with a support message.
 
@@ -13,7 +13,7 @@ The tool package ID and command are both `lidguard`.
 After installation, run:
 
 ```powershell
-lidguard --help
+lidguard help
 ```
 
 ## Usage
@@ -27,7 +27,15 @@ Use `--name value` or `--name=value` for options. Boolean options accept `true/f
 For the full command and parameter reference, run:
 
 ```powershell
+lidguard help
 lidguard --help
+```
+
+For help with one command, run:
+
+```powershell
+lidguard help status
+lidguard status --help
 ```
 
 ## Session Control

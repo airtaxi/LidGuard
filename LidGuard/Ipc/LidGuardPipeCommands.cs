@@ -1,4 +1,4 @@
-namespace LidGuard.Ipc;
+﻿namespace LidGuard.Ipc;
 
 internal static class LidGuardPipeCommands
 {
@@ -12,6 +12,7 @@ internal static class LidGuardPipeCommands
     public const string CodexHooks = "codex-hooks";
     public const string CurrentMonitorCount = "current-monitor-count";
     public const string CurrentTemperature = "current-temperature";
+    public const string Help = "help";
     public const string HookEvents = "hook-events";
     public const string HookInstall = "hook-install";
     public const string HookRemove = "hook-remove";

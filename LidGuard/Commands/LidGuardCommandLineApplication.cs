@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.Versioning;
 using LidGuard.Hooks;
 using LidGuard.Ipc;
@@ -22,13 +22,17 @@ internal static class LidGuardCommandLineApplication
 
         if (commandLineArguments.Length == 0) return LidGuardCommandConsole.WriteHelp(1);
 
-        var commandName = commandLineArguments[0].Trim().ToLowerInvariant();
-        if (commandName is "help" or "--help" or "-h" or "/?") return LidGuardCommandConsole.WriteHelp(0);
+        var requestedCommandName = commandLineArguments[0].Trim();
+        var commandName = requestedCommandName.ToLowerInvariant();
+        if (commandName == LidGuardPipeCommands.Help) return WriteTopLevelHelp(commandLineArguments);
+        if (IsTopLevelHelpAlias(commandName)) return LidGuardCommandConsole.WriteHelp(0);
         if (!TryRestorePendingLidActionBackup(runtimePlatform, out var recoveryMessage))
         {
             Console.Error.WriteLine(recoveryMessage);
             return 1;
         }
+
+        if (HasCommandHelpSwitch(commandLineArguments)) return LidGuardCommandConsole.WriteHelpForCommand(requestedCommandName);
 
         if (commandName == LidGuardPipeCommands.ClaudeHook) return await ClaudeHookCommand.RunAsync();
         if (commandName == LidGuardPipeCommands.CopilotHook) return await GitHubCopilotHookCommand.RunAsync(commandLineArguments[1..]);
@@ -69,8 +73,31 @@ internal static class LidGuardCommandLineApplication
             LidGuardPipeCommands.ProviderMcpStatus => ProviderMcpManagementCommand.WriteProviderMcpStatus(options),
             LidGuardPipeCommands.ProviderMcpInstall => ProviderMcpManagementCommand.InstallProviderMcp(options),
             LidGuardPipeCommands.ProviderMcpRemove or "provider-mcp-uninstall" => ProviderMcpManagementCommand.RemoveProviderMcp(options),
-            _ => LidGuardCommandConsole.WriteUnknownCommand(commandName)
+            _ => LidGuardCommandConsole.WriteUnknownCommand(requestedCommandName)
         };
+    }
+
+    private static int WriteTopLevelHelp(string[] commandLineArguments)
+    {
+        if (commandLineArguments.Length == 1) return LidGuardCommandConsole.WriteHelp(0);
+        if (commandLineArguments.Length == 2) return LidGuardCommandConsole.WriteHelpForCommand(commandLineArguments[1]);
+
+        Console.Error.WriteLine($"Unexpected argument: {commandLineArguments[2]}");
+        LidGuardCommandConsole.TryWriteHelpForCommand(LidGuardPipeCommands.Help, out _);
+        return 1;
+    }
+
+    private static bool IsTopLevelHelpAlias(string commandName)
+        => commandName is "--help" or "-h" or "/?";
+
+    private static bool HasCommandHelpSwitch(string[] commandLineArguments)
+    {
+        for (var argumentIndex = 1; argumentIndex < commandLineArguments.Length; argumentIndex++)
+        {
+            if (commandLineArguments[argumentIndex].Equals("--help", StringComparison.OrdinalIgnoreCase)) return true;
+        }
+
+        return false;
     }
 
     private static async Task<int> RunServerAsync(ILidGuardRuntimePlatform runtimePlatform)
@@ -338,11 +365,9 @@ internal static class LidGuardCommandLineApplication
     {
         emergencyHibernationTemperatureMode = LidGuardSettings.HeadlessRuntimeDefault.EmergencyHibernationTemperatureMode;
         message = string.Empty;
-        if (!CommandOptionReader.TryGetOption(options, out var temperatureModeText, "temperature-mode"))
-            return TryLoadCurrentTemperatureModeFromSettings(out emergencyHibernationTemperatureMode, out message);
+        if (!CommandOptionReader.TryGetOption(options, out var temperatureModeText, "temperature-mode")) return TryLoadCurrentTemperatureModeFromSettings(out emergencyHibernationTemperatureMode, out message);
 
-        if (string.IsNullOrWhiteSpace(temperatureModeText) || temperatureModeText.Trim().Equals("default", StringComparison.OrdinalIgnoreCase))
-            return TryLoadCurrentTemperatureModeFromSettings(out emergencyHibernationTemperatureMode, out message);
+        if (string.IsNullOrWhiteSpace(temperatureModeText) || temperatureModeText.Trim().Equals("default", StringComparison.OrdinalIgnoreCase)) return TryLoadCurrentTemperatureModeFromSettings(out emergencyHibernationTemperatureMode, out message);
         if (LidGuardSettingsCommand.TryParseEmergencyHibernationTemperatureMode(temperatureModeText, out emergencyHibernationTemperatureMode)) return true;
 
         message = "The temperature-mode option must be default, low, average, or high.";
@@ -360,6 +385,4 @@ internal static class LidGuardCommandLineApplication
         emergencyHibernationTemperatureMode = LidGuardSettings.Normalize(settings).EmergencyHibernationTemperatureMode;
         return true;
     }
-
-
 }
