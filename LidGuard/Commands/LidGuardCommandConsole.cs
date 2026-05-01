@@ -29,7 +29,7 @@ internal static class LidGuardCommandConsole
                 var processText = session.WatchedProcessIdentifier > 0 ? session.WatchedProcessIdentifier.ToString() : "none";
                 var providerDisplayText = AgentProviderDisplay.CreateProviderDisplayText(session.Provider, session.ProviderName);
                 Console.WriteLine(
-                    $"- {providerDisplayText}:{session.SessionIdentifier} process={processText} softLock={DescribeSoftLockStatus(session)} cwd=\"{session.WorkingDirectory}\" started={session.StartedAt:O}");
+                    $"- {providerDisplayText}:{session.SessionIdentifier} process={processText} softLock={DescribeSoftLockStatus(session)} cwd=\"{session.WorkingDirectory}\" started={session.StartedAt:O} lastActivity={session.LastActivityAt:O}");
             }
         }
 
@@ -48,6 +48,7 @@ internal static class LidGuardCommandConsole
         Console.WriteLine($"  Prevent display sleep: {powerRequest.PreventDisplaySleep}");
         Console.WriteLine($"  Change lid action: {normalizedSettings.ChangeLidAction}");
         Console.WriteLine($"  Watch parent process: {normalizedSettings.WatchParentProcess}");
+        Console.WriteLine($"  Session timeout: {SessionTimeoutConfiguration.GetDisplayValue(normalizedSettings.SessionTimeoutMinutes)}");
         Console.WriteLine($"  Emergency hibernation on high temperature: {normalizedSettings.EmergencyHibernationOnHighTemperature}");
         Console.WriteLine($"  Emergency hibernation temperature mode: {normalizedSettings.EmergencyHibernationTemperatureMode}");
         Console.WriteLine($"  Emergency hibernation temperature Celsius: {normalizedSettings.EmergencyHibernationTemperatureCelsius}");

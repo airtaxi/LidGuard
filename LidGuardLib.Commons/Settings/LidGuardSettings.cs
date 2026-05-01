@@ -11,6 +11,8 @@ public sealed class LidGuardSettings
     public const int MaximumPostStopSuspendSoundVolumeOverridePercent = 100;
     public const int MinimumSuspendHistoryEntryCount = 1;
     public const int DefaultSuspendHistoryEntryCount = 10;
+    public const int MinimumSessionTimeoutMinutes = 1;
+    public const int DefaultSessionTimeoutMinutes = 12;
 
     public static LidGuardSettings Default { get; } = new();
 
@@ -40,6 +42,8 @@ public sealed class LidGuardSettings
 
     public bool WatchParentProcess { get; init; } = true;
 
+    public int? SessionTimeoutMinutes { get; init; } = DefaultSessionTimeoutMinutes;
+
     public bool EmergencyHibernationOnHighTemperature { get; init; } = true;
 
     public EmergencyHibernationTemperatureMode EmergencyHibernationTemperatureMode { get; init; } = EmergencyHibernationTemperatureMode.Average;
@@ -59,6 +63,9 @@ public sealed class LidGuardSettings
     public static bool IsValidSuspendHistoryEntryCount(int? suspendHistoryEntryCount)
         => suspendHistoryEntryCount is null || suspendHistoryEntryCount >= MinimumSuspendHistoryEntryCount;
 
+    public static bool IsValidSessionTimeoutMinutes(int? sessionTimeoutMinutes)
+        => sessionTimeoutMinutes is null || sessionTimeoutMinutes >= MinimumSessionTimeoutMinutes;
+
     public static LidGuardSettings Normalize(LidGuardSettings settings)
     {
         if (settings is null) return HeadlessRuntimeDefault;
@@ -69,6 +76,9 @@ public sealed class LidGuardSettings
         var suspendHistoryEntryCount = settings.SuspendHistoryEntryCount is null
             ? (int?)null
             : Math.Max(MinimumSuspendHistoryEntryCount, settings.SuspendHistoryEntryCount.Value);
+        var sessionTimeoutMinutes = settings.SessionTimeoutMinutes is null
+            ? (int?)null
+            : Math.Max(MinimumSessionTimeoutMinutes, settings.SessionTimeoutMinutes.Value);
         return new LidGuardSettings
         {
             PowerRequest = new PowerRequestOptions
@@ -87,6 +97,7 @@ public sealed class LidGuardSettings
             PreSuspendWebhookUrl = string.IsNullOrWhiteSpace(settings.PreSuspendWebhookUrl) ? string.Empty : settings.PreSuspendWebhookUrl.Trim(),
             ClosedLidPermissionRequestDecision = settings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settings.WatchParentProcess,
+            SessionTimeoutMinutes = sessionTimeoutMinutes,
             EmergencyHibernationOnHighTemperature = settings.EmergencyHibernationOnHighTemperature,
             EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode,
             EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius

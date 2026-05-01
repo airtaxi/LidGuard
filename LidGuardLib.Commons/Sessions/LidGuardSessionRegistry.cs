@@ -32,6 +32,7 @@ public sealed class LidGuardSessionRegistry
             Provider = request.Provider,
             ProviderName = AgentProviderDisplay.NormalizeProviderName(request.Provider, request.ProviderName),
             StartedAt = request.StartedAt,
+            LastActivityAt = request.LastActivityAt,
             SoftLockState = LidGuardSessionSoftLockState.None,
             SoftLockReason = string.Empty,
             SoftLockedAt = null,
@@ -81,13 +82,15 @@ public sealed class LidGuardSessionRegistry
         {
             if (!_sessions.TryGetValue(key, out var existingSnapshot)) return false;
 
+            var lastActivityAt = DateTimeOffset.UtcNow;
             if (!existingSnapshot.IsSoftLocked)
             {
-                snapshot = existingSnapshot;
+                snapshot = CloneSnapshot(existingSnapshot, LidGuardSessionSoftLockState.None, string.Empty, null, lastActivityAt);
+                _sessions[key] = snapshot;
                 return true;
             }
 
-            snapshot = CloneSnapshot(existingSnapshot, LidGuardSessionSoftLockState.None, string.Empty, null);
+            snapshot = CloneSnapshot(existingSnapshot, LidGuardSessionSoftLockState.None, string.Empty, null, lastActivityAt);
             _sessions[key] = snapshot;
             changed = true;
             return true;
@@ -119,7 +122,12 @@ public sealed class LidGuardSessionRegistry
                 return true;
             }
 
-            snapshot = CloneSnapshot(existingSnapshot, LidGuardSessionSoftLockState.SoftLocked, normalizedSoftLockReason, softLockedAt);
+            snapshot = CloneSnapshot(
+                existingSnapshot,
+                LidGuardSessionSoftLockState.SoftLocked,
+                normalizedSoftLockReason,
+                softLockedAt,
+                existingSnapshot.LastActivityAt);
             _sessions[key] = snapshot;
             changed = true;
             return true;
@@ -140,7 +148,8 @@ public sealed class LidGuardSessionRegistry
         LidGuardSessionSnapshot snapshot,
         LidGuardSessionSoftLockState softLockState,
         string softLockReason,
-        DateTimeOffset? softLockedAt)
+        DateTimeOffset? softLockedAt,
+        DateTimeOffset lastActivityAt)
     {
         return new LidGuardSessionSnapshot
         {
@@ -148,6 +157,7 @@ public sealed class LidGuardSessionRegistry
             Provider = snapshot.Provider,
             ProviderName = snapshot.ProviderName,
             StartedAt = snapshot.StartedAt,
+            LastActivityAt = lastActivityAt,
             SoftLockState = softLockState,
             SoftLockReason = softLockReason,
             SoftLockedAt = softLockedAt,

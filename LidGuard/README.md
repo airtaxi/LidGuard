@@ -61,13 +61,15 @@ lidguard settings --emergency-hibernation-temperature-mode average
 lidguard settings --post-stop-suspend-sound Asterisk
 lidguard settings --post-stop-suspend-sound-volume-override-percent 75
 lidguard settings --post-stop-suspend-sound-volume-override-percent off
+lidguard settings --session-timeout-minutes 12
+lidguard settings --session-timeout-minutes off
 lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
 lidguard remove-pre-suspend-webhook
 lidguard preview-system-sound --name Asterisk
 lidguard preview-current-sound
 ```
 
-Running `settings` with no options starts interactive editing. Emergency Hibernation temperature mode defaults to `Average`, and you can change it to `Low`, `Average`, or `High`. The optional post-stop suspend sound volume override accepts `off` or 1 through 100 percent; when enabled, it temporarily sets the default output device master volume while the sound plays, then restores the previous volume and mute state. `preview-system-sound` and `preview-current-sound` use the saved override setting and wait until playback finishes. `preview-current-sound` prints setup guidance when no post-stop suspend sound is configured. Use `remove-pre-suspend-webhook` to clear a configured webhook URL.
+Running `settings` with no options starts interactive editing. Session timeout defaults to 12 minutes; pass `--session-timeout-minutes off` to disable inactive session timeout soft-locking or pass a value of at least 1 to transition sessions to soft-locked after that many minutes since last activity. Emergency Hibernation temperature mode defaults to `Average`, and you can change it to `Low`, `Average`, or `High`. The optional post-stop suspend sound volume override accepts `off` or 1 through 100 percent; when enabled, it temporarily sets the default output device master volume while the sound plays, then restores the previous volume and mute state. `preview-system-sound` and `preview-current-sound` use the saved override setting and wait until playback finishes. `preview-current-sound` prints setup guidance when no post-stop suspend sound is configured. Use `remove-pre-suspend-webhook` to clear a configured webhook URL.
 
 ## Diagnostics
 
@@ -131,7 +133,7 @@ LidGuard stores its default settings and runtime logs under:
 %LOCALAPPDATA%\LidGuard
 ```
 
-The default settings file is `settings.json`. Runtime session execution events are written to `session-execution.log` as JSON lines, with only the latest 500 entries retained.
+The default settings file is `settings.json`. Runtime session execution events are written to `session-execution.log` as JSON lines, with only the latest 500 entries retained. Inactive-session timeout expiry is logged as `session-timeout-softlock-recorded`.
 
 ## Notes
 

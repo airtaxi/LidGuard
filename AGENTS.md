@@ -29,6 +29,7 @@ The goal is to keep Windows awake while at least one tracked agent session still
 - Claude Code and GitHub Copilot CLI sessions can enter a runtime-managed soft-lock state when provider notifications show the agent is waiting on user input.
 - While at least one non-soft-locked session is active, Windows should not enter idle sleep through `PowerRequestSystemRequired` and `PowerRequestAwayModeRequired`.
 - If every remaining active session is soft-locked, LidGuard should release temporary keep-awake protection, restore any temporary lid policy change, and start the configured suspend flow only when the lid is closed and no suspend-blocking visible display monitors remain attached to the desktop.
+- If a session has no activity after the configured session timeout, LidGuard should transition it to the soft-locked state and apply the same keep-awake release flow used for normal soft-lock operations.
 - Optional settings temporarily change the active power plan's lid close action to `Do Nothing`.
 - When sessions stop, all temporary power settings must be restored to the user's original values.
 - After the last active session stops, LidGuard should always request suspend when the laptop lid is closed and no suspend-blocking visible display monitors remain attached to the desktop.
@@ -38,6 +39,7 @@ The goal is to keep Windows awake while at least one tracked agent session still
 - The post-stop suspend delay remains user-selectable: 10 seconds by default, `0` for immediate suspend.
 - The post-stop suspend sound remains optional: off by default, with supported SystemSounds names or a playable `.wav` path.
 - The post-stop suspend sound volume override remains optional: off by default, with an allowed master volume range of 1 through 100 percent.
+- The inactive session timeout remains user-selectable: 12 minutes by default, `off` optional, and enabled values must be at least 1 minute.
 - While keep-awake protection is applied and the laptop lid is closed with no suspend-blocking visible display monitors remaining on the desktop, an optional Emergency Hibernation thermal monitor should poll every 10 seconds and request immediate hibernation when the system temperature reaches the configured threshold.
 
 The key design rule is to treat normal idle sleep and lid-close sleep as separate problems. Power requests handle idle sleep. `LIDACTION` policy backup/change/restore handles lid-close behavior because standard sleep-prevention APIs cannot reliably block a user lid-close action.
@@ -144,6 +146,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `settings` also exposes `--emergency-hibernation-on-high-temperature`, `--emergency-hibernation-temperature-mode`, and `--emergency-hibernation-temperature-celsius`; the threshold option accepts 70 through 110 only.
 - `settings` exposes `--post-stop-suspend-sound-volume-override-percent off|<1-100>` for temporary post-stop sound playback master volume override; `off` disables it and out-of-range values are rejected.
 - `settings` exposes `--suspend-history-count off|<count>` for recent suspend history retention; `off` disables recording and enabled counts must be at least 1.
+- `settings` exposes `--session-timeout-minutes off|<minutes>` for inactive session timeout soft-locking; `off` disables timeout soft-locking and enabled values must be at least 1.
 - `preview-system-sound` and `preview-current-sound` apply the saved post-stop suspend sound volume override setting and wait until playback finishes. `preview-current-sound` plays the saved post-stop suspend sound and prints setup guidance when no sound is configured.
 - `hook-install`, `hook-status`, `hook-remove`, and `hook-events` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
 - `mcp-status`, `mcp-install`, and `mcp-remove` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
@@ -155,7 +158,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `run-server` acquires the named mutex `Local\LidGuard.Runtime.v1`.
 - `run-server` is detached from inherited stdout/stderr so hook callers do not hang while reading child process output.
 - Runtime communication uses a local named pipe.
-- Session execution events are logged as JSON lines at `%LOCALAPPDATA%\LidGuard\session-execution.log`, keeping the latest 500 entries.
+- Session execution events are logged as JSON lines at `%LOCALAPPDATA%\LidGuard\session-execution.log`, keeping the latest 500 entries. Timeout-triggered soft-lock transitions are logged as `session-timeout-softlock-recorded`.
 - Recent suspend request history is logged as JSON lines at `%LOCALAPPDATA%\LidGuard\suspend-history.log`, keeping the latest configured entry count when enabled.
 - Provider hook event logs record the `prompt` field on received start events: Codex and Claude `UserPromptSubmit`, and GitHub Copilot CLI `userPromptSubmitted`.
 - Default settings are stored at `%LOCALAPPDATA%\LidGuard\settings.json`.
@@ -170,6 +173,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - The regular MCP server exposes `get_settings_status`, `list_sessions`, `update_settings`, `remove_session`, `set_session_soft_lock`, and `clear_session_soft_lock`.
 - `list_sessions` returns the active session list plus runtime lid/session state without the full settings payload.
 - `update_settings` accepts multiple setting fields in a single request and persists them together.
+- `update_settings` exposes inactive session timeout through `sessionTimeoutMinutes`, accepting `off` or an enabled minute count of at least 1.
 - `remove_session` manually removes active sessions by session identifier and optionally narrows the removal to one provider and one MCP provider name.
 - `set_session_soft_lock` and `clear_session_soft_lock` are general-purpose tools that accept provider and session identifier inputs, so non-MCP providers can also use MCP-driven soft-lock control when they can supply those values.
 - `LidGuard` also hosts a separate stdio Provider MCP server through `lidguard provider-mcp-server --provider-name <name>`.
@@ -188,10 +192,12 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 - Session state is ref-counted by active session.
 - `AgentProvider.Mcp` sessions also carry a provider name so multiple MCP-backed providers can reuse the same session identifier without colliding.
-- Each session also carries a soft-lock state, reason, and timestamp.
+- Each session also carries a last activity timestamp plus soft-lock state, reason, and timestamp.
 - One or more active sessions keep shared `SystemRequired` and `AwayModeRequired` power requests alive only while at least one active session is not soft-locked.
 - When all remaining active sessions are soft-locked, LidGuard treats the runtime as suspend-eligible even before those sessions emit stop events.
-- Provider activity such as new tool execution clears that session's current soft-lock state.
+- Start/update and provider activity such as new tool execution refresh that session's last activity timestamp. Provider activity also clears that session's current soft-lock state.
+- Setting a soft-lock does not refresh last activity, because it represents waiting rather than autonomous work.
+- When a session reaches the configured inactive session timeout, LidGuard transitions it to soft-locked with reason metadata and applies the same suspend-eligibility handling as other soft-locked sessions.
 - Codex sessions are a provider-specific exception: when a Codex session is already soft-locked, LidGuard can clear that soft-lock after five actual growth events are observed on the session transcript JSONL file. It prefers hook-provided `transcript_path` and otherwise falls back to a unique `~/.codex/sessions` match by session id.
 - `AgentProvider.Mcp` sessions do not auto-resolve a watched process from the working directory, because model-managed Provider MCP sessions do not reliably identify one owning CLI process.
 - `AgentProvider.Codex` sessions only auto-resolve a watched process from the working directory when no explicit watched process id is supplied and the resolved candidate process is shell-hosted through `cmd.exe`, `pwsh.exe`, or `powershell.exe` as the process itself or its direct parent.
@@ -213,6 +219,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Post-stop suspend sound: off by default.
 - Post-stop suspend sound volume override: off by default, accepts 1 through 100 percent, and is rejected rather than clamped when out of range.
 - Suspend history recording: on by default, keeps the latest 10 entries, and accepts `off` or an enabled count of at least 1.
+- Inactive session timeout: 12 minutes by default, accepts `off` or an enabled minute count of at least 1, and has no product-level maximum.
 - Pre-suspend webhook URL: off by default.
 - Emergency Hibernation on high temperature: enabled by default.
 - Emergency Hibernation temperature mode: Average by default, with Low and High optional.
@@ -243,6 +250,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - `LidGuardSettings.HeadlessRuntimeDefault`
   - `LidGuardSettings.ClampEmergencyHibernationTemperatureCelsius`
   - `LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent`
+  - `LidGuardSettings.IsValidSessionTimeoutMinutes`
   - `LidGuardSettings.Normalize`
 - `Results`
   - `LidGuardOperationResult`
@@ -371,6 +379,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - Exposes `list_sessions` for active-session listing without the full settings payload.
   - Exposes `update_settings` for multi-field settings updates in one call, including Emergency Hibernation temperature settings and post-stop suspend sound volume override percent.
   - Exposes `update_settings` for suspend history retention through `suspendHistoryEntryCount`, accepting `off` or an enabled count of at least 1.
+  - Exposes `update_settings` for inactive session timeout through `sessionTimeoutMinutes`, accepting `off` or an enabled minute count of at least 1.
   - Exposes `remove_session` for manual active-session deletion by session identifier, with optional provider and MCP provider-name filters.
   - Exposes `set_session_soft_lock` and `clear_session_soft_lock` for provider/session-targeted soft-lock control.
 - `LidGuardProviderMcpTools`
@@ -564,6 +573,8 @@ lidguard settings --post-stop-suspend-sound-volume-override-percent 75
 lidguard settings --post-stop-suspend-sound-volume-override-percent off
 lidguard settings --suspend-history-count 10
 lidguard settings --suspend-history-count off
+lidguard settings --session-timeout-minutes 12
+lidguard settings --session-timeout-minutes off
 lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
 lidguard settings --closed-lid-permission-request-decision allow
 lidguard settings --prevent-away-mode-sleep true --prevent-display-sleep true --power-request-reason "LidGuard keeps agent sessions awake"

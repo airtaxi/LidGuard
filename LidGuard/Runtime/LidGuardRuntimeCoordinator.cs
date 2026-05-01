@@ -10,9 +10,10 @@ namespace LidGuard.Runtime;
 
 internal sealed class LidGuardRuntimeCoordinator
 {
+    private const string SessionTimeoutCommandName = "session-timeout";
+
     private static readonly TimeSpan s_processWatchInterval = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan s_emergencyHibernationWebhookTimeout = TimeSpan.FromSeconds(5);
-
     private readonly ICommandLineProcessResolver _commandLineProcessResolver;
     private readonly IProcessExitWatcher _processExitWatcher;
     private readonly PostStopSuspendSoundPlaybackCoordinator _postStopSuspendSoundPlaybackCoordinator;
@@ -28,6 +29,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
     private LidGuardSettings _settings;
     private CancellationTokenSource _pendingSuspendCancellationTokenSource;
+    private CancellationTokenSource _sessionTimeoutCancellationTokenSource;
 
     public LidGuardRuntimeCoordinator(
         LidGuardSettings initialSettings,
@@ -100,12 +102,14 @@ internal sealed class LidGuardRuntimeCoordinator
                 ? _codexSoftLockTranscriptMonitor.RegisterOrUpdateSession(request.SessionIdentifier, request.WorkingDirectory, request.TranscriptPath)
                 : new CodexTranscriptMonitoringRegistrationResult();
             var watchedProcessResolution = ResolveWatchedProcess(request);
+            var startedAt = DateTimeOffset.UtcNow;
             var startRequest = new LidGuardSessionStartRequest
             {
                 SessionIdentifier = request.SessionIdentifier,
                 Provider = request.Provider,
                 ProviderName = request.ProviderName,
-                StartedAt = DateTimeOffset.UtcNow,
+                StartedAt = startedAt,
+                LastActivityAt = startedAt,
                 WatchedProcessIdentifier = watchedProcessResolution.ProcessIdentifier,
                 WatchRegistrationKind = watchedProcessResolution.WatchRegistrationKind,
                 WorkingDirectory = request.WorkingDirectory,
@@ -132,6 +136,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
             CancelPendingSuspend();
             StartWatcher(snapshot);
+            ReconfigureSessionTimeoutMonitorInsideGate();
             AppendCodexTranscriptMonitorRegistration(request, snapshot, codexTranscriptMonitoringRegistrationResult);
 
             var watchMessage = CreateWatcherStatusMessage(request, snapshot);
@@ -220,53 +225,81 @@ internal sealed class LidGuardRuntimeCoordinator
             }
 
             var key = new LidGuardSessionKey(request.Provider, request.SessionIdentifier, request.ProviderName);
-            if (!_sessionRegistry.TryMarkSoftLocked(
-                request.Provider,
-                request.SessionIdentifier,
-                request.ProviderName,
-                request.SessionStateReason,
-                DateTimeOffset.UtcNow,
-                out var snapshot,
-                out var changed))
-            {
-                var ignoredResponse = CreateSuccessResponse($"Session {key} is not active; ignored soft-lock signal.");
-                LidGuardRuntimeLogWriter.AppendSessionLog("session-softlock-ignored", request, ignoredResponse);
-                return ignoredResponse;
-            }
-
-            _codexSoftLockTranscriptMonitor.ArmSessionSoftLock(key);
-            var successMessage = changed
-                ? $"Marked {key} as soft-locked from {request.SessionStateReason}."
-                : $"Session {key} is already soft-locked from {snapshot.SoftLockReason}.";
-            if (HasSessionsKeepingProtectionAppliedInsideGate())
-            {
-                var successResponse = CreateSuccessResponse(successMessage);
-                LidGuardRuntimeLogWriter.AppendSessionLog("session-softlock-recorded", request, successResponse, snapshot);
-                return successResponse;
-            }
-
-            var restoreResult = RestoreProtection();
-            if (!restoreResult.Succeeded)
-            {
-                var failedResponse = CreateFailureResponse(restoreResult);
-                LidGuardRuntimeLogWriter.AppendSessionLog("session-softlock-failed", request, failedResponse, snapshot);
-                return failedResponse;
-            }
-
-            var pendingSuspendContext = CreatePendingSuspendContext(request, snapshot);
-            var successResponseWithSuspendPlan = HandleSuspendAfterProtectionReleased(
-                pendingSuspendContext,
-                snapshot,
+            return MarkSessionSoftLockedInsideGate(
+                LidGuardPipeCommands.MarkSessionSoftLocked,
                 "session-softlock-recorded",
-                successMessage,
-                _sessionRegistry.ActiveSessionCount);
-            LidGuardRuntimeLogWriter.AppendSessionLog("session-softlock-recorded", request, successResponseWithSuspendPlan, snapshot);
-            return successResponseWithSuspendPlan;
+                request.Provider,
+                request.ProviderName,
+                request.SessionIdentifier,
+                request.SessionStateReason,
+                key);
         }
         finally
         {
             _gate.Release();
         }
+    }
+
+    private LidGuardPipeResponse MarkSessionSoftLockedInsideGate(
+        string commandName,
+        string eventName,
+        AgentProvider provider,
+        string providerName,
+        string sessionIdentifier,
+        string sessionStateReason,
+        LidGuardSessionKey sessionKey)
+    {
+        var request = new LidGuardPipeRequest
+        {
+            Command = commandName,
+            Provider = provider,
+            ProviderName = providerName,
+            SessionIdentifier = sessionIdentifier,
+            SessionStateReason = sessionStateReason
+        };
+
+        if (!_sessionRegistry.TryMarkSoftLocked(
+            provider,
+            sessionIdentifier,
+            providerName,
+            request.SessionStateReason,
+            DateTimeOffset.UtcNow,
+            out var snapshot,
+            out var changed))
+        {
+            var ignoredResponse = CreateSuccessResponse($"Session {sessionKey} is not active; ignored soft-lock signal.");
+            LidGuardRuntimeLogWriter.AppendSessionLog("session-softlock-ignored", request, ignoredResponse);
+            return ignoredResponse;
+        }
+
+        _codexSoftLockTranscriptMonitor.ArmSessionSoftLock(sessionKey);
+        var successMessage = changed
+            ? $"Marked {sessionKey} as soft-locked from {request.SessionStateReason}."
+            : $"Session {sessionKey} is already soft-locked from {snapshot.SoftLockReason}.";
+        if (HasSessionsKeepingProtectionAppliedInsideGate())
+        {
+            var successResponse = CreateSuccessResponse(successMessage);
+            LidGuardRuntimeLogWriter.AppendSessionLog(eventName, request, successResponse, snapshot);
+            return successResponse;
+        }
+
+        var restoreResult = RestoreProtection();
+        if (!restoreResult.Succeeded)
+        {
+            var failedResponse = CreateFailureResponse(restoreResult);
+            LidGuardRuntimeLogWriter.AppendSessionLog("session-softlock-failed", request, failedResponse, snapshot);
+            return failedResponse;
+        }
+
+        var pendingSuspendContext = CreatePendingSuspendContext(request, snapshot);
+        var successResponseWithSuspendPlan = HandleSuspendAfterProtectionReleased(
+            pendingSuspendContext,
+            snapshot,
+            eventName,
+            successMessage,
+            _sessionRegistry.ActiveSessionCount);
+        LidGuardRuntimeLogWriter.AppendSessionLog(eventName, request, successResponseWithSuspendPlan, snapshot);
+        return successResponseWithSuspendPlan;
     }
 
     private async Task<LidGuardPipeResponse> GetStatusAsync(CancellationToken cancellationToken)
@@ -418,11 +451,18 @@ internal sealed class LidGuardRuntimeCoordinator
             return LidGuardOperationResult.Failure(message);
         }
 
+        if (!LidGuardSettings.IsValidSessionTimeoutMinutes(settings.SessionTimeoutMinutes))
+        {
+            var message = $"Session timeout minutes must be off or an integer of at least {LidGuardSettings.MinimumSessionTimeoutMinutes}.";
+            return LidGuardOperationResult.Failure(message);
+        }
+
         var normalizedSettings = LidGuardSettings.Normalize(settings);
         if (!_sessionRegistry.HasActiveSessions)
         {
             _settings = normalizedSettings;
             ReconfigureWatchers();
+            ReconfigureSessionTimeoutMonitorInsideGate();
             EnsureEmergencyHibernationThermalMonitor();
             return LidGuardOperationResult.Success();
         }
@@ -435,6 +475,7 @@ internal sealed class LidGuardRuntimeCoordinator
         if (!HasSessionsKeepingProtectionAppliedInsideGate())
         {
             ReconfigureWatchers();
+            ReconfigureSessionTimeoutMonitorInsideGate();
             EnsureEmergencyHibernationThermalMonitor();
             return LidGuardOperationResult.Success();
         }
@@ -443,6 +484,7 @@ internal sealed class LidGuardRuntimeCoordinator
         if (protectionResult.Succeeded)
         {
             ReconfigureWatchers();
+            ReconfigureSessionTimeoutMonitorInsideGate();
             EnsureEmergencyHibernationThermalMonitor();
             return LidGuardOperationResult.Success();
         }
@@ -456,6 +498,7 @@ internal sealed class LidGuardRuntimeCoordinator
         }
 
         ReconfigureWatchers();
+        ReconfigureSessionTimeoutMonitorInsideGate();
         EnsureEmergencyHibernationThermalMonitor();
         return protectionResult;
     }
@@ -502,6 +545,113 @@ internal sealed class LidGuardRuntimeCoordinator
         foreach (var key in _watcherCancellationTokenSources.Keys.ToArray()) CancelWatcher(key);
         if (!_settings.WatchParentProcess) return;
         foreach (var snapshot in _sessionRegistry.GetSnapshots()) StartWatcher(snapshot);
+    }
+
+    private void ReconfigureSessionTimeoutMonitorInsideGate()
+    {
+        CancelSessionTimeoutMonitorInsideGate();
+        if (!_sessionRegistry.HasActiveSessions) return;
+        if (_settings.SessionTimeoutMinutes is not { } sessionTimeoutMinutes) return;
+
+        var sessionTimeoutDuration = TimeSpan.FromMinutes(sessionTimeoutMinutes);
+        var nextExpirationAt = DateTimeOffset.MaxValue;
+        foreach (var snapshot in _sessionRegistry.GetSnapshots())
+        {
+            if (snapshot.IsSoftLocked) continue;
+
+            var sessionExpirationAt = AddSessionTimeoutDuration(snapshot.LastActivityAt, sessionTimeoutDuration);
+            if (sessionExpirationAt < nextExpirationAt) nextExpirationAt = sessionExpirationAt;
+        }
+
+        if (nextExpirationAt == DateTimeOffset.MaxValue) return;
+
+        var delay = nextExpirationAt - DateTimeOffset.UtcNow;
+        if (delay < TimeSpan.Zero) delay = TimeSpan.Zero;
+        var cancellationTokenSource = new CancellationTokenSource();
+        _sessionTimeoutCancellationTokenSource = cancellationTokenSource;
+        _ = WaitForSessionTimeoutAsync(delay, cancellationTokenSource);
+    }
+
+    private void CancelSessionTimeoutMonitorInsideGate()
+    {
+        if (_sessionTimeoutCancellationTokenSource is null) return;
+
+        var cancellationTokenSource = _sessionTimeoutCancellationTokenSource;
+        _sessionTimeoutCancellationTokenSource = null;
+        cancellationTokenSource.Cancel();
+    }
+
+    private async Task WaitForSessionTimeoutAsync(
+        TimeSpan delay,
+        CancellationTokenSource cancellationTokenSource)
+    {
+        try
+        {
+            if (delay > TimeSpan.Zero) await Task.Delay(delay, cancellationTokenSource.Token);
+
+            await _gate.WaitAsync(cancellationTokenSource.Token);
+            try
+            {
+                if (!ReferenceEquals(_sessionTimeoutCancellationTokenSource, cancellationTokenSource)) return;
+
+                _sessionTimeoutCancellationTokenSource = null;
+                HandleSessionTimeoutInsideGate();
+            }
+            finally
+            {
+                _gate.Release();
+            }
+        }
+        catch (OperationCanceledException) { }
+        finally
+        {
+            cancellationTokenSource.Dispose();
+        }
+    }
+
+    private void HandleSessionTimeoutInsideGate()
+    {
+        if (_settings.SessionTimeoutMinutes is not { } sessionTimeoutMinutes)
+        {
+            ReconfigureSessionTimeoutMonitorInsideGate();
+            return;
+        }
+
+        var sessionTimeoutDuration = TimeSpan.FromMinutes(sessionTimeoutMinutes);
+        var now = DateTimeOffset.UtcNow;
+        var expiredSnapshots = _sessionRegistry
+            .GetSnapshots()
+            .Where(snapshot => !snapshot.IsSoftLocked)
+            .Where(snapshot => now >= snapshot.LastActivityAt)
+            .Where(snapshot => now - snapshot.LastActivityAt >= sessionTimeoutDuration)
+            .ToArray();
+        if (expiredSnapshots.Length == 0)
+        {
+            ReconfigureSessionTimeoutMonitorInsideGate();
+            return;
+        }
+
+        foreach (var expiredSnapshot in expiredSnapshots)
+        {
+            MarkSessionSoftLockedInsideGate(
+                SessionTimeoutCommandName,
+                "session-timeout-softlock-recorded",
+                expiredSnapshot.Provider,
+                expiredSnapshot.ProviderName,
+                expiredSnapshot.SessionIdentifier,
+                $"session-timeout-expired:{sessionTimeoutMinutes} minutes",
+                expiredSnapshot.Key);
+        }
+
+        ReconfigureSessionTimeoutMonitorInsideGate();
+    }
+
+    private static DateTimeOffset AddSessionTimeoutDuration(
+        DateTimeOffset lastActivityAt,
+        TimeSpan sessionTimeoutDuration)
+    {
+        try { return lastActivityAt + sessionTimeoutDuration; }
+        catch (ArgumentOutOfRangeException) { return DateTimeOffset.MaxValue; }
     }
 
     private void EnsureEmergencyHibernationThermalMonitor()
@@ -645,6 +795,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
         if (HasSessionsKeepingProtectionAppliedInsideGate())
         {
+            ReconfigureSessionTimeoutMonitorInsideGate();
             var response = CreateSuccessResponse(successMessage);
             LidGuardRuntimeLogWriter.AppendSessionLog(eventName, request, response, stoppedSnapshot, commandName);
             return response;
@@ -653,6 +804,7 @@ internal sealed class LidGuardRuntimeCoordinator
         var restoreResult = RestoreProtection();
         if (!restoreResult.Succeeded)
         {
+            ReconfigureSessionTimeoutMonitorInsideGate();
             var failedResponse = CreateFailureResponse(restoreResult);
             LidGuardRuntimeLogWriter.AppendSessionLog(eventName, request, failedResponse, stoppedSnapshot, commandName);
             return failedResponse;
@@ -665,6 +817,7 @@ internal sealed class LidGuardRuntimeCoordinator
             eventName,
             successMessage,
             _sessionRegistry.ActiveSessionCount);
+        ReconfigureSessionTimeoutMonitorInsideGate();
         LidGuardRuntimeLogWriter.AppendSessionLog(eventName, request, successResponse, stoppedSnapshot, commandName);
         return successResponse;
     }
@@ -1230,6 +1383,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 Provider = snapshot.Provider,
                 ProviderName = snapshot.ProviderName,
                 StartedAt = snapshot.StartedAt,
+                LastActivityAt = snapshot.LastActivityAt,
                 SoftLockState = snapshot.SoftLockState,
                 SoftLockReason = snapshot.SoftLockReason,
                 SoftLockedAt = snapshot.SoftLockedAt,
@@ -1409,6 +1563,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
         _codexSoftLockTranscriptMonitor.ResetSession(key);
         CancelPendingSuspend();
+        ReconfigureSessionTimeoutMonitorInsideGate();
         var protectionResult = EnsureProtection();
         if (!protectionResult.Succeeded)
         {

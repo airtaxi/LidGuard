@@ -12,6 +12,8 @@ public sealed class LidGuardSessionStatus
 
     public DateTimeOffset StartedAt { get; init; }
 
+    public DateTimeOffset LastActivityAt { get; init; }
+
     public LidGuardSessionSoftLockState SoftLockState { get; init; }
 
     public string SoftLockReason { get; init; } = string.Empty;

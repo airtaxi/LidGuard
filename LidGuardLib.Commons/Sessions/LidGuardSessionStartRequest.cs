@@ -10,6 +10,8 @@ public sealed class LidGuardSessionStartRequest
 
     public DateTimeOffset StartedAt { get; init; } = DateTimeOffset.UtcNow;
 
+    public DateTimeOffset LastActivityAt { get; init; } = DateTimeOffset.UtcNow;
+
     public int WatchedProcessIdentifier { get; init; }
 
     public LidGuardSessionWatchRegistrationKind WatchRegistrationKind { get; init; } = LidGuardSessionWatchRegistrationKind.None;

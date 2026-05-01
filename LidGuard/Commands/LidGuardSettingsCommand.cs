@@ -308,6 +308,12 @@ internal static class LidGuardSettingsCommand
         if (!CommandOptionReader.TryParseBooleanOption(options, basePowerRequest.PreventDisplaySleep, out var preventDisplaySleep, out message, "prevent-display-sleep", "display-required")) return false;
         if (!CommandOptionReader.TryParseBooleanOption(options, baseSettings.ChangeLidAction, out var changeLidAction, out message, "change-lid-action", "lid-action")) return false;
         if (!CommandOptionReader.TryParseBooleanOption(options, baseSettings.WatchParentProcess, out var watchParentProcess, out message, "watch-parent-process", "watch-parent")) return false;
+        if (!TryParseSessionTimeoutMinutesOption(
+            options,
+            baseSettings.SessionTimeoutMinutes,
+            out var sessionTimeoutMinutes,
+            out message))
+            return false;
         if (!CommandOptionReader.TryParseBooleanOption(
             options,
             baseSettings.EmergencyHibernationOnHighTemperature,
@@ -367,6 +373,7 @@ internal static class LidGuardSettingsCommand
             PreSuspendWebhookUrl = preSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess,
+            SessionTimeoutMinutes = sessionTimeoutMinutes,
             EmergencyHibernationOnHighTemperature = emergencyHibernationOnHighTemperature,
             EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode,
             EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius
@@ -389,6 +396,13 @@ internal static class LidGuardSettingsCommand
         if (!TryReadBooleanSetting("Prevent display sleep", storedPowerRequest.PreventDisplaySleep, defaultPowerRequest.PreventDisplaySleep, out var preventDisplaySleep, out message)) return false;
         if (!TryReadBooleanSetting("Change lid action", normalizedStoredSettings.ChangeLidAction, defaultSettings.ChangeLidAction, out var changeLidAction, out message)) return false;
         if (!TryReadBooleanSetting("Watch parent process", normalizedStoredSettings.WatchParentProcess, defaultSettings.WatchParentProcess, out var watchParentProcess, out message)) return false;
+        if (!TryReadSessionTimeoutMinutesSetting(
+            "Session timeout minutes",
+            normalizedStoredSettings.SessionTimeoutMinutes,
+            defaultSettings.SessionTimeoutMinutes,
+            out var sessionTimeoutMinutes,
+            out message))
+            return false;
         if (!TryReadBooleanSetting(
             "Emergency hibernation on high temperature",
             normalizedStoredSettings.EmergencyHibernationOnHighTemperature,
@@ -465,6 +479,7 @@ internal static class LidGuardSettingsCommand
             PreSuspendWebhookUrl = normalizedStoredSettings.PreSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess,
+            SessionTimeoutMinutes = sessionTimeoutMinutes,
             EmergencyHibernationOnHighTemperature = emergencyHibernationOnHighTemperature,
             EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode,
             EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius
@@ -550,6 +565,46 @@ internal static class LidGuardSettingsCommand
         if (int.TryParse(valueText.Trim(), out value) && value >= 0) return true;
 
         message = $"{settingName} must be a non-negative integer.";
+        return false;
+    }
+
+    private static bool TryReadSessionTimeoutMinutesSetting(
+        string settingName,
+        int? storedValue,
+        int? defaultValue,
+        out int? value,
+        out string message)
+    {
+        value = storedValue;
+        message = string.Empty;
+        WriteInteractiveSettingPrompt(
+            settingName,
+            SessionTimeoutConfiguration.GetDisplayValue(storedValue),
+            SessionTimeoutConfiguration.GetDisplayValue(defaultValue),
+            $"minimum: {LidGuardSettings.MinimumSessionTimeoutMinutes}, off to disable");
+
+        var valueText = Console.ReadLine();
+        if (valueText is null)
+        {
+            message = $"Input ended before {settingName} was entered.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(valueText)) return true;
+        if (valueText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
+        {
+            value = null;
+            return true;
+        }
+
+        if (int.TryParse(valueText.Trim(), out var parsedValue)
+            && LidGuardSettings.IsValidSessionTimeoutMinutes(parsedValue))
+        {
+            value = parsedValue;
+            return true;
+        }
+
+        message = $"{settingName} must be off or an integer of at least {LidGuardSettings.MinimumSessionTimeoutMinutes}.";
         return false;
     }
 
@@ -943,6 +998,34 @@ internal static class LidGuardSettingsCommand
         }
 
         message = $"The suspend-history-count option must be off or an integer of at least {LidGuardSettings.MinimumSuspendHistoryEntryCount}.";
+        return false;
+    }
+
+    private static bool TryParseSessionTimeoutMinutesOption(
+        IReadOnlyDictionary<string, string> options,
+        int? defaultValue,
+        out int? sessionTimeoutMinutes,
+        out string message)
+    {
+        sessionTimeoutMinutes = defaultValue;
+        message = string.Empty;
+        if (!CommandOptionReader.TryGetOption(options, out var sessionTimeoutMinutesText, "session-timeout-minutes")) return true;
+
+        if (string.IsNullOrWhiteSpace(sessionTimeoutMinutesText)
+            || sessionTimeoutMinutesText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
+        {
+            sessionTimeoutMinutes = null;
+            return true;
+        }
+
+        if (int.TryParse(sessionTimeoutMinutesText.Trim(), out var parsedValue)
+            && LidGuardSettings.IsValidSessionTimeoutMinutes(parsedValue))
+        {
+            sessionTimeoutMinutes = parsedValue;
+            return true;
+        }
+
+        message = $"The session-timeout-minutes option must be off or an integer of at least {LidGuardSettings.MinimumSessionTimeoutMinutes}.";
         return false;
     }
 

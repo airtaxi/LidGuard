@@ -78,6 +78,8 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         bool? changeLidAction = null,
         [Description("Set whether LidGuard watches the resolved parent process and cleans up when that process exits. Omit to keep the current value.")]
         bool? watchParentProcess = null,
+        [Description("Set the inactive session timeout in minutes. Pass off or an empty string to disable it, pass an integer of at least 1 to enable it, or omit to keep the current value.")]
+        string sessionTimeoutMinutes = null,
         [Description("Set whether LidGuard should request Emergency Hibernation when the guarded system temperature reaches the configured high-temperature threshold while the lid is closed. Omit to keep the current value.")]
         bool? emergencyHibernationOnHighTemperature = null,
         [Description("Set which thermal-zone aggregation mode LidGuard uses for Emergency Hibernation. Allowed values: Low, Average, or High. Omit to keep the current value.")]
@@ -120,6 +122,15 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
             throw new McpException(suspendHistoryMessage);
         }
 
+        if (!TryParseSessionTimeoutMinutes(
+            sessionTimeoutMinutes,
+            out var hasSessionTimeoutMinutes,
+            out var parsedSessionTimeoutMinutes,
+            out var sessionTimeoutMessage))
+        {
+            throw new McpException(sessionTimeoutMessage);
+        }
+
         var settingsPatch = new LidGuardSettingsPatch
         {
             ResetToDefaults = resetToDefaults,
@@ -128,6 +139,8 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
             PreventDisplaySleep = preventDisplaySleep,
             ChangeLidAction = changeLidAction,
             WatchParentProcess = watchParentProcess,
+            HasSessionTimeoutMinutes = hasSessionTimeoutMinutes,
+            SessionTimeoutMinutes = parsedSessionTimeoutMinutes,
             EmergencyHibernationOnHighTemperature = emergencyHibernationOnHighTemperature,
             EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode,
             EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius,
@@ -204,6 +217,30 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         }
 
         message = $"suspendHistoryEntryCount must be off or an integer of at least {LidGuardSettings.MinimumSuspendHistoryEntryCount}.";
+        return false;
+    }
+
+    private static bool TryParseSessionTimeoutMinutes(
+        string configuredValue,
+        out bool hasSessionTimeoutMinutes,
+        out int? sessionTimeoutMinutes,
+        out string message)
+    {
+        hasSessionTimeoutMinutes = false;
+        sessionTimeoutMinutes = null;
+        message = string.Empty;
+        if (configuredValue is null) return true;
+
+        hasSessionTimeoutMinutes = true;
+        if (string.IsNullOrWhiteSpace(configuredValue) || configuredValue.Trim().Equals("off", StringComparison.OrdinalIgnoreCase)) return true;
+        if (int.TryParse(configuredValue.Trim(), out var parsedValue)
+            && LidGuardSettings.IsValidSessionTimeoutMinutes(parsedValue))
+        {
+            sessionTimeoutMinutes = parsedValue;
+            return true;
+        }
+
+        message = $"sessionTimeoutMinutes must be off or an integer of at least {LidGuardSettings.MinimumSessionTimeoutMinutes}.";
         return false;
     }
 

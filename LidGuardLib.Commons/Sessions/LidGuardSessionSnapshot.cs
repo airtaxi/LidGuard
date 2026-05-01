@@ -8,6 +8,7 @@ public sealed class LidGuardSessionSnapshot
         Provider = AgentProvider.Unknown,
         ProviderName = string.Empty,
         StartedAt = DateTimeOffset.MinValue,
+        LastActivityAt = DateTimeOffset.MinValue,
         SoftLockState = LidGuardSessionSoftLockState.None,
         SoftLockReason = string.Empty,
         SoftLockedAt = null,
@@ -24,6 +25,8 @@ public sealed class LidGuardSessionSnapshot
     public string ProviderName { get; init; } = string.Empty;
 
     public DateTimeOffset StartedAt { get; init; }
+
+    public DateTimeOffset LastActivityAt { get; init; }
 
     public LidGuardSessionSoftLockState SoftLockState { get; init; }
 
