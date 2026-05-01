@@ -128,7 +128,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 ### Current Windows CLI Path
 
 - `LidGuard` parses `help`, `start`, `stop`, `remove-pre-suspend-webhook`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `current-lid-state`, `current-monitor-count`, `current-temperature`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `mcp-server`, and `provider-mcp-server`.
-- `help` prints the full help reference, and `help <command>` prints focused help for one command or recognized command alias.
+- `help` prints a categorized command overview with short descriptions, and `help <command>` prints focused detailed help for one command or recognized command alias.
 - `<command> --help` uses the same help metadata and returns before the target command validates options or performs command-specific work.
 - `start`, the `UserPromptSubmit` path in `codex-hook` and `claude-hook`, and the `userPromptSubmitted` path in `copilot-hook` load persisted default settings and send them with the start IPC request.
 - `remove-session --all` manually removes every active session currently tracked by the runtime.

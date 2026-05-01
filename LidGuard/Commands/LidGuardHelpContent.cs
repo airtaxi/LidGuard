@@ -84,6 +84,27 @@ internal static class LidGuardHelpContent
         return helpSections;
     }
 
+    public static IReadOnlyList<LidGuardHelpSection> CreateSummarySections(LidGuardHelpDocument document)
+    {
+        var helpSections = new List<LidGuardHelpSection>
+        {
+            new(UsageSectionTitle, CreateSummaryUsageDetails(document.Context.CommandDisplayName), [])
+        };
+
+        foreach (var sectionEntry in document.SectionEntries)
+        {
+            if (sectionEntry.Title.Equals(UsageSectionTitle, StringComparison.Ordinal)) continue;
+            if (sectionEntry.Title.Equals(PathsAndNotesSectionTitle, StringComparison.Ordinal)) continue;
+
+            var helpCommands = CreateSummaryCommandsForSection(document, sectionEntry.Title);
+            if (helpCommands.Count == 0) continue;
+
+            helpSections.Add(new LidGuardHelpSection(sectionEntry.Title, sectionEntry.Details, helpCommands));
+        }
+
+        return helpSections;
+    }
+
     public static IReadOnlyList<LidGuardHelpSection> CreateCommandSections(
         LidGuardHelpDocument document,
         LidGuardHelpCommandEntry commandEntry)
@@ -160,6 +181,7 @@ internal static class LidGuardHelpContent
                 LidGuardPipeCommands.RemoveSession,
                 [],
                 SessionControlSectionTitle,
+                "Remove active sessions currently tracked by the runtime.",
                 [
                     new LidGuardHelpCommand(
                         $"{commandDisplayName} remove-session --all",
@@ -206,7 +228,7 @@ internal static class LidGuardHelpContent
                 [],
                 SessionControlSectionTitle,
                 $"{commandDisplayName} help [command]",
-                "Show the full command reference or focused help for one known command or alias.",
+                "Show the categorized command overview or focused detailed help for one known command or alias.",
                 [],
                 [
                     "The <command> --help form uses the same command metadata."
@@ -507,15 +529,22 @@ internal static class LidGuardHelpContent
         string description,
         IReadOnlyList<LidGuardHelpOption> options,
         IReadOnlyList<string> notes)
-    {
-        return new LidGuardHelpCommandEntry(
+        => new(
             canonicalName,
             aliases,
             sectionTitle,
+            description,
             [
                 new LidGuardHelpCommand(synopsis, description, options, notes)
             ]);
-    }
+
+    private static LidGuardHelpCommandEntry CreateSingleCommandEntry(
+        string canonicalName,
+        IReadOnlyList<string> aliases,
+        string sectionTitle,
+        string summaryDescription,
+        IReadOnlyList<LidGuardHelpCommand> helpCommands)
+        => new(canonicalName, aliases, sectionTitle, summaryDescription, helpCommands);
 
     private static IReadOnlyList<string> CreateUsageDetails(string commandDisplayName)
     {
@@ -525,6 +554,16 @@ internal static class LidGuardHelpContent
             "Use --name value or --name=value for options.",
             "Boolean options accept true/false, yes/no, on/off, and 1/0.",
             "Quote paths or text values when they contain spaces."
+        ];
+    }
+
+    private static IReadOnlyList<string> CreateSummaryUsageDetails(string commandDisplayName)
+    {
+        return
+        [
+            $"{commandDisplayName} <command> [options]",
+            $"{commandDisplayName} help <command>",
+            $"{commandDisplayName} <command> --help"
         ];
     }
 
@@ -567,6 +606,30 @@ internal static class LidGuardHelpContent
 
         return helpCommands;
     }
+
+    private static IReadOnlyList<LidGuardHelpCommand> CreateSummaryCommandsForSection(LidGuardHelpDocument document, string sectionTitle)
+    {
+        var helpCommands = new List<LidGuardHelpCommand>();
+        foreach (var commandEntry in document.CommandEntries)
+        {
+            if (!commandEntry.SectionTitle.Equals(sectionTitle, StringComparison.Ordinal)) continue;
+
+            helpCommands.Add(new LidGuardHelpCommand(
+                CreateSummaryCommandLabel(commandEntry),
+                commandEntry.SummaryDescription,
+                [],
+                []));
+        }
+
+        return helpCommands;
+    }
+
+    private static string CreateSummaryCommandLabel(LidGuardHelpCommandEntry commandEntry)
+    {
+        if (commandEntry.Aliases.Count == 0) return commandEntry.CanonicalName;
+
+        return $"{commandEntry.CanonicalName} (alias: {string.Join(", ", commandEntry.Aliases)})";
+    }
 }
 
 internal sealed class LidGuardHelpDocument(
@@ -591,6 +654,7 @@ internal readonly record struct LidGuardHelpCommandEntry(
     string CanonicalName,
     IReadOnlyList<string> Aliases,
     string SectionTitle,
+    string SummaryDescription,
     IReadOnlyList<LidGuardHelpCommand> HelpCommands);
 
 internal readonly record struct LidGuardHelpSectionEntry(

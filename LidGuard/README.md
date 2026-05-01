@@ -24,14 +24,14 @@ lidguard <command> [options]
 
 Use `--name value` or `--name=value` for options. Boolean options accept `true/false`, `yes/no`, `on/off`, and `1/0`.
 
-For the full command and parameter reference, run:
+For the categorized command overview, run:
 
 ```powershell
 lidguard help
 lidguard --help
 ```
 
-For help with one command, run:
+For full options and notes for one command, run:
 
 ```powershell
 lidguard help status

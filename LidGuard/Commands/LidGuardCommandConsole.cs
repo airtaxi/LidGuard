@@ -62,7 +62,8 @@ internal static class LidGuardCommandConsole
     public static int WriteHelp(int exitCode)
     {
         var helpDocument = CreateHelpDocument();
-        foreach (var helpSection in LidGuardHelpContent.CreateAllSections(helpDocument)) WriteHelpSection(helpSection);
+        foreach (var helpSection in LidGuardHelpContent.CreateSummarySections(helpDocument)) WriteHelpSection(helpSection);
+        Console.WriteLine("Use command-specific help for full options, notes, and examples.");
         return exitCode;
     }
 
