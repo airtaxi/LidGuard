@@ -2,6 +2,8 @@
 setlocal EnableExtensions
 
 set "PACKAGE_VERSION=0.1.0"
+set "MAX_RETRY_COUNT=3"
+set "CURRENT_ATTEMPT=1"
 set "NATIVE_ARCH=%PROCESSOR_ARCHITECTURE%"
 if defined PROCESSOR_ARCHITEW6432 set "NATIVE_ARCH=%PROCESSOR_ARCHITEW6432%"
 
@@ -21,6 +23,36 @@ set "TEMP_CONFIG_DIR=%TEMP%\lidguard-local-source-%RANDOM%%RANDOM%"
 set "NUGET_CONFIG=%TEMP_CONFIG_DIR%\NuGet.Config"
 
 cd /d "%REPO_ROOT%" || exit /b 1
+
+:retry_loop
+call :run_once
+if errorlevel 1 (
+    if %CURRENT_ATTEMPT% geq %MAX_RETRY_COUNT% (
+        set "EXIT_CODE=1"
+        goto finalize
+    )
+    echo.
+    echo [INFO] Previous attempt failed. Retrying %CURRENT_ATTEMPT% of %MAX_RETRY_COUNT%.
+    set /a CURRENT_ATTEMPT+=1
+    echo.
+    goto retry_loop
+)
+
+set "EXIT_CODE=0"
+goto finalize
+
+:finalize
+if "%EXIT_CODE%"=="0" (
+    echo Done.
+) else (
+    echo Failed.
+)
+pause
+exit /b %EXIT_CODE%
+
+:run_once
+set "TEMP_CONFIG_DIR=%TEMP%\lidguard-local-source-%RANDOM%%RANDOM%"
+set "NUGET_CONFIG=%TEMP_CONFIG_DIR%\NuGet.Config"
 
 if not exist "%PROJECT_FILE%" (
     echo LidGuard project file was not found: "%PROJECT_FILE%"
@@ -110,20 +142,9 @@ if errorlevel 1 goto fail
 lidguard --help
 if errorlevel 1 goto fail
 
-echo Done.
-goto cleanup_success
+if exist "%TEMP_CONFIG_DIR%" rmdir /s /q "%TEMP_CONFIG_DIR%"
+exit /b 0
 
 :fail
-echo Failed.
-set "EXIT_CODE=1"
-goto cleanup
-
-:cleanup_success
-set "EXIT_CODE=0"
-goto cleanup
-
-:cleanup
 if exist "%TEMP_CONFIG_DIR%" rmdir /s /q "%TEMP_CONFIG_DIR%"
-exit /b %EXIT_CODE%
-
-pause
+exit /b 1
