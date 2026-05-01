@@ -67,7 +67,7 @@ public sealed class LidGuardSettings
         var emergencyHibernationTemperatureMode = NormalizeEmergencyHibernationTemperatureMode(settings.EmergencyHibernationTemperatureMode);
         var emergencyHibernationTemperatureCelsius = ClampEmergencyHibernationTemperatureCelsius(settings.EmergencyHibernationTemperatureCelsius);
         var suspendHistoryEntryCount = settings.SuspendHistoryEntryCount is null
-            ? null
+            ? (int?)null
             : Math.Max(MinimumSuspendHistoryEntryCount, settings.SuspendHistoryEntryCount.Value);
         return new LidGuardSettings
         {

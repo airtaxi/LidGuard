@@ -139,7 +139,7 @@ echo Verifying lidguard command...
 where lidguard
 if errorlevel 1 goto fail
 
-lidguard --help
+call lidguard --help
 if errorlevel 1 goto fail
 
 if exist "%TEMP_CONFIG_DIR%" rmdir /s /q "%TEMP_CONFIG_DIR%"

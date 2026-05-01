@@ -140,7 +140,10 @@ internal static class LidGuardHelpContent
                 ]),
             new LidGuardHelpSectionEntry(
                 PathsAndNotesSectionTitle,
-                CreatePathsAndNotesDetails(documentContext.SettingsFilePath, documentContext.SessionLogFilePath))
+                CreatePathsAndNotesDetails(
+                    documentContext.SettingsFilePath,
+                    documentContext.SessionLogFilePath,
+                    documentContext.SuspendHistoryLogFilePath))
         ];
     }
 
@@ -607,7 +610,10 @@ internal static class LidGuardHelpContent
         return usageDetails;
     }
 
-    private static IReadOnlyList<string> CreatePathsAndNotesDetails(string settingsFilePath, string sessionLogFilePath)
+    private static IReadOnlyList<string> CreatePathsAndNotesDetails(
+        string settingsFilePath,
+        string sessionLogFilePath,
+        string suspendHistoryLogFilePath)
     {
         return
         [
