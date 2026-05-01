@@ -80,7 +80,7 @@ lidguard current-temperature --temperature-mode high
 
 `current-lid-state` prints the current lid switch state as `Open`, `Closed`, or `Unknown` using the same Windows lid-state source LidGuard uses for closed-lid policy decisions.
 
-`current-monitor-count` prints the current desktop-visible monitor count using the same Windows `SM_CMONITORS` check LidGuard uses for closed-lid suspend policy decisions.
+`current-monitor-count` prints the current visible display monitor count using the same base Windows monitor visibility check LidGuard uses for closed-lid suspend policy decisions. LidGuard starts from `SM_CMONITORS` and excludes inactive monitor connections reported by Windows WMI. Internal laptop panel connections are only excluded by the final suspend eligibility check.
 
 `current-temperature` prints the current recognized system thermal-zone temperature in Celsius using the selected aggregation mode. Use `--temperature-mode default|low|average|high` to reuse the saved setting or override it for one command. When the settings file does not exist yet, `default` falls back to LidGuard's `Average` headless runtime default.
 

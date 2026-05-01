@@ -28,17 +28,17 @@ The goal is to keep Windows awake while at least one tracked agent session still
 - LidGuard detects and tracks active sessions.
 - Claude Code and GitHub Copilot CLI sessions can enter a runtime-managed soft-lock state when provider notifications show the agent is waiting on user input.
 - While at least one non-soft-locked session is active, Windows should not enter idle sleep through `PowerRequestSystemRequired` and `PowerRequestAwayModeRequired`.
-- If every remaining active session is soft-locked, LidGuard should release temporary keep-awake protection, restore any temporary lid policy change, and start the configured suspend flow only when the lid is closed and no visible display monitors remain attached to the desktop.
+- If every remaining active session is soft-locked, LidGuard should release temporary keep-awake protection, restore any temporary lid policy change, and start the configured suspend flow only when the lid is closed and no suspend-blocking visible display monitors remain attached to the desktop.
 - Optional settings temporarily change the active power plan's lid close action to `Do Nothing`.
 - When sessions stop, all temporary power settings must be restored to the user's original values.
-- After the last active session stops, LidGuard should always request suspend when the laptop lid is closed and no visible display monitors remain attached to the desktop.
+- After the last active session stops, LidGuard should always request suspend when the laptop lid is closed and no suspend-blocking visible display monitors remain attached to the desktop.
 - Once the active session count reaches `0`, the server runtime should exit immediately after any in-flight suspend or cleanup work finishes.
 - If active sessions remain but all of them are soft-locked, LidGuard should follow the same suspend path without waiting for stop hooks.
 - The suspend mode remains user-selectable: Sleep by default, Hibernate optional.
 - The post-stop suspend delay remains user-selectable: 10 seconds by default, `0` for immediate suspend.
 - The post-stop suspend sound remains optional: off by default, with supported SystemSounds names or a playable `.wav` path.
 - The post-stop suspend sound volume override remains optional: off by default, with an allowed master volume range of 1 through 100 percent.
-- While keep-awake protection is applied and the laptop lid is closed with no visible display monitors remaining on the desktop, an optional Emergency Hibernation thermal monitor should poll every 10 seconds and request immediate hibernation when the system temperature reaches the configured threshold.
+- While keep-awake protection is applied and the laptop lid is closed with no suspend-blocking visible display monitors remaining on the desktop, an optional Emergency Hibernation thermal monitor should poll every 10 seconds and request immediate hibernation when the system temperature reaches the configured threshold.
 
 The key design rule is to treat normal idle sleep and lid-close sleep as separate problems. Power requests handle idle sleep. `LIDACTION` policy backup/change/restore handles lid-close behavior because standard sleep-prevention APIs cannot reliably block a user lid-close action.
 
@@ -96,10 +96,10 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - Lid open/close notification uses `GUID_LIDSWITCH_STATE_CHANGE`.
 - Broadcast values are `0x0 = lid closed` and `0x1 = lid opened`.
 - `LidSwitchNotificationRegistration` converts these values to `LidSwitchState`.
-- Closed-lid policy decisions also read `GetSystemMetrics(SM_CMONITORS)`, and LidGuard only treats the machine as suspend-eligible for lid-close policy when `LidSwitchState` is `Closed` and the visible display monitor count is `0`.
+- Closed-lid policy decisions start from `GetSystemMetrics(SM_CMONITORS)` and exclude inactive monitor connections reported by Windows WMI. The final suspend eligibility check also excludes internal laptop panel connections while `LidSwitchState` is `Closed`; LidGuard only treats the machine as suspend-eligible for lid-close policy when the resulting visible display monitor count is `0`.
 - Immediate sleep/hibernate uses `SetSuspendState` after enabling `SeShutdownPrivilege`.
 - On Modern Standby systems, `SetSuspendState(false, ...)` can fail with `ERROR_NOT_SUPPORTED`; a later fallback may use a display-off strategy.
-- After the last active session stops, LidGuard should request suspend after the configured post-stop delay using the configured suspend mode only when the lid is closed and the visible display monitor count is `0`. A delay of `0` means immediate suspend.
+- After the last active session stops, LidGuard should request suspend after the configured post-stop delay using the configured suspend mode only when the lid is closed and the suspend eligibility visible display monitor count is `0`. A delay of `0` means immediate suspend.
 - If a post-stop suspend sound is configured, LidGuard should wait for the delay first, then play the configured sound to completion, then re-check the lid/session state before requesting suspend.
 - If a post-stop suspend sound volume override is configured, LidGuard should capture the default output device master volume and mute state immediately before playback, temporarily unmute as needed, set the configured master volume percent for playback, then restore the previous volume and mute state in the sound playback cleanup path.
 - If a pre-suspend webhook URL is configured, LidGuard should POST JSON before requesting suspend. The body must include `reason`, and soft-lock-triggered suspend must also include the soft-locked session count.
@@ -108,7 +108,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 
 - Emergency Hibernation uses `SystemThermalInformation.GetSystemTemperatureCelsius(EmergencyHibernationTemperatureMode)` to read the selected available system thermal-zone temperature in Celsius.
 - Emergency Hibernation temperature mode is configurable as Low, Average, or High, and defaults to Average.
-- The thermal monitor only runs while shared keep-awake protection is applied, the lid is closed, and the visible display monitor count is `0`.
+- The thermal monitor only runs while shared keep-awake protection is applied, the lid is closed, and the suspend eligibility visible display monitor count is `0`.
 - The thermal poll interval is fixed at 10 seconds.
 - The Emergency Hibernation threshold is configurable, defaults to 93 Celsius, and must always be clamped to 70 through 110 Celsius before runtime use.
 - When the observed temperature reaches the clamped threshold, LidGuard should cancel any pending post-stop suspend, send the pre-suspend webhook with `reason = EmergencyHibernation` using a 5-second timeout, then immediately request hibernate.
@@ -137,7 +137,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `remove-session` manually removes active sessions by session identifier; when `--provider` is omitted, it removes every active session whose session identifier matches. When `--provider mcp` is used, `--provider-name` can narrow the removal to one MCP-backed provider; omitting `--provider-name` removes every MCP-backed session that shares that session identifier.
 - `remove-pre-suspend-webhook` clears the configured pre-suspend webhook URL and reports when no webhook is currently configured.
 - `current-lid-state` prints the current lid switch state using the same `GUID_LIDSWITCH_STATE_CHANGE` source LidGuard uses for closed-lid policy decisions.
-- `current-monitor-count` prints the current desktop-visible monitor count using the same `GetSystemMetrics(SM_CMONITORS)` check LidGuard uses for closed-lid policy decisions.
+- `current-monitor-count` prints the current visible display monitor count using the same base Windows monitor visibility check LidGuard uses for closed-lid policy decisions, without the internal-display exclusion used by final suspend eligibility checks.
 - `current-temperature` prints the currently recognized system thermal-zone temperature in Celsius using the selected aggregation mode, or reports when thermal-zone data is unavailable.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
 - `settings` also exposes `--emergency-hibernation-on-high-temperature`, `--emergency-hibernation-temperature-mode`, and `--emergency-hibernation-temperature-celsius`; the threshold option accepts 70 through 110 only.
@@ -310,7 +310,8 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - Uses `PowerCreateRequest`, `PowerSetRequest`, `PowerClearRequest`.
   - Supports system-required, away-mode-required, and display-required requests.
 - `VisibleDisplayMonitorCountProvider`
-  - Reads the desktop-visible monitor count with `GetSystemMetrics(SM_CMONITORS)`.
+  - Starts from `GetSystemMetrics(SM_CMONITORS)`, then uses `WmiMonitorConnectionParams` to exclude inactive monitor connections.
+  - Accepts an internal-display exclusion flag used by final suspend eligibility checks, so status and diagnostic monitor counts can still report the active internal laptop panel.
 - `LidActionService`
   - Reads/writes active power plan `LIDACTION`.
 - `ProcessExitWatcher`

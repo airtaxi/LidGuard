@@ -7,6 +7,7 @@ using LidGuard.Runtime;
 using LidGuard.Settings;
 using LidGuardLib.Commons.Platform;
 using LidGuardLib.Commons.Power;
+using LidGuardLib.Commons.Services;
 using LidGuardLib.Commons.Settings;
 using LidGuardLib.Platform;
 using LidGuardLib.Power;
@@ -327,7 +328,7 @@ internal static class LidGuardCommandLineApplication
 
         using var serviceSet = serviceSetResult.Value;
         var visibleDisplayMonitorCount = serviceSet.VisibleDisplayMonitorCountProvider.GetVisibleDisplayMonitorCount();
-        Console.WriteLine($"Current desktop-visible monitor count: {visibleDisplayMonitorCount}");
+        Console.WriteLine($"Current visible display monitor count: {visibleDisplayMonitorCount}");
         return 0;
     }
 
@@ -341,19 +342,24 @@ internal static class LidGuardCommandLineApplication
         }
 
         using var serviceSet = serviceSetResult.Value;
-        var lidSwitchState = serviceSet.LidStateSource.CurrentState;
-        if (lidSwitchState == LidSwitchState.Unknown)
-        {
-            var stopwatch = Stopwatch.StartNew();
-            while (lidSwitchState == LidSwitchState.Unknown && stopwatch.Elapsed < TimeSpan.FromMilliseconds(500))
-            {
-                Thread.Sleep(25);
-                lidSwitchState = serviceSet.LidStateSource.CurrentState;
-            }
-        }
-
+        var lidSwitchState = ReadCurrentLidSwitchState(serviceSet.LidStateSource);
         Console.WriteLine($"Current lid state: {lidSwitchState}");
         return 0;
+    }
+
+    private static LidSwitchState ReadCurrentLidSwitchState(ILidStateSource lidStateSource)
+    {
+        var lidSwitchState = lidStateSource.CurrentState;
+        if (lidSwitchState != LidSwitchState.Unknown) return lidSwitchState;
+
+        var stopwatch = Stopwatch.StartNew();
+        while (lidSwitchState == LidSwitchState.Unknown && stopwatch.Elapsed < TimeSpan.FromMilliseconds(500))
+        {
+            Thread.Sleep(25);
+            lidSwitchState = lidStateSource.CurrentState;
+        }
+
+        return lidSwitchState;
     }
 
     [SupportedOSPlatform("windows6.1")]

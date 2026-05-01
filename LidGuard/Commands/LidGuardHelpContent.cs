@@ -313,10 +313,10 @@ internal static class LidGuardHelpContent
                 [],
                 DiagnosticsSectionTitle,
                 $"{commandDisplayName} {LidGuardPipeCommands.CurrentMonitorCount}",
-                "Report the current desktop-visible monitor count using the same Windows monitor visibility check LidGuard uses for closed-lid policy decisions.",
+                "Report the current visible display monitor count using the same base Windows monitor visibility check LidGuard uses for closed-lid policy decisions.",
                 [],
                 [
-                    "This uses `GetSystemMetrics(SM_CMONITORS)` and reports the number of monitors currently attached to the desktop."
+                    "This starts from `GetSystemMetrics(SM_CMONITORS)` and excludes inactive monitor connections reported by Windows WMI. Internal laptop panel connections are only excluded by the final suspend eligibility check."
                 ]),
             CreateSingleCommandEntry(
                 LidGuardPipeCommands.CurrentTemperature,

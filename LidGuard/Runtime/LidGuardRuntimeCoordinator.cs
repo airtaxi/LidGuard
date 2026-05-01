@@ -1193,10 +1193,18 @@ internal sealed class LidGuardRuntimeCoordinator
     }
 
     private ClosedLidPolicyApplicability EvaluateClosedLidPolicyApplicability(string actionName)
-        => EvaluateClosedLidPolicyApplicability(actionName, GetCurrentLidAndDisplayState());
+    {
+        var lidSwitchState = _lidStateSource.CurrentState;
+        var visibleDisplayMonitorCount = _visibleDisplayMonitorCountProvider.GetVisibleDisplayMonitorCount(
+            excludeInternalDisplayMonitors: lidSwitchState == LidSwitchState.Closed);
+        return EvaluateClosedLidPolicyApplicability(actionName, new CurrentLidAndDisplayState(lidSwitchState, visibleDisplayMonitorCount));
+    }
 
     private CurrentLidAndDisplayState GetCurrentLidAndDisplayState()
-        => new(_lidStateSource.CurrentState, _visibleDisplayMonitorCountProvider.GetVisibleDisplayMonitorCount());
+    {
+        var lidSwitchState = _lidStateSource.CurrentState;
+        return new(lidSwitchState, _visibleDisplayMonitorCountProvider.GetVisibleDisplayMonitorCount());
+    }
 
     private static ClosedLidPolicyApplicability EvaluateClosedLidPolicyApplicability(
         string actionName,
@@ -1244,8 +1252,8 @@ internal sealed class LidGuardRuntimeCoordinator
 
     private static string DescribeSuspendReason(int activeSessionCount)
         => activeSessionCount == 0
-            ? "because the lid is closed, no visible display monitors remain, and the last session stopped."
-            : "because the lid is closed, no visible display monitors remain, and all remaining sessions are soft-locked.";
+            ? "because the lid is closed, no suspend-blocking visible display monitors remain, and the last session stopped."
+            : "because the lid is closed, no suspend-blocking visible display monitors remain, and all remaining sessions are soft-locked.";
 
     private static string DescribeEmergencyHibernationTemperature(
         int observedTemperatureCelsius,
