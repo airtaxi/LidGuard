@@ -284,7 +284,20 @@ internal static class LidGuardHelpContent
                 [
                     new LidGuardHelpOption("--name <sound>", "Required. Allowed values: Asterisk, Beep, Exclamation, Hand, or Question.")
                 ],
-                []),
+                [
+                    "This command waits until playback finishes."
+                ]),
+            CreateSingleCommandEntry(
+                LidGuardPipeCommands.PreviewCurrentSound,
+                [],
+                SettingsAndSuspendSectionTitle,
+                $"{commandDisplayName} preview-current-sound",
+                "Play the saved post-stop suspend sound immediately using the saved volume override setting.",
+                [],
+                [
+                    "If no post-stop suspend sound is configured, this command prints settings guidance instead of failing.",
+                    "This command waits until playback finishes."
+                ]),
             CreateSingleCommandEntry(
                 LidGuardPipeCommands.CurrentLidState,
                 [],

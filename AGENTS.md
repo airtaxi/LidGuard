@@ -129,7 +129,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 ### Current Windows CLI Path
 
-- `LidGuard` parses `help`, `start`, `stop`, `remove-pre-suspend-webhook`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `current-lid-state`, `current-monitor-count`, `current-temperature`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `mcp-server`, and `provider-mcp-server`.
+- `LidGuard` parses `help`, `start`, `stop`, `remove-pre-suspend-webhook`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `current-lid-state`, `current-monitor-count`, `current-temperature`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `preview-current-sound`, `mcp-server`, and `provider-mcp-server`.
 - `help` prints a categorized command overview with short descriptions, and `help <command>` prints focused detailed help for one command or recognized command alias.
 - `<command> --help` uses the same help metadata and returns before the target command validates options or performs command-specific work.
 - `start`, the `UserPromptSubmit` path in `codex-hook` and `claude-hook`, and the `userPromptSubmitted` path in `copilot-hook` load persisted default settings and send them with the start IPC request.
@@ -142,6 +142,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
 - `settings` also exposes `--emergency-hibernation-on-high-temperature`, `--emergency-hibernation-temperature-mode`, and `--emergency-hibernation-temperature-celsius`; the threshold option accepts 70 through 110 only.
 - `settings` exposes `--post-stop-suspend-sound-volume-override-percent off|<1-100>` for temporary post-stop sound playback master volume override; `off` disables it and out-of-range values are rejected.
+- `preview-system-sound` and `preview-current-sound` apply the saved post-stop suspend sound volume override setting and wait until playback finishes. `preview-current-sound` plays the saved post-stop suspend sound and prints setup guidance when no sound is configured.
 - `hook-install`, `hook-status`, `hook-remove`, and `hook-events` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
 - `mcp-status`, `mcp-install`, and `mcp-remove` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
 - `provider-mcp-status`, `provider-mcp-install`, and `provider-mcp-remove` work on a caller-supplied JSON config file path instead of using Codex, Claude Code, or GitHub Copilot CLI-specific MCP registration commands.
@@ -545,6 +546,7 @@ lidguard current-monitor-count
 lidguard current-temperature
 lidguard current-temperature --temperature-mode high
 lidguard preview-system-sound --name Asterisk
+lidguard preview-current-sound
 lidguard settings
 lidguard settings --emergency-hibernation-temperature-mode average
 lidguard settings --change-lid-action true
