@@ -335,6 +335,12 @@ internal static class LidGuardSettingsCommand
             out var postStopSuspendSoundVolumeOverridePercent,
             out message))
             return false;
+        if (!TryParseSuspendHistoryEntryCountOption(
+            options,
+            baseSettings.SuspendHistoryEntryCount,
+            out var suspendHistoryEntryCount,
+            out message))
+            return false;
         var postStopSuspendSound = baseSettings.PostStopSuspendSound;
         if (CommandOptionReader.TryGetOption(options, out var postStopSuspendSoundText, "post-stop-suspend-sound")) postStopSuspendSound = postStopSuspendSoundText;
         if (!TryParsePreSuspendWebhookUrlOption(options, baseSettings.PreSuspendWebhookUrl, out var preSuspendWebhookUrl, out message)) return false;
@@ -357,6 +363,7 @@ internal static class LidGuardSettingsCommand
             PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
             PostStopSuspendSound = postStopSuspendSound,
             PostStopSuspendSoundVolumeOverridePercent = postStopSuspendSoundVolumeOverridePercent,
+            SuspendHistoryEntryCount = suspendHistoryEntryCount,
             PreSuspendWebhookUrl = preSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess,
@@ -425,6 +432,13 @@ internal static class LidGuardSettingsCommand
             out var postStopSuspendSoundVolumeOverridePercent,
             out message))
             return false;
+        if (!TryReadSuspendHistoryEntryCountSetting(
+            "Suspend history entry count",
+            normalizedStoredSettings.SuspendHistoryEntryCount,
+            defaultSettings.SuspendHistoryEntryCount,
+            out var suspendHistoryEntryCount,
+            out message))
+            return false;
         if (!TryReadClosedLidPermissionRequestDecisionSetting(
             "Closed lid permission request decision",
             normalizedStoredSettings.ClosedLidPermissionRequestDecision,
@@ -447,6 +461,7 @@ internal static class LidGuardSettingsCommand
             PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
             PostStopSuspendSound = postStopSuspendSound,
             PostStopSuspendSoundVolumeOverridePercent = postStopSuspendSoundVolumeOverridePercent,
+            SuspendHistoryEntryCount = suspendHistoryEntryCount,
             PreSuspendWebhookUrl = normalizedStoredSettings.PreSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess,
@@ -576,6 +591,46 @@ internal static class LidGuardSettingsCommand
 
         message =
             $"{settingName} must be off or an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.";
+        return false;
+    }
+
+    private static bool TryReadSuspendHistoryEntryCountSetting(
+        string settingName,
+        int? storedValue,
+        int? defaultValue,
+        out int? value,
+        out string message)
+    {
+        value = storedValue;
+        message = string.Empty;
+        WriteInteractiveSettingPrompt(
+            settingName,
+            SuspendHistoryConfiguration.GetDisplayValue(storedValue),
+            SuspendHistoryConfiguration.GetDisplayValue(defaultValue),
+            $"minimum: {LidGuardSettings.MinimumSuspendHistoryEntryCount}, off to disable");
+
+        var valueText = Console.ReadLine();
+        if (valueText is null)
+        {
+            message = $"Input ended before {settingName} was entered.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(valueText)) return true;
+        if (valueText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
+        {
+            value = null;
+            return true;
+        }
+
+        if (int.TryParse(valueText.Trim(), out var parsedValue)
+            && LidGuardSettings.IsValidSuspendHistoryEntryCount(parsedValue))
+        {
+            value = parsedValue;
+            return true;
+        }
+
+        message = $"{settingName} must be off or an integer of at least {LidGuardSettings.MinimumSuspendHistoryEntryCount}.";
         return false;
     }
 
@@ -853,6 +908,41 @@ internal static class LidGuardSettingsCommand
 
         message =
             $"The post-stop-suspend-sound-volume-override-percent option must be off or an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.";
+        return false;
+    }
+
+    private static bool TryParseSuspendHistoryEntryCountOption(
+        IReadOnlyDictionary<string, string> options,
+        int? defaultValue,
+        out int? suspendHistoryEntryCount,
+        out string message)
+    {
+        suspendHistoryEntryCount = defaultValue;
+        message = string.Empty;
+        if (!CommandOptionReader.TryGetOption(
+            options,
+            out var suspendHistoryEntryCountText,
+            "suspend-history-count",
+            "suspend-history-entry-count"))
+        {
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(suspendHistoryEntryCountText)
+            || suspendHistoryEntryCountText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
+        {
+            suspendHistoryEntryCount = null;
+            return true;
+        }
+
+        if (int.TryParse(suspendHistoryEntryCountText.Trim(), out var parsedValue)
+            && LidGuardSettings.IsValidSuspendHistoryEntryCount(parsedValue))
+        {
+            suspendHistoryEntryCount = parsedValue;
+            return true;
+        }
+
+        message = $"The suspend-history-count option must be off or an integer of at least {LidGuardSettings.MinimumSuspendHistoryEntryCount}.";
         return false;
     }
 

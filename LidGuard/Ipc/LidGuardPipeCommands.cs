@@ -34,5 +34,6 @@ internal static class LidGuardPipeCommands
     public const string Start = "start";
     public const string Status = "status";
     public const string Stop = "stop";
+    public const string SuspendHistory = "suspend-history";
 }
 

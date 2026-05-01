@@ -33,6 +33,10 @@ public sealed class LidGuardSettingsPatch
 
     public int? PostStopSuspendSoundVolumeOverridePercent { get; init; }
 
+    public bool HasSuspendHistoryEntryCount { get; init; }
+
+    public int? SuspendHistoryEntryCount { get; init; }
+
     public string PreSuspendWebhookUrl { get; init; }
 
     public ClosedLidPermissionRequestDecision? ClosedLidPermissionRequestDecision { get; init; }

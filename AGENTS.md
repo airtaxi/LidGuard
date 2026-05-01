@@ -129,7 +129,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 ### Current Windows CLI Path
 
-- `LidGuard` parses `help`, `start`, `stop`, `remove-pre-suspend-webhook`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `current-lid-state`, `current-monitor-count`, `current-temperature`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `preview-current-sound`, `mcp-server`, and `provider-mcp-server`.
+- `LidGuard` parses `help`, `start`, `stop`, `remove-pre-suspend-webhook`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `current-lid-state`, `current-monitor-count`, `current-temperature`, `suspend-history`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `preview-current-sound`, `mcp-server`, and `provider-mcp-server`.
 - `help` prints a categorized command overview with short descriptions, and `help <command>` prints focused detailed help for one command or recognized command alias.
 - `<command> --help` uses the same help metadata and returns before the target command validates options or performs command-specific work.
 - `start`, the `UserPromptSubmit` path in `codex-hook` and `claude-hook`, and the `userPromptSubmitted` path in `copilot-hook` load persisted default settings and send them with the start IPC request.
@@ -139,9 +139,11 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `current-lid-state` prints the current lid switch state using the same `GUID_LIDSWITCH_STATE_CHANGE` source LidGuard uses for closed-lid policy decisions.
 - `current-monitor-count` prints the current visible display monitor count using the same base Windows monitor visibility check LidGuard uses for closed-lid policy decisions, without the internal-display exclusion used by final suspend eligibility checks.
 - `current-temperature` prints the currently recognized system thermal-zone temperature in Celsius using the selected aggregation mode, or reports when thermal-zone data is unavailable.
+- `suspend-history` prints recent suspend request history from `%LOCALAPPDATA%\LidGuard\suspend-history.log`, including mode, reason, result, active session count, and related session or Emergency Hibernation temperature details when available.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
 - `settings` also exposes `--emergency-hibernation-on-high-temperature`, `--emergency-hibernation-temperature-mode`, and `--emergency-hibernation-temperature-celsius`; the threshold option accepts 70 through 110 only.
 - `settings` exposes `--post-stop-suspend-sound-volume-override-percent off|<1-100>` for temporary post-stop sound playback master volume override; `off` disables it and out-of-range values are rejected.
+- `settings` exposes `--suspend-history-count off|<count>` for recent suspend history retention; `off` disables recording and enabled counts must be at least 1.
 - `preview-system-sound` and `preview-current-sound` apply the saved post-stop suspend sound volume override setting and wait until playback finishes. `preview-current-sound` plays the saved post-stop suspend sound and prints setup guidance when no sound is configured.
 - `hook-install`, `hook-status`, `hook-remove`, and `hook-events` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
 - `mcp-status`, `mcp-install`, and `mcp-remove` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
@@ -154,6 +156,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `run-server` is detached from inherited stdout/stderr so hook callers do not hang while reading child process output.
 - Runtime communication uses a local named pipe.
 - Session execution events are logged as JSON lines at `%LOCALAPPDATA%\LidGuard\session-execution.log`, keeping the latest 500 entries.
+- Recent suspend request history is logged as JSON lines at `%LOCALAPPDATA%\LidGuard\suspend-history.log`, keeping the latest configured entry count when enabled.
 - Provider hook event logs record the `prompt` field on received start events: Codex and Claude `UserPromptSubmit`, and GitHub Copilot CLI `userPromptSubmitted`.
 - Default settings are stored at `%LOCALAPPDATA%\LidGuard\settings.json`.
 
@@ -209,6 +212,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Post-stop suspend mode: Sleep by default, Hibernate optional.
 - Post-stop suspend sound: off by default.
 - Post-stop suspend sound volume override: off by default, accepts 1 through 100 percent, and is rejected rather than clamped when out of range.
+- Suspend history recording: on by default, keeps the latest 10 entries, and accepts `off` or an enabled count of at least 1.
 - Pre-suspend webhook URL: off by default.
 - Emergency Hibernation on high temperature: enabled by default.
 - Emergency Hibernation temperature mode: Average by default, with Low and High optional.
@@ -301,6 +305,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - `CodexSoftLockTranscriptMonitor`
   - `EmergencyHibernationThermalMonitor`
   - `PostStopSuspendSoundPlaybackCoordinator`
+  - `SuspendHistoryLogStore`
 
 `LidGuardControlService` loads/saves stored settings and can push updated settings into a running runtime without requiring the CLI entrypoint.
 
@@ -365,6 +370,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - Exposes `get_settings_status`.
   - Exposes `list_sessions` for active-session listing without the full settings payload.
   - Exposes `update_settings` for multi-field settings updates in one call, including Emergency Hibernation temperature settings and post-stop suspend sound volume override percent.
+  - Exposes `update_settings` for suspend history retention through `suspendHistoryEntryCount`, accepting `off` or an enabled count of at least 1.
   - Exposes `remove_session` for manual active-session deletion by session identifier, with optional provider and MCP provider-name filters.
   - Exposes `set_session_soft_lock` and `clear_session_soft_lock` for provider/session-targeted soft-lock control.
 - `LidGuardProviderMcpTools`
@@ -546,6 +552,7 @@ lidguard current-lid-state
 lidguard current-monitor-count
 lidguard current-temperature
 lidguard current-temperature --temperature-mode high
+lidguard suspend-history
 lidguard preview-system-sound --name Asterisk
 lidguard preview-current-sound
 lidguard settings
@@ -555,6 +562,8 @@ lidguard settings --post-stop-suspend-delay-seconds 0
 lidguard settings --post-stop-suspend-sound Asterisk
 lidguard settings --post-stop-suspend-sound-volume-override-percent 75
 lidguard settings --post-stop-suspend-sound-volume-override-percent off
+lidguard settings --suspend-history-count 10
+lidguard settings --suspend-history-count off
 lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
 lidguard settings --closed-lid-permission-request-decision allow
 lidguard settings --prevent-away-mode-sleep true --prevent-display-sleep true --power-request-reason "LidGuard keeps agent sessions awake"

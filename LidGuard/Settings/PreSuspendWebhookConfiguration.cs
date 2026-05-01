@@ -18,6 +18,7 @@ internal static class PreSuspendWebhookConfiguration
             PostStopSuspendDelaySeconds = normalizedInputSettings.PostStopSuspendDelaySeconds,
             PostStopSuspendSound = normalizedInputSettings.PostStopSuspendSound,
             PostStopSuspendSoundVolumeOverridePercent = normalizedInputSettings.PostStopSuspendSoundVolumeOverridePercent,
+            SuspendHistoryEntryCount = normalizedInputSettings.SuspendHistoryEntryCount,
             PreSuspendWebhookUrl = preSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = normalizedInputSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = normalizedInputSettings.WatchParentProcess,

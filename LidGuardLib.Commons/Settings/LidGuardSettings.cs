@@ -9,6 +9,8 @@ public sealed class LidGuardSettings
     public const int DefaultEmergencyHibernationTemperatureCelsius = 93;
     public const int MinimumPostStopSuspendSoundVolumeOverridePercent = 1;
     public const int MaximumPostStopSuspendSoundVolumeOverridePercent = 100;
+    public const int MinimumSuspendHistoryEntryCount = 1;
+    public const int DefaultSuspendHistoryEntryCount = 10;
 
     public static LidGuardSettings Default { get; } = new();
 
@@ -29,6 +31,8 @@ public sealed class LidGuardSettings
     public string PostStopSuspendSound { get; init; } = string.Empty;
 
     public int? PostStopSuspendSoundVolumeOverridePercent { get; init; }
+
+    public int? SuspendHistoryEntryCount { get; init; } = DefaultSuspendHistoryEntryCount;
 
     public string PreSuspendWebhookUrl { get; init; } = string.Empty;
 
@@ -52,6 +56,9 @@ public sealed class LidGuardSettings
         => postStopSuspendSoundVolumeOverridePercent is null
             || postStopSuspendSoundVolumeOverridePercent is >= MinimumPostStopSuspendSoundVolumeOverridePercent and <= MaximumPostStopSuspendSoundVolumeOverridePercent;
 
+    public static bool IsValidSuspendHistoryEntryCount(int? suspendHistoryEntryCount)
+        => suspendHistoryEntryCount is null || suspendHistoryEntryCount >= MinimumSuspendHistoryEntryCount;
+
     public static LidGuardSettings Normalize(LidGuardSettings settings)
     {
         if (settings is null) return HeadlessRuntimeDefault;
@@ -59,6 +66,9 @@ public sealed class LidGuardSettings
         var powerRequest = settings.PowerRequest ?? PowerRequestOptions.Default;
         var emergencyHibernationTemperatureMode = NormalizeEmergencyHibernationTemperatureMode(settings.EmergencyHibernationTemperatureMode);
         var emergencyHibernationTemperatureCelsius = ClampEmergencyHibernationTemperatureCelsius(settings.EmergencyHibernationTemperatureCelsius);
+        var suspendHistoryEntryCount = settings.SuspendHistoryEntryCount is null
+            ? null
+            : Math.Max(MinimumSuspendHistoryEntryCount, settings.SuspendHistoryEntryCount.Value);
         return new LidGuardSettings
         {
             PowerRequest = new PowerRequestOptions
@@ -73,6 +83,7 @@ public sealed class LidGuardSettings
             PostStopSuspendDelaySeconds = Math.Max(0, settings.PostStopSuspendDelaySeconds),
             PostStopSuspendSound = string.IsNullOrWhiteSpace(settings.PostStopSuspendSound) ? string.Empty : settings.PostStopSuspendSound.Trim(),
             PostStopSuspendSoundVolumeOverridePercent = settings.PostStopSuspendSoundVolumeOverridePercent,
+            SuspendHistoryEntryCount = suspendHistoryEntryCount,
             PreSuspendWebhookUrl = string.IsNullOrWhiteSpace(settings.PreSuspendWebhookUrl) ? string.Empty : settings.PreSuspendWebhookUrl.Trim(),
             ClosedLidPermissionRequestDecision = settings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settings.WatchParentProcess,

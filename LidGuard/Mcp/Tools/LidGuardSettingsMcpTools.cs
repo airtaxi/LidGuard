@@ -92,6 +92,8 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         string postStopSuspendSound = null,
         [Description("Set the optional post-stop suspend sound master volume override percent. Pass off or an empty string to disable it, pass 1 through 100 to enable it, or omit to keep the current value.")]
         string postStopSuspendSoundVolumeOverridePercent = null,
+        [Description("Set how many recent suspend history entries LidGuard retains. Pass off or an empty string to disable recording, pass an integer of at least 1 to enable it, or omit to keep the current value.")]
+        string suspendHistoryEntryCount = null,
         [Description("Set the webhook URL LidGuard POSTs before requesting suspend. Pass an empty string to disable it. Omit to keep the current value.")]
         string preSuspendWebhookUrl = null,
         [Description("Set the PermissionRequest decision returned while the lid is closed. Omit to keep the current value.")]
@@ -107,6 +109,15 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
             out var volumeOverrideMessage))
         {
             throw new McpException(volumeOverrideMessage);
+        }
+
+        if (!TryParseSuspendHistoryEntryCount(
+            suspendHistoryEntryCount,
+            out var hasSuspendHistoryEntryCount,
+            out var parsedSuspendHistoryEntryCount,
+            out var suspendHistoryMessage))
+        {
+            throw new McpException(suspendHistoryMessage);
         }
 
         var settingsPatch = new LidGuardSettingsPatch
@@ -125,6 +136,8 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
             PostStopSuspendSound = postStopSuspendSound,
             HasPostStopSuspendSoundVolumeOverridePercent = hasPostStopSuspendSoundVolumeOverridePercent,
             PostStopSuspendSoundVolumeOverridePercent = parsedPostStopSuspendSoundVolumeOverridePercent,
+            HasSuspendHistoryEntryCount = hasSuspendHistoryEntryCount,
+            SuspendHistoryEntryCount = parsedSuspendHistoryEntryCount,
             PreSuspendWebhookUrl = preSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             PowerRequestReason = powerRequestReason
@@ -167,6 +180,30 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
 
         message =
             $"postStopSuspendSoundVolumeOverridePercent must be off or an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.";
+        return false;
+    }
+
+    private static bool TryParseSuspendHistoryEntryCount(
+        string configuredValue,
+        out bool hasSuspendHistoryEntryCount,
+        out int? suspendHistoryEntryCount,
+        out string message)
+    {
+        hasSuspendHistoryEntryCount = false;
+        suspendHistoryEntryCount = null;
+        message = string.Empty;
+        if (configuredValue is null) return true;
+
+        hasSuspendHistoryEntryCount = true;
+        if (string.IsNullOrWhiteSpace(configuredValue) || configuredValue.Trim().Equals("off", StringComparison.OrdinalIgnoreCase)) return true;
+        if (int.TryParse(configuredValue.Trim(), out var parsedValue)
+            && LidGuardSettings.IsValidSuspendHistoryEntryCount(parsedValue))
+        {
+            suspendHistoryEntryCount = parsedValue;
+            return true;
+        }
+
+        message = $"suspendHistoryEntryCount must be off or an integer of at least {LidGuardSettings.MinimumSuspendHistoryEntryCount}.";
         return false;
     }
 

@@ -412,6 +412,12 @@ internal sealed class LidGuardRuntimeCoordinator
             return LidGuardOperationResult.Failure(message);
         }
 
+        if (!LidGuardSettings.IsValidSuspendHistoryEntryCount(settings.SuspendHistoryEntryCount))
+        {
+            var message = $"Suspend history count must be off or an integer of at least {LidGuardSettings.MinimumSuspendHistoryEntryCount}.";
+            return LidGuardOperationResult.Failure(message);
+        }
+
         var normalizedSettings = LidGuardSettings.Normalize(settings);
         if (!_sessionRegistry.HasActiveSessions)
         {
@@ -759,6 +765,8 @@ internal sealed class LidGuardRuntimeCoordinator
                 pendingSuspendContext,
                 snapshot,
                 eventName,
+                suspendWebhookReason,
+                suspendTriggerSessionCount,
                 pendingSuspendCancellationTokenSource.Token);
         }
         catch (OperationCanceledException) { }
@@ -772,9 +780,13 @@ internal sealed class LidGuardRuntimeCoordinator
         PendingSuspendContext pendingSuspendContext,
         LidGuardSessionSnapshot snapshot,
         string eventName,
+        SuspendWebhookReason suspendWebhookReason,
+        int suspendTriggerSessionCount,
         CancellationToken cancellationToken)
     {
         var suspendMode = SystemSuspendMode.Sleep;
+        int? suspendHistoryEntryCount = null;
+        var activeSessionCount = 0;
         await _gate.WaitAsync(cancellationToken);
         try
         {
@@ -794,7 +806,9 @@ internal sealed class LidGuardRuntimeCoordinator
             }
 
             suspendMode = _settings.SuspendMode;
-            var requestingResponse = CreateSuccessResponse($"Requesting {suspendMode} {DescribeSuspendReason(_sessionRegistry.ActiveSessionCount)}");
+            suspendHistoryEntryCount = _settings.SuspendHistoryEntryCount;
+            activeSessionCount = _sessionRegistry.ActiveSessionCount;
+            var requestingResponse = CreateSuccessResponse($"Requesting {suspendMode} {DescribeSuspendReason(activeSessionCount)}");
             LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-suspend-requesting", pendingSuspendContext, requestingResponse, snapshot);
         }
         finally
@@ -803,6 +817,25 @@ internal sealed class LidGuardRuntimeCoordinator
         }
 
         var suspendResult = _systemSuspendService.Suspend(suspendMode);
+        SuspendHistoryLogStore.Append(
+            new SuspendHistoryEntry
+            {
+                RecordedAt = DateTimeOffset.UtcNow,
+                SuspendMode = suspendMode,
+                Reason = suspendWebhookReason,
+                Succeeded = suspendResult.Succeeded,
+                Message = suspendResult.Succeeded ? $"Requested {suspendMode} {DescribeSuspendReason(activeSessionCount)}" : CreateResultMessage(suspendResult),
+                EventName = suspendResult.Succeeded ? $"{eventName}-suspend-requested" : $"{eventName}-suspend-failed",
+                CommandName = pendingSuspendContext.CommandName,
+                Provider = pendingSuspendContext.Provider,
+                ProviderName = pendingSuspendContext.ProviderName,
+                SessionIdentifier = pendingSuspendContext.SessionIdentifier,
+                WorkingDirectory = pendingSuspendContext.WorkingDirectory,
+                SessionStateReason = pendingSuspendContext.SessionStateReason,
+                ActiveSessionCount = activeSessionCount,
+                SuspendTriggerSessionCount = suspendTriggerSessionCount
+            },
+            suspendHistoryEntryCount);
         if (suspendResult.Succeeded) return;
 
         await _gate.WaitAsync(CancellationToken.None);
@@ -1036,6 +1069,8 @@ internal sealed class LidGuardRuntimeCoordinator
         int emergencyHibernationTemperatureCelsius,
         EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
     {
+        int? suspendHistoryEntryCount = null;
+        var activeSessionCount = 0;
         await _gate.WaitAsync(CancellationToken.None);
         try
         {
@@ -1054,6 +1089,8 @@ internal sealed class LidGuardRuntimeCoordinator
                 return;
             }
 
+            suspendHistoryEntryCount = _settings.SuspendHistoryEntryCount;
+            activeSessionCount = _sessionRegistry.ActiveSessionCount;
             LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
                 "emergency-hibernation-requesting",
                 CreateSuccessResponse(
@@ -1068,6 +1105,24 @@ internal sealed class LidGuardRuntimeCoordinator
         }
 
         var hibernationResult = _systemSuspendService.Suspend(SystemSuspendMode.Hibernate);
+        SuspendHistoryLogStore.Append(
+            new SuspendHistoryEntry
+            {
+                RecordedAt = DateTimeOffset.UtcNow,
+                SuspendMode = SystemSuspendMode.Hibernate,
+                Reason = SuspendWebhookReason.EmergencyHibernation,
+                Succeeded = hibernationResult.Succeeded,
+                Message = hibernationResult.Succeeded
+                    ? $"Requested Emergency Hibernation because system temperature reached {DescribeEmergencyHibernationTemperature(observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode)}."
+                    : CreateResultMessage(hibernationResult),
+                EventName = hibernationResult.Succeeded ? "emergency-hibernation-requested" : "emergency-hibernation-failed",
+                CommandName = "emergency-hibernation-monitor",
+                ActiveSessionCount = activeSessionCount,
+                ObservedTemperatureCelsius = observedTemperatureCelsius,
+                EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius,
+                EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode
+            },
+            suspendHistoryEntryCount);
         if (hibernationResult.Succeeded) return;
 
         await _gate.WaitAsync(CancellationToken.None);

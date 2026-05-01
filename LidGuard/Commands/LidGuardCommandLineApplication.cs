@@ -59,6 +59,7 @@ internal static class LidGuardCommandLineApplication
             LidGuardPipeCommands.CurrentLidState => WriteCurrentLidState(runtimePlatform),
             LidGuardPipeCommands.CurrentMonitorCount => WriteCurrentMonitorCount(runtimePlatform),
             LidGuardPipeCommands.CurrentTemperature => WriteCurrentTemperature(options),
+            LidGuardPipeCommands.SuspendHistory => SuspendHistoryCommand.WriteHistory(options),
             LidGuardPipeCommands.Settings => await LidGuardSettingsCommand.SendSettingsAsync(options, runtimePlatform),
             LidGuardPipeCommands.PreviewCurrentSound => LidGuardSettingsCommand.PreviewCurrentSound(options, runtimePlatform),
             LidGuardPipeCommands.PreviewSystemSound => LidGuardSettingsCommand.PreviewSystemSound(options, runtimePlatform),

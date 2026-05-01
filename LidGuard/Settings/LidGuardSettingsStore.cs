@@ -53,6 +53,7 @@ internal static class LidGuardSettingsStore
             normalizedSettings.PostStopSuspendSoundVolumeOverridePercent,
             out message))
             return false;
+        if (!SuspendHistoryConfiguration.TryValidateEntryCount(normalizedSettings.SuspendHistoryEntryCount, out message)) return false;
 
         try
         {
@@ -91,6 +92,7 @@ internal static class LidGuardSettingsStore
             PostStopSuspendDelaySeconds = normalizedSettings.PostStopSuspendDelaySeconds,
             PostStopSuspendSound = normalizedSettings.PostStopSuspendSound,
             PostStopSuspendSoundVolumeOverridePercent = normalizedSettings.PostStopSuspendSoundVolumeOverridePercent,
+            SuspendHistoryEntryCount = normalizedSettings.SuspendHistoryEntryCount,
             PreSuspendWebhookUrl = normalizedSettings.PreSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = normalizedSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = normalizedSettings.WatchParentProcess,
