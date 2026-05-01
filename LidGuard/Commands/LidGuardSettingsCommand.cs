@@ -1,5 +1,6 @@
 using LidGuard.Control;
 using LidGuard.Ipc;
+using LidGuard.Runtime;
 using LidGuard.Settings;
 using LidGuardLib.Commons.Platform;
 using LidGuardLib.Commons.Power;
@@ -156,6 +157,19 @@ internal static class LidGuardSettingsCommand
             return 1;
         }
 
+        var systemAudioVolumeControllerResult = runtimePlatform.CreateSystemAudioVolumeController();
+        if (!systemAudioVolumeControllerResult.Succeeded)
+        {
+            Console.Error.WriteLine(systemAudioVolumeControllerResult.Message);
+            return 1;
+        }
+
+        if (!LidGuardSettingsStore.TryLoadExistingOrDefault(out var storedSettings, out _, out var settingsMessage))
+        {
+            Console.Error.WriteLine(settingsMessage);
+            return 1;
+        }
+
         var systemSoundName = CommandOptionReader.GetOption(options, "name", "system-sound");
         if (string.IsNullOrWhiteSpace(systemSoundName))
         {
@@ -172,10 +186,22 @@ internal static class LidGuardSettingsCommand
             return 1;
         }
 
-        var playbackResult = await postStopSuspendSoundPlayerResult.Value.PlayAsync(normalizedSystemSoundName, CancellationToken.None);
-        if (!playbackResult.Succeeded)
+        var normalizedStoredSettings = LidGuardSettings.Normalize(storedSettings);
+        var playbackCoordinator = new PostStopSuspendSoundPlaybackCoordinator(
+            postStopSuspendSoundPlayerResult.Value,
+            systemAudioVolumeControllerResult.Value);
+        var playbackResult = await playbackCoordinator.PlayAsync(
+            normalizedSystemSoundName,
+            normalizedStoredSettings.PostStopSuspendSoundVolumeOverridePercent,
+            CancellationToken.None);
+        foreach (var volumeWarningResult in playbackResult.VolumeWarningResults)
         {
-            Console.Error.WriteLine(playbackResult.Message);
+            Console.Error.WriteLine($"Warning: {volumeWarningResult.Message}");
+        }
+
+        if (!playbackResult.PlaybackResult.Succeeded)
+        {
+            Console.Error.WriteLine(playbackResult.PlaybackResult.Message);
             return 1;
         }
 
@@ -223,6 +249,12 @@ internal static class LidGuardSettingsCommand
             return false;
         if (!TryParseSuspendModeOption(options, baseSettings.SuspendMode, out var suspendMode, out message)) return false;
         if (!TryParsePostStopSuspendDelaySecondsOption(options, baseSettings.PostStopSuspendDelaySeconds, out var postStopSuspendDelaySeconds, out message)) return false;
+        if (!TryParsePostStopSuspendSoundVolumeOverridePercentOption(
+            options,
+            baseSettings.PostStopSuspendSoundVolumeOverridePercent,
+            out var postStopSuspendSoundVolumeOverridePercent,
+            out message))
+            return false;
         var postStopSuspendSound = baseSettings.PostStopSuspendSound;
         if (CommandOptionReader.TryGetOption(options, out var postStopSuspendSoundText, "post-stop-suspend-sound")) postStopSuspendSound = postStopSuspendSoundText;
         if (!TryParsePreSuspendWebhookUrlOption(options, baseSettings.PreSuspendWebhookUrl, out var preSuspendWebhookUrl, out message)) return false;
@@ -244,6 +276,7 @@ internal static class LidGuardSettingsCommand
             SuspendMode = suspendMode,
             PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
             PostStopSuspendSound = postStopSuspendSound,
+            PostStopSuspendSoundVolumeOverridePercent = postStopSuspendSoundVolumeOverridePercent,
             PreSuspendWebhookUrl = preSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess,
@@ -305,6 +338,13 @@ internal static class LidGuardSettingsCommand
             out var postStopSuspendSound,
             out message))
             return false;
+        if (!TryReadPostStopSuspendSoundVolumeOverridePercentSetting(
+            "Post-stop suspend sound volume override percent",
+            normalizedStoredSettings.PostStopSuspendSoundVolumeOverridePercent,
+            defaultSettings.PostStopSuspendSoundVolumeOverridePercent,
+            out var postStopSuspendSoundVolumeOverridePercent,
+            out message))
+            return false;
         if (!TryReadClosedLidPermissionRequestDecisionSetting(
             "Closed lid permission request decision",
             normalizedStoredSettings.ClosedLidPermissionRequestDecision,
@@ -326,6 +366,7 @@ internal static class LidGuardSettingsCommand
             SuspendMode = suspendMode,
             PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
             PostStopSuspendSound = postStopSuspendSound,
+            PostStopSuspendSoundVolumeOverridePercent = postStopSuspendSoundVolumeOverridePercent,
             PreSuspendWebhookUrl = normalizedStoredSettings.PreSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess,
@@ -414,6 +455,47 @@ internal static class LidGuardSettingsCommand
         if (int.TryParse(valueText.Trim(), out value) && value >= 0) return true;
 
         message = $"{settingName} must be a non-negative integer.";
+        return false;
+    }
+
+    private static bool TryReadPostStopSuspendSoundVolumeOverridePercentSetting(
+        string settingName,
+        int? storedValue,
+        int? defaultValue,
+        out int? value,
+        out string message)
+    {
+        value = storedValue;
+        message = string.Empty;
+        WriteInteractiveSettingPrompt(
+            settingName,
+            PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(storedValue),
+            PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(defaultValue),
+            $"range: {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent}-{LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}, off to disable");
+
+        var valueText = Console.ReadLine();
+        if (valueText is null)
+        {
+            message = $"Input ended before {settingName} was entered.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(valueText)) return true;
+        if (valueText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
+        {
+            value = null;
+            return true;
+        }
+
+        if (int.TryParse(valueText.Trim(), out var parsedValue)
+            && LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(parsedValue))
+        {
+            value = parsedValue;
+            return true;
+        }
+
+        message =
+            $"{settingName} must be off or an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.";
         return false;
     }
 
@@ -656,6 +738,41 @@ internal static class LidGuardSettingsCommand
         if (int.TryParse(postStopSuspendDelaySecondsText.Trim(), out postStopSuspendDelaySeconds) && postStopSuspendDelaySeconds >= 0) return true;
 
         message = "The post-stop-suspend-delay-seconds option must be a non-negative integer.";
+        return false;
+    }
+
+    private static bool TryParsePostStopSuspendSoundVolumeOverridePercentOption(
+        IReadOnlyDictionary<string, string> options,
+        int? defaultValue,
+        out int? postStopSuspendSoundVolumeOverridePercent,
+        out string message)
+    {
+        postStopSuspendSoundVolumeOverridePercent = defaultValue;
+        message = string.Empty;
+        if (!CommandOptionReader.TryGetOption(
+            options,
+            out var postStopSuspendSoundVolumeOverridePercentText,
+            "post-stop-suspend-sound-volume-override-percent"))
+        {
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(postStopSuspendSoundVolumeOverridePercentText)
+            || postStopSuspendSoundVolumeOverridePercentText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
+        {
+            postStopSuspendSoundVolumeOverridePercent = null;
+            return true;
+        }
+
+        if (int.TryParse(postStopSuspendSoundVolumeOverridePercentText.Trim(), out var parsedValue)
+            && LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(parsedValue))
+        {
+            postStopSuspendSoundVolumeOverridePercent = parsedValue;
+            return true;
+        }
+
+        message =
+            $"The post-stop-suspend-sound-volume-override-percent option must be off or an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.";
         return false;
     }
 

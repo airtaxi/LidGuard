@@ -7,6 +7,8 @@ public sealed class LidGuardSettings
     public const int MinimumEmergencyHibernationTemperatureCelsius = 70;
     public const int MaximumEmergencyHibernationTemperatureCelsius = 110;
     public const int DefaultEmergencyHibernationTemperatureCelsius = 93;
+    public const int MinimumPostStopSuspendSoundVolumeOverridePercent = 1;
+    public const int MaximumPostStopSuspendSoundVolumeOverridePercent = 100;
 
     public static LidGuardSettings Default { get; } = new();
 
@@ -26,6 +28,8 @@ public sealed class LidGuardSettings
 
     public string PostStopSuspendSound { get; init; } = string.Empty;
 
+    public int? PostStopSuspendSoundVolumeOverridePercent { get; init; }
+
     public string PreSuspendWebhookUrl { get; init; } = string.Empty;
 
     public ClosedLidPermissionRequestDecision ClosedLidPermissionRequestDecision { get; init; } = ClosedLidPermissionRequestDecision.Deny;
@@ -43,6 +47,10 @@ public sealed class LidGuardSettings
             emergencyHibernationTemperatureCelsius,
             MinimumEmergencyHibernationTemperatureCelsius,
             MaximumEmergencyHibernationTemperatureCelsius);
+
+    public static bool IsValidPostStopSuspendSoundVolumeOverridePercent(int? postStopSuspendSoundVolumeOverridePercent)
+        => postStopSuspendSoundVolumeOverridePercent is null
+            || postStopSuspendSoundVolumeOverridePercent is >= MinimumPostStopSuspendSoundVolumeOverridePercent and <= MaximumPostStopSuspendSoundVolumeOverridePercent;
 
     public static LidGuardSettings Normalize(LidGuardSettings settings)
     {
@@ -64,6 +72,7 @@ public sealed class LidGuardSettings
             SuspendMode = settings.SuspendMode,
             PostStopSuspendDelaySeconds = Math.Max(0, settings.PostStopSuspendDelaySeconds),
             PostStopSuspendSound = string.IsNullOrWhiteSpace(settings.PostStopSuspendSound) ? string.Empty : settings.PostStopSuspendSound.Trim(),
+            PostStopSuspendSoundVolumeOverridePercent = settings.PostStopSuspendSoundVolumeOverridePercent,
             PreSuspendWebhookUrl = string.IsNullOrWhiteSpace(settings.PreSuspendWebhookUrl) ? string.Empty : settings.PreSuspendWebhookUrl.Trim(),
             ClosedLidPermissionRequestDecision = settings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settings.WatchParentProcess,

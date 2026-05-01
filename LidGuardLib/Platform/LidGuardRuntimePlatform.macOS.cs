@@ -15,4 +15,7 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
 
     public LidGuardOperationResult<IPostStopSuspendSoundPlayer> CreatePostStopSuspendSoundPlayer()
         => LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Failure(UnsupportedMessage);
+
+    public LidGuardOperationResult<ISystemAudioVolumeController> CreateSystemAudioVolumeController()
+        => LidGuardOperationResult<ISystemAudioVolumeController>.Failure(UnsupportedMessage);
 }

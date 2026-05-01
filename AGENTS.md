@@ -37,6 +37,7 @@ The goal is to keep Windows awake while at least one tracked agent session still
 - The suspend mode remains user-selectable: Sleep by default, Hibernate optional.
 - The post-stop suspend delay remains user-selectable: 10 seconds by default, `0` for immediate suspend.
 - The post-stop suspend sound remains optional: off by default, with supported SystemSounds names or a playable `.wav` path.
+- The post-stop suspend sound volume override remains optional: off by default, with an allowed master volume range of 1 through 100 percent.
 - While keep-awake protection is applied and the laptop lid is closed with no visible display monitors remaining on the desktop, an optional Emergency Hibernation thermal monitor should poll every 10 seconds and request immediate hibernation when the system temperature reaches the configured threshold.
 
 The key design rule is to treat normal idle sleep and lid-close sleep as separate problems. Power requests handle idle sleep. `LIDACTION` policy backup/change/restore handles lid-close behavior because standard sleep-prevention APIs cannot reliably block a user lid-close action.
@@ -100,6 +101,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - On Modern Standby systems, `SetSuspendState(false, ...)` can fail with `ERROR_NOT_SUPPORTED`; a later fallback may use a display-off strategy.
 - After the last active session stops, LidGuard should request suspend after the configured post-stop delay using the configured suspend mode only when the lid is closed and the visible display monitor count is `0`. A delay of `0` means immediate suspend.
 - If a post-stop suspend sound is configured, LidGuard should wait for the delay first, then play the configured sound to completion, then re-check the lid/session state before requesting suspend.
+- If a post-stop suspend sound volume override is configured, LidGuard should capture the default output device master volume and mute state immediately before playback, temporarily unmute as needed, set the configured master volume percent for playback, then restore the previous volume and mute state in the sound playback cleanup path.
 - If a pre-suspend webhook URL is configured, LidGuard should POST JSON before requesting suspend. The body must include `reason`, and soft-lock-triggered suspend must also include the soft-locked session count.
 
 ### Emergency Hibernation Thermal Monitor
@@ -110,7 +112,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - The thermal poll interval is fixed at 10 seconds.
 - The Emergency Hibernation threshold is configurable, defaults to 93 Celsius, and must always be clamped to 70 through 110 Celsius before runtime use.
 - When the observed temperature reaches the clamped threshold, LidGuard should cancel any pending post-stop suspend, send the pre-suspend webhook with `reason = EmergencyHibernation` using a 5-second timeout, then immediately request hibernate.
-- Emergency Hibernation ignores the regular suspend mode, post-stop suspend delay, and post-stop suspend sound settings.
+- Emergency Hibernation ignores the regular suspend mode, post-stop suspend delay, post-stop suspend sound, and sound volume override settings.
 - Emergency Hibernation webhook timeout or failure must not block the immediate hibernation request.
 
 ### Process Exit Watcher
@@ -139,6 +141,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `current-temperature` prints the currently recognized system thermal-zone temperature in Celsius using the selected aggregation mode, or reports when thermal-zone data is unavailable.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
 - `settings` also exposes `--emergency-hibernation-on-high-temperature`, `--emergency-hibernation-temperature-mode`, and `--emergency-hibernation-temperature-celsius`; the threshold option accepts 70 through 110 only.
+- `settings` exposes `--post-stop-suspend-sound-volume-override-percent off|<1-100>` for temporary post-stop sound playback master volume override; `off` disables it and out-of-range values are rejected.
 - `hook-install`, `hook-status`, `hook-remove`, and `hook-events` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
 - `mcp-status`, `mcp-install`, and `mcp-remove` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
 - `provider-mcp-status`, `provider-mcp-install`, and `provider-mcp-remove` work on a caller-supplied JSON config file path instead of using Codex, Claude Code, or GitHub Copilot CLI-specific MCP registration commands.
@@ -204,6 +207,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Post-stop suspend delay: 10 seconds by default, `0` for immediate suspend.
 - Post-stop suspend mode: Sleep by default, Hibernate optional.
 - Post-stop suspend sound: off by default.
+- Post-stop suspend sound volume override: off by default, accepts 1 through 100 percent, and is rejected rather than clamped when out of range.
 - Pre-suspend webhook URL: off by default.
 - Emergency Hibernation on high temperature: enabled by default.
 - Emergency Hibernation temperature mode: Average by default, with Low and High optional.
@@ -233,6 +237,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - `LidGuardSettings.Default`
   - `LidGuardSettings.HeadlessRuntimeDefault`
   - `LidGuardSettings.ClampEmergencyHibernationTemperatureCelsius`
+  - `LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent`
   - `LidGuardSettings.Normalize`
 - `Results`
   - `LidGuardOperationResult`
@@ -249,6 +254,9 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - `ICommandLineProcessResolver`
   - `ILidStateSource`
   - `IVisibleDisplayMonitorCountProvider`
+  - `IPostStopSuspendSoundPlayer`
+  - `ISystemAudioVolumeController`
+  - `SystemAudioVolumeState`
 - `Power`
   - `PowerRequestOptions`
   - `PowerLine`
@@ -291,6 +299,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `Runtime`
   - `CodexSoftLockTranscriptMonitor`
   - `EmergencyHibernationThermalMonitor`
+  - `PostStopSuspendSoundPlaybackCoordinator`
 
 `LidGuardControlService` loads/saves stored settings and can push updated settings into a running runtime without requiring the CLI entrypoint.
 
@@ -318,6 +327,8 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `SystemSuspendService`
   - Enables `SeShutdownPrivilege`.
   - Calls `SetSuspendState` for sleep/hibernate.
+- `SystemAudioVolumeController`
+  - Uses Windows Core Audio endpoint volume APIs to capture, temporarily apply, and restore the default render output master volume and mute state for post-stop suspend sound playback.
 - `LidGuardRuntimePlatform`
   - Adapts Windows power/process services into the Commons runtime platform abstraction.
   - Reports unsupported platforms before Windows-only services are constructed.
@@ -351,7 +362,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `LidGuardSettingsMcpTools`
   - Exposes `get_settings_status`.
   - Exposes `list_sessions` for active-session listing without the full settings payload.
-  - Exposes `update_settings` for multi-field settings updates in one call, including Emergency Hibernation temperature settings.
+  - Exposes `update_settings` for multi-field settings updates in one call, including Emergency Hibernation temperature settings and post-stop suspend sound volume override percent.
   - Exposes `remove_session` for manual active-session deletion by session identifier, with optional provider and MCP provider-name filters.
   - Exposes `set_session_soft_lock` and `clear_session_soft_lock` for provider/session-targeted soft-lock control.
 - `LidGuardProviderMcpTools`
@@ -539,6 +550,8 @@ lidguard settings --emergency-hibernation-temperature-mode average
 lidguard settings --change-lid-action true
 lidguard settings --post-stop-suspend-delay-seconds 0
 lidguard settings --post-stop-suspend-sound Asterisk
+lidguard settings --post-stop-suspend-sound-volume-override-percent 75
+lidguard settings --post-stop-suspend-sound-volume-override-percent off
 lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
 lidguard settings --closed-lid-permission-request-decision allow
 lidguard settings --prevent-away-mode-sleep true --prevent-display-sleep true --power-request-reason "LidGuard keeps agent sessions awake"

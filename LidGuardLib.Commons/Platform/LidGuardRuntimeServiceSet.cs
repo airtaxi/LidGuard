@@ -10,6 +10,7 @@ public sealed class LidGuardRuntimeServiceSet(
     LidActionPolicyController lidActionPolicyController,
     ISystemSuspendService systemSuspendService,
     IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer,
+    ISystemAudioVolumeController systemAudioVolumeController,
     ILidStateSource lidStateSource,
     IVisibleDisplayMonitorCountProvider visibleDisplayMonitorCountProvider) : IDisposable
 {
@@ -24,6 +25,8 @@ public sealed class LidGuardRuntimeServiceSet(
     public ISystemSuspendService SystemSuspendService { get; } = systemSuspendService;
 
     public IPostStopSuspendSoundPlayer PostStopSuspendSoundPlayer { get; } = postStopSuspendSoundPlayer;
+
+    public ISystemAudioVolumeController SystemAudioVolumeController { get; } = systemAudioVolumeController;
 
     public ILidStateSource LidStateSource { get; } = lidStateSource;
 

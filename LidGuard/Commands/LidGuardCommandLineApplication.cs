@@ -131,6 +131,7 @@ internal static class LidGuardCommandLineApplication
                 serviceSet.LidActionPolicyController,
                 serviceSet.SystemSuspendService,
                 serviceSet.PostStopSuspendSoundPlayer,
+                serviceSet.SystemAudioVolumeController,
                 serviceSet.LidStateSource,
                 serviceSet.VisibleDisplayMonitorCountProvider);
 

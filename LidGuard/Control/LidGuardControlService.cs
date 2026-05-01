@@ -157,11 +157,16 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(settingsPatch);
-        if (settingsPatch.PostStopSuspendDelaySeconds < 0)
-            return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure("Post-stop suspend delay seconds must be a non-negative integer.");
+        if (settingsPatch.PostStopSuspendDelaySeconds < 0) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure("Post-stop suspend delay seconds must be a non-negative integer.");
+        if (settingsPatch.HasPostStopSuspendSoundVolumeOverridePercent
+            && !PostStopSuspendSoundConfiguration.TryValidateVolumeOverridePercent(
+                settingsPatch.PostStopSuspendSoundVolumeOverridePercent,
+                out var volumeOverrideValidationMessage))
+        {
+            return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(volumeOverrideValidationMessage);
+        }
 
-        if (!LidGuardSettingsStore.TryLoadOrCreate(out var currentSettings, out var message))
-            return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
+        if (!LidGuardSettingsStore.TryLoadOrCreate(out var currentSettings, out var message)) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
 
         var previousStoredSettings = LidGuardSettings.Normalize(currentSettings);
         var updatedStoredSettings = ApplyPatch(previousStoredSettings, settingsPatch);
@@ -170,14 +175,19 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             postStopSuspendSoundPlayer,
             out updatedStoredSettings,
             out message))
+        {
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
+        }
+
         if (settingsPatch.PreSuspendWebhookUrl is not null)
         {
             if (!PreSuspendWebhookConfiguration.TryNormalizeConfiguredValue(
                 settingsPatch.PreSuspendWebhookUrl,
                 out var normalizedPreSuspendWebhookUrl,
                 out message))
+            {
                 return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
+            }
 
             updatedStoredSettings = PreSuspendWebhookConfiguration.WithPreSuspendWebhookUrl(
                 updatedStoredSettings,
@@ -186,8 +196,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
 
         updatedStoredSettings = LidGuardSettings.Normalize(updatedStoredSettings);
 
-        if (!LidGuardSettingsStore.TrySave(updatedStoredSettings, out message))
-            return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
+        if (!LidGuardSettingsStore.TrySave(updatedStoredSettings, out message)) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
 
         var response = await _runtimeClient.SendAsync(
             new LidGuardPipeRequest
@@ -267,6 +276,9 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             SuspendMode = settingsPatch.SuspendMode ?? normalizedBaseSettings.SuspendMode,
             PostStopSuspendDelaySeconds = settingsPatch.PostStopSuspendDelaySeconds ?? normalizedBaseSettings.PostStopSuspendDelaySeconds,
             PostStopSuspendSound = settingsPatch.PostStopSuspendSound ?? normalizedBaseSettings.PostStopSuspendSound,
+            PostStopSuspendSoundVolumeOverridePercent = settingsPatch.HasPostStopSuspendSoundVolumeOverridePercent
+                ? settingsPatch.PostStopSuspendSoundVolumeOverridePercent
+                : normalizedBaseSettings.PostStopSuspendSoundVolumeOverridePercent,
             PreSuspendWebhookUrl = settingsPatch.PreSuspendWebhookUrl ?? normalizedBaseSettings.PreSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = settingsPatch.ClosedLidPermissionRequestDecision ?? normalizedBaseSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settingsPatch.WatchParentProcess ?? normalizedBaseSettings.WatchParentProcess,
@@ -384,6 +396,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         AppendChange(changes, previousStoredSettings.SuspendMode, updatedStoredSettings.SuspendMode, "suspendMode");
         AppendChange(changes, previousStoredSettings.PostStopSuspendDelaySeconds, updatedStoredSettings.PostStopSuspendDelaySeconds, "postStopSuspendDelaySeconds");
         AppendChange(changes, previousStoredSettings.PostStopSuspendSound, updatedStoredSettings.PostStopSuspendSound, "postStopSuspendSound");
+        AppendChange(changes, previousStoredSettings.PostStopSuspendSoundVolumeOverridePercent, updatedStoredSettings.PostStopSuspendSoundVolumeOverridePercent, "postStopSuspendSoundVolumeOverridePercent");
         AppendChange(changes, previousStoredSettings.PreSuspendWebhookUrl, updatedStoredSettings.PreSuspendWebhookUrl, "preSuspendWebhookUrl");
         AppendChange(changes, previousStoredSettings.ClosedLidPermissionRequestDecision, updatedStoredSettings.ClosedLidPermissionRequestDecision, "closedLidPermissionRequestDecision");
         AppendChange(changes, previousStoredSettings.EmergencyHibernationOnHighTemperature, updatedStoredSettings.EmergencyHibernationOnHighTemperature, "emergencyHibernationOnHighTemperature");

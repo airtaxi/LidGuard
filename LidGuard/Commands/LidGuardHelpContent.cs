@@ -237,7 +237,7 @@ internal static class LidGuardHelpContent
                 LidGuardPipeCommands.Settings,
                 [],
                 SettingsAndSuspendSectionTitle,
-                $"{commandDisplayName} settings [--reset <bool>] [--change-lid-action <bool>] [--prevent-system-sleep <bool>] [--prevent-away-mode-sleep <bool>] [--prevent-display-sleep <bool>] [--watch-parent-process <bool>] [--emergency-hibernation-on-high-temperature <bool>] [--emergency-hibernation-temperature-mode low|average|high] [--emergency-hibernation-temperature-celsius <number>] [--suspend-mode sleep|hibernate] [--post-stop-suspend-delay-seconds <number>] [--post-stop-suspend-sound off|<system-sound>|<wav-path>] [--pre-suspend-webhook-url <http-or-https-url>] [--closed-lid-permission-request-decision deny|allow] [--power-request-reason <text>]",
+                $"{commandDisplayName} settings [--reset <bool>] [--change-lid-action <bool>] [--prevent-system-sleep <bool>] [--prevent-away-mode-sleep <bool>] [--prevent-display-sleep <bool>] [--watch-parent-process <bool>] [--emergency-hibernation-on-high-temperature <bool>] [--emergency-hibernation-temperature-mode low|average|high] [--emergency-hibernation-temperature-celsius <number>] [--suspend-mode sleep|hibernate] [--post-stop-suspend-delay-seconds <number>] [--post-stop-suspend-sound off|<system-sound>|<wav-path>] [--post-stop-suspend-sound-volume-override-percent off|<1-100>] [--pre-suspend-webhook-url <http-or-https-url>] [--closed-lid-permission-request-decision deny|allow] [--power-request-reason <text>]",
                 "Show and update the persisted default settings used by start and hook-driven runtime requests.",
                 [
                     new LidGuardHelpOption("--reset <bool>", "When true, start from headless runtime defaults before applying the other supplied options."),
@@ -252,6 +252,7 @@ internal static class LidGuardHelpContent
                     new LidGuardHelpOption("--suspend-mode sleep|hibernate", "Choose the suspend action requested after the last active session stops or becomes soft-locked."),
                     new LidGuardHelpOption("--post-stop-suspend-delay-seconds <number>", "Set the suspend delay in seconds. Use 0 for immediate suspend."),
                     new LidGuardHelpOption("--post-stop-suspend-sound off|<system-sound>|<wav-path>", $"Disable the pre-suspend sound, use one supported SystemSound name ({supportedPostStopSuspendSystemSounds}), or supply an existing playable .wav path."),
+                    new LidGuardHelpOption("--post-stop-suspend-sound-volume-override-percent off|<1-100>", "Disable the volume override or temporarily set the default output device master volume while the post-stop suspend sound plays, then restore the previous volume and mute state."),
                     new LidGuardHelpOption("--pre-suspend-webhook-url <http-or-https-url>", "Set the absolute HTTP or HTTPS webhook called before suspend."),
                     new LidGuardHelpOption("--closed-lid-permission-request-decision deny|allow", "Choose how closed-lid PermissionRequest hooks respond when the runtime reports the lid is closed."),
                     new LidGuardHelpOption("--power-request-reason <text>", "Set the power request reason text shown to Windows.")
@@ -261,6 +262,7 @@ internal static class LidGuardHelpContent
                     "Emergency Hibernation temperature mode defaults to Average.",
                     "Emergency Hibernation temperature defaults to 93 Celsius and is clamped to 70 through 110 at runtime.",
                     "Post-stop suspend delay defaults to 10 seconds.",
+                    "Post-stop suspend sound volume override defaults to off; pass off to disable it.",
                     "Use remove-pre-suspend-webhook to clear a configured webhook URL instead of passing off or an empty value."
                 ]),
             CreateSingleCommandEntry(
@@ -278,7 +280,7 @@ internal static class LidGuardHelpContent
                 [],
                 SettingsAndSuspendSectionTitle,
                 $"{commandDisplayName} preview-system-sound --name Asterisk|Beep|Exclamation|Hand|Question",
-                "Play one supported SystemSound name immediately so you can preview it for the post-stop suspend setting.",
+                "Play one supported SystemSound name immediately using the saved post-stop suspend sound volume override setting.",
                 [
                     new LidGuardHelpOption("--name <sound>", "Required. Allowed values: Asterisk, Beep, Exclamation, Hand, or Question.")
                 ],

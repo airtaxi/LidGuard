@@ -90,6 +90,8 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         int? postStopSuspendDelaySeconds = null,
         [Description("Set the post-stop suspend sound. Use off or an empty string to disable it. Supported system sound names are Asterisk, Beep, Exclamation, Hand, and Question. You can also pass a path to a playable .wav file. Omit to keep the current value.")]
         string postStopSuspendSound = null,
+        [Description("Set the optional post-stop suspend sound master volume override percent. Pass off or an empty string to disable it, pass 1 through 100 to enable it, or omit to keep the current value.")]
+        string postStopSuspendSoundVolumeOverridePercent = null,
         [Description("Set the webhook URL LidGuard POSTs before requesting suspend. Pass an empty string to disable it. Omit to keep the current value.")]
         string preSuspendWebhookUrl = null,
         [Description("Set the PermissionRequest decision returned while the lid is closed. Omit to keep the current value.")]
@@ -98,6 +100,15 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         string powerRequestReason = null,
         CancellationToken cancellationToken = default)
     {
+        if (!TryParsePostStopSuspendSoundVolumeOverridePercent(
+            postStopSuspendSoundVolumeOverridePercent,
+            out var hasPostStopSuspendSoundVolumeOverridePercent,
+            out var parsedPostStopSuspendSoundVolumeOverridePercent,
+            out var volumeOverrideMessage))
+        {
+            throw new McpException(volumeOverrideMessage);
+        }
+
         var settingsPatch = new LidGuardSettingsPatch
         {
             ResetToDefaults = resetToDefaults,
@@ -112,6 +123,8 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
             SuspendMode = suspendMode,
             PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
             PostStopSuspendSound = postStopSuspendSound,
+            HasPostStopSuspendSoundVolumeOverridePercent = hasPostStopSuspendSoundVolumeOverridePercent,
+            PostStopSuspendSoundVolumeOverridePercent = parsedPostStopSuspendSoundVolumeOverridePercent,
             PreSuspendWebhookUrl = preSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             PowerRequestReason = powerRequestReason
@@ -130,6 +143,31 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
             UpdatedStoredSettings = result.Value.UpdatedStoredSettings,
             Snapshot = result.Value.Snapshot
         };
+    }
+
+    private static bool TryParsePostStopSuspendSoundVolumeOverridePercent(
+        string configuredValue,
+        out bool hasPostStopSuspendSoundVolumeOverridePercent,
+        out int? postStopSuspendSoundVolumeOverridePercent,
+        out string message)
+    {
+        hasPostStopSuspendSoundVolumeOverridePercent = false;
+        postStopSuspendSoundVolumeOverridePercent = null;
+        message = string.Empty;
+        if (configuredValue is null) return true;
+
+        hasPostStopSuspendSoundVolumeOverridePercent = true;
+        if (string.IsNullOrWhiteSpace(configuredValue) || configuredValue.Trim().Equals("off", StringComparison.OrdinalIgnoreCase)) return true;
+        if (int.TryParse(configuredValue.Trim(), out var parsedValue)
+            && LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(parsedValue))
+        {
+            postStopSuspendSoundVolumeOverridePercent = parsedValue;
+            return true;
+        }
+
+        message =
+            $"postStopSuspendSoundVolumeOverridePercent must be off or an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.";
+        return false;
     }
 
     [McpServerTool(

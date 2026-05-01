@@ -54,6 +54,7 @@ internal static class LidGuardCommandConsole
         Console.WriteLine($"  Suspend mode: {normalizedSettings.SuspendMode}");
         Console.WriteLine($"  Post-stop suspend delay seconds: {normalizedSettings.PostStopSuspendDelaySeconds}");
         Console.WriteLine($"  Post-stop suspend sound: {PostStopSuspendSoundConfiguration.GetDisplayValue(normalizedSettings.PostStopSuspendSound)}");
+        Console.WriteLine($"  Post-stop suspend sound volume override percent: {PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(normalizedSettings.PostStopSuspendSoundVolumeOverridePercent)}");
         Console.WriteLine($"  Pre-suspend webhook URL: {PreSuspendWebhookConfiguration.GetDisplayValue(normalizedSettings.PreSuspendWebhookUrl)}");
         Console.WriteLine($"  Closed lid permission request decision: {normalizedSettings.ClosedLidPermissionRequestDecision}");
         Console.WriteLine($"  Reason: {powerRequest.Reason}");

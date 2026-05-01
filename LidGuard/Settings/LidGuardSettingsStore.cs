@@ -49,6 +49,10 @@ internal static class LidGuardSettingsStore
     {
         var settingsFilePath = GetDefaultSettingsFilePath();
         var normalizedSettings = LidGuardSettings.Normalize(settings);
+        if (!PostStopSuspendSoundConfiguration.TryValidateVolumeOverridePercent(
+            normalizedSettings.PostStopSuspendSoundVolumeOverridePercent,
+            out message))
+            return false;
 
         try
         {
@@ -86,6 +90,7 @@ internal static class LidGuardSettingsStore
             SuspendMode = normalizedSettings.SuspendMode,
             PostStopSuspendDelaySeconds = normalizedSettings.PostStopSuspendDelaySeconds,
             PostStopSuspendSound = normalizedSettings.PostStopSuspendSound,
+            PostStopSuspendSoundVolumeOverridePercent = normalizedSettings.PostStopSuspendSoundVolumeOverridePercent,
             PreSuspendWebhookUrl = normalizedSettings.PreSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = normalizedSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = normalizedSettings.WatchParentProcess,

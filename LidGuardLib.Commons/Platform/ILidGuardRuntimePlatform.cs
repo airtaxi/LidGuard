@@ -12,4 +12,6 @@ public interface ILidGuardRuntimePlatform
     LidGuardOperationResult<LidGuardRuntimeServiceSet> CreateRuntimeServiceSet();
 
     LidGuardOperationResult<IPostStopSuspendSoundPlayer> CreatePostStopSuspendSoundPlayer();
+
+    LidGuardOperationResult<ISystemAudioVolumeController> CreateSystemAudioVolumeController();
 }

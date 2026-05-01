@@ -9,6 +9,19 @@ internal static class PostStopSuspendSoundConfiguration
     public static string GetDisplayValue(string postStopSuspendSound)
         => string.IsNullOrWhiteSpace(postStopSuspendSound) ? "off" : postStopSuspendSound;
 
+    public static string GetVolumeOverrideDisplayValue(int? postStopSuspendSoundVolumeOverridePercent)
+        => postStopSuspendSoundVolumeOverridePercent is null ? "off" : $"{postStopSuspendSoundVolumeOverridePercent}%";
+
+    public static bool TryValidateVolumeOverridePercent(int? postStopSuspendSoundVolumeOverridePercent, out string message)
+    {
+        message = string.Empty;
+        if (LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(postStopSuspendSoundVolumeOverridePercent)) return true;
+
+        message =
+            $"Post-stop suspend sound volume override percent must be an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.";
+        return false;
+    }
+
     public static bool TryNormalize(
         LidGuardSettings settings,
         IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer,
@@ -38,6 +51,7 @@ internal static class PostStopSuspendSoundConfiguration
             SuspendMode = normalizedInputSettings.SuspendMode,
             PostStopSuspendDelaySeconds = normalizedInputSettings.PostStopSuspendDelaySeconds,
             PostStopSuspendSound = normalizeResult.Value,
+            PostStopSuspendSoundVolumeOverridePercent = normalizedInputSettings.PostStopSuspendSoundVolumeOverridePercent,
             PreSuspendWebhookUrl = normalizedInputSettings.PreSuspendWebhookUrl,
             ClosedLidPermissionRequestDecision = normalizedInputSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = normalizedInputSettings.WatchParentProcess,

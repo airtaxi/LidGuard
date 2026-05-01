@@ -1,4 +1,5 @@
 using System.Runtime.Versioning;
+using LidGuardLib.Audio;
 using LidGuardLib.Commons.Platform;
 using LidGuardLib.Commons.Power;
 using LidGuardLib.Commons.Results;
@@ -21,6 +22,9 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
         var postStopSuspendSoundPlayerResult = CreatePostStopSuspendSoundPlayer();
         if (!postStopSuspendSoundPlayerResult.Succeeded) return LidGuardOperationResult<LidGuardRuntimeServiceSet>.Failure(postStopSuspendSoundPlayerResult.Message);
 
+        var systemAudioVolumeControllerResult = CreateSystemAudioVolumeController();
+        if (!systemAudioVolumeControllerResult.Succeeded) return LidGuardOperationResult<LidGuardRuntimeServiceSet>.Failure(systemAudioVolumeControllerResult.Message);
+
         var lidActionService = new LidActionService();
         var lidStateSource = CreateLidStateSource();
         var serviceSet = new LidGuardRuntimeServiceSet(
@@ -30,6 +34,7 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
             new LidActionPolicyController(lidActionService),
             new SystemSuspendService(),
             postStopSuspendSoundPlayerResult.Value,
+            systemAudioVolumeControllerResult.Value,
             lidStateSource,
             new VisibleDisplayMonitorCountProvider());
 
@@ -40,6 +45,12 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
     {
         if (!OperatingSystem.IsWindowsVersionAtLeast(6, 1)) return LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Failure(UnsupportedMessage);
         return LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Success(new PostStopSuspendSoundPlayer());
+    }
+
+    public LidGuardOperationResult<ISystemAudioVolumeController> CreateSystemAudioVolumeController()
+    {
+        if (!OperatingSystem.IsWindowsVersionAtLeast(6, 1)) return LidGuardOperationResult<ISystemAudioVolumeController>.Failure(UnsupportedMessage);
+        return LidGuardOperationResult<ISystemAudioVolumeController>.Success(new SystemAudioVolumeController());
     }
 
     [SupportedOSPlatform("windows6.1")]

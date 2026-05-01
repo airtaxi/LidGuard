@@ -29,6 +29,10 @@ public sealed class LidGuardSettingsPatch
 
     public string PostStopSuspendSound { get; init; }
 
+    public bool HasPostStopSuspendSoundVolumeOverridePercent { get; init; }
+
+    public int? PostStopSuspendSoundVolumeOverridePercent { get; init; }
+
     public string PreSuspendWebhookUrl { get; init; }
 
     public ClosedLidPermissionRequestDecision? ClosedLidPermissionRequestDecision { get; init; }

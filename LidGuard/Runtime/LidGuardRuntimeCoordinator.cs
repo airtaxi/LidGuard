@@ -15,7 +15,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
     private readonly ICommandLineProcessResolver _commandLineProcessResolver;
     private readonly IProcessExitWatcher _processExitWatcher;
-    private readonly IPostStopSuspendSoundPlayer _postStopSuspendSoundPlayer;
+    private readonly PostStopSuspendSoundPlaybackCoordinator _postStopSuspendSoundPlaybackCoordinator;
     private readonly ISystemSuspendService _systemSuspendService;
     private readonly ILidStateSource _lidStateSource;
     private readonly IVisibleDisplayMonitorCountProvider _visibleDisplayMonitorCountProvider;
@@ -37,12 +37,13 @@ internal sealed class LidGuardRuntimeCoordinator
         LidActionPolicyController lidActionPolicyController,
         ISystemSuspendService systemSuspendService,
         IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer,
+        ISystemAudioVolumeController systemAudioVolumeController,
         ILidStateSource lidStateSource,
         IVisibleDisplayMonitorCountProvider visibleDisplayMonitorCountProvider)
     {
         _commandLineProcessResolver = commandLineProcessResolver;
         _processExitWatcher = processExitWatcher;
-        _postStopSuspendSoundPlayer = postStopSuspendSoundPlayer;
+        _postStopSuspendSoundPlaybackCoordinator = new PostStopSuspendSoundPlaybackCoordinator(postStopSuspendSoundPlayer, systemAudioVolumeController);
         _systemSuspendService = systemSuspendService;
         _lidStateSource = lidStateSource;
         _visibleDisplayMonitorCountProvider = visibleDisplayMonitorCountProvider;
@@ -404,6 +405,13 @@ internal sealed class LidGuardRuntimeCoordinator
 
     private LidGuardOperationResult UpdateSettingsInsideGate(LidGuardSettings settings)
     {
+        if (!LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(settings.PostStopSuspendSoundVolumeOverridePercent))
+        {
+            var message =
+                $"Post-stop suspend sound volume override percent must be an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.";
+            return LidGuardOperationResult.Failure(message);
+        }
+
         var normalizedSettings = LidGuardSettings.Normalize(settings);
         if (!_sessionRegistry.HasActiveSessions)
         {
@@ -713,6 +721,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 await Task.Delay(TimeSpan.FromSeconds(postStopSuspendDelaySeconds), pendingSuspendCancellationTokenSource.Token);
 
             var postStopSuspendSound = string.Empty;
+            int? postStopSuspendSoundVolumeOverridePercent = null;
             await _gate.WaitAsync(pendingSuspendCancellationTokenSource.Token);
             try
             {
@@ -732,6 +741,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 }
 
                 postStopSuspendSound = _settings.PostStopSuspendSound;
+                postStopSuspendSoundVolumeOverridePercent = _settings.PostStopSuspendSoundVolumeOverridePercent;
             }
             finally
             {
@@ -743,6 +753,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 snapshot,
                 eventName,
                 postStopSuspendSound,
+                postStopSuspendSoundVolumeOverridePercent,
                 pendingSuspendCancellationTokenSource.Token);
             await RequestSuspendAsync(
                 pendingSuspendContext,
@@ -843,18 +854,49 @@ internal sealed class LidGuardRuntimeCoordinator
         LidGuardSessionSnapshot snapshot,
         string eventName,
         string postStopSuspendSound,
+        int? postStopSuspendSoundVolumeOverridePercent,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(postStopSuspendSound)) return;
 
-        var playbackResult = await _postStopSuspendSoundPlayer.PlayAsync(postStopSuspendSound, cancellationToken);
-        if (playbackResult.Succeeded) return;
+        var playbackResult = await _postStopSuspendSoundPlaybackCoordinator.PlayAsync(
+            postStopSuspendSound,
+            postStopSuspendSoundVolumeOverridePercent,
+            cancellationToken);
+        foreach (var volumeWarningResult in playbackResult.VolumeWarningResults)
+        {
+            await AppendPostStopSuspendSoundVolumeWarningAsync(
+                pendingSuspendContext,
+                snapshot,
+                eventName,
+                volumeWarningResult);
+        }
+
+        if (playbackResult.PlaybackResult.Succeeded) return;
 
         await _gate.WaitAsync(CancellationToken.None);
         try
         {
-            var response = CreateFailureResponse(playbackResult);
+            var response = CreateFailureResponse(playbackResult.PlaybackResult);
             LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-suspend-sound-failed", pendingSuspendContext, response, snapshot);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    private async Task AppendPostStopSuspendSoundVolumeWarningAsync(
+        PendingSuspendContext pendingSuspendContext,
+        LidGuardSessionSnapshot snapshot,
+        string eventName,
+        LidGuardOperationResult volumeWarningResult)
+    {
+        await _gate.WaitAsync(CancellationToken.None);
+        try
+        {
+            var response = CreateSuccessResponse($"Warning: {CreateResultMessage(volumeWarningResult)}");
+            LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-suspend-sound-volume-warning", pendingSuspendContext, response, snapshot);
         }
         finally
         {
