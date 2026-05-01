@@ -576,6 +576,7 @@ The Windows CLI hook receiving path is implemented for Codex, Claude Code, and G
 - Do not share hook DTOs across providers only because their current JSON shapes look similar. Hook contracts are provider-specific and should keep separate types.
 - Do not reintroduce sleep idle timeout modification.
 - Use power plan writes only for behavior that power requests cannot cover, currently `LIDACTION`.
+- Any future localization work must localize the final human-facing CLI presentation, including runtime/session status messages, session list summaries, management output, enum display text, and placeholders, even when the underlying IPC/log/settings values remain stable English; do not leak raw protocol `Message` text directly into user-facing terminal output when a localized rendering can be produced.
 - Before version 1.0.0, do not add migration-only legacy code for behavior or configuration that has not been publicly released.
 
 ## Failure Modes

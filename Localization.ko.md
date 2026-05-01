@@ -158,7 +158,9 @@ Override 지원:
 - Machine-readable output은 언어와 관계없이 안정적으로 유지한다.
 - IPC 및 JSON `message` field는 agent, provider client, script가 읽을 수 있으므로 영어로 유지한다.
 - Command name, option name, JSON property name, MCP tool name, hook event name, stored settings key는 언어에 따라 절대 바뀌면 안 된다.
-- 파일에 저장되지 않고 IPC/JSON protocol payload도 아닌, 현재 CLI invocation 중 사용자 terminal에 즉시 표시되는 runtime 결정 메시지는 현지화한다.
+- 최종적으로 사람이 읽는 CLI presentation은, 그 기반 데이터가 protocol-facing 또는 persisted English field에서 왔더라도 현지화해야 한다.
+- 여기에는 runtime 또는 inspection result message의 표시 문장, session list summary, hook/MCP/provider management status text, interactive prompt, `none`이나 `<none>` 같은 placeholder, enum 성격 값의 display label이 포함된다.
+- IPC, log, settings, generated file 때문에 raw value를 안정적으로 유지해야 하는 경우에는 저장값이나 직렬화값이 아니라 presentation layer를 현지화한다.
 
 Runtime 및 IPC 고려사항:
 
@@ -167,8 +169,8 @@ Runtime 및 IPC 고려사항:
 - Runtime은 최신 UI culture setting을 메모리에 기억하고 settings/status snapshot에 포함해 helper process가 현재 설정을 관찰할 수 있게 해야 한다.
 - MCP server와 Provider MCP server process는 startup 시 persisted settings를 읽어 effective UI culture를 적용하고, runtime/settings response에서 더 최신 값이 보고되면 local effective culture를 갱신해야 한다.
 - LidGuard가 child 또는 detached LidGuard process를 시작할 때는 effective UI culture를 `LIDGUARD_UI_CULTURE`로 전달해 child process가 오래된 OS culture에 의존하지 않게 한다.
-- `LidGuardPipeRequest`와 `LidGuardPipeResponse` protocol text는 영어로 유지한다. Runtime response의 `Message` 값은 localized UI string이 아니라 protocol-facing text로 취급한다.
-- CLI에 runtime result의 현지화된 문장이 필요하다면 response에 message code와 argument를 추가하거나 structured response field에서 표시 문장을 도출하고, CLI가 최종 사용자 표시 문장을 현지화한다.
+- `LidGuardPipeRequest`와 `LidGuardPipeResponse`의 raw protocol payload text는 안정적으로 유지한다. Protocol 또는 log 호환성 때문에 runtime response의 `Message` 값이 영어로 남아 있어도, CLI는 현지화된 human-facing rendering을 만들 수 있을 때 그 raw 값을 그대로 사용자에게 노출하면 안 된다.
+- 저장값이나 protocol-facing text를 바꾸지 않고도 CLI가 runtime/session management 문장, enum display text, placeholder, inspection summary를 현지화할 수 있도록 message code + argument 또는 structured response field를 우선 사용한다.
 - Runtime state는 UI culture setting을 기억하고 전파할 수 있지만, IPC message 자체는 영어로 유지한다.
 - Log message text는 v1에서 현지화하지 않는다. JSONL log field name, structured event name, persisted log text는 안정적으로 유지한다.
 
@@ -196,18 +198,20 @@ Hook 및 MCP 고려사항:
 사람이 읽는 CLI 출력은 현지화한다.
 
 - `help` 출력과 명령 설명.
-- `status`, `settings`, `remove-session`, `cleanup-orphans`, diagnostics 출력 label.
-- settings 및 provider 선택 흐름의 interactive prompt.
-- 일반 CLI text로 출력되는 hook 및 MCP install/status/remove 메시지.
+- `status`, `settings`, `remove-session`, `cleanup-orphans`, diagnostics 출력의 label과 summary.
+- Session list line, soft-lock summary, lid/monitor/suspend status text 같은 user-facing runtime/session presentation.
+- settings 및 provider 선택 흐름의 interactive prompt와 interactive validation 및 후속 안내 text.
+- 일반 CLI text로 출력되는 hook, MCP, provider-MCP install/status/remove 섹션과 inspection summary.
 - CLI가 직접 terminal에 출력하는 failure message.
-- IPC/JSON payload 밖에서 format되는 runtime result의 CLI presentation text.
-- Settings, generated config file, log, IPC, hook JSON, MCP JSON에 기록되지 않고 현재 CLI invocation 중에만 사용자에게 보이는 transient runtime-decision message.
+- IPC, settings, log에 raw backing field가 영어로 남아 있어도, runtime result, inspection result, 기타 structured response field에서 파생되는 human-facing CLI presentation text.
+- `none`, `<none>` 같은 placeholder와 lid state, suspend mode, soft-lock state, emergency hibernation temperature mode, permission-request decision 같은 enum 성격 값의 display label.
+- 현재 CLI invocation 중 사용자에게 보이는 transient runtime-decision message.
 
 아래 항목은 안정적으로 유지하고 현지화하지 않는다.
 
 - CLI command name과 option name.
 - JSON property name과 protocol value.
-- IPC request/response message text. Runtime `Message` 값도 포함한다.
+- 직렬화 경계에서의 raw IPC request/response payload text. Protocol data로 운반되거나 저장되는 runtime `Message` field 값도 포함한다.
 - Hook, MCP, provider JSON의 `message`, `error`, denial text.
 - MCP tool name, argument name, response property name.
 - Hook event name과 생성되는 provider configuration key.
@@ -227,9 +231,10 @@ Hook 및 MCP 고려사항:
 4. [LidGuardCommandConsole.cs](LidGuard/Commands/LidGuardCommandConsole.cs)의 label, unknown-command, help rendering을 현지화한다.
 5. [LidGuardHelpContent.cs](LidGuard/Commands/LidGuardHelpContent.cs)를 현지화하되 command syntax와 option name은 literal로 유지한다.
 6. [LidGuardSettingsCommand.cs](LidGuard/Commands/LidGuardSettingsCommand.cs)의 prompt와 settings update message를 현지화한다.
-7. [HookManagementCommand.cs](LidGuard/Commands/HookManagementCommand.cs), [McpManagementCommand.cs](LidGuard/Commands/McpManagementCommand.cs), [ProviderMcpManagementCommand.cs](LidGuard/Commands/ProviderMcpManagementCommand.cs)는 일반 CLI text만 현지화하고 generated config content나 protocol payload는 현지화하지 않는다.
-8. Hook output DTO와 MCP tool response를 점검해 protocol JSON text가 영어로 유지되는지 확인한다.
-9. 해당 assembly 안에서 생성되는 human CLI presentation message를 현지화해야 할 때만 `LidGuardLibText`와 `CommonText`를 추가한다.
+7. [HookManagementCommand.cs](LidGuard/Commands/HookManagementCommand.cs), [McpManagementCommand.cs](LidGuard/Commands/McpManagementCommand.cs), [ProviderMcpManagementCommand.cs](LidGuard/Commands/ProviderMcpManagementCommand.cs)는 generated config content나 protocol payload가 아니라 human-facing CLI text와 inspection presentation만 현지화한다.
+8. Raw runtime 또는 inspection `Message` string을 terminal에 직접 출력하지 않도록 바꾸고, 필요한 경우 structured field 또는 message code에서 localized CLI presentation을 만들되 raw protocol/log text는 필요한 범위에서 안정적으로 유지한다.
+9. Hook output DTO와 MCP tool response를 점검해 protocol JSON text가 영어로 유지되는지 확인한다.
+10. 해당 assembly 안에서 생성되는 human CLI presentation message를 현지화해야 할 때만 `LidGuardLibText`와 `CommonText`를 추가한다.
 
 한 변경에서 광범위한 문자열 이동을 하지 않는다. 각 단계는 CLI 동작과 exit code를 바꾸지 않아야 한다.
 
@@ -279,7 +284,8 @@ NativeAOT publish가 framework-dependent publish와 동일하게 동작한다고
 - `settings --ui-culture`는 persisted settings를 갱신하고 실행 중인 runtime도 갱신한다.
 - MCP server process는 persisted 또는 runtime-reported UI culture를 사용해 human-facing presentation에 적용한다.
 - IPC 및 hook/MCP JSON output은 protocol payload 밖의 명시적 비프로토콜 field를 제외하고 바뀌지 않는다.
-- Protocol/file persistence path 밖에서 format되는 runtime-decision CLI 표시 메시지는 현지화된다.
+- Localized rendering이 가능할 때 human-facing CLI output에 raw English runtime 또는 inspection `Message` text가 그대로 새어 나오지 않는다.
+- CLI가 표시하는 runtime-decision message, session summary, enum display value, placeholder, management status text는 raw backing value가 protocol이나 persisted data에 안정적으로 남아 있어도 현지화된다.
 - JSONL log 구조는 안정적으로 유지된다.
 
 ## 번역 정책
