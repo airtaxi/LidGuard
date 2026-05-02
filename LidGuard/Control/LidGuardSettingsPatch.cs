@@ -21,6 +21,10 @@ public sealed class LidGuardSettingsPatch
 
     public int? SessionTimeoutMinutes { get; init; }
 
+    public bool HasServerRuntimeCleanupDelayMinutes { get; init; }
+
+    public int? ServerRuntimeCleanupDelayMinutes { get; init; }
+
     public bool? EmergencyHibernationOnHighTemperature { get; init; }
 
     public EmergencyHibernationTemperatureMode? EmergencyHibernationTemperatureMode { get; init; }

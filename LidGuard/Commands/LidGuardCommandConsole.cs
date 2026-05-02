@@ -1,4 +1,4 @@
-﻿using LidGuard.Ipc;
+using LidGuard.Ipc;
 using LidGuard.Runtime;
 using LidGuard.Settings;
 using LidGuardLib.Commons.Power;
@@ -51,6 +51,7 @@ internal static class LidGuardCommandConsole
         Console.WriteLine($"  Change lid action: {normalizedSettings.ChangeLidAction}");
         Console.WriteLine($"  Watch parent process: {normalizedSettings.WatchParentProcess}");
         Console.WriteLine($"  Session timeout: {SessionTimeoutConfiguration.GetDisplayValue(normalizedSettings.SessionTimeoutMinutes)}");
+        Console.WriteLine($"  Server runtime cleanup delay: {ServerRuntimeCleanupConfiguration.GetDisplayValue(normalizedSettings.ServerRuntimeCleanupDelayMinutes)}");
         Console.WriteLine($"  Emergency hibernation on high temperature: {normalizedSettings.EmergencyHibernationOnHighTemperature}");
         Console.WriteLine($"  Emergency hibernation temperature mode: {normalizedSettings.EmergencyHibernationTemperatureMode}");
         Console.WriteLine($"  Emergency hibernation temperature Celsius: {normalizedSettings.EmergencyHibernationTemperatureCelsius}");

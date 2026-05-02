@@ -36,7 +36,7 @@ The goal is to keep Windows awake while at least one tracked agent session still
 - Optional settings temporarily change the active power plan's lid close action to `Do Nothing`.
 - When sessions stop, all temporary power settings must be restored to the user's original values.
 - After the last active session stops, LidGuard should always request suspend when the laptop lid is closed and no suspend-blocking visible display monitors remain attached to the desktop.
-- Once the active session count reaches `0`, the server runtime should exit immediately after any in-flight suspend or cleanup work finishes.
+- Once the active session count reaches `0`, the server runtime should exit after the configured server runtime cleanup delay once any in-flight suspend or cleanup work finishes. The delay defaults to 10 minutes, and `off` means exit immediately after in-flight work finishes.
 - If active sessions remain but all of them are soft-locked, LidGuard should follow the same suspend path without waiting for stop hooks.
 - The suspend mode remains user-selectable: Sleep by default, Hibernate optional.
 - The post-stop suspend delay remains user-selectable: 10 seconds by default, `0` for immediate suspend.
@@ -156,6 +156,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `settings` exposes `--post-stop-suspend-sound-volume-override-percent off|<1-100>` for temporary post-stop sound playback master volume override; `off` disables it and out-of-range values are rejected.
 - `settings` exposes `--suspend-history-count off|<count>` for recent suspend history retention; `off` disables recording and enabled counts must be at least 1.
 - `settings` exposes `--session-timeout-minutes off|<minutes>` for inactive session timeout soft-locking; `off` disables timeout soft-locking and enabled values must be at least 1.
+- `settings` exposes `--server-runtime-cleanup-delay-minutes off|<minutes>` for server runtime cleanup after all active sessions are gone and pending cleanup is finished; `off` exits immediately and enabled values must be at least 1.
 - `preview-system-sound` and `preview-current-sound` apply the saved post-stop suspend sound volume override setting and wait until playback finishes. `preview-current-sound` plays the saved post-stop suspend sound and prints setup guidance when no sound is configured.
 - `hook-install`, `hook-status`, `hook-remove`, and `hook-events` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
 - `mcp-status`, `mcp-install`, and `mcp-remove` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
@@ -183,6 +184,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `list_sessions` returns the active session list plus runtime lid/session state without the full settings payload.
 - `update_settings` accepts multiple setting fields in a single request and persists them together.
 - `update_settings` exposes inactive session timeout through `sessionTimeoutMinutes`, accepting `off` or an enabled minute count of at least 1.
+- `update_settings` exposes server runtime cleanup delay through `serverRuntimeCleanupDelayMinutes`, accepting `off` for immediate exit or an enabled minute count of at least 1.
 - `remove_session` manually removes active sessions by session identifier and optionally narrows the removal to one provider and one MCP provider name.
 - `set_session_soft_lock` and `clear_session_soft_lock` are general-purpose tools that accept provider and session identifier inputs, so non-MCP providers can also use MCP-driven soft-lock control when they can supply those values.
 - `LidGuard` also hosts a separate stdio Provider MCP server through `lidguard provider-mcp-server --provider-name <name>`.
@@ -214,7 +216,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Optional lid action changes are backed up once and restored after the last active session stops.
 - While shared protection remains applied and the lid is closed, the Emergency Hibernation thermal monitor polls every 10 seconds and stops automatically once protection is restored or disabled.
 - Multiple stop signals for the same session should not cause repeated cleanup side effects.
-- When the active session count reaches `0`, the runtime should shut down immediately once no post-stop suspend request, lid-action restore, pre-suspend webhook, post-stop sound, or equivalent cleanup work remains pending.
+- When the active session count reaches `0`, the runtime should shut down after the configured server runtime cleanup delay once no post-stop suspend request, lid-action restore, pre-suspend webhook, post-stop sound, or equivalent cleanup work remains pending.
 - Persistent pending backup state is still missing and is the next resilience priority.
 
 ### Settings Defaults
@@ -229,6 +231,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Post-stop suspend sound volume override: off by default, accepts 1 through 100 percent, and is rejected rather than clamped when out of range.
 - Suspend history recording: on by default, keeps the latest 10 entries, and accepts `off` or an enabled count of at least 1.
 - Inactive session timeout: 12 minutes by default, accepts `off` or an enabled minute count of at least 1, and has no product-level maximum.
+- Server runtime cleanup delay after all sessions are gone: 10 minutes by default, accepts `off` for immediate exit or an enabled minute count of at least 1, and has no product-level maximum.
 - Pre-suspend webhook URL: off by default.
 - Emergency Hibernation on high temperature: enabled by default.
 - Emergency Hibernation temperature mode: Average by default, with Low and High optional.
@@ -259,7 +262,9 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - `LidGuardSettings.HeadlessRuntimeDefault`
   - `LidGuardSettings.ClampEmergencyHibernationTemperatureCelsius`
   - `LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent`
+  - `LidGuardSettings.IsValidSuspendHistoryEntryCount`
   - `LidGuardSettings.IsValidSessionTimeoutMinutes`
+  - `LidGuardSettings.IsValidServerRuntimeCleanupDelayMinutes`
   - `LidGuardSettings.Normalize`
 - `Results`
   - `LidGuardOperationResult`
@@ -312,6 +317,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `Settings`
   - `LidGuardSettingsStore`
   - `LidGuardSettingsFileJsonSerializerContext`
+  - `ServerRuntimeCleanupConfiguration`
 - `Control`
   - `LidGuardControlService`
   - `LidGuardControlSnapshot`
@@ -402,6 +408,7 @@ The notification server is optional and external to the core LidGuard runtime. I
   - Exposes `update_settings` for multi-field settings updates in one call, including Emergency Hibernation temperature settings and post-stop suspend sound volume override percent.
   - Exposes `update_settings` for suspend history retention through `suspendHistoryEntryCount`, accepting `off` or an enabled count of at least 1.
   - Exposes `update_settings` for inactive session timeout through `sessionTimeoutMinutes`, accepting `off` or an enabled minute count of at least 1.
+  - Exposes `update_settings` for server runtime cleanup delay through `serverRuntimeCleanupDelayMinutes`, accepting `off` for immediate exit or an enabled minute count of at least 1.
   - Exposes `remove_session` for manual active-session deletion by session identifier, with optional provider and MCP provider-name filters.
   - Exposes `set_session_soft_lock` and `clear_session_soft_lock` for provider/session-targeted soft-lock control.
 - `LidGuardProviderMcpTools`
@@ -597,6 +604,8 @@ lidguard settings --suspend-history-count 10
 lidguard settings --suspend-history-count off
 lidguard settings --session-timeout-minutes 12
 lidguard settings --session-timeout-minutes off
+lidguard settings --server-runtime-cleanup-delay-minutes 10
+lidguard settings --server-runtime-cleanup-delay-minutes off
 lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
 lidguard settings --closed-lid-permission-request-decision allow
 lidguard settings --prevent-away-mode-sleep true --prevent-display-sleep true --power-request-reason "LidGuard keeps agent sessions awake"

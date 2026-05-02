@@ -55,6 +55,7 @@ internal static class LidGuardSettingsStore
             return false;
         if (!SuspendHistoryConfiguration.TryValidateEntryCount(normalizedSettings.SuspendHistoryEntryCount, out message)) return false;
         if (!SessionTimeoutConfiguration.TryValidateMinutes(normalizedSettings.SessionTimeoutMinutes, out message)) return false;
+        if (!ServerRuntimeCleanupConfiguration.TryValidateDelayMinutes(normalizedSettings.ServerRuntimeCleanupDelayMinutes, out message)) return false;
 
         try
         {
@@ -98,6 +99,7 @@ internal static class LidGuardSettingsStore
             ClosedLidPermissionRequestDecision = normalizedSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = normalizedSettings.WatchParentProcess,
             SessionTimeoutMinutes = normalizedSettings.SessionTimeoutMinutes,
+            ServerRuntimeCleanupDelayMinutes = normalizedSettings.ServerRuntimeCleanupDelayMinutes,
             EmergencyHibernationOnHighTemperature = normalizedSettings.EmergencyHibernationOnHighTemperature,
             EmergencyHibernationTemperatureMode = normalizedSettings.EmergencyHibernationTemperatureMode,
             EmergencyHibernationTemperatureCelsius = normalizedSettings.EmergencyHibernationTemperatureCelsius

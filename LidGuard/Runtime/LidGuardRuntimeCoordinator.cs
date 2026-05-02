@@ -12,6 +12,7 @@ internal sealed class LidGuardRuntimeCoordinator
 {
     private const string SessionTimeoutCommandName = "session-timeout";
     private const string CodexTranscriptTurnAbortedCommandName = "codex-transcript-turn-aborted";
+    private const string ServerRuntimeCleanupCommandName = "server-runtime-cleanup";
 
     private static readonly TimeSpan s_processWatchInterval = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan s_emergencyHibernationWebhookTimeout = TimeSpan.FromSeconds(5);
@@ -27,10 +28,13 @@ internal sealed class LidGuardRuntimeCoordinator
     private readonly LidGuardProtectionCoordinator _protectionCoordinator;
     private readonly CodexSoftLockTranscriptMonitor _codexSoftLockTranscriptMonitor;
     private readonly EmergencyHibernationThermalMonitor _emergencyHibernationThermalMonitor;
+    private readonly Action _requestRuntimeStop;
 
     private LidGuardSettings _settings;
     private CancellationTokenSource _pendingSuspendCancellationTokenSource;
     private CancellationTokenSource _sessionTimeoutCancellationTokenSource;
+    private CancellationTokenSource _serverRuntimeCleanupCancellationTokenSource;
+    private bool _serverRuntimeStopRequested;
 
     public LidGuardRuntimeCoordinator(
         LidGuardSettings initialSettings,
@@ -42,7 +46,8 @@ internal sealed class LidGuardRuntimeCoordinator
         IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer,
         ISystemAudioVolumeController systemAudioVolumeController,
         ILidStateSource lidStateSource,
-        IVisibleDisplayMonitorCountProvider visibleDisplayMonitorCountProvider)
+        IVisibleDisplayMonitorCountProvider visibleDisplayMonitorCountProvider,
+        Action requestRuntimeStop = null)
     {
         _commandLineProcessResolver = commandLineProcessResolver;
         _processExitWatcher = processExitWatcher;
@@ -57,6 +62,7 @@ internal sealed class LidGuardRuntimeCoordinator
         _emergencyHibernationThermalMonitor = new EmergencyHibernationThermalMonitor(
             CreateEmergencyHibernationThermalMonitorState,
             HandleEmergencyHibernationThresholdReachedAsync);
+        _requestRuntimeStop = requestRuntimeStop;
         _settings = LidGuardSettings.Normalize(initialSettings);
     }
 
@@ -76,6 +82,22 @@ internal sealed class LidGuardRuntimeCoordinator
             LidGuardPipeCommands.Settings => await UpdateSettingsAsync(request, cancellationToken),
             _ => LidGuardPipeResponse.Failure($"Unsupported command: {request.Command}", _sessionRegistry.ActiveSessionCount)
         };
+    }
+
+    public async Task<bool> TryConsumeServerRuntimeStopRequestAsync(CancellationToken cancellationToken)
+    {
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            if (!_serverRuntimeStopRequested) return false;
+
+            _serverRuntimeStopRequested = false;
+            return true;
+        }
+        finally
+        {
+            _gate.Release();
+        }
     }
 
     private async Task<LidGuardPipeResponse> StartAsync(LidGuardPipeRequest request, CancellationToken cancellationToken)
@@ -120,6 +142,7 @@ internal sealed class LidGuardRuntimeCoordinator
             };
 
             var snapshot = _sessionRegistry.StartOrUpdate(startRequest);
+            CancelServerRuntimeCleanupInsideGate();
             var protectionResult = EnsureProtection();
             if (!protectionResult.Succeeded)
             {
@@ -460,6 +483,13 @@ internal sealed class LidGuardRuntimeCoordinator
             return LidGuardOperationResult.Failure(message);
         }
 
+        if (!LidGuardSettings.IsValidServerRuntimeCleanupDelayMinutes(settings.ServerRuntimeCleanupDelayMinutes))
+        {
+            var message =
+                $"Server runtime cleanup delay minutes must be off or an integer of at least {LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes}.";
+            return LidGuardOperationResult.Failure(message);
+        }
+
         var normalizedSettings = LidGuardSettings.Normalize(settings);
         if (!_sessionRegistry.HasActiveSessions)
         {
@@ -467,10 +497,12 @@ internal sealed class LidGuardRuntimeCoordinator
             ReconfigureWatchers();
             ReconfigureSessionTimeoutMonitorInsideGate();
             EnsureEmergencyHibernationThermalMonitor();
+            ReconfigureServerRuntimeCleanupInsideGate();
             return LidGuardOperationResult.Success();
         }
 
         var previousSettings = _settings;
+        CancelServerRuntimeCleanupInsideGate();
         var restoreResult = RestoreProtection();
         if (!restoreResult.Succeeded) return restoreResult;
 
@@ -582,6 +614,79 @@ internal sealed class LidGuardRuntimeCoordinator
         var cancellationTokenSource = _sessionTimeoutCancellationTokenSource;
         _sessionTimeoutCancellationTokenSource = null;
         cancellationTokenSource.Cancel();
+    }
+
+    private void ReconfigureServerRuntimeCleanupInsideGate(bool deferImmediateStopUntilCurrentResponse = true)
+    {
+        CancelServerRuntimeCleanupInsideGate();
+        if (_sessionRegistry.HasActiveSessions) return;
+        if (_pendingSuspendCancellationTokenSource is not null) return;
+
+        if (_settings.ServerRuntimeCleanupDelayMinutes is not { } serverRuntimeCleanupDelayMinutes)
+        {
+            RequestServerRuntimeStopInsideGate(deferImmediateStopUntilCurrentResponse);
+            return;
+        }
+
+        var delay = TimeSpan.FromMinutes(serverRuntimeCleanupDelayMinutes);
+        var cancellationTokenSource = new CancellationTokenSource();
+        _serverRuntimeCleanupCancellationTokenSource = cancellationTokenSource;
+        LidGuardRuntimeLogWriter.AppendRuntimeLog(
+            "server-runtime-cleanup-scheduled",
+            ServerRuntimeCleanupCommandName,
+            CreateSuccessResponse($"Scheduled server runtime cleanup in {serverRuntimeCleanupDelayMinutes} minute(s)."));
+        _ = StopServerRuntimeAfterCleanupDelayAsync(delay, cancellationTokenSource);
+    }
+
+    private void CancelServerRuntimeCleanupInsideGate()
+    {
+        _serverRuntimeStopRequested = false;
+        if (_serverRuntimeCleanupCancellationTokenSource is null) return;
+
+        var cancellationTokenSource = _serverRuntimeCleanupCancellationTokenSource;
+        _serverRuntimeCleanupCancellationTokenSource = null;
+        cancellationTokenSource.Cancel();
+    }
+
+    private async Task StopServerRuntimeAfterCleanupDelayAsync(
+        TimeSpan delay,
+        CancellationTokenSource cancellationTokenSource)
+    {
+        try
+        {
+            if (delay > TimeSpan.Zero) await Task.Delay(delay, cancellationTokenSource.Token);
+
+            await _gate.WaitAsync(cancellationTokenSource.Token);
+            try
+            {
+                if (!ReferenceEquals(_serverRuntimeCleanupCancellationTokenSource, cancellationTokenSource)) return;
+
+                _serverRuntimeCleanupCancellationTokenSource = null;
+                if (_sessionRegistry.HasActiveSessions) return;
+                if (_pendingSuspendCancellationTokenSource is not null) return;
+
+                RequestServerRuntimeStopInsideGate(false);
+            }
+            finally
+            {
+                _gate.Release();
+            }
+        }
+        catch (OperationCanceledException) { }
+        finally
+        {
+            cancellationTokenSource.Dispose();
+        }
+    }
+
+    private void RequestServerRuntimeStopInsideGate(bool deferImmediateStopUntilCurrentResponse)
+    {
+        _serverRuntimeStopRequested = true;
+        LidGuardRuntimeLogWriter.AppendRuntimeLog(
+            "server-runtime-cleanup-requested",
+            ServerRuntimeCleanupCommandName,
+            CreateSuccessResponse("Requested server runtime cleanup because no active sessions remain."));
+        if (!deferImmediateStopUntilCurrentResponse) _requestRuntimeStop?.Invoke();
     }
 
     private async Task WaitForSessionTimeoutAsync(
@@ -821,6 +926,7 @@ internal sealed class LidGuardRuntimeCoordinator
             successMessage,
             _sessionRegistry.ActiveSessionCount);
         ReconfigureSessionTimeoutMonitorInsideGate();
+        ReconfigureServerRuntimeCleanupInsideGate();
         LidGuardRuntimeLogWriter.AppendSessionLog(eventName, request, successResponse, stoppedSnapshot, commandName);
         return successResponse;
     }
@@ -1029,6 +1135,7 @@ internal sealed class LidGuardRuntimeCoordinator
         {
             if (ReferenceEquals(_pendingSuspendCancellationTokenSource, pendingSuspendCancellationTokenSource))
                 _pendingSuspendCancellationTokenSource = null;
+            ReconfigureServerRuntimeCleanupInsideGate(false);
         }
         finally
         {
@@ -1566,6 +1673,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
         _codexSoftLockTranscriptMonitor.ResetSession(key);
         CancelPendingSuspend();
+        CancelServerRuntimeCleanupInsideGate();
         ReconfigureSessionTimeoutMonitorInsideGate();
         var protectionResult = EnsureProtection();
         if (!protectionResult.Succeeded)

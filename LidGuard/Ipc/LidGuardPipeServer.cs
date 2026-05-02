@@ -5,7 +5,9 @@ using LidGuard.Runtime;
 
 namespace LidGuard.Ipc;
 
-internal sealed class LidGuardPipeServer(LidGuardRuntimeCoordinator runtimeCoordinator)
+internal sealed class LidGuardPipeServer(
+    LidGuardRuntimeCoordinator runtimeCoordinator,
+    Action requestRuntimeStop)
 {
     public async Task RunAsync(CancellationToken cancellationToken)
     {
@@ -32,6 +34,7 @@ internal sealed class LidGuardPipeServer(LidGuardRuntimeCoordinator runtimeCoord
         var response = await CreateResponseAsync(requestJson, cancellationToken);
         var responseJson = JsonSerializer.Serialize(response, LidGuardJsonSerializerContext.Default.LidGuardPipeResponse);
         await streamWriter.WriteLineAsync(responseJson);
+        if (await runtimeCoordinator.TryConsumeServerRuntimeStopRequestAsync(cancellationToken)) requestRuntimeStop();
     }
 
     private async Task<LidGuardPipeResponse> CreateResponseAsync(string requestJson, CancellationToken cancellationToken)

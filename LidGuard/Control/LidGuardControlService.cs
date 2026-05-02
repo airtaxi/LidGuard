@@ -182,6 +182,14 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(sessionTimeoutValidationMessage);
         }
 
+        if (settingsPatch.HasServerRuntimeCleanupDelayMinutes
+            && !ServerRuntimeCleanupConfiguration.TryValidateDelayMinutes(
+                settingsPatch.ServerRuntimeCleanupDelayMinutes,
+                out var serverRuntimeCleanupValidationMessage))
+        {
+            return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(serverRuntimeCleanupValidationMessage);
+        }
+
         if (!LidGuardSettingsStore.TryLoadOrCreate(out var currentSettings, out var message)) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
 
         var previousStoredSettings = LidGuardSettings.Normalize(currentSettings);
@@ -304,6 +312,9 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             SessionTimeoutMinutes = settingsPatch.HasSessionTimeoutMinutes
                 ? settingsPatch.SessionTimeoutMinutes
                 : normalizedBaseSettings.SessionTimeoutMinutes,
+            ServerRuntimeCleanupDelayMinutes = settingsPatch.HasServerRuntimeCleanupDelayMinutes
+                ? settingsPatch.ServerRuntimeCleanupDelayMinutes
+                : normalizedBaseSettings.ServerRuntimeCleanupDelayMinutes,
             EmergencyHibernationOnHighTemperature = settingsPatch.EmergencyHibernationOnHighTemperature ?? normalizedBaseSettings.EmergencyHibernationOnHighTemperature,
             EmergencyHibernationTemperatureMode = settingsPatch.EmergencyHibernationTemperatureMode ?? normalizedBaseSettings.EmergencyHibernationTemperatureMode,
             EmergencyHibernationTemperatureCelsius = settingsPatch.EmergencyHibernationTemperatureCelsius ?? normalizedBaseSettings.EmergencyHibernationTemperatureCelsius
@@ -423,6 +434,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         AppendChange(changes, previousStoredSettings.PreSuspendWebhookUrl, updatedStoredSettings.PreSuspendWebhookUrl, "preSuspendWebhookUrl");
         AppendChange(changes, previousStoredSettings.ClosedLidPermissionRequestDecision, updatedStoredSettings.ClosedLidPermissionRequestDecision, "closedLidPermissionRequestDecision");
         AppendChange(changes, previousStoredSettings.SessionTimeoutMinutes, updatedStoredSettings.SessionTimeoutMinutes, "sessionTimeoutMinutes");
+        AppendChange(changes, previousStoredSettings.ServerRuntimeCleanupDelayMinutes, updatedStoredSettings.ServerRuntimeCleanupDelayMinutes, "serverRuntimeCleanupDelayMinutes");
         AppendChange(changes, previousStoredSettings.EmergencyHibernationOnHighTemperature, updatedStoredSettings.EmergencyHibernationOnHighTemperature, "emergencyHibernationOnHighTemperature");
         AppendChange(changes, previousStoredSettings.EmergencyHibernationTemperatureMode, updatedStoredSettings.EmergencyHibernationTemperatureMode, "emergencyHibernationTemperatureMode");
         AppendChange(changes, previousStoredSettings.EmergencyHibernationTemperatureCelsius, updatedStoredSettings.EmergencyHibernationTemperatureCelsius, "emergencyHibernationTemperatureCelsius");

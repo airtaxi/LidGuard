@@ -136,9 +136,10 @@ internal static class LidGuardCommandLineApplication
                 serviceSet.PostStopSuspendSoundPlayer,
                 serviceSet.SystemAudioVolumeController,
                 serviceSet.LidStateSource,
-                serviceSet.VisibleDisplayMonitorCountProvider);
+                serviceSet.VisibleDisplayMonitorCountProvider,
+                cancellationTokenSource.Cancel);
 
-            var pipeServer = new LidGuardPipeServer(runtimeCoordinator);
+            var pipeServer = new LidGuardPipeServer(runtimeCoordinator, cancellationTokenSource.Cancel);
 
             try
             {

@@ -314,6 +314,12 @@ internal static class LidGuardSettingsCommand
             out var sessionTimeoutMinutes,
             out message))
             return false;
+        if (!TryParseServerRuntimeCleanupDelayMinutesOption(
+            options,
+            baseSettings.ServerRuntimeCleanupDelayMinutes,
+            out var serverRuntimeCleanupDelayMinutes,
+            out message))
+            return false;
         if (!CommandOptionReader.TryParseBooleanOption(
             options,
             baseSettings.EmergencyHibernationOnHighTemperature,
@@ -374,6 +380,7 @@ internal static class LidGuardSettingsCommand
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess,
             SessionTimeoutMinutes = sessionTimeoutMinutes,
+            ServerRuntimeCleanupDelayMinutes = serverRuntimeCleanupDelayMinutes,
             EmergencyHibernationOnHighTemperature = emergencyHibernationOnHighTemperature,
             EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode,
             EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius
@@ -401,6 +408,13 @@ internal static class LidGuardSettingsCommand
             normalizedStoredSettings.SessionTimeoutMinutes,
             defaultSettings.SessionTimeoutMinutes,
             out var sessionTimeoutMinutes,
+            out message))
+            return false;
+        if (!TryReadServerRuntimeCleanupDelayMinutesSetting(
+            "Server runtime cleanup delay minutes",
+            normalizedStoredSettings.ServerRuntimeCleanupDelayMinutes,
+            defaultSettings.ServerRuntimeCleanupDelayMinutes,
+            out var serverRuntimeCleanupDelayMinutes,
             out message))
             return false;
         if (!TryReadBooleanSetting(
@@ -480,6 +494,7 @@ internal static class LidGuardSettingsCommand
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess,
             SessionTimeoutMinutes = sessionTimeoutMinutes,
+            ServerRuntimeCleanupDelayMinutes = serverRuntimeCleanupDelayMinutes,
             EmergencyHibernationOnHighTemperature = emergencyHibernationOnHighTemperature,
             EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode,
             EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius
@@ -605,6 +620,46 @@ internal static class LidGuardSettingsCommand
         }
 
         message = $"{settingName} must be off or an integer of at least {LidGuardSettings.MinimumSessionTimeoutMinutes}.";
+        return false;
+    }
+
+    private static bool TryReadServerRuntimeCleanupDelayMinutesSetting(
+        string settingName,
+        int? storedValue,
+        int? defaultValue,
+        out int? value,
+        out string message)
+    {
+        value = storedValue;
+        message = string.Empty;
+        WriteInteractiveSettingPrompt(
+            settingName,
+            ServerRuntimeCleanupConfiguration.GetDisplayValue(storedValue),
+            ServerRuntimeCleanupConfiguration.GetDisplayValue(defaultValue),
+            $"minimum: {LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes}, off to exit immediately");
+
+        var valueText = Console.ReadLine();
+        if (valueText is null)
+        {
+            message = $"Input ended before {settingName} was entered.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(valueText)) return true;
+        if (valueText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
+        {
+            value = null;
+            return true;
+        }
+
+        if (int.TryParse(valueText.Trim(), out var parsedValue)
+            && LidGuardSettings.IsValidServerRuntimeCleanupDelayMinutes(parsedValue))
+        {
+            value = parsedValue;
+            return true;
+        }
+
+        message = $"{settingName} must be off or an integer of at least {LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes}.";
         return false;
     }
 
@@ -1026,6 +1081,40 @@ internal static class LidGuardSettingsCommand
         }
 
         message = $"The session-timeout-minutes option must be off or an integer of at least {LidGuardSettings.MinimumSessionTimeoutMinutes}.";
+        return false;
+    }
+
+    private static bool TryParseServerRuntimeCleanupDelayMinutesOption(
+        IReadOnlyDictionary<string, string> options,
+        int? defaultValue,
+        out int? serverRuntimeCleanupDelayMinutes,
+        out string message)
+    {
+        serverRuntimeCleanupDelayMinutes = defaultValue;
+        message = string.Empty;
+        if (!CommandOptionReader.TryGetOption(
+            options,
+            out var serverRuntimeCleanupDelayMinutesText,
+            "server-runtime-cleanup-delay-minutes"))
+        {
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(serverRuntimeCleanupDelayMinutesText)
+            || serverRuntimeCleanupDelayMinutesText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
+        {
+            serverRuntimeCleanupDelayMinutes = null;
+            return true;
+        }
+
+        if (int.TryParse(serverRuntimeCleanupDelayMinutesText.Trim(), out var parsedValue)
+            && LidGuardSettings.IsValidServerRuntimeCleanupDelayMinutes(parsedValue))
+        {
+            serverRuntimeCleanupDelayMinutes = parsedValue;
+            return true;
+        }
+
+        message = $"The server-runtime-cleanup-delay-minutes option must be off or an integer of at least {LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes}.";
         return false;
     }
 

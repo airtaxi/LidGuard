@@ -13,6 +13,8 @@ public sealed class LidGuardSettings
     public const int DefaultSuspendHistoryEntryCount = 10;
     public const int MinimumSessionTimeoutMinutes = 1;
     public const int DefaultSessionTimeoutMinutes = 12;
+    public const int MinimumServerRuntimeCleanupDelayMinutes = 1;
+    public const int DefaultServerRuntimeCleanupDelayMinutes = 10;
 
     public static LidGuardSettings Default { get; } = new();
 
@@ -44,6 +46,8 @@ public sealed class LidGuardSettings
 
     public int? SessionTimeoutMinutes { get; init; } = DefaultSessionTimeoutMinutes;
 
+    public int? ServerRuntimeCleanupDelayMinutes { get; init; } = DefaultServerRuntimeCleanupDelayMinutes;
+
     public bool EmergencyHibernationOnHighTemperature { get; init; } = true;
 
     public EmergencyHibernationTemperatureMode EmergencyHibernationTemperatureMode { get; init; } = EmergencyHibernationTemperatureMode.Average;
@@ -66,6 +70,9 @@ public sealed class LidGuardSettings
     public static bool IsValidSessionTimeoutMinutes(int? sessionTimeoutMinutes)
         => sessionTimeoutMinutes is null || sessionTimeoutMinutes >= MinimumSessionTimeoutMinutes;
 
+    public static bool IsValidServerRuntimeCleanupDelayMinutes(int? serverRuntimeCleanupDelayMinutes)
+        => serverRuntimeCleanupDelayMinutes is null || serverRuntimeCleanupDelayMinutes >= MinimumServerRuntimeCleanupDelayMinutes;
+
     public static LidGuardSettings Normalize(LidGuardSettings settings)
     {
         if (settings is null) return HeadlessRuntimeDefault;
@@ -79,6 +86,9 @@ public sealed class LidGuardSettings
         var sessionTimeoutMinutes = settings.SessionTimeoutMinutes is null
             ? (int?)null
             : Math.Max(MinimumSessionTimeoutMinutes, settings.SessionTimeoutMinutes.Value);
+        var serverRuntimeCleanupDelayMinutes = settings.ServerRuntimeCleanupDelayMinutes is null
+            ? (int?)null
+            : Math.Max(MinimumServerRuntimeCleanupDelayMinutes, settings.ServerRuntimeCleanupDelayMinutes.Value);
         return new LidGuardSettings
         {
             PowerRequest = new PowerRequestOptions
@@ -98,6 +108,7 @@ public sealed class LidGuardSettings
             ClosedLidPermissionRequestDecision = settings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settings.WatchParentProcess,
             SessionTimeoutMinutes = sessionTimeoutMinutes,
+            ServerRuntimeCleanupDelayMinutes = serverRuntimeCleanupDelayMinutes,
             EmergencyHibernationOnHighTemperature = settings.EmergencyHibernationOnHighTemperature,
             EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode,
             EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius
