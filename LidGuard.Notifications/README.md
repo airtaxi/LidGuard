@@ -16,14 +16,18 @@ Do not expose this server publicly without HTTPS, a strong `AccessToken`, and a 
 
 ## VAPID Key Generation
 
-Generate VAPID keys with `ClosureOSS.WebPush`:
+Generate VAPID keys from a CLI instead of creating a temporary .NET project. The `web-push` npm package provides a cross-platform generator and does not add any dependency to this repository.
 
-```csharp
-using WebPush;
+Install or prepare `npx` for your OS first:
 
-var vapidDetails = VapidHelper.GenerateVapidKeys();
-Console.WriteLine($"Public:  {vapidDetails.PublicKey}");
-Console.WriteLine($"Private: {vapidDetails.PrivateKey}");
+- Windows: install Node.js LTS from the official installer or run `winget install OpenJS.NodeJS.LTS`.
+- macOS: install Node.js LTS from the official installer or run `brew install node`.
+- Linux: install Node.js and npm from your distribution packages, such as `sudo apt install nodejs npm` on Debian/Ubuntu.
+
+Then run the same command on every OS:
+
+```bash
+npx --yes web-push generate-vapid-keys
 ```
 
 Put the generated public key in `VapidPublicKey` and the generated private key in `VapidPrivateKey`.
