@@ -12,6 +12,8 @@ internal sealed class LidGuardRuntimeCoordinator
 {
     private const string SessionTimeoutCommandName = "session-timeout";
     private const string CodexTranscriptTurnAbortedCommandName = "codex-transcript-turn-aborted";
+    private const string ClaudeTranscriptInterruptedCommandName = "claude-transcript-interrupted";
+    private const string GitHubCopilotTranscriptAbortCommandName = "github-copilot-transcript-abort";
     private const string ServerRuntimeCleanupCommandName = "server-runtime-cleanup";
 
     private static readonly TimeSpan s_processWatchInterval = TimeSpan.FromSeconds(1);
@@ -26,7 +28,9 @@ internal sealed class LidGuardRuntimeCoordinator
     private readonly LidGuardSessionRegistry _sessionRegistry = new();
     private readonly Dictionary<LidGuardSessionKey, CancellationTokenSource> _watcherCancellationTokenSources = [];
     private readonly LidGuardProtectionCoordinator _protectionCoordinator;
-    private readonly CodexSoftLockTranscriptMonitor _codexSoftLockTranscriptMonitor;
+    private readonly AgentTranscriptMonitor _codexTranscriptMonitor;
+    private readonly AgentTranscriptMonitor _claudeTranscriptMonitor;
+    private readonly AgentTranscriptMonitor _gitHubCopilotTranscriptMonitor;
     private readonly EmergencyHibernationThermalMonitor _emergencyHibernationThermalMonitor;
     private readonly Action _requestRuntimeStop;
 
@@ -56,9 +60,18 @@ internal sealed class LidGuardRuntimeCoordinator
         _lidStateSource = lidStateSource;
         _visibleDisplayMonitorCountProvider = visibleDisplayMonitorCountProvider;
         _protectionCoordinator = new LidGuardProtectionCoordinator(powerRequestService, lidActionPolicyController);
-        _codexSoftLockTranscriptMonitor = new CodexSoftLockTranscriptMonitor(
-            HandleCodexTranscriptActivityDetectedAsync,
-            HandleCodexTranscriptTurnAbortedAsync);
+        _codexTranscriptMonitor = new AgentTranscriptMonitor(
+            CreateCodexTranscriptMonitoringProfile(),
+            HandleTranscriptActivityDetectedAsync,
+            HandleTranscriptStopDetectedAsync);
+        _claudeTranscriptMonitor = new AgentTranscriptMonitor(
+            CreateClaudeTranscriptMonitoringProfile(),
+            HandleTranscriptActivityDetectedAsync,
+            HandleTranscriptStopDetectedAsync);
+        _gitHubCopilotTranscriptMonitor = new AgentTranscriptMonitor(
+            CreateGitHubCopilotTranscriptMonitoringProfile(),
+            HandleTranscriptActivityDetectedAsync,
+            HandleTranscriptStopDetectedAsync);
         _emergencyHibernationThermalMonitor = new EmergencyHibernationThermalMonitor(
             CreateEmergencyHibernationThermalMonitorState,
             HandleEmergencyHibernationThresholdReachedAsync);
@@ -123,9 +136,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 }
             }
 
-            var codexTranscriptMonitoringRegistrationResult = request.Provider == AgentProvider.Codex
-                ? _codexSoftLockTranscriptMonitor.RegisterOrUpdateSession(request.SessionIdentifier, request.WorkingDirectory, request.TranscriptPath)
-                : new CodexTranscriptMonitoringRegistrationResult();
+            var transcriptMonitoringRegistrationResult = RegisterTranscriptMonitor(request);
             var watchedProcessResolution = ResolveWatchedProcess(request);
             var startedAt = DateTimeOffset.UtcNow;
             var startRequest = new LidGuardSessionStartRequest
@@ -138,7 +149,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 WatchedProcessIdentifier = watchedProcessResolution.ProcessIdentifier,
                 WatchRegistrationKind = watchedProcessResolution.WatchRegistrationKind,
                 WorkingDirectory = request.WorkingDirectory,
-                TranscriptPath = codexTranscriptMonitoringRegistrationResult.ResolvedTranscriptPath
+                TranscriptPath = transcriptMonitoringRegistrationResult.ResolvedTranscriptPath
             };
 
             var snapshot = _sessionRegistry.StartOrUpdate(startRequest);
@@ -146,7 +157,7 @@ internal sealed class LidGuardRuntimeCoordinator
             var protectionResult = EnsureProtection();
             if (!protectionResult.Succeeded)
             {
-                _codexSoftLockTranscriptMonitor.RemoveSession(snapshot.Key);
+                RemoveTranscriptMonitorSession(snapshot.Key);
                 _sessionRegistry.Stop(
                     new LidGuardSessionStopRequest
                     {
@@ -163,7 +174,7 @@ internal sealed class LidGuardRuntimeCoordinator
             CancelPendingSuspend();
             StartWatcher(snapshot);
             ReconfigureSessionTimeoutMonitorInsideGate();
-            AppendCodexTranscriptMonitorRegistration(request, snapshot, codexTranscriptMonitoringRegistrationResult);
+            AppendTranscriptMonitorRegistration(request, snapshot, transcriptMonitoringRegistrationResult);
 
             var watchMessage = CreateWatcherStatusMessage(request, snapshot);
             var successResponse = CreateSuccessResponse($"Started {snapshot.Key}.{watchMessage}");
@@ -298,7 +309,7 @@ internal sealed class LidGuardRuntimeCoordinator
             return ignoredResponse;
         }
 
-        _codexSoftLockTranscriptMonitor.ArmSessionSoftLock(sessionKey);
+        ResetTranscriptMonitorSession(sessionKey);
         var successMessage = changed
             ? $"Marked {sessionKey} as soft-locked from {request.SessionStateReason}."
             : $"Session {sessionKey} is already soft-locked from {snapshot.SoftLockReason}.";
@@ -426,10 +437,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
     private WatchedProcessResolution ResolveWatchedProcess(LidGuardPipeRequest request)
     {
-        if (request.WatchedProcessIdentifier > 0)
-            return new WatchedProcessResolution(
-                request.WatchedProcessIdentifier,
-                LidGuardSessionWatchRegistrationKind.ExplicitWatchedProcessIdentifier);
+        if (request.WatchedProcessIdentifier > 0) return new WatchedProcessResolution(request.WatchedProcessIdentifier, LidGuardSessionWatchRegistrationKind.ExplicitWatchedProcessIdentifier);
 
         if (request.Provider == AgentProvider.Mcp) return WatchedProcessResolution.None;
         if (!_settings.WatchParentProcess) return WatchedProcessResolution.None;
@@ -449,15 +457,13 @@ internal sealed class LidGuardRuntimeCoordinator
 
     private string CreateWatcherStatusMessage(LidGuardPipeRequest request, LidGuardSessionSnapshot snapshot)
     {
-        if (snapshot.WatchRegistrationKind == LidGuardSessionWatchRegistrationKind.CodexShellHostedWorkingDirectoryFallback)
-            return $" Watching process {snapshot.WatchedProcessIdentifier} through Codex shell-host fallback.";
+        if (snapshot.WatchRegistrationKind == LidGuardSessionWatchRegistrationKind.CodexShellHostedWorkingDirectoryFallback) return $" Watching process {snapshot.WatchedProcessIdentifier} through Codex shell-host fallback.";
         if (snapshot.HasWatchedProcess) return $" Watching process {snapshot.WatchedProcessIdentifier}.";
 
         var shouldExplainSkippedCodexFallback = request.Provider == AgentProvider.Codex
             && request.WatchedProcessIdentifier <= 0
             && _settings.WatchParentProcess;
-        if (shouldExplainSkippedCodexFallback)
-            return " Codex fallback watchdog only attaches when the resolved Codex process or its direct parent is cmd.exe, pwsh.exe, or powershell.exe; a stop hook is required.";
+        if (shouldExplainSkippedCodexFallback) return " Codex fallback watchdog only attaches when the resolved Codex process or its direct parent is cmd.exe, pwsh.exe, or powershell.exe; a stop hook is required.";
 
         return " No watched process was resolved; a stop hook is required.";
     }
@@ -872,8 +878,7 @@ internal sealed class LidGuardRuntimeCoordinator
         }
 
         var successMessage = matchingSnapshots.Length == 1 ? lastResponse.Message : multipleRemovalSuccessMessage;
-        if (matchingSnapshots.Length > 1 && TryExtractPostStopScheduleMessage(lastResponse.Message, out var postStopScheduleMessage))
-            successMessage = $"{successMessage} {postStopScheduleMessage}";
+        if (matchingSnapshots.Length > 1 && TryExtractPostStopScheduleMessage(lastResponse.Message, out var postStopScheduleMessage)) successMessage = $"{successMessage} {postStopScheduleMessage}";
         return CreateSuccessResponse(successMessage);
     }
 
@@ -892,7 +897,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
         var key = new LidGuardSessionKey(request.Provider, request.SessionIdentifier, request.ProviderName);
         CancelWatcher(key);
-        _codexSoftLockTranscriptMonitor.RemoveSession(key);
+        RemoveTranscriptMonitorSession(key);
 
         if (!_sessionRegistry.Stop(request, out var stoppedSnapshot))
         {
@@ -985,8 +990,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 suspendTriggerSessionCount,
                 pendingSuspendCancellationTokenSource.Token);
 
-            if (postStopSuspendDelaySeconds > 0)
-                await Task.Delay(TimeSpan.FromSeconds(postStopSuspendDelaySeconds), pendingSuspendCancellationTokenSource.Token);
+            if (postStopSuspendDelaySeconds > 0) await Task.Delay(TimeSpan.FromSeconds(postStopSuspendDelaySeconds), pendingSuspendCancellationTokenSource.Token);
 
             var postStopSuspendSound = string.Empty;
             int? postStopSuspendSoundVolumeOverridePercent = null;
@@ -1133,8 +1137,7 @@ internal sealed class LidGuardRuntimeCoordinator
         await _gate.WaitAsync(CancellationToken.None);
         try
         {
-            if (ReferenceEquals(_pendingSuspendCancellationTokenSource, pendingSuspendCancellationTokenSource))
-                _pendingSuspendCancellationTokenSource = null;
+            if (ReferenceEquals(_pendingSuspendCancellationTokenSource, pendingSuspendCancellationTokenSource)) _pendingSuspendCancellationTokenSource = null;
             ReconfigureServerRuntimeCleanupInsideGate(false);
         }
         finally
@@ -1635,8 +1638,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
         var finalSuccessMessage =
             $"Cleaned {matchingSnapshots.Length} watched Codex session(s) for working directory \"{snapshot.WorkingDirectory}\" and left process=none Codex sessions untouched.";
-        if (TryExtractPostStopScheduleMessage(lastResponse.Message, out var postStopScheduleMessage))
-            finalSuccessMessage = $"{finalSuccessMessage} {postStopScheduleMessage}";
+        if (TryExtractPostStopScheduleMessage(lastResponse.Message, out var postStopScheduleMessage)) finalSuccessMessage = $"{finalSuccessMessage} {postStopScheduleMessage}";
 
         var successResponse = CreateSuccessResponse(finalSuccessMessage);
         return new CleanupResult(successResponse, matchingSnapshots.Length);
@@ -1671,7 +1673,7 @@ internal sealed class LidGuardRuntimeCoordinator
             return ignoredResponse;
         }
 
-        _codexSoftLockTranscriptMonitor.ResetSession(key);
+        ResetTranscriptMonitorSession(key);
         CancelPendingSuspend();
         CancelServerRuntimeCleanupInsideGate();
         ReconfigureSessionTimeoutMonitorInsideGate();
@@ -1691,29 +1693,77 @@ internal sealed class LidGuardRuntimeCoordinator
         return successResponse;
     }
 
-    private void AppendCodexTranscriptMonitorRegistration(
+    private AgentTranscriptMonitoringRegistrationResult RegisterTranscriptMonitor(LidGuardPipeRequest request)
+    {
+        if (!TryGetTranscriptMonitor(request.Provider, out var transcriptMonitor)) return new AgentTranscriptMonitoringRegistrationResult();
+        return transcriptMonitor.RegisterOrUpdateSession(request.SessionIdentifier, request.ProviderName, request.WorkingDirectory, request.TranscriptPath);
+    }
+
+    private void ResetTranscriptMonitorSession(LidGuardSessionKey sessionKey)
+    {
+        if (TryGetTranscriptMonitor(sessionKey.Provider, out var transcriptMonitor)) transcriptMonitor.ResetSessionObservationBaseline(sessionKey);
+    }
+
+    private void RemoveTranscriptMonitorSession(LidGuardSessionKey sessionKey)
+    {
+        if (TryGetTranscriptMonitor(sessionKey.Provider, out var transcriptMonitor)) transcriptMonitor.RemoveSession(sessionKey);
+    }
+
+    private bool TryGetTranscriptMonitor(AgentProvider provider, out AgentTranscriptMonitor transcriptMonitor)
+    {
+        if (provider == AgentProvider.Codex)
+        {
+            transcriptMonitor = _codexTranscriptMonitor;
+            return true;
+        }
+
+        if (provider == AgentProvider.Claude)
+        {
+            transcriptMonitor = _claudeTranscriptMonitor;
+            return true;
+        }
+
+        if (provider == AgentProvider.GitHubCopilot)
+        {
+            transcriptMonitor = _gitHubCopilotTranscriptMonitor;
+            return true;
+        }
+
+        transcriptMonitor = null;
+        return false;
+    }
+
+    private void AppendTranscriptMonitorRegistration(
         LidGuardPipeRequest request,
         LidGuardSessionSnapshot snapshot,
-        CodexTranscriptMonitoringRegistrationResult codexTranscriptMonitoringRegistrationResult)
+        AgentTranscriptMonitoringRegistrationResult transcriptMonitoringRegistrationResult)
     {
-        if (request.Provider != AgentProvider.Codex) return;
-        if (string.IsNullOrWhiteSpace(codexTranscriptMonitoringRegistrationResult.Message)) return;
+        if (!IsTranscriptMonitoringProvider(request.Provider)) return;
+        if (string.IsNullOrWhiteSpace(transcriptMonitoringRegistrationResult.Message)) return;
 
-        var response = CreateSuccessResponse(codexTranscriptMonitoringRegistrationResult.Message);
-        var eventName = codexTranscriptMonitoringRegistrationResult.MonitoringEnabled
-            ? "codex-transcript-monitor-configured"
-            : "codex-transcript-monitor-skipped";
+        var response = CreateSuccessResponse(transcriptMonitoringRegistrationResult.Message);
+        var eventNamePrefix = GetTranscriptMonitorEventNamePrefix(request.Provider);
+        var eventName = transcriptMonitoringRegistrationResult.MonitoringEnabled
+            ? $"{eventNamePrefix}-transcript-monitor-configured"
+            : $"{eventNamePrefix}-transcript-monitor-skipped";
         LidGuardRuntimeLogWriter.AppendSessionLog(eventName, request, response, snapshot);
     }
 
-    private async Task HandleCodexTranscriptActivityDetectedAsync(CodexTranscriptActivityDetectedContext transcriptActivityDetectedContext)
+    private static bool IsTranscriptMonitoringProvider(AgentProvider provider)
+        => provider is AgentProvider.Codex or AgentProvider.Claude or AgentProvider.GitHubCopilot;
+
+    private static string GetTranscriptMonitorEventNamePrefix(AgentProvider provider)
+        => provider == AgentProvider.GitHubCopilot ? "github-copilot" : provider.ToString().ToLowerInvariant();
+
+    private async Task HandleTranscriptActivityDetectedAsync(AgentTranscriptActivityDetectedContext transcriptActivityDetectedContext)
     {
         var request = new LidGuardPipeRequest
         {
             Command = LidGuardPipeCommands.MarkSessionActive,
-            Provider = AgentProvider.Codex,
+            Provider = transcriptActivityDetectedContext.SessionKey.Provider,
+            ProviderName = transcriptActivityDetectedContext.SessionKey.ProviderName,
             SessionIdentifier = transcriptActivityDetectedContext.SessionKey.SessionIdentifier,
-            SessionStateReason = "codex_transcript_activity_detected",
+            SessionStateReason = transcriptActivityDetectedContext.ActivityReason,
             WorkingDirectory = transcriptActivityDetectedContext.WorkingDirectory,
             TranscriptPath = transcriptActivityDetectedContext.TranscriptPath
         };
@@ -1729,13 +1779,13 @@ internal sealed class LidGuardRuntimeCoordinator
         }
     }
 
-    private async Task HandleCodexTranscriptTurnAbortedAsync(CodexTranscriptTurnAbortedContext transcriptTurnAbortedContext)
+    private async Task HandleTranscriptStopDetectedAsync(AgentTranscriptStopDetectedContext transcriptStopDetectedContext)
     {
         var request = new LidGuardSessionStopRequest
         {
-            Provider = AgentProvider.Codex,
-            SessionIdentifier = transcriptTurnAbortedContext.SessionKey.SessionIdentifier,
-            ProviderName = transcriptTurnAbortedContext.SessionKey.ProviderName
+            Provider = transcriptStopDetectedContext.SessionKey.Provider,
+            SessionIdentifier = transcriptStopDetectedContext.SessionKey.SessionIdentifier,
+            ProviderName = transcriptStopDetectedContext.SessionKey.ProviderName
         };
 
         await _gate.WaitAsync(CancellationToken.None);
@@ -1743,14 +1793,95 @@ internal sealed class LidGuardRuntimeCoordinator
         {
             StopInsideGate(
                 request,
-                $"Stopped {transcriptTurnAbortedContext.SessionKey} because the Codex transcript reported turn_aborted.",
-                CodexTranscriptTurnAbortedCommandName,
-                CodexTranscriptTurnAbortedCommandName);
+                $"Stopped {transcriptStopDetectedContext.SessionKey} because {transcriptStopDetectedContext.StopReasonDescription}.",
+                transcriptStopDetectedContext.StopCommandName,
+                transcriptStopDetectedContext.StopCommandName);
         }
         finally
         {
             _gate.Release();
         }
+    }
+
+    private static AgentTranscriptMonitoringProfile CreateCodexTranscriptMonitoringProfile()
+        => new()
+        {
+            Provider = AgentProvider.Codex,
+            DisplayName = "Codex",
+            FallbackRootDescription = "Codex sessions",
+            FallbackRootPathResolver = GetCodexSessionsDirectoryPath,
+            StopDetector = AgentTranscriptStopDetectors.IsLastCodexTranscriptLineTurnAborted,
+            ActivityReason = "codex_transcript_activity_detected",
+            StopCommandName = CodexTranscriptTurnAbortedCommandName,
+            StopReasonDescription = "the Codex transcript reported turn_aborted"
+        };
+
+    private static AgentTranscriptMonitoringProfile CreateClaudeTranscriptMonitoringProfile()
+        => new()
+        {
+            Provider = AgentProvider.Claude,
+            DisplayName = "Claude",
+            FallbackRootDescription = "Claude projects",
+            FallbackRootPathResolver = GetClaudeProjectsDirectoryPath,
+            StopDetector = AgentTranscriptStopDetectors.IsLastClaudeTranscriptLineInterrupted,
+            ActivityReason = "claude_transcript_activity_detected",
+            StopCommandName = ClaudeTranscriptInterruptedCommandName,
+            StopReasonDescription = "the Claude transcript reported an interrupted request"
+        };
+
+    private static AgentTranscriptMonitoringProfile CreateGitHubCopilotTranscriptMonitoringProfile()
+        => new()
+        {
+            Provider = AgentProvider.GitHubCopilot,
+            DisplayName = "GitHub Copilot",
+            FallbackRootDescription = "GitHub Copilot session-state",
+            FallbackRootPathResolver = GetGitHubCopilotSessionStateDirectoryPath,
+            FallbackTranscriptPathResolver = ResolveGitHubCopilotSessionEventsJsonlPath,
+            StopDetector = AgentTranscriptStopDetectors.IsLastGitHubCopilotSessionEventAbort,
+            ActivityReason = "github_copilot_session_event_activity_detected",
+            StopCommandName = GitHubCopilotTranscriptAbortCommandName,
+            StopReasonDescription = "the GitHub Copilot session event log reported abort"
+        };
+
+    private static string GetCodexSessionsDirectoryPath()
+    {
+        var userProfilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        if (string.IsNullOrWhiteSpace(userProfilePath)) return string.Empty;
+        return Path.Combine(userProfilePath, ".codex", "sessions");
+    }
+
+    private static string GetClaudeProjectsDirectoryPath()
+    {
+        var userProfilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        if (string.IsNullOrWhiteSpace(userProfilePath)) return string.Empty;
+        return Path.Combine(userProfilePath, ".claude", "projects");
+    }
+
+    private static string GetGitHubCopilotSessionStateDirectoryPath()
+    {
+        var gitHubCopilotHomeDirectoryPath = GetGitHubCopilotHomeDirectoryPath();
+        if (string.IsNullOrWhiteSpace(gitHubCopilotHomeDirectoryPath)) return string.Empty;
+        return Path.Combine(gitHubCopilotHomeDirectoryPath, "session-state");
+    }
+
+    private static string ResolveGitHubCopilotSessionEventsJsonlPath(string sessionIdentifier)
+    {
+        if (string.IsNullOrWhiteSpace(sessionIdentifier)) return string.Empty;
+        if (sessionIdentifier.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return string.Empty;
+
+        var gitHubCopilotSessionStateDirectoryPath = GetGitHubCopilotSessionStateDirectoryPath();
+        if (string.IsNullOrWhiteSpace(gitHubCopilotSessionStateDirectoryPath)) return string.Empty;
+        return Path.Combine(gitHubCopilotSessionStateDirectoryPath, sessionIdentifier, "events.jsonl");
+    }
+
+    private static string GetGitHubCopilotHomeDirectoryPath()
+    {
+        var gitHubCopilotHomeDirectoryPath = Environment.GetEnvironmentVariable("COPILOT_HOME");
+        if (!string.IsNullOrWhiteSpace(gitHubCopilotHomeDirectoryPath)) return gitHubCopilotHomeDirectoryPath;
+
+        var userProfilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        if (string.IsNullOrWhiteSpace(userProfilePath)) return string.Empty;
+        return Path.Combine(userProfilePath, ".copilot");
     }
 
     private static bool IsProcessRunning(int processIdentifier)

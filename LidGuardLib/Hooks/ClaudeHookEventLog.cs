@@ -20,7 +20,8 @@ public static class ClaudeHookEventLog
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
-        var details = $"permissionMode={Sanitize(hookInput.PermissionMode)} tool={Sanitize(hookInput.ToolName)} reason={Sanitize(hookInput.Reason)} notificationType={Sanitize(hookInput.NotificationType)}";
+        var details =
+            $"permissionMode={Sanitize(hookInput.PermissionMode)} tool={Sanitize(hookInput.ToolName)} reason={Sanitize(hookInput.Reason)} notificationType={Sanitize(hookInput.NotificationType)} transcriptPath={Sanitize(hookInput.TranscriptPath)} isInterrupt={hookInput.IsInterrupt}";
         if (IsUserPromptSubmitEvent(hookInput.HookEventName)) details = $"{details} prompt={Sanitize(hookInput.Prompt)}";
 
         AppendLine(CreateLogLine(
@@ -40,7 +41,7 @@ public static class ClaudeHookEventLog
             hookInput.HookEventName,
             hookInput.SessionIdentifier,
             hookInput.WorkingDirectory,
-            $"command={Sanitize(commandName)} succeeded={succeeded} runtimeUnavailable={runtimeUnavailable} activeSessions={activeSessionCount} message={Sanitize(message)}"));
+            $"command={Sanitize(commandName)} transcriptPath={Sanitize(hookInput.TranscriptPath)} succeeded={succeeded} runtimeUnavailable={runtimeUnavailable} activeSessions={activeSessionCount} message={Sanitize(message)}"));
     }
 
     public static void AppendMessage(string message) => AppendLine(CreateLogLine("message", string.Empty, string.Empty, string.Empty, Sanitize(message)));

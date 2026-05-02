@@ -209,7 +209,10 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Start/update and provider activity such as new tool execution refresh that session's last activity timestamp. Provider activity also clears that session's current soft-lock state.
 - Setting a soft-lock does not refresh last activity, because it represents waiting rather than autonomous work.
 - When a session reaches the configured inactive session timeout, LidGuard transitions it to soft-locked with reason metadata and applies the same suspend-eligibility handling as other soft-locked sessions.
-- Codex sessions use transcript JSONL monitoring as their provider activity source: transcript length growth or `LastWriteTimeUtc` advancement refreshes the session's last activity timestamp and clears the current soft-lock state through the same activity path used by tool events. It prefers hook-provided `transcript_path` and otherwise falls back to a unique `~/.codex/sessions` match by session id. Monitoring uses both file-system change notifications and a short metadata polling fallback so missed notifications do not leave `status` stale. If the latest transcript record is an `event_msg` whose payload type is `turn_aborted`, LidGuard treats it as an interrupted Codex turn and routes the session through the normal stop path instead of recording activity.
+- Codex, Claude, and GitHub Copilot CLI sessions use the shared `AgentTranscriptMonitor` implementation for transcript JSONL monitoring. Transcript length growth or `LastWriteTimeUtc` advancement refreshes the session's last activity timestamp and clears the current soft-lock state through the same activity path used by tool events.
+- The Codex transcript profile prefers hook-provided `transcript_path` and otherwise falls back to a unique `~/.codex/sessions` match by session id. If the latest transcript record is an `event_msg` whose payload type is `turn_aborted`, LidGuard treats it as an interrupted Codex turn and routes the session through the normal stop path instead of recording activity.
+- The Claude transcript profile prefers hook-provided `transcript_path` and otherwise falls back to a unique `~/.claude/projects` match by session id. If the latest transcript record is a `user` record whose text content is `[Request interrupted by user]` or `[Request interrupted by user for tool use]`, LidGuard treats it as an interrupted Claude turn and routes the session through the normal stop path instead of recording activity.
+- The GitHub Copilot CLI transcript profile prefers hook-provided `transcriptPath` / `transcript_path` and otherwise falls back to `COPILOT_HOME\session-state\<sessionId>\events.jsonl` or `%USERPROFILE%\.copilot\session-state\<sessionId>\events.jsonl`. If the latest JSONL record has top-level `type` of `abort`, LidGuard treats it as a Copilot abort signal and routes the session through the normal stop path instead of recording activity.
 - `AgentProvider.Mcp` sessions do not auto-resolve a watched process from the working directory, because model-managed Provider MCP sessions do not reliably identify one owning CLI process.
 - `AgentProvider.Codex` sessions only auto-resolve a watched process from the working directory when no explicit watched process id is supplied and the resolved candidate process is shell-hosted through `cmd.exe`, `pwsh.exe`, or `powershell.exe` as the process itself or its direct parent.
 - When a shell-hosted Codex watchdog or `cleanup-orphans` removes sessions by working directory, it removes only watched Codex sessions in that directory and intentionally leaves `process=none` Codex sessions untouched.
@@ -325,7 +328,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - `LidGuardSettingsPatch`
   - `LidGuardSettingsUpdateOutcome`
 - `Runtime`
-  - `CodexSoftLockTranscriptMonitor`
+  - `AgentTranscriptMonitor`
   - `EmergencyHibernationThermalMonitor`
   - `PostStopSuspendSoundPlaybackCoordinator`
   - `SuspendHistoryLogStore`
@@ -457,7 +460,7 @@ The notification server is optional and external to the core LidGuard runtime. I
 - For `PermissionRequest`, it does not stop the runtime; it queries the runtime lid state and visible display monitor count and returns a structured allow/deny decision from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed and the visible display monitor count is `0`.
 - For `Stop`, and for `SessionEnd` when a Codex build emits it, it sends internal `stop --provider codex`.
 - Notification-driven soft-lock detection is currently unsupported for Codex because the current public hook surface does not expose a comparable `Notification` event. Future support can be added if Codex exposes notification or machine-readable pending-state hooks later.
-- Because Codex lacks a notification-style soft-lock clear signal and comparable tool activity hooks, LidGuard records `transcript_path` from `UserPromptSubmit` and treats transcript JSONL length growth or `LastWriteTimeUtc` advancement as Codex provider activity. That activity refreshes `LastActivityAt` and clears the current soft-lock state through the standard activity path. If `transcript_path` is missing, LidGuard falls back to a unique `~/.codex/sessions` transcript match by session id. The transcript monitor combines file-system change notifications with a short metadata polling fallback. A latest-record `turn_aborted` event is handled as an interrupted turn and stops the tracked Codex session rather than refreshing activity.
+- Because Codex lacks a notification-style soft-lock clear signal and comparable tool activity hooks, LidGuard records `transcript_path` from `UserPromptSubmit` and treats transcript JSONL length growth or `LastWriteTimeUtc` advancement as Codex provider activity through the shared transcript monitor. That activity refreshes `LastActivityAt` and clears the current soft-lock state through the standard activity path. If `transcript_path` is missing, LidGuard falls back to a unique `~/.codex/sessions` transcript match by session id. The transcript monitor combines file-system change notifications with a short metadata polling fallback. A latest-record `turn_aborted` event is handled as an interrupted turn and stops the tracked Codex session rather than refreshing activity.
 - Codex hook input does not provide a stable parent process id. LidGuard therefore prefers an explicit watched process id for Codex, but when none is supplied it can still use a working-directory fallback if the resolved Codex candidate process is shell-hosted through `cmd.exe`, `pwsh.exe`, or `powershell.exe` as the process itself or its direct parent. That cleanup path never removes `process=none` Codex sessions.
 - Codex `PermissionRequest` exits successfully with structured JSON stdout only for effective closed-lid decisions; when the lid is open, unknown, any visible display monitor remains active, or runtime status is unavailable, it exits successfully with empty stdout. LidGuard records diagnostics locally and should not block the Codex task when a runtime request fails.
 - This behavior is based on analyzing the `openai/codex` `codex-rs` hook source: `exit 0` with empty stdout is treated as a no-op success, while non-empty stdout may be parsed as hook JSON or interpreted as plain-text context depending on the event.
@@ -486,10 +489,12 @@ Reference:
 - Based on analysis of a locally retained Claude Code source snapshot, command hooks treat `exit code 0` with empty stdout as a successful no-op, while non-empty stdout may be interpreted as hook JSON or plain-text output depending on the execution path.
 - Based on the same local source snapshot analysis, `PermissionRequest` only becomes a programmatic allow/deny when the hook returns structured JSON with `hookSpecificOutput.decision`; LidGuard also sets `interrupt: true` on those closed-lid decisions so Claude stops the interactive permission path immediately. Empty stdout keeps the normal permission flow.
 - `claude-hook` reads Claude hook JSON from stdin and maps `hook_event_name` to runtime IPC.
-- For `UserPromptSubmit`, it sends internal `start --provider claude`.
-- For `PreToolUse`, `PostToolUse`, and `PostToolUseFailure`, it records provider activity and clears the current session soft-lock state for non-`AskUserQuestion` tools.
+- For `UserPromptSubmit`, it sends internal `start --provider claude` with `transcript_path` when Claude provides one.
+- For `PreToolUse`, `PostToolUse`, and non-interrupt `PostToolUseFailure`, it records provider activity and clears the current session soft-lock state for non-`AskUserQuestion` tools.
+- For `PostToolUseFailure` with `is_interrupt: true`, it sends internal `stop --provider claude` immediately.
 - For `Elicitation`, it does not stop the runtime; it queries the runtime lid state and visible display monitor count and returns a structured `cancel` only when the lid is closed and the visible display monitor count is `0`.
 - For `Notification`, `permission_prompt` and `elicitation_dialog` mark the session soft-locked, while `elicitation_complete` and `elicitation_response` clear the current soft-lock state.
+- Claude transcript JSONL changes are monitored through the same shared transcript monitor used by Codex. If `transcript_path` is missing, LidGuard falls back to a unique `~/.claude/projects` transcript match by session id; a latest user text marker of `[Request interrupted by user]` or `[Request interrupted by user for tool use]` stops the tracked Claude session instead of refreshing activity.
 - For `PermissionRequest`, it does not stop the runtime; it queries the runtime lid state and visible display monitor count and returns a Claude-specific structured allow/deny decision with `interrupt: true` from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed and the visible display monitor count is `0`.
 - When working on Claude Code-related setup, support, or documentation, explicitly and strongly warn the user not to use third-party prompt-style hooks alongside LidGuard. Explain that LidGuard must only answer its own closed-lid `PermissionRequest` and `Elicitation` paths and must not be presented as able to answer or proxy third-party hook prompts.
 - For `Stop`, `StopFailure`, and `SessionEnd`, it sends internal `stop --provider claude`.
@@ -504,12 +509,12 @@ Reference:
 ### GitHub Copilot CLI
 
 - Start event: `userPromptSubmitted`.
-- Stop event: `agentStop`.
+- Stop events: `agentStop`, `sessionEnd`, and session-state JSONL `abort`.
 - Closed-lid permission decision event: `permissionRequest`.
 - Closed-lid ask-user guard event: `preToolUse` when `toolName` is `ask_user`.
 - Activity event: `postToolUse`.
 - Soft-lock notification event: `notification` with `notification_type` / `notificationType` of `permission_prompt` or `elicitation_dialog`.
-- Telemetry-only events: `sessionStart`, `sessionEnd`, and `errorOccurred`.
+- Telemetry-only events: `sessionStart` and `errorOccurred`.
 - Command path: `lidguard copilot-hook --event <event-name>` when the global tool is available on PATH, otherwise the current executable path plus `copilot-hook --event <event-name>`.
 - Snippet command: `lidguard copilot-hooks --format config-json`.
 - Install/status/remove commands: `lidguard hook-install --provider copilot`, `lidguard hook-status --provider copilot`, and `lidguard hook-remove --provider copilot`.
@@ -523,13 +528,14 @@ Reference:
 - Based on the official hooks configuration reference, `preToolUse` output JSON is optional and omitting output allows the tool by default, so structured JSON should only be returned when LidGuard intentionally wants to influence a hook decision.
 - Even if a future GitHub Copilot CLI hook output ends up looking similar to another provider's current hook JSON, keep a dedicated GitHub Copilot CLI hook output type. Hook contracts are provider-specific and are not standardized across CLIs.
 - `copilot-hook` takes the configured event name from the command line because camelCase GitHub Copilot CLI hook payloads do not consistently include the event name in stdin JSON.
-- For `userPromptSubmitted`, it sends internal `start --provider copilot`.
+- For `userPromptSubmitted`, it sends internal `start --provider copilot` with `transcriptPath` / `transcript_path` when Copilot provides one.
 - For `permissionRequest`, it does not stop the runtime; it queries the runtime lid state and visible display monitor count and returns a GitHub Copilot CLI allow/deny decision from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed and the visible display monitor count is `0`, and it includes `interrupt: true`.
 - For `preToolUse`, it does not stop the runtime; it denies `ask_user` only when the lid is closed and the visible display monitor count is `0`, so the agent cannot soft-lock waiting for user input that cannot be answered, and it clears the current session soft-lock state for non-`ask_user` tools.
 - For `postToolUse`, it records tool completion activity and clears the current session soft-lock state for non-`ask_user` tools.
 - For `notification`, it marks the session soft-locked when GitHub Copilot CLI reports `permission_prompt` or `elicitation_dialog`.
-- For `agentStop`, it sends internal `stop --provider copilot`.
-- For `sessionStart`, `sessionEnd`, and `errorOccurred`, it records telemetry only.
+- For `agentStop` and `sessionEnd`, it sends internal `stop --provider copilot`.
+- GitHub Copilot CLI session-state JSONL changes are monitored through the shared transcript monitor. If `transcriptPath` / `transcript_path` is missing, LidGuard falls back to `COPILOT_HOME\session-state\<sessionId>\events.jsonl` or `%USERPROFILE%\.copilot\session-state\<sessionId>\events.jsonl`; a latest top-level `type` of `abort` stops the tracked Copilot session instead of refreshing activity. Other JSONL appends or `LastWriteTimeUtc` advancements refresh `LastActivityAt` with reason `github_copilot_session_event_activity_detected` and clear the current soft-lock state.
+- For `sessionStart` and `errorOccurred`, it records telemetry only.
 - GitHub Copilot CLI hook input currently does not provide a stable parent process id in the documented payloads, so the current implementation resolves a process by working directory.
 - GitHub Copilot CLI `permissionRequest` exits successfully with structured JSON stdout only for effective closed-lid decisions; when the lid is open, unknown, any visible display monitor remains active, or runtime status is unavailable, it exits successfully with empty stdout so the normal permission flow continues.
 - GitHub Copilot CLI `preToolUse` exits successfully with structured JSON stdout only for effective closed-lid `ask_user` denial; otherwise it exits successfully with empty stdout so normal tool handling continues.

@@ -35,13 +35,13 @@ internal static class GitHubCopilotHookCommand
         }
 
         GitHubCopilotHookEventLog.AppendReceived(configuredHookEventName, hookInput);
-        if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.Notification, StringComparison.Ordinal))
-            return await HandleNotificationAsync(configuredHookEventName, hookInput);
+        if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.Notification, StringComparison.Ordinal)) return await HandleNotificationAsync(configuredHookEventName, hookInput);
         if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.UserPromptSubmitted, StringComparison.Ordinal)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Start, configuredHookEventName, hookInput);
         if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.PermissionRequest, StringComparison.Ordinal)) return await WriteClosedLidPermissionRequestDecisionAsync(hookInput);
         if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.PreToolUse, StringComparison.Ordinal)) return await HandlePreToolUseAsync(configuredHookEventName, hookInput);
         if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.PostToolUse, StringComparison.Ordinal)) return await ReportActivityAsync(configuredHookEventName, hookInput, configuredHookEventName);
         if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.AgentStop, StringComparison.Ordinal)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, configuredHookEventName, hookInput);
+        if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.SessionEnd, StringComparison.Ordinal)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, configuredHookEventName, hookInput);
         return 0;
     }
 
@@ -125,6 +125,7 @@ internal static class GitHubCopilotHookCommand
             Provider = AgentProvider.GitHubCopilot,
             SessionIdentifier = GetSessionIdentifier(hookInput),
             Settings = settings,
+            TranscriptPath = hookInput.TranscriptPath,
             WorkingDirectory = GetWorkingDirectory(hookInput)
         };
 
@@ -225,12 +226,7 @@ internal static class GitHubCopilotHookCommand
 
     private static async Task<int> HandlePreToolUseAsync(string configuredHookEventName, GitHubCopilotHookInput hookInput)
     {
-        if (GitHubCopilotSoftLockSignalSource.IsActivityEvent(configuredHookEventName, hookInput))
-            await SendSessionStateRequestAsync(
-                LidGuardPipeCommands.MarkSessionActive,
-                configuredHookEventName,
-                hookInput,
-                DescribeActivityReason(configuredHookEventName, hookInput.ToolName));
+        if (GitHubCopilotSoftLockSignalSource.IsActivityEvent(configuredHookEventName, hookInput)) await SendSessionStateRequestAsync(LidGuardPipeCommands.MarkSessionActive, configuredHookEventName, hookInput, DescribeActivityReason(configuredHookEventName, hookInput.ToolName));
 
         return await WriteClosedLidAskUserGuardAsync(hookInput);
     }
@@ -257,6 +253,7 @@ internal static class GitHubCopilotHookCommand
             Provider = AgentProvider.GitHubCopilot,
             SessionIdentifier = GetSessionIdentifier(hookInput),
             SessionStateReason = sessionStateReason,
+            TranscriptPath = hookInput.TranscriptPath,
             WorkingDirectory = GetWorkingDirectory(hookInput)
         };
 

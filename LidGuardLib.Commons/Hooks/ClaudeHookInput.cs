@@ -25,6 +25,9 @@ public sealed class ClaudeHookInput
     [JsonPropertyName("hook_event_name")]
     public string HookEventName { get; init; } = string.Empty;
 
+    [JsonPropertyName("is_interrupt")]
+    public bool IsInterrupt { get; init; }
+
     [JsonPropertyName("permission_mode")]
     public string PermissionMode { get; init; } = string.Empty;
 
