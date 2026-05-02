@@ -40,6 +40,9 @@ internal static class LidGuardCommandLineApplication
 #if LIDGUARD_LINUX
         if (commandName == LinuxPermissionCommand.CommandName) return LinuxPermissionCommand.Run(commandLineArguments[1..]);
 #endif
+#if LIDGUARD_MACOS
+        if (commandName == MacOSPermissionCommand.CommandName) return MacOSPermissionCommand.Run(commandLineArguments[1..]);
+#endif
 
         if (!IsOptionParsedCommandName(commandName)) return LidGuardCommandConsole.WriteUnknownCommand(requestedCommandName);
 
@@ -212,22 +215,46 @@ internal static class LidGuardCommandLineApplication
                 ownsRuntimeMutex = true;
             }
 
-            if (!File.Exists(LidGuardPendingLidActionBackupStore.GetDefaultFilePath())) return true;
+            var hasPendingLidActionBackup = File.Exists(LidGuardPendingLidActionBackupStore.GetDefaultFilePath());
+#if LIDGUARD_MACOS
+            var hasPendingMacOSPowerStateBackup = File.Exists(MacOSPendingPowerStateBackupStore.GetDefaultFilePath());
+            if (!hasPendingLidActionBackup && !hasPendingMacOSPowerStateBackup) return true;
+#else
+            if (!hasPendingLidActionBackup) return true;
+#endif
 
-            var serviceSetResult = runtimePlatform.CreateRuntimeServiceSet();
-            if (!serviceSetResult.Succeeded)
+            if (hasPendingLidActionBackup)
             {
-                message = serviceSetResult.Message;
-                return false;
+                var serviceSetResult = runtimePlatform.CreateRuntimeServiceSet();
+                if (!serviceSetResult.Succeeded)
+                {
+                    message = serviceSetResult.Message;
+                    return false;
+                }
+
+                using var serviceSet = serviceSetResult.Value;
+                var pendingBackupManager = new LidGuardPendingLidActionBackupManager(serviceSet.LidActionPolicyController);
+                var restoreResult = pendingBackupManager.RestorePendingBackupIfPresent();
+                if (!restoreResult.Succeeded)
+                {
+                    message = restoreResult.Message;
+                    return false;
+                }
             }
 
-            using var serviceSet = serviceSetResult.Value;
-            var pendingBackupManager = new LidGuardPendingLidActionBackupManager(serviceSet.LidActionPolicyController);
-            var restoreResult = pendingBackupManager.RestorePendingBackupIfPresent();
-            if (restoreResult.Succeeded) return true;
+#if LIDGUARD_MACOS
+            if (hasPendingMacOSPowerStateBackup)
+            {
+                var restoreResult = MacOSPendingPowerStateBackupManager.RestorePendingBackupIfPresent();
+                if (!restoreResult.Succeeded)
+                {
+                    message = restoreResult.Message;
+                    return false;
+                }
+            }
+#endif
 
-            message = restoreResult.Message;
-            return false;
+            return true;
         }
         finally
         {

@@ -22,17 +22,17 @@
 
 ## Product Goal
 
-LidGuard is a Windows-first utility with systemd/logind Linux support for long-running local AI coding agents such as Codex, Claude Code, and GitHub Copilot CLI.
+LidGuard is a Windows-first utility with systemd/logind Linux support and macOS support for long-running local AI coding agents such as Codex, Claude Code, and GitHub Copilot CLI.
 
 The goal is to keep the supported local system awake while at least one tracked agent session still needs protection, then restore the user's original power policy after the session ends or becomes suspend-eligible.
 
 - Agent sessions start through provider hooks.
 - LidGuard detects and tracks active sessions.
 - Claude Code and GitHub Copilot CLI sessions can enter a runtime-managed soft-lock state when provider notifications show the agent is waiting on user input.
-- While at least one non-soft-locked session is active, Windows should not enter idle sleep through `PowerRequestSystemRequired` and `PowerRequestAwayModeRequired`, and Linux should hold systemd/logind sleep and idle inhibitors.
+- While at least one non-soft-locked session is active, Windows should not enter idle sleep through `PowerRequestSystemRequired` and `PowerRequestAwayModeRequired`, Linux should hold systemd/logind sleep and idle inhibitors, and macOS should hold `caffeinate` assertions.
 - If every remaining active session is soft-locked, LidGuard should release temporary keep-awake protection, restore any temporary lid policy change, and start the configured suspend flow only when the lid is closed and no suspend-blocking visible display monitors remain attached to the desktop.
 - If a session has no activity after the configured session timeout, LidGuard should transition it to the soft-locked state and apply the same keep-awake release flow used for normal soft-lock operations.
-- Optional settings temporarily change the active power plan's lid close action to `Do Nothing` on Windows, or hold a `handle-lid-switch` inhibitor on Linux.
+- Optional settings temporarily change the active power plan's lid close action to `Do Nothing` on Windows, hold a `handle-lid-switch` inhibitor on Linux, or temporarily set `pmset -a disablesleep 1` on macOS.
 - When sessions stop, all temporary power settings must be restored to the user's original values.
 - After the last active session stops, LidGuard should always request suspend when the laptop lid is closed and no suspend-blocking visible display monitors remain attached to the desktop.
 - Once the active session count reaches `0`, the server runtime should exit after the configured server runtime cleanup delay once any in-flight suspend or cleanup work finishes. The delay defaults to 10 minutes, and `off` means exit immediately after in-flight work finishes.
@@ -45,7 +45,7 @@ The goal is to keep the supported local system awake while at least one tracked 
 - An optional post-session-end webhook URL remains off by default. When a provider reports a normal session end and that stop does not schedule the pre-suspend flow, LidGuard should POST a `PostSessionEnd` payload without blocking session cleanup. Abort, interrupt, manual stop/remove, watchdog, and orphan cleanup paths must not send it.
 - While keep-awake protection is applied and the laptop lid is closed with no suspend-blocking visible display monitors remaining on the desktop, an optional Emergency Hibernation thermal monitor should poll every 10 seconds and request immediate hibernation when the system temperature reaches the configured threshold.
 
-The key design rule is to treat normal idle sleep and lid-close sleep as separate problems. Power requests or systemd inhibitors handle idle sleep. Windows `LIDACTION` policy backup/change/restore and Linux `handle-lid-switch` inhibition handle lid-close behavior because standard sleep-prevention APIs cannot reliably block a user lid-close action.
+The key design rule is to treat normal idle sleep and lid-close sleep as separate problems. Power requests, systemd inhibitors, or `caffeinate` handle idle sleep. Windows `LIDACTION` policy backup/change/restore, Linux `handle-lid-switch` inhibition, and macOS `pmset disablesleep` backup/change/restore handle lid-close behavior because standard sleep-prevention APIs cannot reliably block a user lid-close action.
 
 ## Repository Shape
 
@@ -56,7 +56,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
   - Shared provider/hook utilities live under `Hooks` in regular `*.cs` files.
   - Windows-specific runtime/process/power implementations live in `*.windows.cs`.
   - Linux-specific systemd/logind, `/proc`, and `/sys` implementations live in `*.linux.cs`.
-  - macOS placeholder files exist only for the minimal public surface currently needed to keep cross-platform builds compiling.
+  - macOS-specific runtime/process/power implementations live in `*.macOS.cs`.
   - Nullable is intentionally not enabled in the csproj.
   - `ImplicitUsings` is enabled.
   - NativeAOT/trimming compatibility flags are enabled.
@@ -66,10 +66,10 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
   - Supported package RIDs are `win-x64`, `win-x86`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, and `osx-arm64`.
   - Windows behavior is implemented.
   - Linux behavior is implemented for systemd/logind systems.
-  - macOS currently prints a support-planned message and returns exit code `0`.
+  - macOS behavior is implemented with `caffeinate`, `pmset`, `ioreg`, `system_profiler`, `powermetrics`, and `osascript`/`afplay` where needed.
   - Uses a named pipe to send `start`, `stop`, `remove-session`, `status`, `settings`, and `cleanup-orphans` requests to the runtime.
   - Hosts the stdio MCP server through the `mcp-server` subcommand.
-  - Stores default settings JSON under the platform local application data directory, such as `%LOCALAPPDATA%\LidGuard\settings.json` on Windows or `~/.local/share/LidGuard/settings.json` on typical Linux desktops.
+  - Stores default settings JSON under the platform local application data directory, such as `%LOCALAPPDATA%\LidGuard\settings.json` on Windows, `~/.local/share/LidGuard/settings.json` on typical Linux desktops, or the .NET local application data path on macOS.
 - `LidGuard.Notifications`
   - .NET 10 ASP.NET Core Razor Pages app targeting `net10.0`.
   - Receives LidGuard pre-suspend and post-session-end webhooks and sends browser Web Push notifications to subscribed clients.
@@ -102,6 +102,19 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - Linux remains a supported top-level platform when `OperatingSystem.IsLinux()` is true, and missing or incomplete systemd/logind prerequisites are reported by the specific runtime or diagnostic operation. This keeps `linux-permission status|check` and `/proc`/`/sys` diagnostics usable in partial environments such as WSL.
 - Linux runtime operation should not depend on a long-lived `sudo -v` cache. Persistent privileged logind actions should be prepared through the Linux polkit rule command.
 
+### macOS Power Control
+
+- macOS support targets local macOS systems with `caffeinate`, `pmset`, `ioreg`, `system_profiler`, and best-effort `powermetrics`.
+- Use `caffeinate` assertions for normal idle sleep prevention.
+- `PreventSystemSleep` maps to `caffeinate -i`.
+- `PreventAwayModeSleep` maps to `caffeinate -s`, recognizing that macOS only honors that assertion on AC power.
+- `PreventDisplaySleep` maps to `caffeinate -d`.
+- Temporary lid-close protection maps to `pmset -a disablesleep 1` only when `ChangeLidAction` is enabled.
+- Before changing `SleepDisabled`, save the original state through the pending lid-action backup JSON path; restore it when protection ends or during the next CLI recovery path before normal command execution.
+- Immediate Sleep uses `pmset sleepnow`.
+- Hibernate temporarily backs up the current supported `hibernatemode`, writes `hibernatemode 25`, requests `pmset sleepnow`, then restores the original mode. Pending hibernatemode backup state must be restored during the next CLI recovery path if the process exits before cleanup.
+- macOS privileged runtime operations should use non-interactive `sudo -n` only for the exact commands allowed by `macos-permission install`; they must fail with actionable setup guidance instead of prompting in background runtime paths.
+
 ### Lid Close Policy
 
 - The lid close setting is Windows power setting `LIDACTION`.
@@ -113,6 +126,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - After the last active session stops, restore the backed-up AC/DC values.
 - v1 restores the scheme that was active at backup time. Future work may add policy for active scheme changes while LidGuard is running.
 - On Linux, `ChangeLidAction=true` means LidGuard holds a systemd/logind `handle-lid-switch` inhibitor while protection is applied. It does not edit distribution power configuration files.
+- On macOS, `ChangeLidAction=true` means LidGuard temporarily applies `pmset -a disablesleep 1` while protection is applied, records the original `SleepDisabled` value in pending backup state, and restores it after protection ends or during crash recovery.
 
 ### Lid State And Suspend
 
@@ -125,6 +139,9 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - Linux lid state reads `/proc/acpi/button/lid/*/state` and reports `Unknown` when no readable lid state exists.
 - Linux visible display monitor count reads `/sys/class/drm/*/status` and counts `connected` connectors. The final suspend eligibility check excludes internal connector families such as `eDP`, `LVDS`, and `DSI` while `LidSwitchState` is `Closed`.
 - Linux immediate sleep/hibernate uses `systemctl suspend` or `systemctl hibernate`.
+- macOS lid state reads `ioreg` clamshell state and reports `Unknown` when no readable state exists.
+- macOS visible display monitor count reads `system_profiler SPDisplaysDataType -json`. The final suspend eligibility check excludes built-in/internal display entries while `LidSwitchState` is `Closed`.
+- macOS immediate sleep uses `pmset sleepnow`; macOS hibernate uses the temporary `hibernatemode 25` flow described above.
 - After the last active session stops, LidGuard should request suspend after the configured post-stop delay using the configured suspend mode only when the lid is closed and the suspend eligibility visible display monitor count is `0`. A delay of `0` means immediate suspend.
 - If a post-stop suspend sound is configured, LidGuard should wait for the delay first, then play the configured sound to completion, then re-check the lid/session state before requesting suspend.
 - If a post-stop suspend sound volume override is configured, LidGuard should capture the default output device master volume and mute state immediately before playback, temporarily unmute as needed, set the configured master volume percent for playback, then restore the previous volume and mute state in the sound playback cleanup path.
@@ -135,6 +152,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 
 - Emergency Hibernation uses `SystemThermalInformation.GetSystemTemperatureCelsius(EmergencyHibernationTemperatureMode)` to read the selected available system thermal-zone temperature in Celsius.
 - On Linux, Emergency Hibernation temperature reads millidegree Celsius values from `/sys/class/thermal/thermal_zone*/temp` and applies the configured Low, Average, or High aggregation.
+- On macOS, Emergency Hibernation temperature is best-effort from `powermetrics --samplers smc` Celsius sensor output and applies the configured Low, Average, or High aggregation. Permission failures, unsupported samplers, missing numeric Celsius values, and timeouts must report unavailable and must not trigger Emergency Hibernation.
 - Emergency Hibernation temperature mode is configurable as Low, Average, or High, and defaults to Average.
 - The thermal monitor only runs while shared keep-awake protection is applied, the lid is closed, and the suspend eligibility visible display monitor count is `0`.
 - The thermal poll interval is fixed at 10 seconds.
@@ -152,6 +170,8 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - On Windows, open the target process with synchronize/query rights and wait with `WaitForSingleObject`.
 - On Linux, use `/proc/<pid>/cwd`, `/proc/<pid>/comm`, `/proc/<pid>/cmdline`, and `/proc/<pid>/stat` for working-directory process resolution, and use `Process.GetProcessById().WaitForExitAsync()` for process exit watching.
 - On Linux, Codex shell-host fallback is allowed only when the resolved candidate process or its direct parent is `bash`, `zsh`, `fish`, `sh`, `dash`, or `pwsh`.
+- On macOS, use `ps` plus `lsof` current-working-directory inspection for working-directory process resolution, and use `Process.GetProcessById().WaitForExitAsync()` for process exit watching.
+- On macOS, Codex shell-host fallback is allowed only when the resolved candidate process or its direct parent is `zsh`, `bash`, `fish`, `sh`, or `pwsh`.
 - Treat the first cleanup signal as authoritative; later stop/watchdog events for the same session should be harmless.
 - If a provider launches a short-lived wrapper that exits before the real agent, provider-specific process selection may need follow-up work.
 
@@ -161,6 +181,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 - `LidGuard` parses `help`, `start`, `stop`, `remove-pre-suspend-webhook`, `remove-post-session-end-webhook`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `current-lid-state`, `current-monitor-count`, `current-temperature`, `suspend-history`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `preview-current-sound`, `mcp-server`, and `provider-mcp-server`.
 - Linux builds additionally parse `linux-permission status`, `linux-permission check`, `linux-permission install`, and `linux-permission remove`. Windows builds must not include this command in routing or help output.
+- macOS builds additionally parse `macos-permission status`, `macos-permission check`, `macos-permission install`, and `macos-permission remove`. Windows and Linux builds must not include this command in routing or help output.
 - `help` prints a categorized command overview with short descriptions, and `help <command>` prints focused detailed help for one command or recognized command alias.
 - `<command> --help` uses the same help metadata and returns before the target command validates options or performs command-specific work.
 - `start`, the `UserPromptSubmit` path in `codex-hook` and `claude-hook`, and the `userPromptSubmitted` path in `copilot-hook` load persisted default settings and send them with the start IPC request.
@@ -189,6 +210,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - When adding a new CLI command that takes a provider parameter, make omitted provider values prompt the user instead of silently defaulting.
 - When no runtime is listening, `start` launches detached `run-server`.
 - `run-server` acquires the named mutex `Local\LidGuard.Runtime.v1` on Windows and `LidGuard.Runtime.v1` on Linux.
+- macOS uses the same non-Windows named mutex name as Linux: `LidGuard.Runtime.v1`.
 - `run-server` is detached from inherited stdout/stderr so hook callers do not hang while reading child process output.
 - When the Linux CLI is run through the `dotnet` host during framework-dependent validation, automatic runtime launch must pass the built `lidguard.dll` path before `run-server`. Linux detached runtime launch prefers `setsid`, falls back to `nohup`, and redirects stdin/stdout/stderr to `/dev/null`.
 - Runtime communication uses a local named pipe.
@@ -206,6 +228,16 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `linux-permission install` writes `/etc/polkit-1/rules.d/49-lidguard.rules` using root privileges or one-time `sudo`, and grants only the current target user the logind actions LidGuard needs.
 - The managed polkit rule allows only `org.freedesktop.login1.suspend`, `suspend-multiple-sessions`, `hibernate`, `hibernate-multiple-sessions`, `inhibit-block-sleep`, `inhibit-block-idle`, and `inhibit-handle-lid-switch`.
 - `linux-permission remove` deletes the rule only when the file contains LidGuard's managed markers. It must refuse to delete unmanaged files.
+- Do not add a `sudo -v` prepare command; sudo credential caches are tty/timeout scoped and are not a reliable basis for long-running agent protection.
+
+### macOS Permission Command
+
+- `macos-permission` is compiled only into macOS builds and must not appear in Windows or Linux routing or help.
+- `macos-permission status` reports the current user, managed sudoers rule state when inspectable, `caffeinate`, `pmset`, `powermetrics`, `ioreg`, and `system_profiler` availability, plus current `SleepDisabled` and `hibernatemode` values when queryable.
+- `macos-permission check` non-destructively verifies `caffeinate` acquire/release, `pmset -g`, same-value privileged `pmset disablesleep`, same-value privileged `pmset hibernatemode`, and one privileged `powermetrics --samplers smc` sample. It must not request an actual sleep or hibernate.
+- `macos-permission install` writes `/private/etc/sudoers.d/lidguard` using root privileges or one-time `sudo`, validates the generated rule with `visudo -cf`, and grants only the current target user the exact privileged commands LidGuard needs.
+- The managed sudoers rule allows only `/usr/bin/pmset -a disablesleep 0`, `/usr/bin/pmset -a disablesleep 1`, `/usr/bin/pmset -a hibernatemode 0`, `/usr/bin/pmset -a hibernatemode 3`, `/usr/bin/pmset -a hibernatemode 25`, and `/usr/bin/powermetrics --samplers smc -n 1 -i 1000`.
+- `macos-permission remove` deletes the sudoers file only when the file contains LidGuard's managed markers. It must refuse to delete unmanaged files.
 - Do not add a `sudo -v` prepare command; sudo credential caches are tty/timeout scoped and are not a reliable basis for long-running agent protection.
 
 ### MCP Server
@@ -680,17 +712,20 @@ lidguard mcp-server
 
 - Current manual runtime validation has only covered Windows with Codex.
 - Windows, Linux, and macOS RID compile validation can catch platform compilation regressions, but it is not a substitute for runtime behavior validation on each target OS.
-- Linux systemd/logind runtime behavior, Claude Code hooks, GitHub Copilot CLI hooks, Provider MCP flows, and cross-provider concurrent-session behavior still need real environment validation before being treated as verified.
+- Linux systemd/logind runtime behavior, macOS runtime behavior, Claude Code hooks, GitHub Copilot CLI hooks, Provider MCP flows, and cross-provider concurrent-session behavior still need real environment validation before being treated as verified.
 
 ## Missing Work
 
-The Windows and Linux CLI hook receiving path is implemented for Codex, Claude Code, and GitHub Copilot CLI. Remaining work is now focused on lifecycle polish and automated regression coverage.
+The Windows, Linux, and macOS CLI hook receiving path is implemented for Codex, Claude Code, and GitHub Copilot CLI. Remaining work is now focused on lifecycle polish and automated regression coverage.
 
 - Implement immediate runtime shutdown after the last session stops once the remaining post-stop cleanup work is complete.
 - Validate Linux behavior on a real systemd/logind laptop: `systemd-inhibit` lifecycle, `handle-lid-switch` inhibition, `systemctl suspend` / `systemctl hibernate`, closed-lid plus monitor-count suspend eligibility, `/proc/acpi/button/lid` lid-state reads, `/sys/class/drm` monitor detection, `/sys/class/thermal` temperature aggregation, Emergency Hibernation, and suspend history logging.
 - Validate `linux-permission status|check|install|remove` on non-root and root paths, including busctl `CanSuspend` / `CanHibernate`, managed marker refusal for unmanaged polkit files, sudo failure paths, and removal safety.
 - Validate Linux post-stop sound behavior with no player installed, `pw-play`, `paplay`, `aplay`, missing desktop sound-theme assets, `.wav` paths, and `pactl` volume override capture/apply/restore failure paths.
-- Add automated regression tests or verification scripts for the already manually verified provider behavior, Windows behavior, and Linux systemd/logind behavior: latest Codex hook behavior, Claude Code hook stdout behavior, GitHub Copilot CLI hook output behavior, GitHub Copilot CLI user-level `~/.copilot/hooks/` loading and inline `~/.copilot/settings.json` hook composition, GitHub Copilot CLI session id stability, `PowerReadACValueIndex`/`PowerReadDCValueIndex` read/write behavior under normal user permissions, Linux inhibitor lifecycle, Linux polkit rule management, and Group Policy or MDM blocked power setting fallback messages.
+- Validate macOS behavior on a real MacBook: `caffeinate` lifecycle, `pmset disablesleep` backup/restore, `pmset sleepnow`, temporary `hibernatemode 25` hibernate/restore, closed-lid plus monitor-count suspend eligibility, `ioreg` lid-state reads, `system_profiler` monitor detection, best-effort `powermetrics` temperature aggregation, Emergency Hibernation, and suspend history logging.
+- Validate `macos-permission status|check|install|remove` on non-root and root paths, including managed marker refusal for unmanaged sudoers files, `visudo` validation, non-interactive sudo failure paths, and removal safety.
+- Validate macOS post-stop sound behavior with missing `afplay`, SystemSounds mapping, `.wav` paths, and `osascript` volume override capture/apply/restore failure paths.
+- Add automated regression tests or verification scripts for the already manually verified provider behavior, Windows behavior, Linux systemd/logind behavior, and macOS behavior: latest Codex hook behavior, Claude Code hook stdout behavior, GitHub Copilot CLI hook output behavior, GitHub Copilot CLI user-level `~/.copilot/hooks/` loading and inline `~/.copilot/settings.json` hook composition, GitHub Copilot CLI session id stability, `PowerReadACValueIndex`/`PowerReadDCValueIndex` read/write behavior under normal user permissions, Linux inhibitor lifecycle, Linux polkit rule management, macOS parser/permission management, and Group Policy or MDM blocked power setting fallback messages.
 - Add direct Codex soft-lock support only if Codex later exposes a notification or machine-readable pending-state hook surface.
 
 ## Design Constraints

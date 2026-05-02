@@ -10,7 +10,7 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
 {
     public bool IsSupported => OperatingSystem.IsLinux();
 
-    public string UnsupportedMessage => "LidGuard Linux support requires a systemd/logind environment. macOS support is planned.";
+    public string UnsupportedMessage => "LidGuard Linux support requires a systemd/logind environment.";
 
     public LidGuardOperationResult<LidGuardRuntimeServiceSet> CreateRuntimeServiceSet()
     {

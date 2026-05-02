@@ -49,7 +49,7 @@ internal sealed class EmergencyHibernationThermalMonitor(
                 if (!emergencyHibernationThermalMonitorState.ProtectionApplied) continue;
                 if (!emergencyHibernationThermalMonitorState.EmergencyHibernationOnHighTemperature) continue;
                 if (!emergencyHibernationThermalMonitorState.ClosedLidPolicyActive) continue;
-                if (!OperatingSystem.IsWindowsVersionAtLeast(6, 1) && !OperatingSystem.IsLinux()) continue;
+                if (!OperatingSystem.IsWindowsVersionAtLeast(6, 1) && !OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS()) continue;
 
                 var emergencyHibernationTemperatureCelsius = LidGuardSettings.ClampEmergencyHibernationTemperatureCelsius(
                     emergencyHibernationThermalMonitorState.EmergencyHibernationTemperatureCelsius);

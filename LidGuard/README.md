@@ -2,7 +2,7 @@
 
 🌐 [한국어](README.ko.md)
 
-LidGuard is a command-line tool for long-running local AI coding agent sessions. Windows protection is implemented, Linux protection is implemented for systemd/logind systems, and macOS support is planned.
+LidGuard is a command-line tool for long-running local AI coding agent sessions. Windows protection, systemd/logind Linux protection, and macOS protection are implemented.
 
 ## Install
 
@@ -86,6 +86,8 @@ lidguard current-temperature
 lidguard current-temperature --temperature-mode high
 lidguard linux-permission status
 lidguard linux-permission check
+lidguard macos-permission status
+lidguard macos-permission check
 ```
 
 `current-lid-state` prints the current lid switch state as `Open`, `Closed`, or `Unknown` using the same platform lid-state source LidGuard uses for closed-lid policy decisions.
@@ -95,6 +97,8 @@ lidguard linux-permission check
 `current-temperature` prints the current recognized system thermal-zone temperature in Celsius using the selected aggregation mode. Use `--temperature-mode default|low|average|high` to reuse the saved setting or override it for one command. When the settings file does not exist yet, `default` falls back to LidGuard's `Average` headless runtime default.
 
 On Linux, `linux-permission status` and `linux-permission check` inspect the systemd/logind permission environment without suspending the system. Use `linux-permission install` to install a LidGuard-managed polkit rule for the current user, and `linux-permission remove` to remove only that managed rule file.
+
+On macOS, `macos-permission status` and `macos-permission check` inspect the `caffeinate`, `pmset`, and `powermetrics` environment without requesting sleep. Use `macos-permission install` to install a LidGuard-managed sudoers rule for the current user, and `macos-permission remove` to remove only that managed rule file.
 
 ## Hook Integration
 
@@ -143,14 +147,16 @@ LidGuard stores its default settings and runtime logs under:
 %LOCALAPPDATA%\LidGuard
 ```
 
-On typical Linux desktops, this resolves under `~/.local/share/LidGuard`.
+On typical Linux desktops, this resolves under `~/.local/share/LidGuard`. On macOS, it resolves through .NET's local application data path for the current user.
 
 The default settings file is `settings.json`. Runtime session execution events are written to `session-execution.log` as JSON lines, with only the latest 500 entries retained. Inactive-session timeout expiry is logged as `session-timeout-softlock-recorded`.
 
 ## Notes
 
-This package targets `net10.0` and is packaged as RID-specific NativeAOT .NET tool packages for Windows, Linux, and macOS. Windows and systemd/logind Linux are implemented runtime platforms in the current release; macOS currently reports planned support.
+This package targets `net10.0` and is packaged as RID-specific NativeAOT .NET tool packages for Windows, Linux, and macOS. Windows, systemd/logind Linux, and macOS are implemented runtime platforms in the current release.
 
 On Linux, idle sleep protection uses systemd/logind `sleep` and `idle` inhibitors. Lid-close handling is separate: `--change-lid-action true` holds a `handle-lid-switch` inhibitor, while `false` leaves distribution lid-close handling unchanged. Partial systemd/logind environments report missing prerequisites per operation so diagnostics can still explain what is unavailable.
+
+On macOS, idle sleep protection uses `caffeinate`. Lid-close protection with `--change-lid-action true` temporarily sets `pmset -a disablesleep 1`, stores the original `SleepDisabled` state as a pending backup, and restores it when protection ends or during the next CLI recovery path. Hibernate temporarily sets supported `hibernatemode` values to `25` before `pmset sleepnow`, then restores the original mode. Temperature readings are best-effort `powermetrics --samplers smc` samples; unavailable sensors or permissions simply make Emergency Hibernation skip that poll.
 
 Provider MCP integrations are best-effort only. They depend on the model actually calling the LidGuard MCP tools at the right times, so LidGuard cannot guarantee that a provider will start, soft-lock, clear, and stop sessions correctly.

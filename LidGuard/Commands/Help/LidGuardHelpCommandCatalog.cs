@@ -24,6 +24,9 @@ internal static class LidGuardHelpCommandCatalog
 #if LIDGUARD_LINUX
             LinuxPermissionHelpContent.Create(documentContext),
 #endif
+#if LIDGUARD_MACOS
+            MacOSPermissionHelpContent.Create(documentContext),
+#endif
             HookStatusHelpContent.Create(documentContext),
             HookInstallHelpContent.Create(documentContext),
             HookRemoveHelpContent.Create(documentContext),

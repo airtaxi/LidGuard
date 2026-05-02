@@ -2,7 +2,7 @@
 
 🌐 [English](README.md)
 
-LidGuard는 오래 실행되는 로컬 AI 코딩 에이전트 세션을 위한 명령줄 도구입니다. 현재 Windows 보호 기능이 구현되어 있으며, macOS와 Linux 지원은 예정되어 있고 지금은 지원 예정 메시지를 출력한 뒤 성공 코드로 종료합니다.
+LidGuard는 오래 실행되는 로컬 AI 코딩 에이전트 세션을 위한 명령줄 도구입니다. Windows 보호, systemd/logind Linux 보호, macOS 보호 기능이 구현되어 있습니다.
 
 ## 설치
 
@@ -84,13 +84,21 @@ lidguard current-lid-state
 lidguard current-monitor-count
 lidguard current-temperature
 lidguard current-temperature --temperature-mode high
+lidguard linux-permission status
+lidguard linux-permission check
+lidguard macos-permission status
+lidguard macos-permission check
 ```
 
-`current-lid-state`는 LidGuard가 덮개 닫힘 정책 판단에 사용하는 동일한 Windows lid-state source를 통해 현재 덮개 스위치 상태를 `Open`, `Closed`, `Unknown`으로 출력합니다.
+`current-lid-state`는 LidGuard가 덮개 닫힘 정책 판단에 사용하는 동일한 플랫폼 lid-state source를 통해 현재 덮개 스위치 상태를 `Open`, `Closed`, `Unknown`으로 출력합니다.
 
-`current-monitor-count`는 LidGuard가 덮개 닫힘 절전 정책 판단에 사용하는 동일한 기본 Windows 모니터 visibility check로 현재 visible display monitor count를 출력합니다. LidGuard는 `SM_CMONITORS`에서 시작한 뒤 Windows WMI가 보고하는 inactive monitor connection을 제외합니다. 내부 노트북 패널 connection은 최종 suspend eligibility check에서만 제외됩니다.
+`current-monitor-count`는 LidGuard가 덮개 닫힘 절전 정책 판단에 사용하는 동일한 기본 플랫폼 monitor visibility check로 현재 visible display monitor count를 출력합니다. 내부 노트북 패널 connection은 최종 suspend eligibility check에서만 제외됩니다.
 
 `current-temperature`는 선택한 집계 모드로 현재 인식된 system thermal-zone 온도를 Celsius로 출력합니다. `--temperature-mode default|low|average|high`를 사용하면 저장된 설정을 재사용하거나 한 번의 명령에 대해서만 override할 수 있습니다. 설정 파일이 아직 없을 때 `default`는 LidGuard의 `Average` headless runtime 기본값으로 fallback합니다.
+
+Linux에서는 `linux-permission status`와 `linux-permission check`가 실제 suspend를 요청하지 않고 systemd/logind permission environment를 점검합니다. `linux-permission install`은 현재 사용자를 위한 LidGuard-managed polkit rule을 설치하고, `linux-permission remove`는 해당 managed rule file만 제거합니다.
+
+macOS에서는 `macos-permission status`와 `macos-permission check`가 sleep을 요청하지 않고 `caffeinate`, `pmset`, `powermetrics` environment를 점검합니다. `macos-permission install`은 현재 사용자를 위한 LidGuard-managed sudoers rule을 설치하고, `macos-permission remove`는 해당 managed rule file만 제거합니다.
 
 ## Hook 통합
 
@@ -143,6 +151,10 @@ LidGuard는 기본 설정과 runtime log를 다음 위치에 저장합니다:
 
 ## 참고
 
-이 패키지는 `net10.0`을 대상으로 하며 Windows, Linux, macOS용 RID별 NativeAOT .NET tool package로 패키징됩니다. 현재 릴리스에서 구현된 runtime platform은 Windows뿐입니다.
+이 패키지는 `net10.0`을 대상으로 하며 Windows, Linux, macOS용 RID별 NativeAOT .NET tool package로 패키징됩니다. 현재 릴리스에서 Windows, systemd/logind Linux, macOS runtime platform이 구현되어 있습니다.
+
+Linux에서는 idle sleep protection이 systemd/logind `sleep`, `idle` inhibitor를 사용합니다. Lid-close handling은 별도이며 `--change-lid-action true`는 `handle-lid-switch` inhibitor를 유지하고, `false`는 배포판의 lid-close 처리를 변경하지 않습니다.
+
+macOS에서는 idle sleep protection이 `caffeinate`를 사용합니다. `--change-lid-action true`의 lid-close protection은 `pmset -a disablesleep 1`을 임시 적용하고 원래 `SleepDisabled` 상태를 pending backup으로 저장한 뒤, 보호 종료 또는 다음 CLI recovery path에서 복구합니다. Hibernate는 지원되는 `hibernatemode` 값을 임시로 `25`로 바꾸고 `pmset sleepnow`를 요청한 뒤 원래 mode를 복구합니다. 온도는 best-effort `powermetrics --samplers smc` sample이며, sensor나 권한이 없으면 Emergency Hibernation poll을 건너뜁니다.
 
 Provider MCP 통합은 best-effort 방식입니다. 이 통합은 모델이 적절한 시점에 실제로 LidGuard MCP tool을 호출하는지에 의존하므로, LidGuard는 provider가 세션을 올바르게 시작, soft-lock, clear, stop한다고 보장할 수 없습니다.

@@ -482,6 +482,8 @@ internal sealed class LidGuardRuntimeCoordinator
     {
 #if LIDGUARD_LINUX
         return "bash, zsh, fish, sh, dash, or pwsh";
+#elif LIDGUARD_MACOS
+        return "zsh, bash, fish, sh, or pwsh";
 #else
         return "cmd.exe, pwsh.exe, or powershell.exe";
 #endif
