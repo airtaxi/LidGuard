@@ -1,17 +1,17 @@
 using System.IO;
 using System.Media;
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using LidGuardLib.Commons.Results;
 using LidGuardLib.Commons.Services;
+using Windows.Win32;
+using Windows.Win32.Media.Audio;
 
 namespace LidGuardLib.Power;
 
 [SupportedOSPlatform("windows6.1")]
 public sealed partial class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPlayer
 {
-    private const uint SoundFlagAlias = 0x00010000;
-    private const uint SoundFlagSynchronous = 0x00000000;
+    private const SND_FLAGS SystemSoundFlags = SND_FLAGS.SND_ALIAS | SND_FLAGS.SND_SYNC;
     private static readonly Dictionary<string, string> s_systemSoundAliases = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Asterisk"] = "SystemAsterisk",
@@ -87,7 +87,7 @@ public sealed partial class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPl
     private static LidGuardOperationResult PlaySystemSound(string canonicalSystemSoundName)
     {
         var systemSoundAlias = s_systemSoundAliases[canonicalSystemSoundName];
-        if (PlaySound(systemSoundAlias, IntPtr.Zero, SoundFlagAlias | SoundFlagSynchronous)) return LidGuardOperationResult.Success();
+        if (PInvoke.PlaySound(systemSoundAlias, null, SystemSoundFlags)) return LidGuardOperationResult.Success();
 
         return LidGuardOperationResult.Failure($"Failed to play the configured system sound: {canonicalSystemSoundName}");
     }
@@ -121,7 +121,4 @@ public sealed partial class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPl
         return false;
     }
 
-    [LibraryImport("winmm.dll", EntryPoint = "PlaySoundW", StringMarshalling = StringMarshalling.Utf16)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool PlaySound(string soundName, IntPtr moduleHandle, uint soundFlags);
 }

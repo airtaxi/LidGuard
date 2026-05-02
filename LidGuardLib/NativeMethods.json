@@ -1,5 +1,14 @@
 {
   "$schema": "https://aka.ms/CsWin32.schema.json",
   "emitSingleFile": true,
-  "public": false
+  "public": false,
+  "allowMarshaling": false,
+  "comInterop": {
+    "preserveSigMethods": [
+      "IMMDeviceEnumerator",
+      "IMMDevice",
+      "IAudioEndpointVolume"
+    ],
+    "useIntPtrForComOutPointers": true
+  }
 }

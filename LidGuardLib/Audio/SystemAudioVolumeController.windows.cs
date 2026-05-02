@@ -1,8 +1,12 @@
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using LidGuardLib.Commons.Results;
 using LidGuardLib.Commons.Services;
 using LidGuardLib.Commons.Settings;
+using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.Media.Audio;
+using Windows.Win32.Media.Audio.Endpoints;
+using Windows.Win32.System.Com;
 
 namespace LidGuardLib.Audio;
 
@@ -12,15 +16,26 @@ public sealed partial class SystemAudioVolumeController : ISystemAudioVolumeCont
     private const int Success = 0;
     private const int SuccessFalse = 1;
     private const int RpcChangedMode = unchecked((int)0x80010106);
-    private const uint ClassContextInProcessServer = 0x1;
-    private const uint CoInitializeMultithreaded = 0x0;
-    private const int AudioDataFlowRender = 0;
-    private const int AudioRoleConsole = 0;
     private static readonly Guid s_mmDeviceEnumeratorClassIdentifier = new("BCDE0395-E52F-467C-8E3D-C4579291692E");
-    private static readonly Guid s_mmDeviceEnumeratorInterfaceIdentifier = new("A95664D2-9614-4F35-A746-DE8DB63617E6");
-    private static readonly Guid s_audioEndpointVolumeInterfaceIdentifier = new("5CDF2C82-841E-4546-9722-0CF74078229A");
 
     public LidGuardOperationResult<SystemAudioVolumeState> CaptureDefaultRenderDeviceState()
+        => CaptureDefaultRenderDeviceStateCore();
+
+    public LidGuardOperationResult ApplyDefaultRenderDeviceVolumeOverride(int volumeOverridePercent)
+    {
+        if (!LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(volumeOverridePercent)) return LidGuardOperationResult.Failure($"The volume override percent must be an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.");
+
+        return ApplyDefaultRenderDeviceVolumeOverrideCore(volumeOverridePercent);
+    }
+
+    public LidGuardOperationResult RestoreDefaultRenderDeviceState(SystemAudioVolumeState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        return RestoreDefaultRenderDeviceStateCore(state);
+    }
+
+    private static unsafe LidGuardOperationResult<SystemAudioVolumeState> CaptureDefaultRenderDeviceStateCore()
     {
         var endpointVolumeResult = CreateDefaultAudioEndpointVolume();
         if (!endpointVolumeResult.Succeeded) return LidGuardOperationResult<SystemAudioVolumeState>.Failure(endpointVolumeResult.Message, endpointVolumeResult.NativeErrorCode);
@@ -39,10 +54,8 @@ public sealed partial class SystemAudioVolumeController : ISystemAudioVolumeCont
         });
     }
 
-    public LidGuardOperationResult ApplyDefaultRenderDeviceVolumeOverride(int volumeOverridePercent)
+    private static unsafe LidGuardOperationResult ApplyDefaultRenderDeviceVolumeOverrideCore(int volumeOverridePercent)
     {
-        if (!LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(volumeOverridePercent)) return LidGuardOperationResult.Failure($"The volume override percent must be an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.");
-
         var endpointVolumeResult = CreateDefaultAudioEndpointVolume();
         if (!endpointVolumeResult.Succeeded) return endpointVolumeResult.ToNonGenericResult();
 
@@ -53,10 +66,8 @@ public sealed partial class SystemAudioVolumeController : ISystemAudioVolumeCont
         return CombineVolumeChangeResults(volumeResult, muteResult);
     }
 
-    public LidGuardOperationResult RestoreDefaultRenderDeviceState(SystemAudioVolumeState state)
+    private static unsafe LidGuardOperationResult RestoreDefaultRenderDeviceStateCore(SystemAudioVolumeState state)
     {
-        ArgumentNullException.ThrowIfNull(state);
-
         var endpointVolumeResult = CreateDefaultAudioEndpointVolume();
         if (!endpointVolumeResult.Succeeded) return endpointVolumeResult.ToNonGenericResult();
 
@@ -76,20 +87,20 @@ public sealed partial class SystemAudioVolumeController : ISystemAudioVolumeCont
         return LidGuardOperationResult.Failure(message, nativeErrorCode);
     }
 
-    private static unsafe LidGuardOperationResult<ComInterfaceHandle> CreateDefaultAudioEndpointVolume()
+    private static unsafe LidGuardOperationResult<ComInterfaceHandle<IAudioEndpointVolume>> CreateDefaultAudioEndpointVolume()
     {
         var initializeResult = ComApartment.Initialize(out var comApartment);
-        if (!initializeResult.Succeeded) return LidGuardOperationResult<ComInterfaceHandle>.Failure(initializeResult.Message, initializeResult.NativeErrorCode);
+        if (!initializeResult.Succeeded) return LidGuardOperationResult<ComInterfaceHandle<IAudioEndpointVolume>>.Failure(initializeResult.Message, initializeResult.NativeErrorCode);
 
         var shouldDisposeComApartment = true;
         try
         {
             var enumeratorResult = CreateMmDeviceEnumerator();
-            if (!enumeratorResult.Succeeded) return LidGuardOperationResult<ComInterfaceHandle>.Failure(enumeratorResult.Message, enumeratorResult.NativeErrorCode);
+            if (!enumeratorResult.Succeeded) return LidGuardOperationResult<ComInterfaceHandle<IAudioEndpointVolume>>.Failure(enumeratorResult.Message, enumeratorResult.NativeErrorCode);
 
             using var enumeratorHandle = enumeratorResult.Value;
             var endpointResult = GetDefaultAudioEndpoint(enumeratorHandle.Pointer);
-            if (!endpointResult.Succeeded) return LidGuardOperationResult<ComInterfaceHandle>.Failure(endpointResult.Message, endpointResult.NativeErrorCode);
+            if (!endpointResult.Succeeded) return LidGuardOperationResult<ComInterfaceHandle<IAudioEndpointVolume>>.Failure(endpointResult.Message, endpointResult.NativeErrorCode);
 
             using var endpointHandle = endpointResult.Value;
             var endpointVolumeResult = ActivateAudioEndpointVolume(endpointHandle.Pointer, comApartment);
@@ -104,155 +115,123 @@ public sealed partial class SystemAudioVolumeController : ISystemAudioVolumeCont
         }
     }
 
-    private static unsafe LidGuardOperationResult<ComInterfaceHandle> CreateMmDeviceEnumerator()
+    private static unsafe LidGuardOperationResult<ComInterfaceHandle<IMMDeviceEnumerator>> CreateMmDeviceEnumerator()
     {
         void* enumeratorPointer = null;
-        var classIdentifier = s_mmDeviceEnumeratorClassIdentifier;
-        var interfaceIdentifier = s_mmDeviceEnumeratorInterfaceIdentifier;
-        var result = CoCreateInstance(
-            &classIdentifier,
+        var result = PInvoke.CoCreateInstance(
+            s_mmDeviceEnumeratorClassIdentifier,
             null,
-            ClassContextInProcessServer,
-            &interfaceIdentifier,
-            &enumeratorPointer);
-        if (Failed(result)) return LidGuardOperationResult<ComInterfaceHandle>.Failure("Failed to create the Windows audio device enumerator.", result);
+            CLSCTX.CLSCTX_INPROC_SERVER,
+            IMMDeviceEnumerator.IID_Guid,
+            out enumeratorPointer);
+        if (Failed(result)) return LidGuardOperationResult<ComInterfaceHandle<IMMDeviceEnumerator>>.Failure("Failed to create the Windows audio device enumerator.", (int)result);
 
-        return LidGuardOperationResult<ComInterfaceHandle>.Success(new ComInterfaceHandle((nint)enumeratorPointer));
+        return LidGuardOperationResult<ComInterfaceHandle<IMMDeviceEnumerator>>.Success(new ComInterfaceHandle<IMMDeviceEnumerator>((IMMDeviceEnumerator*)enumeratorPointer));
     }
 
-    private static unsafe LidGuardOperationResult<ComInterfaceHandle> GetDefaultAudioEndpoint(nint enumeratorPointer)
+    private static unsafe LidGuardOperationResult<ComInterfaceHandle<IMMDevice>> GetDefaultAudioEndpoint(IMMDeviceEnumerator* enumeratorPointer)
     {
-        void* endpointPointer = null;
-        var virtualTable = *(void***)enumeratorPointer;
-        var getDefaultAudioEndpoint = (delegate* unmanaged[Stdcall]<void*, int, int, void**, int>)virtualTable[4];
-        var result = getDefaultAudioEndpoint((void*)enumeratorPointer, AudioDataFlowRender, AudioRoleConsole, &endpointPointer);
-        if (Failed(result)) return LidGuardOperationResult<ComInterfaceHandle>.Failure("Failed to get the default Windows render audio endpoint.", result);
+        IMMDevice* endpointPointer = null;
+        var result = enumeratorPointer->GetDefaultAudioEndpoint(EDataFlow.eRender, ERole.eConsole, &endpointPointer);
+        if (Failed(result)) return LidGuardOperationResult<ComInterfaceHandle<IMMDevice>>.Failure("Failed to get the default Windows render audio endpoint.", (int)result);
 
-        return LidGuardOperationResult<ComInterfaceHandle>.Success(new ComInterfaceHandle((nint)endpointPointer));
+        return LidGuardOperationResult<ComInterfaceHandle<IMMDevice>>.Success(new ComInterfaceHandle<IMMDevice>(endpointPointer));
     }
 
-    private static unsafe LidGuardOperationResult<ComInterfaceHandle> ActivateAudioEndpointVolume(nint endpointPointer, ComApartment comApartment)
+    private static unsafe LidGuardOperationResult<ComInterfaceHandle<IAudioEndpointVolume>> ActivateAudioEndpointVolume(IMMDevice* endpointPointer, ComApartment comApartment)
     {
         void* endpointVolumePointer = null;
-        var interfaceIdentifier = s_audioEndpointVolumeInterfaceIdentifier;
-        var virtualTable = *(void***)endpointPointer;
-        var activate = (delegate* unmanaged[Stdcall]<void*, Guid*, uint, void*, void**, int>)virtualTable[3];
-        var result = activate((void*)endpointPointer, &interfaceIdentifier, ClassContextInProcessServer, null, &endpointVolumePointer);
-        if (Failed(result)) return LidGuardOperationResult<ComInterfaceHandle>.Failure("Failed to activate the Windows audio endpoint volume interface.", result);
+        var result = endpointPointer->Activate(IAudioEndpointVolume.IID_Guid, CLSCTX.CLSCTX_INPROC_SERVER, null, out endpointVolumePointer);
+        if (Failed(result)) return LidGuardOperationResult<ComInterfaceHandle<IAudioEndpointVolume>>.Failure("Failed to activate the Windows audio endpoint volume interface.", (int)result);
 
-        return LidGuardOperationResult<ComInterfaceHandle>.Success(new ComInterfaceHandle((nint)endpointVolumePointer, comApartment));
+        return LidGuardOperationResult<ComInterfaceHandle<IAudioEndpointVolume>>.Success(new ComInterfaceHandle<IAudioEndpointVolume>((IAudioEndpointVolume*)endpointVolumePointer, comApartment));
     }
 
-    private static unsafe LidGuardOperationResult GetMasterVolumeScalar(nint endpointVolumePointer, out float masterVolumeScalar)
+    private static unsafe LidGuardOperationResult GetMasterVolumeScalar(IAudioEndpointVolume* endpointVolumePointer, out float masterVolumeScalar)
     {
         masterVolumeScalar = 0.0f;
-        var capturedMasterVolumeScalar = 0.0f;
-        var virtualTable = *(void***)endpointVolumePointer;
-        var getMasterVolumeLevelScalar = (delegate* unmanaged[Stdcall]<void*, float*, int>)virtualTable[9];
-        var result = getMasterVolumeLevelScalar((void*)endpointVolumePointer, &capturedMasterVolumeScalar);
-        if (Failed(result)) return LidGuardOperationResult.Failure("Failed to capture the current Windows master volume.", result);
+        var result = endpointVolumePointer->GetMasterVolumeLevelScalar(out var capturedMasterVolumeScalar);
+        if (Failed(result)) return LidGuardOperationResult.Failure("Failed to capture the current Windows master volume.", (int)result);
 
         masterVolumeScalar = capturedMasterVolumeScalar;
         return LidGuardOperationResult.Success();
     }
 
-    private static unsafe LidGuardOperationResult SetMasterVolumeScalar(nint endpointVolumePointer, float masterVolumeScalar)
+    private static unsafe LidGuardOperationResult SetMasterVolumeScalar(IAudioEndpointVolume* endpointVolumePointer, float masterVolumeScalar)
     {
-        var virtualTable = *(void***)endpointVolumePointer;
-        var setMasterVolumeLevelScalar = (delegate* unmanaged[Stdcall]<void*, float, Guid*, int>)virtualTable[7];
-        var result = setMasterVolumeLevelScalar((void*)endpointVolumePointer, masterVolumeScalar, null);
-        if (Failed(result)) return LidGuardOperationResult.Failure("Failed to set the Windows master volume.", result);
+        var result = endpointVolumePointer->SetMasterVolumeLevelScalar(masterVolumeScalar, null);
+        if (Failed(result)) return LidGuardOperationResult.Failure("Failed to set the Windows master volume.", (int)result);
 
         return LidGuardOperationResult.Success();
     }
 
-    private static unsafe LidGuardOperationResult GetMute(nint endpointVolumePointer, out bool isMuted)
+    private static unsafe LidGuardOperationResult GetMute(IAudioEndpointVolume* endpointVolumePointer, out bool isMuted)
     {
-        var muteValue = 0;
-        var virtualTable = *(void***)endpointVolumePointer;
-        var getMute = (delegate* unmanaged[Stdcall]<void*, int*, int>)virtualTable[15];
-        var result = getMute((void*)endpointVolumePointer, &muteValue);
+        var result = endpointVolumePointer->GetMute(out var muteValue);
         if (Failed(result))
         {
             isMuted = false;
-            return LidGuardOperationResult.Failure("Failed to capture the current Windows audio mute state.", result);
+            return LidGuardOperationResult.Failure("Failed to capture the current Windows audio mute state.", (int)result);
         }
 
-        isMuted = muteValue != 0;
+        isMuted = muteValue;
         return LidGuardOperationResult.Success();
     }
 
-    private static unsafe LidGuardOperationResult SetMute(nint endpointVolumePointer, bool isMuted)
+    private static unsafe LidGuardOperationResult SetMute(IAudioEndpointVolume* endpointVolumePointer, bool isMuted)
     {
-        var virtualTable = *(void***)endpointVolumePointer;
-        var setMute = (delegate* unmanaged[Stdcall]<void*, int, Guid*, int>)virtualTable[14];
-        var result = setMute((void*)endpointVolumePointer, isMuted ? 1 : 0, null);
-        if (Failed(result)) return LidGuardOperationResult.Failure("Failed to set the Windows audio mute state.", result);
+        var result = endpointVolumePointer->SetMute(new BOOL(isMuted ? 1 : 0), null);
+        if (Failed(result)) return LidGuardOperationResult.Failure("Failed to set the Windows audio mute state.", (int)result);
 
         return LidGuardOperationResult.Success();
     }
 
-    private static bool Failed(int result) => result < 0;
-
-    [LibraryImport("ole32.dll")]
-    private static unsafe partial int CoCreateInstance(
-        Guid* classIdentifier,
-        void* outerUnknown,
-        uint classContext,
-        Guid* interfaceIdentifier,
-        void** interfacePointer);
-
-    [LibraryImport("ole32.dll")]
-    private static partial int CoInitializeEx(IntPtr reserved, uint coInitializeOption);
-
-    [LibraryImport("ole32.dll")]
-    private static partial void CoUninitialize();
+    private static bool Failed(HRESULT result) => !result.Succeeded;
 
     private readonly struct ComApartment(bool shouldUninitialize) : IDisposable
     {
         public static LidGuardOperationResult Initialize(out ComApartment comApartment)
         {
-            var result = CoInitializeEx(IntPtr.Zero, CoInitializeMultithreaded);
-            if (result is Success or SuccessFalse)
+            var result = PInvoke.CoInitializeEx(COINIT.COINIT_MULTITHREADED);
+            if ((int)result is Success or SuccessFalse)
             {
                 comApartment = new ComApartment(true);
                 return LidGuardOperationResult.Success();
             }
 
-            if (result == RpcChangedMode)
+            if ((int)result == RpcChangedMode)
             {
                 comApartment = new ComApartment(false);
                 return LidGuardOperationResult.Success();
             }
 
             comApartment = new ComApartment(false);
-            return LidGuardOperationResult.Failure("Failed to initialize COM for Windows audio volume control.", result);
+            return LidGuardOperationResult.Failure("Failed to initialize COM for Windows audio volume control.", (int)result);
         }
 
         public void Dispose()
         {
-            if (shouldUninitialize) CoUninitialize();
+            if (shouldUninitialize) PInvoke.CoUninitialize();
         }
     }
 
-    private sealed class ComInterfaceHandle(nint pointer, ComApartment comApartment = default) : IDisposable
+    private sealed unsafe class ComInterfaceHandle<TComInterface>(TComInterface* pointer, ComApartment comApartment = default) : IDisposable
+        where TComInterface : unmanaged
     {
-        private nint _pointer = pointer;
+        private TComInterface* _pointer = pointer;
         private bool _disposed;
 
-        public nint Pointer => _pointer;
+        public TComInterface* Pointer => _pointer;
 
-        public unsafe void Dispose()
+        public void Dispose()
         {
             if (_disposed) return;
 
             _disposed = true;
-            if (_pointer != 0)
+            if (_pointer != null)
             {
-                var virtualTable = *(void***)_pointer;
-                var release = (delegate* unmanaged[Stdcall]<void*, uint>)virtualTable[2];
-                release((void*)_pointer);
-                _pointer = 0;
+                ((IUnknown*)_pointer)->Release();
+                _pointer = null;
             }
 
             comApartment.Dispose();

@@ -1,7 +1,8 @@
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using LidGuardLib.Commons.Services;
+using Windows.Win32;
+using Windows.Win32.UI.WindowsAndMessaging;
 using WmiLight;
 
 namespace LidGuardLib.Power;
@@ -9,7 +10,6 @@ namespace LidGuardLib.Power;
 [SupportedOSPlatform("windows6.1")]
 internal sealed partial class VisibleDisplayMonitorCountProvider : IVisibleDisplayMonitorCountProvider
 {
-    private const int VisibleDisplayMonitorCountSystemMetricIndex = 80;
     private const string MonitorConnectionNamespace = @"root\wmi";
     private const string MonitorConnectionQuery = "SELECT Active, VideoOutputTechnology FROM WmiMonitorConnectionParams";
     private const uint VideoOutputTechnologyLowVoltageDifferentialSwing = 6;
@@ -19,7 +19,7 @@ internal sealed partial class VisibleDisplayMonitorCountProvider : IVisibleDispl
 
     public int GetVisibleDisplayMonitorCount(bool excludeInternalDisplayMonitors = false)
     {
-        var desktopVisibleMonitorCount = Math.Max(0, GetSystemMetrics(VisibleDisplayMonitorCountSystemMetricIndex));
+        var desktopVisibleMonitorCount = Math.Max(0, PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CMONITORS));
         if (desktopVisibleMonitorCount == 0) return 0;
 
         if (!TryGetMonitorConnectionSummary(out var monitorConnectionSummary)) return desktopVisibleMonitorCount;
@@ -113,9 +113,6 @@ internal sealed partial class VisibleDisplayMonitorCountProvider : IVisibleDispl
             or VideoOutputTechnologyDisplayPortEmbedded
             or VideoOutputTechnologyUnifiedDisplayInterfaceEmbedded
             or VideoOutputTechnologyInternal;
-
-    [LibraryImport("user32.dll", EntryPoint = "GetSystemMetrics")]
-    private static partial int GetSystemMetrics(int systemMetricIndex);
 
     private readonly record struct MonitorConnectionSummary(int ActiveMonitorCount, int ActiveInternalMonitorCount);
 }

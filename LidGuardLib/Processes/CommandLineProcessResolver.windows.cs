@@ -7,7 +7,10 @@ using LidGuardLib.Commons.Services;
 using LidGuardLib.Commons.Sessions;
 using Microsoft.Win32.SafeHandles;
 using Windows.Win32;
+using Windows.Win32.Foundation;
 using Windows.Win32.System.Threading;
+using WdkPInvoke = Windows.Wdk.PInvoke;
+using WdkProcessInformationClass = Windows.Wdk.System.Threading.PROCESSINFOCLASS;
 
 namespace LidGuardLib.Processes;
 
@@ -203,7 +206,6 @@ public sealed partial class CommandLineProcessResolver : ICommandLineProcessReso
 
     private static unsafe partial class RemoteProcessParametersReader
     {
-        private const int ProcessBasicInformationClass = 0;
         private static readonly int s_processParametersOffset = IntPtr.Size == 8 ? 0x20 : 0x10;
         private static readonly int s_currentDirectoryOffset = IntPtr.Size == 8 ? 0x38 : 0x24;
         private static readonly int s_commandLineOffset = IntPtr.Size == 8 ? 0x70 : 0x40;
@@ -212,11 +214,18 @@ public sealed partial class CommandLineProcessResolver : ICommandLineProcessReso
         {
             workingDirectory = string.Empty;
 
-            var processBasicInformation = default(ProcessBasicInformation);
-            var status = NtQueryInformationProcess(processHandle, ProcessBasicInformationClass, &processBasicInformation, (uint)sizeof(ProcessBasicInformation), out _);
-            if (status != 0) return false;
+            var processBasicInformation = default(PROCESS_BASIC_INFORMATION);
+            var returnLength = 0u;
+            var status = WdkPInvoke.NtQueryInformationProcess(
+                (HANDLE)processHandle.DangerousGetHandle(),
+                WdkProcessInformationClass.ProcessBasicInformation,
+                &processBasicInformation,
+                (uint)sizeof(PROCESS_BASIC_INFORMATION),
+                ref returnLength);
+            if ((int)status != 0) return false;
 
-            var processParametersAddress = ReadPointer(processHandle, processBasicInformation.PebBaseAddress + s_processParametersOffset);
+            var processEnvironmentBlockAddress = (IntPtr)processBasicInformation.PebBaseAddress;
+            var processParametersAddress = ReadPointer(processHandle, processEnvironmentBlockAddress + s_processParametersOffset);
             if (processParametersAddress == IntPtr.Zero) return false;
 
             if (!TryReadStructure(processHandle, processParametersAddress + s_currentDirectoryOffset, out RemoteUnicodeString currentDirectory)) return false;
@@ -227,11 +236,18 @@ public sealed partial class CommandLineProcessResolver : ICommandLineProcessReso
         {
             commandLine = string.Empty;
 
-            var processBasicInformation = default(ProcessBasicInformation);
-            var status = NtQueryInformationProcess(processHandle, ProcessBasicInformationClass, &processBasicInformation, (uint)sizeof(ProcessBasicInformation), out _);
-            if (status != 0) return false;
+            var processBasicInformation = default(PROCESS_BASIC_INFORMATION);
+            var returnLength = 0u;
+            var status = WdkPInvoke.NtQueryInformationProcess(
+                (HANDLE)processHandle.DangerousGetHandle(),
+                WdkProcessInformationClass.ProcessBasicInformation,
+                &processBasicInformation,
+                (uint)sizeof(PROCESS_BASIC_INFORMATION),
+                ref returnLength);
+            if ((int)status != 0) return false;
 
-            var processParametersAddress = ReadPointer(processHandle, processBasicInformation.PebBaseAddress + s_processParametersOffset);
+            var processEnvironmentBlockAddress = (IntPtr)processBasicInformation.PebBaseAddress;
+            var processParametersAddress = ReadPointer(processHandle, processEnvironmentBlockAddress + s_processParametersOffset);
             if (processParametersAddress == IntPtr.Zero) return false;
 
             if (!TryReadStructure(processHandle, processParametersAddress + s_commandLineOffset, out RemoteUnicodeString commandLineString)) return false;
@@ -242,22 +258,21 @@ public sealed partial class CommandLineProcessResolver : ICommandLineProcessReso
         {
             parentProcessIdentifier = 0;
 
-            var processBasicInformation = default(ProcessBasicInformation);
-            var status = NtQueryInformationProcess(processHandle, ProcessBasicInformationClass, &processBasicInformation, (uint)sizeof(ProcessBasicInformation), out _);
-            if (status != 0) return false;
-            if (processBasicInformation.InheritedFromUniqueProcessIdentifier == IntPtr.Zero) return false;
+            var processBasicInformation = default(PROCESS_BASIC_INFORMATION);
+            var returnLength = 0u;
+            var status = WdkPInvoke.NtQueryInformationProcess(
+                (HANDLE)processHandle.DangerousGetHandle(),
+                WdkProcessInformationClass.ProcessBasicInformation,
+                &processBasicInformation,
+                (uint)sizeof(PROCESS_BASIC_INFORMATION),
+                ref returnLength);
+            if ((int)status != 0) return false;
 
-            if (IntPtr.Size == 8)
-            {
-                var parentProcessIdentifier64 = processBasicInformation.InheritedFromUniqueProcessIdentifier.ToInt64();
-                if (parentProcessIdentifier64 <= 0 || parentProcessIdentifier64 > int.MaxValue) return false;
+            var parentProcessIdentifierNative = processBasicInformation.InheritedFromUniqueProcessId;
+            if (parentProcessIdentifierNative == 0 || parentProcessIdentifierNative > (nuint)int.MaxValue) return false;
 
-                parentProcessIdentifier = (int)parentProcessIdentifier64;
-                return true;
-            }
-
-            parentProcessIdentifier = processBasicInformation.InheritedFromUniqueProcessIdentifier.ToInt32();
-            return parentProcessIdentifier > 0;
+            parentProcessIdentifier = (int)parentProcessIdentifierNative;
+            return true;
         }
 
         private static IntPtr ReadPointer(SafeFileHandle processHandle, IntPtr address)
@@ -296,25 +311,7 @@ public sealed partial class CommandLineProcessResolver : ICommandLineProcessReso
             return true;
         }
 
-        [LibraryImport("ntdll.dll")]
-        private static partial int NtQueryInformationProcess(
-            SafeHandle processHandle,
-            int processInformationClass,
-            void* processInformation,
-            uint processInformationLength,
-            out uint returnLength);
-
 #pragma warning disable CS0649
-        private struct ProcessBasicInformation
-        {
-            public IntPtr Reserved1;
-            public IntPtr PebBaseAddress;
-            public IntPtr Reserved2;
-            public IntPtr Reserved3;
-            public IntPtr UniqueProcessIdentifier;
-            public IntPtr InheritedFromUniqueProcessIdentifier;
-        }
-
         private struct RemoteUnicodeString
         {
             public ushort Length;

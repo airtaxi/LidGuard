@@ -10,6 +10,8 @@
 - 커밋은 영어로 작성한다.
 - 이 Windows 저장소에서는 작업을 마치기 전에 수정한 텍스트 파일의 줄바꿈을 일관된 CRLF로 정규화해야 한다. `LF will be replaced by CRLF` 같은 Git 경고를 반복 유발하는 mixed line ending이나 LF-only working tree 파일을 남기지 않는다.
 - 이 저장소는 NativeAOT 및 trimming에 민감하다. IL2026 / IL3050 경고를 유발하는 API는 피하고, reflection 기반이나 동적 JSON helper보다 AOT-safe 오버로드와 source-generated `System.Text.Json` serializer를 우선 사용한다.
+- Windows native interop는 CsWin32 생성 API로 중앙화한다. CsWin32 또는 사용 가능한 metadata로 API를 표현할 수 없고 그 예외를 이 파일에 문서화한 경우가 아니면, 프로젝트 코드에 직접 `[DllImport]` / `[LibraryImport]`, `NativeLibrary` / `GetProcAddress`, 수동 COM vtable 호출을 추가하지 않는다.
+- `Microsoft.Windows.WDK.Win32Metadata`는 `NtQueryInformationProcess` 같은 WDK 기반 API를 CsWin32가 생성하게 하기 위해서만 의도적으로 참조한다. 이 참조는 `PrivateAssets="all"`로 유지하고, 수동 native 선언을 추가해도 된다는 근거로 사용하지 않는다.
 - 사용자가 명시적으로 요청하지 않으면 빌드를 실행하지 않는다. 단, 변경 규모가 매우 큰 경우는 예외다.
 - 작업 중 애매한 점이 있으면 즉시 사용자에게 물어보고, 가능하면 선택지를 제공한다.
 

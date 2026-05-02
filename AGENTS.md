@@ -6,6 +6,8 @@
 - Commit messages must be written in English.
 - On this Windows repository, normalize touched text files to consistent CRLF line endings before finishing. Do not leave mixed or LF-only working tree files that trigger recurring Git warnings such as `LF will be replaced by CRLF`.
 - This repository is NativeAOT and trimming sensitive. Avoid APIs that trigger IL2026 / IL3050 warnings, and prefer AOT-safe overloads plus source-generated `System.Text.Json` serializers over reflection-driven or dynamic JSON helpers.
+- Windows native interop must stay centralized through CsWin32-generated APIs. Do not add direct `[DllImport]` / `[LibraryImport]`, `NativeLibrary` / `GetProcAddress`, or manual COM vtable calls in project code unless CsWin32 or available metadata cannot express the API and the exception is documented in this file.
+- `Microsoft.Windows.WDK.Win32Metadata` is intentionally referenced only to let CsWin32 generate WDK-backed APIs such as `NtQueryInformationProcess`; keep it `PrivateAssets="all"` and do not use it as permission to add hand-written native declarations.
 - You MUST NOT run builds unless the user explicitly asks for one, except when the changes are huge.
 - If something is unclear or ambiguous, ask the user immediately and provide selectable choices where possible.
 
