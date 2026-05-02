@@ -14,6 +14,31 @@
 
 HTTPS, 강력한 `AccessToken`, 별도의 강력한 `WebhookSecret` 없이 이 서버를 공개하지 마세요.
 
+## AccessToken과 WebhookSecret 생성
+
+`AccessToken`과 `WebhookSecret`은 서로 다른 랜덤 값으로 생성합니다. `AccessToken`은 브라우저 dashboard 로그인에 사용됩니다. `WebhookSecret`은 LidGuard webhook URL에 포함되므로 URL-safe 값을 사용합니다.
+
+OS에 맞는 명령을 두 번 실행해서 하나는 `AccessToken`, 하나는 `WebhookSecret`으로 사용합니다:
+
+```powershell
+# Windows PowerShell
+$bytes = New-Object byte[] 32
+[System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+[Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
+```
+
+```bash
+# Linux
+openssl rand -base64 32 | tr '+/' '-_' | tr -d '='
+```
+
+```bash
+# macOS
+openssl rand -base64 32 | tr '+/' '-_' | tr -d '='
+```
+
+두 값은 모두 Git 밖에 보관합니다. 두 설정에 같은 값을 재사용하지 마세요.
+
 ## VAPID key 생성
 
 임시 .NET project를 만들지 말고 CLI에서 VAPID key를 생성합니다. `web-push` npm package는 cross-platform generator를 제공하며 이 저장소에 dependency를 추가하지 않습니다.

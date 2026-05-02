@@ -14,6 +14,31 @@ Browser Web Push requires a secure context. Use HTTPS in production. During deve
 
 Do not expose this server publicly without HTTPS, a strong `AccessToken`, and a separate strong `WebhookSecret`.
 
+## AccessToken And WebhookSecret Generation
+
+Generate `AccessToken` and `WebhookSecret` as two separate random values. The `AccessToken` is used to sign in to the browser dashboard. The `WebhookSecret` is embedded in the LidGuard webhook URL, so use a URL-safe value.
+
+Run the command for your OS twice, once for `AccessToken` and once for `WebhookSecret`:
+
+```powershell
+# Windows PowerShell
+$bytes = New-Object byte[] 32
+[System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+[Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
+```
+
+```bash
+# Linux
+openssl rand -base64 32 | tr '+/' '-_' | tr -d '='
+```
+
+```bash
+# macOS
+openssl rand -base64 32 | tr '+/' '-_' | tr -d '='
+```
+
+Keep both values outside Git. Do not reuse the same value for both settings.
+
 ## VAPID Key Generation
 
 Generate VAPID keys from a CLI instead of creating a temporary .NET project. The `web-push` npm package provides a cross-platform generator and does not add any dependency to this repository.

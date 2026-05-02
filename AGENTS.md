@@ -14,7 +14,7 @@
 ## Document Policy
 
 - `AGENTS.md` is the single source of truth for LidGuard's product direction, technical design, current implementation state, and next work.
-- `AGENTS.ko.md` is only the Korean user-readable mirror of this document. Do not read it during routine context gathering because it duplicates `AGENTS.md` and wastes context; read and update it only when `AGENTS.md` changes meaningfully or when the user explicitly asks.
+- All `*.ko.md` files are Korean user-readable mirrors or translations. Do not read them during routine context gathering because they duplicate source documents and waste context; read and update a `*.ko.md` file only when its source document changes meaningfully or when the user explicitly asks.
 - `Plan.md` was removed to avoid duplicated planning content.
 - When changing core behavior, update this file instead of reintroducing duplicated design notes elsewhere.
 - Any future repository-wide README that documents Provider MCP or model-managed MCP session flows must explicitly state that the behavior is not guaranteed, because correct operation depends entirely on the model choosing to call the LidGuard MCP tools at the right times.
