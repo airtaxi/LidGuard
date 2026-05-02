@@ -40,6 +40,8 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             0,
             sessionStateReason,
             false,
+            string.Empty,
+            false,
             false,
             false,
             cancellationToken);
@@ -110,6 +112,8 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             0,
             sessionStateReason,
             false,
+            string.Empty,
+            false,
             false,
             false,
             cancellationToken);
@@ -129,6 +133,8 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             workingDirectory,
             watchedProcessIdentifier,
             string.Empty,
+            false,
+            string.Empty,
             true,
             true,
             false,
@@ -138,6 +144,8 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         string sessionIdentifier,
         AgentProvider provider,
         string providerName = "",
+        bool isProviderSessionEnd = false,
+        string sessionEndReason = "",
         CancellationToken cancellationToken = default)
         => SendSessionCommandAsync(
             LidGuardPipeCommands.Stop,
@@ -147,6 +155,8 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             string.Empty,
             0,
             string.Empty,
+            isProviderSessionEnd,
+            sessionEndReason,
             false,
             false,
             true,
@@ -216,6 +226,21 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             updatedStoredSettings = PreSuspendWebhookConfiguration.WithPreSuspendWebhookUrl(
                 updatedStoredSettings,
                 normalizedPreSuspendWebhookUrl);
+        }
+
+        if (settingsPatch.PostSessionEndWebhookUrl is not null)
+        {
+            if (!PostSessionEndWebhookConfiguration.TryNormalizeConfiguredValue(
+                settingsPatch.PostSessionEndWebhookUrl,
+                out var normalizedPostSessionEndWebhookUrl,
+                out message))
+            {
+                return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
+            }
+
+            updatedStoredSettings = PostSessionEndWebhookConfiguration.WithPostSessionEndWebhookUrl(
+                updatedStoredSettings,
+                normalizedPostSessionEndWebhookUrl);
         }
 
         updatedStoredSettings = LidGuardSettings.Normalize(updatedStoredSettings);
@@ -307,6 +332,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
                 ? settingsPatch.SuspendHistoryEntryCount
                 : normalizedBaseSettings.SuspendHistoryEntryCount,
             PreSuspendWebhookUrl = settingsPatch.PreSuspendWebhookUrl ?? normalizedBaseSettings.PreSuspendWebhookUrl,
+            PostSessionEndWebhookUrl = settingsPatch.PostSessionEndWebhookUrl ?? normalizedBaseSettings.PostSessionEndWebhookUrl,
             ClosedLidPermissionRequestDecision = settingsPatch.ClosedLidPermissionRequestDecision ?? normalizedBaseSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settingsPatch.WatchParentProcess ?? normalizedBaseSettings.WatchParentProcess,
             SessionTimeoutMinutes = settingsPatch.HasSessionTimeoutMinutes
@@ -332,6 +358,8 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         string workingDirectory,
         int watchedProcessIdentifier,
         string sessionStateReason,
+        bool isProviderSessionEnd,
+        string sessionEndReason,
         bool includeStoredSettings,
         bool startRuntimeIfUnavailable,
         bool allowRuntimeUnavailableAsSuccess,
@@ -351,6 +379,8 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             Provider = provider,
             ProviderName = normalizedProviderName,
             SessionIdentifier = sessionIdentifier,
+            IsProviderSessionEnd = isProviderSessionEnd,
+            SessionEndReason = sessionEndReason ?? string.Empty,
             WatchedProcessIdentifier = watchedProcessIdentifier,
             SessionStateReason = sessionStateReason ?? string.Empty,
             WorkingDirectory = workingDirectory ?? string.Empty,
@@ -432,6 +462,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         AppendChange(changes, previousStoredSettings.PostStopSuspendSoundVolumeOverridePercent, updatedStoredSettings.PostStopSuspendSoundVolumeOverridePercent, "postStopSuspendSoundVolumeOverridePercent");
         AppendChange(changes, previousStoredSettings.SuspendHistoryEntryCount, updatedStoredSettings.SuspendHistoryEntryCount, "suspendHistoryEntryCount");
         AppendChange(changes, previousStoredSettings.PreSuspendWebhookUrl, updatedStoredSettings.PreSuspendWebhookUrl, "preSuspendWebhookUrl");
+        AppendChange(changes, previousStoredSettings.PostSessionEndWebhookUrl, updatedStoredSettings.PostSessionEndWebhookUrl, "postSessionEndWebhookUrl");
         AppendChange(changes, previousStoredSettings.ClosedLidPermissionRequestDecision, updatedStoredSettings.ClosedLidPermissionRequestDecision, "closedLidPermissionRequestDecision");
         AppendChange(changes, previousStoredSettings.SessionTimeoutMinutes, updatedStoredSettings.SessionTimeoutMinutes, "sessionTimeoutMinutes");
         AppendChange(changes, previousStoredSettings.ServerRuntimeCleanupDelayMinutes, updatedStoredSettings.ServerRuntimeCleanupDelayMinutes, "serverRuntimeCleanupDelayMinutes");

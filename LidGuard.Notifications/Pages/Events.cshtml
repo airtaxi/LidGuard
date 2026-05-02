@@ -10,7 +10,9 @@
         <thead>
             <tr>
                 <th>Received</th>
+                <th>Event</th>
                 <th>Reason</th>
+                <th>Session</th>
                 <th>Status</th>
                 <th>Deliveries</th>
                 <th>Last error</th>
@@ -21,11 +23,39 @@
             {
                 <tr>
                     <td>@webhookEvent.ReceivedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>@webhookEvent.EventType</td>
                     <td>
                         @webhookEvent.Reason
                         @if (webhookEvent.SoftLockedSessionCount is not null)
                         {
                             <span class="muted">(@webhookEvent.SoftLockedSessionCount)</span>
+                        }
+                    </td>
+                    <td>
+                        @if (!string.IsNullOrWhiteSpace(webhookEvent.SessionIdentifier))
+                        {
+                            <span>@(string.IsNullOrWhiteSpace(webhookEvent.ProviderName) ? webhookEvent.Provider : $"{webhookEvent.Provider}:{webhookEvent.ProviderName}")</span>
+                            <span class="muted"> @webhookEvent.SessionIdentifier</span>
+                            @if (!string.IsNullOrWhiteSpace(webhookEvent.EndReason))
+                            {
+                                <span class="muted"> @webhookEvent.EndReason</span>
+                            }
+                            @if (webhookEvent.ActiveSessionCount is not null)
+                            {
+                                <span class="muted"> active=@webhookEvent.ActiveSessionCount</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(webhookEvent.WorkingDirectory))
+                            {
+                                <span class="muted"> cwd=@webhookEvent.WorkingDirectory</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(webhookEvent.TranscriptPath))
+                            {
+                                <span class="muted"> transcript=@webhookEvent.TranscriptPath</span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="muted">-</span>
                         }
                     </td>
                     <td>@webhookEvent.Status</td>

@@ -1,4 +1,4 @@
-﻿namespace LidGuard.Ipc;
+namespace LidGuard.Ipc;
 
 internal static class LidGuardPipeCommands
 {
@@ -27,6 +27,7 @@ internal static class LidGuardPipeCommands
     public const string ProviderMcpInstall = "provider-mcp-install";
     public const string ProviderMcpRemove = "provider-mcp-remove";
     public const string ProviderMcpStatus = "provider-mcp-status";
+    public const string RemovePostSessionEndWebhook = "remove-post-session-end-webhook";
     public const string RemovePreSuspendWebhook = "remove-pre-suspend-webhook";
     public const string RemoveSession = "remove-session";
     public const string RunServer = "run-server";

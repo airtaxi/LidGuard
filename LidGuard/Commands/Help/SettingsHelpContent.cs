@@ -12,7 +12,7 @@ internal static class SettingsHelpContent
             LidGuardPipeCommands.Settings,
             [],
             LidGuardHelpSectionTitles.SettingsAndSuspend,
-            $"{commandDisplayName} settings [--reset <bool>] [--change-lid-action <bool>] [--prevent-system-sleep <bool>] [--prevent-away-mode-sleep <bool>] [--prevent-display-sleep <bool>] [--watch-parent-process <bool>] [--session-timeout-minutes off|<minutes>] [--server-runtime-cleanup-delay-minutes off|<minutes>] [--emergency-hibernation-on-high-temperature <bool>] [--emergency-hibernation-temperature-mode low|average|high] [--emergency-hibernation-temperature-celsius <number>] [--suspend-mode sleep|hibernate] [--post-stop-suspend-delay-seconds <number>] [--post-stop-suspend-sound off|<system-sound>|<wav-path>] [--post-stop-suspend-sound-volume-override-percent off|<1-100>] [--suspend-history-count off|<count>] [--pre-suspend-webhook-url <http-or-https-url>] [--closed-lid-permission-request-decision deny|allow] [--power-request-reason <text>]",
+            $"{commandDisplayName} settings [--reset <bool>] [--change-lid-action <bool>] [--prevent-system-sleep <bool>] [--prevent-away-mode-sleep <bool>] [--prevent-display-sleep <bool>] [--watch-parent-process <bool>] [--session-timeout-minutes off|<minutes>] [--server-runtime-cleanup-delay-minutes off|<minutes>] [--emergency-hibernation-on-high-temperature <bool>] [--emergency-hibernation-temperature-mode low|average|high] [--emergency-hibernation-temperature-celsius <number>] [--suspend-mode sleep|hibernate] [--post-stop-suspend-delay-seconds <number>] [--post-stop-suspend-sound off|<system-sound>|<wav-path>] [--post-stop-suspend-sound-volume-override-percent off|<1-100>] [--suspend-history-count off|<count>] [--pre-suspend-webhook-url <http-or-https-url>] [--post-session-end-webhook-url <http-or-https-url>] [--closed-lid-permission-request-decision deny|allow] [--power-request-reason <text>]",
             "Show and update the persisted default settings used by start and hook-driven runtime requests.",
             [
                 new LidGuardHelpOption("--reset <bool>", "When true, start from headless runtime defaults before applying the other supplied options."),
@@ -32,12 +32,13 @@ internal static class SettingsHelpContent
                 new LidGuardHelpOption("--post-stop-suspend-sound-volume-override-percent off|<1-100>", "Disable the volume override or temporarily set the default output device master volume while the post-stop suspend sound plays, then restore the previous volume and mute state."),
                 new LidGuardHelpOption("--suspend-history-count off|<count>", "Disable suspend history recording or retain the most recent suspend request entries. Minimum enabled value is 1."),
                 new LidGuardHelpOption("--pre-suspend-webhook-url <http-or-https-url>", "Set the absolute HTTP or HTTPS webhook called before suspend."),
+                new LidGuardHelpOption("--post-session-end-webhook-url <http-or-https-url>", "Set the absolute HTTP or HTTPS webhook called when a provider reports a normal session end and no suspend is scheduled from that stop."),
                 new LidGuardHelpOption("--closed-lid-permission-request-decision deny|allow", "Choose how closed-lid PermissionRequest hooks respond when the runtime reports the lid is closed."),
                 new LidGuardHelpOption("--power-request-reason <text>", "Set the power request reason text shown to Windows.")
             ],
             [
                 "Running settings with no options enters interactive edit mode.",
-                "Use remove-pre-suspend-webhook to clear a configured webhook URL instead of passing off or an empty value."
+                "Use remove-pre-suspend-webhook or remove-post-session-end-webhook to clear a configured webhook URL instead of passing off or an empty value."
             ]);
     }
 }

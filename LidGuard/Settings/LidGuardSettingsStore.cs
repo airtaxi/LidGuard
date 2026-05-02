@@ -96,6 +96,7 @@ internal static class LidGuardSettingsStore
             PostStopSuspendSoundVolumeOverridePercent = normalizedSettings.PostStopSuspendSoundVolumeOverridePercent,
             SuspendHistoryEntryCount = normalizedSettings.SuspendHistoryEntryCount,
             PreSuspendWebhookUrl = normalizedSettings.PreSuspendWebhookUrl,
+            PostSessionEndWebhookUrl = normalizedSettings.PostSessionEndWebhookUrl,
             ClosedLidPermissionRequestDecision = normalizedSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = normalizedSettings.WatchParentProcess,
             SessionTimeoutMinutes = normalizedSettings.SessionTimeoutMinutes,

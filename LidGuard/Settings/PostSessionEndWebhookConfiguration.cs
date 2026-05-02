@@ -2,12 +2,12 @@ using LidGuardLib.Commons.Settings;
 
 namespace LidGuard.Settings;
 
-internal static class PreSuspendWebhookConfiguration
+internal static class PostSessionEndWebhookConfiguration
 {
-    public static string GetDisplayValue(string preSuspendWebhookUrl)
-        => WebhookUrlConfiguration.GetDisplayValue(preSuspendWebhookUrl);
+    public static string GetDisplayValue(string postSessionEndWebhookUrl)
+        => WebhookUrlConfiguration.GetDisplayValue(postSessionEndWebhookUrl);
 
-    public static LidGuardSettings WithPreSuspendWebhookUrl(LidGuardSettings settings, string preSuspendWebhookUrl)
+    public static LidGuardSettings WithPostSessionEndWebhookUrl(LidGuardSettings settings, string postSessionEndWebhookUrl)
     {
         var normalizedInputSettings = LidGuardSettings.Normalize(settings);
         return new LidGuardSettings
@@ -19,8 +19,8 @@ internal static class PreSuspendWebhookConfiguration
             PostStopSuspendSound = normalizedInputSettings.PostStopSuspendSound,
             PostStopSuspendSoundVolumeOverridePercent = normalizedInputSettings.PostStopSuspendSoundVolumeOverridePercent,
             SuspendHistoryEntryCount = normalizedInputSettings.SuspendHistoryEntryCount,
-            PreSuspendWebhookUrl = preSuspendWebhookUrl,
-            PostSessionEndWebhookUrl = normalizedInputSettings.PostSessionEndWebhookUrl,
+            PreSuspendWebhookUrl = normalizedInputSettings.PreSuspendWebhookUrl,
+            PostSessionEndWebhookUrl = postSessionEndWebhookUrl,
             ClosedLidPermissionRequestDecision = normalizedInputSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = normalizedInputSettings.WatchParentProcess,
             SessionTimeoutMinutes = normalizedInputSettings.SessionTimeoutMinutes,
@@ -31,10 +31,10 @@ internal static class PreSuspendWebhookConfiguration
         };
     }
 
-    public static bool TryNormalizeConfiguredValue(string preSuspendWebhookUrl, out string normalizedPreSuspendWebhookUrl, out string message)
+    public static bool TryNormalizeConfiguredValue(string postSessionEndWebhookUrl, out string normalizedPostSessionEndWebhookUrl, out string message)
         => WebhookUrlConfiguration.TryNormalizeConfiguredValue(
-            preSuspendWebhookUrl,
-            "pre-suspend",
-            out normalizedPreSuspendWebhookUrl,
+            postSessionEndWebhookUrl,
+            "post-session-end",
+            out normalizedPostSessionEndWebhookUrl,
             out message);
 }

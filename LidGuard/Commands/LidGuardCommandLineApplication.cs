@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Runtime.Versioning;
 using LidGuard.Hooks;
 using LidGuard.Ipc;
@@ -53,6 +53,7 @@ internal static class LidGuardCommandLineApplication
             LidGuardPipeCommands.Start => await SendStartAsync(options),
             LidGuardPipeCommands.Stop => await SendStopAsync(options),
             LidGuardPipeCommands.RemovePreSuspendWebhook => await LidGuardSettingsCommand.SendRemovePreSuspendWebhookAsync(options, runtimePlatform),
+            LidGuardPipeCommands.RemovePostSessionEndWebhook => await LidGuardSettingsCommand.SendRemovePostSessionEndWebhookAsync(options, runtimePlatform),
             LidGuardPipeCommands.RemoveSession => await SendRemoveSessionAsync(options),
             LidGuardPipeCommands.Status => await SendStatusAsync(),
             LidGuardPipeCommands.CleanupOrphans => await SendCleanupOrphansAsync(),

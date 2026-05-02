@@ -73,13 +73,27 @@ internal static class LidGuardNotificationApiEndpoints
             }
 
             var webhookRequest = await ReadJsonAsync(request, LidGuardNotificationsJsonSerializerContext.Default.LidGuardWebhookRequest, cancellationToken);
-            if (!TryValidateWebhook(webhookRequest, out var reason, out var softLockedSessionCount, out var errorMessage))
+            if (!TryValidateWebhook(webhookRequest, out var eventType, out var reason, out var softLockedSessionCount, out var errorMessage))
             {
                 await WriteTextAsync(response, errorMessage, StatusCodes.Status400BadRequest, cancellationToken);
                 return;
             }
 
-            await webhookEventStore.InsertAsync(reason, softLockedSessionCount, cancellationToken);
+            await webhookEventStore.InsertAsync(
+                eventType,
+                reason,
+                softLockedSessionCount,
+                webhookRequest?.Provider?.Trim(),
+                webhookRequest?.ProviderName?.Trim(),
+                webhookRequest?.SessionIdentifier?.Trim(),
+                webhookRequest?.StartedAtUtc,
+                webhookRequest?.LastActivityAtUtc,
+                webhookRequest?.EndedAtUtc,
+                webhookRequest?.EndReason?.Trim(),
+                webhookRequest?.ActiveSessionCount,
+                webhookRequest?.WorkingDirectory?.Trim(),
+                webhookRequest?.TranscriptPath?.Trim(),
+                cancellationToken);
             processingSignal.Signal();
             response.StatusCode = StatusCodes.Status202Accepted;
         });
@@ -142,22 +156,54 @@ internal static class LidGuardNotificationApiEndpoints
 
     private static bool TryValidateWebhook(
         LidGuardWebhookRequest? request,
+        out string eventType,
         out string reason,
         out int? softLockedSessionCount,
         out string errorMessage)
     {
+        eventType = request?.EventType?.Trim() ?? LidGuardWebhookEventTypes.PreSuspend;
         reason = request?.Reason?.Trim() ?? string.Empty;
         softLockedSessionCount = request?.SoftLockedSessionCount;
 
-        if (!LidGuardWebhookReasons.IsRecognized(reason))
+        if (!LidGuardWebhookEventTypes.IsRecognized(eventType))
         {
-            errorMessage = "reason must be Completed, SoftLocked, or EmergencyHibernation.";
+            errorMessage = "eventType must be PreSuspend or PostSessionEnd.";
             return false;
         }
 
         if (softLockedSessionCount.HasValue && softLockedSessionCount.Value < 0)
         {
             errorMessage = "softLockedSessionCount must be zero or greater when supplied.";
+            return false;
+        }
+
+        if (eventType.Equals(LidGuardWebhookEventTypes.PreSuspend, StringComparison.Ordinal))
+        {
+            if (LidGuardWebhookReasons.IsRecognizedPreSuspendReason(reason))
+            {
+                errorMessage = string.Empty;
+                return true;
+            }
+
+            errorMessage = "reason must be Completed, SoftLocked, or EmergencyHibernation for PreSuspend events.";
+            return false;
+        }
+
+        if (!LidGuardWebhookReasons.IsRecognizedPostSessionEndReason(reason))
+        {
+            errorMessage = "reason must be SessionEnded for PostSessionEnd events.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request?.Provider))
+        {
+            errorMessage = "provider is required for PostSessionEnd events.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request?.SessionIdentifier))
+        {
+            errorMessage = "sessionIdentifier is required for PostSessionEnd events.";
             return false;
         }
 

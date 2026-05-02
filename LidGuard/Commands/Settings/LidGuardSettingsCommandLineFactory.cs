@@ -72,6 +72,7 @@ internal static class LidGuardSettingsCommandLineFactory
         var postStopSuspendSound = baseSettings.PostStopSuspendSound;
         if (CommandOptionReader.TryGetOption(options, out var postStopSuspendSoundText, "post-stop-suspend-sound")) postStopSuspendSound = postStopSuspendSoundText;
         if (!LidGuardSettingsValueParser.TryParsePreSuspendWebhookUrlOption(options, baseSettings.PreSuspendWebhookUrl, out var preSuspendWebhookUrl, out message)) return false;
+        if (!LidGuardSettingsValueParser.TryParsePostSessionEndWebhookUrlOption(options, baseSettings.PostSessionEndWebhookUrl, out var postSessionEndWebhookUrl, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParseClosedLidPermissionRequestDecisionOption(options, baseSettings.ClosedLidPermissionRequestDecision, out var closedLidPermissionRequestDecision, out message)) return false;
 
         var reason = CommandOptionReader.GetOption(options, "power-request-reason", "reason");
@@ -93,6 +94,7 @@ internal static class LidGuardSettingsCommandLineFactory
             PostStopSuspendSoundVolumeOverridePercent = postStopSuspendSoundVolumeOverridePercent,
             SuspendHistoryEntryCount = suspendHistoryEntryCount,
             PreSuspendWebhookUrl = preSuspendWebhookUrl,
+            PostSessionEndWebhookUrl = postSessionEndWebhookUrl,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess,
             SessionTimeoutMinutes = sessionTimeoutMinutes,

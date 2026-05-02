@@ -14,6 +14,7 @@ internal static class LidGuardHelpCommandCatalog
             HelpHelpContent.Create(documentContext),
             SettingsHelpContent.Create(documentContext),
             RemovePreSuspendWebhookHelpContent.Create(documentContext),
+            RemovePostSessionEndWebhookHelpContent.Create(documentContext),
             PreviewSystemSoundHelpContent.Create(documentContext),
             PreviewCurrentSoundHelpContent.Create(documentContext),
             CurrentLidStateHelpContent.Create(documentContext),

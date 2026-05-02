@@ -226,7 +226,9 @@ internal sealed class LidGuardRuntimeCoordinator
             {
                 SessionIdentifier = request.SessionIdentifier,
                 Provider = request.Provider,
-                ProviderName = request.ProviderName
+                ProviderName = request.ProviderName,
+                IsProviderSessionEnd = request.IsProviderSessionEnd,
+                SessionEndReason = request.SessionEndReason
             };
             return StopInsideGate(stopRequest, $"Stopped {new LidGuardSessionKey(stopRequest.Provider, stopRequest.SessionIdentifier, stopRequest.ProviderName)}.");
         }
@@ -334,7 +336,8 @@ internal sealed class LidGuardRuntimeCoordinator
             snapshot,
             eventName,
             successMessage,
-            _sessionRegistry.ActiveSessionCount);
+            _sessionRegistry.ActiveSessionCount,
+            out _);
         LidGuardRuntimeLogWriter.AppendSessionLog(eventName, request, successResponseWithSuspendPlan, snapshot);
         return successResponseWithSuspendPlan;
     }
@@ -911,6 +914,7 @@ internal sealed class LidGuardRuntimeCoordinator
             ReconfigureSessionTimeoutMonitorInsideGate();
             var response = CreateSuccessResponse(successMessage);
             LidGuardRuntimeLogWriter.AppendSessionLog(eventName, request, response, stoppedSnapshot, commandName);
+            QueuePostSessionEndWebhookIfRequired(request, stoppedSnapshot, eventName, commandName, _sessionRegistry.ActiveSessionCount);
             return response;
         }
 
@@ -929,10 +933,12 @@ internal sealed class LidGuardRuntimeCoordinator
             stoppedSnapshot,
             eventName,
             successMessage,
-            _sessionRegistry.ActiveSessionCount);
+            _sessionRegistry.ActiveSessionCount,
+            out var suspendScheduled);
         ReconfigureSessionTimeoutMonitorInsideGate();
         ReconfigureServerRuntimeCleanupInsideGate();
         LidGuardRuntimeLogWriter.AppendSessionLog(eventName, request, successResponse, stoppedSnapshot, commandName);
+        if (!suspendScheduled) QueuePostSessionEndWebhookIfRequired(request, stoppedSnapshot, eventName, commandName, _sessionRegistry.ActiveSessionCount);
         return successResponse;
     }
 
@@ -941,8 +947,10 @@ internal sealed class LidGuardRuntimeCoordinator
         LidGuardSessionSnapshot snapshot,
         string eventName,
         string successMessage,
-        int activeSessionCount)
+        int activeSessionCount,
+        out bool suspendScheduled)
     {
+        suspendScheduled = false;
         var closedLidPolicyApplicability = EvaluateClosedLidPolicyApplicability("suspend");
         if (!closedLidPolicyApplicability.IsApplicable)
         {
@@ -956,6 +964,7 @@ internal sealed class LidGuardRuntimeCoordinator
         var scheduledResponse = CreateSuccessResponse(
             $"Scheduled {suspendMode} {DescribePostStopSuspendDelay(postStopSuspendDelaySeconds)} {DescribeSuspendReason(activeSessionCount)}");
         LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-suspend-scheduled", pendingSuspendContext, scheduledResponse, snapshot);
+        suspendScheduled = true;
         CancelPendingSuspend();
         var pendingSuspendCancellationTokenSource = new CancellationTokenSource();
         _pendingSuspendCancellationTokenSource = pendingSuspendCancellationTokenSource;
@@ -1239,6 +1248,71 @@ internal sealed class LidGuardRuntimeCoordinator
         {
             _gate.Release();
         }
+    }
+
+    private void QueuePostSessionEndWebhookIfRequired(
+        LidGuardSessionStopRequest request,
+        LidGuardSessionSnapshot snapshot,
+        string eventName,
+        string commandName,
+        int activeSessionCount)
+    {
+        if (!request.IsProviderSessionEnd) return;
+        if (string.IsNullOrWhiteSpace(_settings.PostSessionEndWebhookUrl)) return;
+
+        var postSessionEndWebhookUrl = _settings.PostSessionEndWebhookUrl;
+        var webhookRequest = new LidGuardWebhookRequest
+        {
+            EventType = LidGuardWebhookEventTypes.PostSessionEnd,
+            Reason = LidGuardWebhookReasons.SessionEnded,
+            Provider = snapshot.Provider.ToString(),
+            ProviderName = string.IsNullOrWhiteSpace(snapshot.ProviderName) ? null : snapshot.ProviderName,
+            SessionIdentifier = snapshot.SessionIdentifier,
+            StartedAtUtc = snapshot.StartedAt,
+            LastActivityAtUtc = snapshot.LastActivityAt,
+            EndedAtUtc = DateTimeOffset.UtcNow,
+            EndReason = string.IsNullOrWhiteSpace(request.SessionEndReason) ? commandName : request.SessionEndReason,
+            ActiveSessionCount = activeSessionCount,
+            WorkingDirectory = string.IsNullOrWhiteSpace(snapshot.WorkingDirectory) ? null : snapshot.WorkingDirectory,
+            TranscriptPath = string.IsNullOrWhiteSpace(snapshot.TranscriptPath) ? null : snapshot.TranscriptPath
+        };
+
+        _ = SendPostSessionEndWebhookAsync(
+            postSessionEndWebhookUrl,
+            webhookRequest,
+            request,
+            snapshot,
+            eventName,
+            commandName,
+            activeSessionCount);
+    }
+
+    private static async Task SendPostSessionEndWebhookAsync(
+        string postSessionEndWebhookUrl,
+        LidGuardWebhookRequest webhookRequest,
+        LidGuardSessionStopRequest request,
+        LidGuardSessionSnapshot snapshot,
+        string eventName,
+        string commandName,
+        int activeSessionCount)
+    {
+        LidGuardOperationResult sendResult;
+        try
+        {
+            sendResult = await SuspendWebhookSender.SendPostSessionEndAsync(
+                postSessionEndWebhookUrl,
+                webhookRequest,
+                CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            sendResult = LidGuardOperationResult.Failure($"Failed to send the post-session-end webhook: {exception.Message}");
+        }
+
+        if (sendResult.Succeeded) return;
+
+        var response = LidGuardPipeResponse.Failure(sendResult.Message, activeSessionCount);
+        LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-post-session-end-webhook-failed", request, response, snapshot, commandName);
     }
 
     private async Task HandleEmergencyHibernationThresholdReachedAsync(

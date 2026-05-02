@@ -120,6 +120,8 @@ internal static class CodexHookCommand
             Command = commandName,
             Provider = AgentProvider.Codex,
             SessionIdentifier = GetSessionIdentifier(hookInput),
+            IsProviderSessionEnd = commandName == LidGuardPipeCommands.Stop,
+            SessionEndReason = commandName == LidGuardPipeCommands.Stop ? CreateSessionEndReason(hookInput) : string.Empty,
             WorkingDirectory = GetWorkingDirectory(hookInput),
             TranscriptPath = hookInput.TranscriptPath,
             HasSettings = hasSettings,
@@ -142,6 +144,9 @@ internal static class CodexHookCommand
     }
 
     private static string GetWorkingDirectory(CodexHookInput hookInput) => string.IsNullOrWhiteSpace(hookInput.WorkingDirectory) ? Environment.CurrentDirectory : hookInput.WorkingDirectory;
+
+    private static string CreateSessionEndReason(CodexHookInput hookInput)
+        => string.IsNullOrWhiteSpace(hookInput.HookEventName) ? "codex-hook-stop" : hookInput.HookEventName;
 
     private static string NormalizeWorkingDirectory(string workingDirectory)
     {

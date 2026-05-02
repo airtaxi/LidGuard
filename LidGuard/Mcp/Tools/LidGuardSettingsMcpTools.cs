@@ -100,6 +100,8 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         string suspendHistoryEntryCount = null,
         [Description("Set the webhook URL LidGuard POSTs before requesting suspend. Pass an empty string to disable it. Omit to keep the current value.")]
         string preSuspendWebhookUrl = null,
+        [Description("Set the webhook URL LidGuard POSTs when a provider reports a normal session end and no suspend is scheduled from that stop. Pass an empty string to disable it. Omit to keep the current value.")]
+        string postSessionEndWebhookUrl = null,
         [Description("Set the PermissionRequest decision returned while the lid is closed. Omit to keep the current value.")]
         ClosedLidPermissionRequestDecision? closedLidPermissionRequestDecision = null,
         [Description("Set the power request reason string. Pass an empty string to restore LidGuard's default reason text. Omit to keep the current value.")]
@@ -165,6 +167,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
             HasSuspendHistoryEntryCount = hasSuspendHistoryEntryCount,
             SuspendHistoryEntryCount = parsedSuspendHistoryEntryCount,
             PreSuspendWebhookUrl = preSuspendWebhookUrl,
+            PostSessionEndWebhookUrl = postSessionEndWebhookUrl,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             PowerRequestReason = powerRequestReason
         };

@@ -66,6 +66,8 @@ internal static class LidGuardSettingsUpdateCommand
             Console.WriteLine($"To change Reason, run: {LidGuardCommandConsole.GetCommandDisplayName()} settings --power-request-reason <text>");
             Console.WriteLine($"To change Pre-suspend webhook URL, run: {LidGuardCommandConsole.GetCommandDisplayName()} settings --pre-suspend-webhook-url <http-or-https-url>");
             Console.WriteLine($"To remove Pre-suspend webhook URL, run: {LidGuardCommandConsole.GetCommandDisplayName()} {LidGuardPipeCommands.RemovePreSuspendWebhook}");
+            Console.WriteLine($"To change Post-session-end webhook URL, run: {LidGuardCommandConsole.GetCommandDisplayName()} settings --post-session-end-webhook-url <http-or-https-url>");
+            Console.WriteLine($"To remove Post-session-end webhook URL, run: {LidGuardCommandConsole.GetCommandDisplayName()} {LidGuardPipeCommands.RemovePostSessionEndWebhook}");
         }
 
         if (response.Succeeded)

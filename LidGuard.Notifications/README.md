@@ -4,7 +4,7 @@
 
 ## Overview
 
-`LidGuard.Notifications` is a small ASP.NET Core Razor Pages server that receives LidGuard pre-suspend webhooks and forwards them to subscribed browsers through Web Push. It stores browser subscriptions, webhook events, and delivery results in SQLite.
+`LidGuard.Notifications` is a small ASP.NET Core Razor Pages server that receives LidGuard pre-suspend and post-session-end webhooks and forwards them to subscribed browsers through Web Push. It stores browser subscriptions, webhook events, and delivery results in SQLite.
 
 The server is intentionally not a pure WebAssembly app. LidGuard needs an HTTP endpoint for incoming webhooks, and Web Push requires a private VAPID key that must stay on the server.
 
@@ -89,6 +89,7 @@ Configure LidGuard with the server URL and webhook secret:
 
 ```powershell
 lidguard settings --pre-suspend-webhook-url https://host/api/webhooks/lidguard/{webhookSecret}
+lidguard settings --post-session-end-webhook-url https://host/api/webhooks/lidguard/{webhookSecret}
 ```
 
 Replace `{webhookSecret}` with the configured `WebhookSecret`. The webhook secret is for LidGuard only; it must not be the same value as the browser login `AccessToken`.
@@ -99,9 +100,10 @@ Use `curl` or PowerShell after at least one browser is subscribed:
 
 ```powershell
 curl.exe -X POST "https://host/api/webhooks/lidguard/{webhookSecret}" -H "Content-Type: application/json" -d "{\"reason\":\"SoftLocked\",\"softLockedSessionCount\":2}"
+curl.exe -X POST "https://host/api/webhooks/lidguard/{webhookSecret}" -H "Content-Type: application/json" -d "{\"eventType\":\"PostSessionEnd\",\"reason\":\"SessionEnded\",\"provider\":\"Codex\",\"sessionIdentifier\":\"abc123\",\"startedAtUtc\":\"2026-05-02T00:00:00Z\",\"lastActivityAtUtc\":\"2026-05-02T00:03:00Z\",\"endedAtUtc\":\"2026-05-02T00:04:00Z\",\"endReason\":\"SessionEnd\",\"activeSessionCount\":0}"
 ```
 
-The webhook endpoint records the event and immediately returns `202 Accepted`. The background service then sends notifications and records delivery results.
+The webhook endpoint records the event and immediately returns `202 Accepted`. Legacy pre-suspend payloads without `eventType` are still accepted as `PreSuspend`. The background service then sends notifications and records delivery results.
 
 ## Operations Checklist
 

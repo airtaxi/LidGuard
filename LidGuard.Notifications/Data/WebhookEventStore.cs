@@ -5,7 +5,21 @@ namespace LidGuard.Notifications.Data;
 
 internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactory)
 {
-    public async Task<long> InsertAsync(string reason, int? softLockedSessionCount, CancellationToken cancellationToken)
+    public async Task<long> InsertAsync(
+        string eventType,
+        string reason,
+        int? softLockedSessionCount,
+        string? provider,
+        string? providerName,
+        string? sessionIdentifier,
+        DateTimeOffset? startedAtUtc,
+        DateTimeOffset? lastActivityAtUtc,
+        DateTimeOffset? endedAtUtc,
+        string? endReason,
+        int? activeSessionCount,
+        string? workingDirectory,
+        string? transcriptPath,
+        CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
@@ -13,16 +27,54 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         command.CommandText =
             """
             INSERT INTO WebhookEvents (
+                EventType,
                 Reason,
                 SoftLockedSessionCount,
+                Provider,
+                ProviderName,
+                SessionIdentifier,
+                StartedAtUtc,
+                LastActivityAtUtc,
+                EndedAtUtc,
+                EndReason,
+                ActiveSessionCount,
+                WorkingDirectory,
+                TranscriptPath,
                 ReceivedAtUtc,
                 Status
             )
-            VALUES ($reason, $softLockedSessionCount, $receivedAtUtc, $status)
+            VALUES (
+                $eventType,
+                $reason,
+                $softLockedSessionCount,
+                $provider,
+                $providerName,
+                $sessionIdentifier,
+                $startedAtUtc,
+                $lastActivityAtUtc,
+                $endedAtUtc,
+                $endReason,
+                $activeSessionCount,
+                $workingDirectory,
+                $transcriptPath,
+                $receivedAtUtc,
+                $status
+            )
             RETURNING Id;
             """;
+        command.Parameters.AddWithValue("$eventType", eventType);
         command.Parameters.AddWithValue("$reason", reason);
         command.Parameters.AddWithValue("$softLockedSessionCount", ToDatabaseValue(softLockedSessionCount));
+        command.Parameters.AddWithValue("$provider", ToDatabaseValue(provider));
+        command.Parameters.AddWithValue("$providerName", ToDatabaseValue(providerName));
+        command.Parameters.AddWithValue("$sessionIdentifier", ToDatabaseValue(sessionIdentifier));
+        command.Parameters.AddWithValue("$startedAtUtc", ToDatabaseValue(startedAtUtc));
+        command.Parameters.AddWithValue("$lastActivityAtUtc", ToDatabaseValue(lastActivityAtUtc));
+        command.Parameters.AddWithValue("$endedAtUtc", ToDatabaseValue(endedAtUtc));
+        command.Parameters.AddWithValue("$endReason", ToDatabaseValue(endReason));
+        command.Parameters.AddWithValue("$activeSessionCount", ToDatabaseValue(activeSessionCount));
+        command.Parameters.AddWithValue("$workingDirectory", ToDatabaseValue(workingDirectory));
+        command.Parameters.AddWithValue("$transcriptPath", ToDatabaseValue(transcriptPath));
         command.Parameters.AddWithValue("$receivedAtUtc", now);
         command.Parameters.AddWithValue("$status", WebhookEventStatuses.Pending);
         var result = await command.ExecuteScalarAsync(cancellationToken);
@@ -40,7 +92,23 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
             selectCommand.Transaction = transaction;
             selectCommand.CommandText =
                 """
-                SELECT Id, Reason, SoftLockedSessionCount, ReceivedAtUtc, AttemptCount
+                SELECT
+                    Id,
+                    EventType,
+                    Reason,
+                    SoftLockedSessionCount,
+                    Provider,
+                    ProviderName,
+                    SessionIdentifier,
+                    StartedAtUtc,
+                    LastActivityAtUtc,
+                    EndedAtUtc,
+                    EndReason,
+                    ActiveSessionCount,
+                    WorkingDirectory,
+                    TranscriptPath,
+                    ReceivedAtUtc,
+                    AttemptCount
                 FROM WebhookEvents
                 WHERE Status = $pendingStatus
                     OR (Status = $processingStatus AND ReceivedAtUtc <= $staleProcessingThreshold)
@@ -57,9 +125,20 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                 events.Add(new PendingWebhookEvent(
                     reader.GetInt64(0),
                     reader.GetString(1),
-                    reader.IsDBNull(2) ? null : reader.GetInt32(2),
-                    DateTimeOffset.Parse(reader.GetString(3), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                    Convert.ToInt32(reader.GetValue(4), CultureInfo.InvariantCulture) + 1));
+                    reader.GetString(2),
+                    reader.IsDBNull(3) ? null : reader.GetInt32(3),
+                    reader.IsDBNull(4) ? null : reader.GetString(4),
+                    reader.IsDBNull(5) ? null : reader.GetString(5),
+                    reader.IsDBNull(6) ? null : reader.GetString(6),
+                    reader.IsDBNull(7) ? null : DateTimeOffset.Parse(reader.GetString(7), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                    reader.IsDBNull(8) ? null : DateTimeOffset.Parse(reader.GetString(8), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                    reader.IsDBNull(9) ? null : DateTimeOffset.Parse(reader.GetString(9), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                    reader.IsDBNull(10) ? null : reader.GetString(10),
+                    reader.IsDBNull(11) ? null : reader.GetInt32(11),
+                    reader.IsDBNull(12) ? null : reader.GetString(12),
+                    reader.IsDBNull(13) ? null : reader.GetString(13),
+                    DateTimeOffset.Parse(reader.GetString(14), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                    Convert.ToInt32(reader.GetValue(15), CultureInfo.InvariantCulture) + 1));
             }
         }
 
@@ -132,8 +211,19 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
             """
             SELECT
                 events.Id,
+                events.EventType,
                 events.Reason,
                 events.SoftLockedSessionCount,
+                events.Provider,
+                events.ProviderName,
+                events.SessionIdentifier,
+                events.StartedAtUtc,
+                events.LastActivityAtUtc,
+                events.EndedAtUtc,
+                events.EndReason,
+                events.ActiveSessionCount,
+                events.WorkingDirectory,
+                events.TranscriptPath,
                 events.ReceivedAtUtc,
                 events.ProcessedAtUtc,
                 events.Status,
@@ -159,20 +249,37 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
             events.Add(new WebhookEventSummary(
                 reader.GetInt64(0),
                 reader.GetString(1),
-                reader.IsDBNull(2) ? null : reader.GetInt32(2),
-                DateTimeOffset.Parse(reader.GetString(3), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                reader.IsDBNull(4) ? null : DateTimeOffset.Parse(reader.GetString(4), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                reader.GetString(5),
-                Convert.ToInt32(reader.GetValue(6), CultureInfo.InvariantCulture),
-                Convert.ToInt32(reader.GetValue(7), CultureInfo.InvariantCulture),
-                Convert.ToInt32(reader.GetValue(8), CultureInfo.InvariantCulture),
-                Convert.ToInt32(reader.GetValue(9), CultureInfo.InvariantCulture),
-                Convert.ToInt32(reader.GetValue(10), CultureInfo.InvariantCulture),
-                reader.IsDBNull(11) ? null : reader.GetString(11)));
+                reader.GetString(2),
+                reader.IsDBNull(3) ? null : reader.GetInt32(3),
+                reader.IsDBNull(4) ? null : reader.GetString(4),
+                reader.IsDBNull(5) ? null : reader.GetString(5),
+                reader.IsDBNull(6) ? null : reader.GetString(6),
+                reader.IsDBNull(7) ? null : DateTimeOffset.Parse(reader.GetString(7), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                reader.IsDBNull(8) ? null : DateTimeOffset.Parse(reader.GetString(8), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                reader.IsDBNull(9) ? null : DateTimeOffset.Parse(reader.GetString(9), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                reader.IsDBNull(10) ? null : reader.GetString(10),
+                reader.IsDBNull(11) ? null : reader.GetInt32(11),
+                reader.IsDBNull(12) ? null : reader.GetString(12),
+                reader.IsDBNull(13) ? null : reader.GetString(13),
+                DateTimeOffset.Parse(reader.GetString(14), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                reader.IsDBNull(15) ? null : DateTimeOffset.Parse(reader.GetString(15), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                reader.GetString(16),
+                Convert.ToInt32(reader.GetValue(17), CultureInfo.InvariantCulture),
+                Convert.ToInt32(reader.GetValue(18), CultureInfo.InvariantCulture),
+                Convert.ToInt32(reader.GetValue(19), CultureInfo.InvariantCulture),
+                Convert.ToInt32(reader.GetValue(20), CultureInfo.InvariantCulture),
+                Convert.ToInt32(reader.GetValue(21), CultureInfo.InvariantCulture),
+                reader.IsDBNull(22) ? null : reader.GetString(22)));
         }
 
         return events;
     }
 
     private static object ToDatabaseValue(int? value) => value.HasValue ? value.Value : DBNull.Value;
+
+    private static object ToDatabaseValue(DateTimeOffset? value)
+        => value.HasValue ? value.Value.ToString("O", CultureInfo.InvariantCulture) : DBNull.Value;
+
+    private static object ToDatabaseValue(string? value)
+        => string.IsNullOrWhiteSpace(value) ? DBNull.Value : value;
 }

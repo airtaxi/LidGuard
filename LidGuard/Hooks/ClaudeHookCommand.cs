@@ -58,7 +58,7 @@ internal static class ClaudeHookCommand
         if (hookEventName.Equals(ClaudeHookEventNames.UserPromptSubmit, StringComparison.Ordinal)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Start, hookInput);
         if (hookEventName.Equals(ClaudeHookEventNames.Elicitation, StringComparison.Ordinal)) return await WriteClosedLidElicitationDecisionAsync();
         if (hookEventName.Equals(ClaudeHookEventNames.PermissionRequest, StringComparison.Ordinal)) return await WriteClosedLidPermissionRequestDecisionAsync();
-        if (ClaudeHookEventNames.IsStopTrigger(hookEventName)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookInput);
+        if (ClaudeHookEventNames.IsStopTrigger(hookEventName)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookInput, IsProviderSessionEnd(hookInput));
 
         return 0;
     }
@@ -133,7 +133,10 @@ internal static class ClaudeHookCommand
         return ClaudeClosedLidElicitationOutput.Write();
     }
 
-    private static async Task<int> SendRuntimeRequestAsync(string commandName, ClaudeHookInput hookInput)
+    private static async Task<int> SendRuntimeRequestAsync(
+        string commandName,
+        ClaudeHookInput hookInput,
+        bool isProviderSessionEnd = false)
     {
         // Claude Code hook handling accepts exit 0 + empty stdout as a no-op success,
         // while structured JSON is only needed when a hook intentionally makes a decision.
@@ -155,6 +158,8 @@ internal static class ClaudeHookCommand
             Command = commandName,
             Provider = AgentProvider.Claude,
             SessionIdentifier = GetSessionIdentifier(hookInput),
+            IsProviderSessionEnd = isProviderSessionEnd,
+            SessionEndReason = isProviderSessionEnd ? CreateSessionEndReason(hookInput) : string.Empty,
             WorkingDirectory = GetWorkingDirectory(hookInput),
             TranscriptPath = hookInput.TranscriptPath,
             HasSettings = hasSettings,
@@ -214,6 +219,22 @@ internal static class ClaudeHookCommand
     }
 
     private static string GetWorkingDirectory(ClaudeHookInput hookInput) => string.IsNullOrWhiteSpace(hookInput.WorkingDirectory) ? Environment.CurrentDirectory : hookInput.WorkingDirectory;
+
+    private static bool IsProviderSessionEnd(ClaudeHookInput hookInput)
+    {
+        if (hookInput.IsInterrupt) return false;
+
+        var hookEventName = hookInput.HookEventName.Trim();
+        return hookEventName.Equals(ClaudeHookEventNames.Stop, StringComparison.Ordinal)
+            || hookEventName.Equals(ClaudeHookEventNames.SessionEnd, StringComparison.Ordinal);
+    }
+
+    private static string CreateSessionEndReason(ClaudeHookInput hookInput)
+    {
+        if (string.IsNullOrWhiteSpace(hookInput.Reason)) return hookInput.HookEventName;
+        if (string.IsNullOrWhiteSpace(hookInput.HookEventName)) return hookInput.Reason;
+        return $"{hookInput.HookEventName}:{hookInput.Reason}";
+    }
 
     private static string NormalizeWorkingDirectory(string workingDirectory)
     {

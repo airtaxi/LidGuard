@@ -54,6 +54,7 @@ internal static class PostStopSuspendSoundConfiguration
             PostStopSuspendSoundVolumeOverridePercent = normalizedInputSettings.PostStopSuspendSoundVolumeOverridePercent,
             SuspendHistoryEntryCount = normalizedInputSettings.SuspendHistoryEntryCount,
             PreSuspendWebhookUrl = normalizedInputSettings.PreSuspendWebhookUrl,
+            PostSessionEndWebhookUrl = normalizedInputSettings.PostSessionEndWebhookUrl,
             ClosedLidPermissionRequestDecision = normalizedInputSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = normalizedInputSettings.WatchParentProcess,
             SessionTimeoutMinutes = normalizedInputSettings.SessionTimeoutMinutes,

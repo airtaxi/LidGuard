@@ -47,6 +47,8 @@ public sealed class LidGuardSettingsPatch
 
     public string PreSuspendWebhookUrl { get; init; }
 
+    public string PostSessionEndWebhookUrl { get; init; }
+
     public ClosedLidPermissionRequestDecision? ClosedLidPermissionRequestDecision { get; init; }
 
     public string PowerRequestReason { get; init; }

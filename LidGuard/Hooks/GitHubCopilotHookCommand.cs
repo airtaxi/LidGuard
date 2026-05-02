@@ -40,8 +40,8 @@ internal static class GitHubCopilotHookCommand
         if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.PermissionRequest, StringComparison.Ordinal)) return await WriteClosedLidPermissionRequestDecisionAsync(hookInput);
         if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.PreToolUse, StringComparison.Ordinal)) return await HandlePreToolUseAsync(configuredHookEventName, hookInput);
         if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.PostToolUse, StringComparison.Ordinal)) return await ReportActivityAsync(configuredHookEventName, hookInput, configuredHookEventName);
-        if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.AgentStop, StringComparison.Ordinal)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, configuredHookEventName, hookInput);
-        if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.SessionEnd, StringComparison.Ordinal)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, configuredHookEventName, hookInput);
+        if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.AgentStop, StringComparison.Ordinal)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, configuredHookEventName, hookInput, true);
+        if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.SessionEnd, StringComparison.Ordinal)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, configuredHookEventName, hookInput, true);
         return 0;
     }
 
@@ -103,7 +103,11 @@ internal static class GitHubCopilotHookCommand
         catch { return workingDirectory; }
     }
 
-    private static async Task<int> SendRuntimeRequestAsync(string commandName, string configuredHookEventName, GitHubCopilotHookInput hookInput)
+    private static async Task<int> SendRuntimeRequestAsync(
+        string commandName,
+        string configuredHookEventName,
+        GitHubCopilotHookInput hookInput,
+        bool isProviderSessionEnd = false)
     {
         var hasSettings = false;
         var settings = LidGuardSettings.Default;
@@ -124,6 +128,8 @@ internal static class GitHubCopilotHookCommand
             HasSettings = hasSettings,
             Provider = AgentProvider.GitHubCopilot,
             SessionIdentifier = GetSessionIdentifier(hookInput),
+            IsProviderSessionEnd = isProviderSessionEnd,
+            SessionEndReason = isProviderSessionEnd ? CreateSessionEndReason(configuredHookEventName, hookInput) : string.Empty,
             Settings = settings,
             TranscriptPath = hookInput.TranscriptPath,
             WorkingDirectory = GetWorkingDirectory(hookInput)
@@ -140,6 +146,15 @@ internal static class GitHubCopilotHookCommand
             response.ActiveSessionCount,
             response.Message);
         return 0;
+    }
+
+    private static string CreateSessionEndReason(string configuredHookEventName, GitHubCopilotHookInput hookInput)
+    {
+        var detailedReason = configuredHookEventName.Equals(GitHubCopilotHookEventNames.SessionEnd, StringComparison.Ordinal)
+            ? hookInput.SessionEndReason
+            : hookInput.StopReason;
+        if (string.IsNullOrWhiteSpace(detailedReason)) return configuredHookEventName;
+        return $"{configuredHookEventName}:{detailedReason}";
     }
 
     private static bool TryParseConfiguredHookEventName(string[] commandLineArguments, out string configuredHookEventName)

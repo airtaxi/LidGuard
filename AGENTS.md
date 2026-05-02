@@ -43,6 +43,7 @@ The goal is to keep Windows awake while at least one tracked agent session still
 - The post-stop suspend sound remains optional: off by default, with supported SystemSounds names or a playable `.wav` path.
 - The post-stop suspend sound volume override remains optional: off by default, with an allowed master volume range of 1 through 100 percent.
 - The inactive session timeout remains user-selectable: 12 minutes by default, `off` optional, and enabled values must be at least 1 minute.
+- An optional post-session-end webhook URL remains off by default. When a provider reports a normal session end and that stop does not schedule the pre-suspend flow, LidGuard should POST a `PostSessionEnd` payload without blocking session cleanup. Abort, interrupt, manual stop/remove, watchdog, and orphan cleanup paths must not send it.
 - While keep-awake protection is applied and the laptop lid is closed with no suspend-blocking visible display monitors remaining on the desktop, an optional Emergency Hibernation thermal monitor should poll every 10 seconds and request immediate hibernation when the system temperature reaches the configured threshold.
 
 The key design rule is to treat normal idle sleep and lid-close sleep as separate problems. Power requests handle idle sleep. `LIDACTION` policy backup/change/restore handles lid-close behavior because standard sleep-prevention APIs cannot reliably block a user lid-close action.
@@ -73,7 +74,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
   - Stores default settings JSON at `%LOCALAPPDATA%\LidGuard\settings.json`.
 - `LidGuard.Notifications`
   - .NET 10 ASP.NET Core Razor Pages app targeting `net10.0`.
-  - Receives LidGuard pre-suspend webhooks and sends browser Web Push notifications to subscribed clients.
+  - Receives LidGuard pre-suspend and post-session-end webhooks and sends browser Web Push notifications to subscribed clients.
   - Stores subscriptions, webhook events, and delivery attempts in SQLite.
   - Uses server-side VAPID settings; VAPID private keys and access tokens must never be committed.
 - `LidGuard.slnx`
@@ -112,7 +113,8 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - After the last active session stops, LidGuard should request suspend after the configured post-stop delay using the configured suspend mode only when the lid is closed and the suspend eligibility visible display monitor count is `0`. A delay of `0` means immediate suspend.
 - If a post-stop suspend sound is configured, LidGuard should wait for the delay first, then play the configured sound to completion, then re-check the lid/session state before requesting suspend.
 - If a post-stop suspend sound volume override is configured, LidGuard should capture the default output device master volume and mute state immediately before playback, temporarily unmute as needed, set the configured master volume percent for playback, then restore the previous volume and mute state in the sound playback cleanup path.
-- If a pre-suspend webhook URL is configured, LidGuard should POST JSON before requesting suspend. The body must include `reason`, and soft-lock-triggered suspend must also include the soft-locked session count.
+- If a pre-suspend webhook URL is configured, LidGuard should POST JSON before requesting suspend. The body must include `eventType = PreSuspend` and `reason`, and soft-lock-triggered suspend must also include the soft-locked session count. Notification receivers must continue accepting the legacy payload shape that omits `eventType`.
+- If a post-session-end webhook URL is configured, LidGuard should POST JSON after a provider-reported normal session end only when that stop does not schedule suspend. The body must include `eventType = PostSessionEnd`, `reason = SessionEnded`, provider/session identity, UTC start/activity/end timestamps, end reason metadata, active session count, working directory, and transcript path when available.
 
 ### Emergency Hibernation Thermal Monitor
 
@@ -139,13 +141,14 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 ### Current Windows CLI Path
 
-- `LidGuard` parses `help`, `start`, `stop`, `remove-pre-suspend-webhook`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `current-lid-state`, `current-monitor-count`, `current-temperature`, `suspend-history`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `preview-current-sound`, `mcp-server`, and `provider-mcp-server`.
+- `LidGuard` parses `help`, `start`, `stop`, `remove-pre-suspend-webhook`, `remove-post-session-end-webhook`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `current-lid-state`, `current-monitor-count`, `current-temperature`, `suspend-history`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `preview-current-sound`, `mcp-server`, and `provider-mcp-server`.
 - `help` prints a categorized command overview with short descriptions, and `help <command>` prints focused detailed help for one command or recognized command alias.
 - `<command> --help` uses the same help metadata and returns before the target command validates options or performs command-specific work.
 - `start`, the `UserPromptSubmit` path in `codex-hook` and `claude-hook`, and the `userPromptSubmitted` path in `copilot-hook` load persisted default settings and send them with the start IPC request.
 - `remove-session --all` manually removes every active session currently tracked by the runtime.
 - `remove-session` manually removes active sessions by session identifier; when `--provider` is omitted, it removes every active session whose session identifier matches. When `--provider mcp` is used, `--provider-name` can narrow the removal to one MCP-backed provider; omitting `--provider-name` removes every MCP-backed session that shares that session identifier.
 - `remove-pre-suspend-webhook` clears the configured pre-suspend webhook URL and reports when no webhook is currently configured.
+- `remove-post-session-end-webhook` clears the configured post-session-end webhook URL and reports when no webhook is currently configured.
 - `current-lid-state` prints the current lid switch state using the same `GUID_LIDSWITCH_STATE_CHANGE` source LidGuard uses for closed-lid policy decisions.
 - `current-monitor-count` prints the current visible display monitor count using the same base Windows monitor visibility check LidGuard uses for closed-lid policy decisions, without the internal-display exclusion used by final suspend eligibility checks.
 - `current-temperature` prints the currently recognized system thermal-zone temperature in Celsius using the selected aggregation mode, or reports when thermal-zone data is unavailable.
@@ -157,6 +160,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `settings` exposes `--suspend-history-count off|<count>` for recent suspend history retention; `off` disables recording and enabled counts must be at least 1.
 - `settings` exposes `--session-timeout-minutes off|<minutes>` for inactive session timeout soft-locking; `off` disables timeout soft-locking and enabled values must be at least 1.
 - `settings` exposes `--server-runtime-cleanup-delay-minutes off|<minutes>` for server runtime cleanup after all active sessions are gone and pending cleanup is finished; `off` exits immediately and enabled values must be at least 1.
+- `settings` exposes `--post-session-end-webhook-url <http-or-https-url>` for normal provider session-end notifications that do not schedule suspend.
 - `preview-system-sound` and `preview-current-sound` apply the saved post-stop suspend sound volume override setting and wait until playback finishes. `preview-current-sound` plays the saved post-stop suspend sound and prints setup guidance when no sound is configured.
 - `hook-install`, `hook-status`, `hook-remove`, and `hook-events` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
 - `mcp-status`, `mcp-install`, and `mcp-remove` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
@@ -185,6 +189,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `update_settings` accepts multiple setting fields in a single request and persists them together.
 - `update_settings` exposes inactive session timeout through `sessionTimeoutMinutes`, accepting `off` or an enabled minute count of at least 1.
 - `update_settings` exposes server runtime cleanup delay through `serverRuntimeCleanupDelayMinutes`, accepting `off` for immediate exit or an enabled minute count of at least 1.
+- `update_settings` exposes post-session-end webhook URL through `postSessionEndWebhookUrl`, accepting an empty string to clear it.
 - `remove_session` manually removes active sessions by session identifier and optionally narrows the removal to one provider and one MCP provider name.
 - `set_session_soft_lock` and `clear_session_soft_lock` are general-purpose tools that accept provider and session identifier inputs, so non-MCP providers can also use MCP-driven soft-lock control when they can supply those values.
 - `LidGuard` also hosts a separate stdio Provider MCP server through `lidguard provider-mcp-server --provider-name <name>`.
@@ -220,6 +225,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - While shared protection remains applied and the lid is closed, the Emergency Hibernation thermal monitor polls every 10 seconds and stops automatically once protection is restored or disabled.
 - Multiple stop signals for the same session should not cause repeated cleanup side effects.
 - When the active session count reaches `0`, the runtime should shut down after the configured server runtime cleanup delay once no post-stop suspend request, lid-action restore, pre-suspend webhook, post-stop sound, or equivalent cleanup work remains pending.
+- When a provider-reported normal stop removes an active session and no suspend is scheduled from that stop, the runtime sends the post-session-end webhook in the background and logs webhook failures without failing the stop.
 - Persistent pending backup state is still missing and is the next resilience priority.
 
 ### Settings Defaults
@@ -236,6 +242,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Inactive session timeout: 12 minutes by default, accepts `off` or an enabled minute count of at least 1, and has no product-level maximum.
 - Server runtime cleanup delay after all sessions are gone: 10 minutes by default, accepts `off` for immediate exit or an enabled minute count of at least 1, and has no product-level maximum.
 - Pre-suspend webhook URL: off by default.
+- Post-session-end webhook URL: off by default.
 - Emergency Hibernation on high temperature: enabled by default.
 - Emergency Hibernation temperature mode: Average by default, with Low and High optional.
 - Emergency Hibernation temperature threshold: 93 Celsius by default, clamped to 70 through 110.
@@ -346,7 +353,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `Pages`
   - Token login, browser subscription dashboard, and webhook event history.
 
-The notification server is optional and external to the core LidGuard runtime. It receives the existing pre-suspend webhook payload and must keep VAPID private keys on the server only.
+The notification server is optional and external to the core LidGuard runtime. It receives both the existing pre-suspend webhook payload and the post-session-end payload, accepts legacy pre-suspend bodies without `eventType`, and must keep VAPID private keys on the server only.
 
 ### Windows
 
@@ -412,6 +419,7 @@ The notification server is optional and external to the core LidGuard runtime. I
   - Exposes `update_settings` for suspend history retention through `suspendHistoryEntryCount`, accepting `off` or an enabled count of at least 1.
   - Exposes `update_settings` for inactive session timeout through `sessionTimeoutMinutes`, accepting `off` or an enabled minute count of at least 1.
   - Exposes `update_settings` for server runtime cleanup delay through `serverRuntimeCleanupDelayMinutes`, accepting `off` for immediate exit or an enabled minute count of at least 1.
+  - Exposes `update_settings` for post-session-end webhook URL through `postSessionEndWebhookUrl`.
   - Exposes `remove_session` for manual active-session deletion by session identifier, with optional provider and MCP provider-name filters.
   - Exposes `set_session_soft_lock` and `clear_session_soft_lock` for provider/session-targeted soft-lock control.
 - `LidGuardProviderMcpTools`
@@ -551,6 +559,7 @@ Reference:
 lidguard start --provider codex --session "<session-id>" --parent-pid 1234
 lidguard stop --provider codex --session "<session-id>"
 lidguard remove-pre-suspend-webhook
+lidguard remove-post-session-end-webhook
 lidguard remove-session --all
 lidguard remove-session --session "<session-id>"
 lidguard remove-session --session "<session-id>" --provider codex
@@ -613,6 +622,7 @@ lidguard settings --session-timeout-minutes off
 lidguard settings --server-runtime-cleanup-delay-minutes 10
 lidguard settings --server-runtime-cleanup-delay-minutes off
 lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
+lidguard settings --post-session-end-webhook-url https://example.com/lidguard-session-ended
 lidguard settings --closed-lid-permission-request-decision allow
 lidguard settings --prevent-away-mode-sleep true --prevent-display-sleep true --power-request-reason "LidGuard keeps agent sessions awake"
 lidguard status

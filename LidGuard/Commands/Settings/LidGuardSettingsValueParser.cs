@@ -29,6 +29,28 @@ internal static class LidGuardSettingsValueParser
             out message);
     }
 
+    public static bool TryParsePostSessionEndWebhookUrlOption(
+        IReadOnlyDictionary<string, string> options,
+        string defaultValue,
+        out string postSessionEndWebhookUrl,
+        out string message)
+    {
+        postSessionEndWebhookUrl = defaultValue;
+        message = string.Empty;
+        if (!CommandOptionReader.TryGetOption(options, out var postSessionEndWebhookUrlText, "post-session-end-webhook-url")) return true;
+
+        if (string.IsNullOrWhiteSpace(postSessionEndWebhookUrlText) || postSessionEndWebhookUrlText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
+        {
+            message = $"Use {LidGuardCommandConsole.GetCommandDisplayName()} {LidGuardPipeCommands.RemovePostSessionEndWebhook} to remove the post-session-end webhook URL.";
+            return false;
+        }
+
+        return PostSessionEndWebhookConfiguration.TryNormalizeConfiguredValue(
+            postSessionEndWebhookUrlText,
+            out postSessionEndWebhookUrl,
+            out message);
+    }
+
     public static bool TryParseClosedLidPermissionRequestDecisionOption(
         IReadOnlyDictionary<string, string> options,
         ClosedLidPermissionRequestDecision defaultValue,

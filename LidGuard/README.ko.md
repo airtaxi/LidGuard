@@ -68,12 +68,14 @@ lidguard settings --session-timeout-minutes off
 lidguard settings --server-runtime-cleanup-delay-minutes 10
 lidguard settings --server-runtime-cleanup-delay-minutes off
 lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
+lidguard settings --post-session-end-webhook-url https://example.com/lidguard-session-ended
 lidguard remove-pre-suspend-webhook
+lidguard remove-post-session-end-webhook
 lidguard preview-system-sound --name Asterisk
 lidguard preview-current-sound
 ```
 
-옵션 없이 `settings`를 실행하면 대화형 설정 편집을 시작합니다. 세션 타임아웃 기본값은 12분입니다. 비활성 세션 타임아웃 soft-lock을 끄려면 `--session-timeout-minutes off`를 전달하고, 마지막 활동 이후 지정한 분 수가 지나면 세션을 soft-lock 상태로 전환하려면 1 이상의 값을 전달합니다. Server runtime cleanup 지연 시간 기본값은 모든 세션이 사라지고 pending cleanup이 끝난 뒤 10분입니다. 즉시 종료하려면 `--server-runtime-cleanup-delay-minutes off`를 전달합니다. Emergency Hibernation 온도 모드 기본값은 `Average`이며 `Low`, `Average`, `High`로 바꿀 수 있습니다. 선택 사항인 post-stop suspend sound volume override는 `off` 또는 1부터 100까지의 percent 값을 받습니다. 켜져 있으면 소리가 재생되는 동안 기본 출력 장치의 master volume을 임시로 설정한 뒤 이전 volume과 mute 상태를 복원합니다. `preview-system-sound`와 `preview-current-sound`는 저장된 override 설정을 사용하고 재생이 끝날 때까지 기다립니다. post-stop suspend sound가 설정되어 있지 않으면 `preview-current-sound`가 설정 안내를 출력합니다. 설정된 webhook URL을 지우려면 `remove-pre-suspend-webhook`을 사용합니다.
+옵션 없이 `settings`를 실행하면 대화형 설정 편집을 시작합니다. 세션 타임아웃 기본값은 12분입니다. 비활성 세션 타임아웃 soft-lock을 끄려면 `--session-timeout-minutes off`를 전달하고, 마지막 활동 이후 지정한 분 수가 지나면 세션을 soft-lock 상태로 전환하려면 1 이상의 값을 전달합니다. Server runtime cleanup 지연 시간 기본값은 모든 세션이 사라지고 pending cleanup이 끝난 뒤 10분입니다. 즉시 종료하려면 `--server-runtime-cleanup-delay-minutes off`를 전달합니다. Emergency Hibernation 온도 모드 기본값은 `Average`이며 `Low`, `Average`, `High`로 바꿀 수 있습니다. 선택 사항인 post-stop suspend sound volume override는 `off` 또는 1부터 100까지의 percent 값을 받습니다. 켜져 있으면 소리가 재생되는 동안 기본 출력 장치의 master volume을 임시로 설정한 뒤 이전 volume과 mute 상태를 복원합니다. `preview-system-sound`와 `preview-current-sound`는 저장된 override 설정을 사용하고 재생이 끝날 때까지 기다립니다. post-stop suspend sound가 설정되어 있지 않으면 `preview-current-sound`가 설정 안내를 출력합니다. 설정된 webhook URL을 지우려면 `remove-pre-suspend-webhook` 또는 `remove-post-session-end-webhook`을 사용합니다.
 
 ## 진단
 

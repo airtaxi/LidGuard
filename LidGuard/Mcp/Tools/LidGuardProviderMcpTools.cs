@@ -54,6 +54,8 @@ public sealed class LidGuardProviderMcpTools(
             sessionIdentifier,
             AgentProvider.Mcp,
             providerMcpServerConfiguration.ProviderName,
+            true,
+            "provider_stop_session",
             cancellationToken);
         if (!result.Succeeded) throw new McpException(result.Message);
 
