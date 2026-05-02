@@ -37,13 +37,6 @@ internal static class SettingsHelpContent
             ],
             [
                 "Running settings with no options enters interactive edit mode.",
-                "Emergency Hibernation temperature mode defaults to Average.",
-                "Emergency Hibernation temperature defaults to 93 Celsius and is clamped to 70 through 110 at runtime.",
-                "Session timeout defaults to 12 minutes; pass off to disable inactive timeout soft-locking, or a value of 1 or more to soft-lock inactive sessions.",
-                "Server runtime cleanup delay defaults to 10 minutes after the last session and pending cleanup finish; pass off to exit immediately.",
-                "Post-stop suspend delay defaults to 10 seconds.",
-                "Post-stop suspend sound volume override defaults to off; pass off to disable it.",
-                "Suspend history recording defaults to on and keeps the latest 10 entries.",
                 "Use remove-pre-suspend-webhook to clear a configured webhook URL instead of passing off or an empty value."
             ]);
     }
