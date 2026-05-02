@@ -15,7 +15,11 @@ internal static class LidGuardSettingsInteractiveFactory
         message = string.Empty;
 
         if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting("Prevent system sleep", storedPowerRequest.PreventSystemSleep, defaultPowerRequest.PreventSystemSleep, out var preventSystemSleep, out message)) return false;
+#if LIDGUARD_LINUX || LIDGUARD_MACOS
+        var preventAwayModeSleep = false;
+#else
         if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting("Prevent away mode sleep", storedPowerRequest.PreventAwayModeSleep, defaultPowerRequest.PreventAwayModeSleep, out var preventAwayModeSleep, out message)) return false;
+#endif
         if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting("Prevent display sleep", storedPowerRequest.PreventDisplaySleep, defaultPowerRequest.PreventDisplaySleep, out var preventDisplaySleep, out message)) return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting("Change lid action", normalizedStoredSettings.ChangeLidAction, defaultSettings.ChangeLidAction, out var changeLidAction, out message)) return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting("Watch parent process", normalizedStoredSettings.WatchParentProcess, defaultSettings.WatchParentProcess, out var watchParentProcess, out message)) return false;

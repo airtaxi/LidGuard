@@ -20,7 +20,17 @@ internal static class LidGuardSettingsCommandLineFactory
         message = string.Empty;
 
         if (!CommandOptionReader.TryParseBooleanOption(options, basePowerRequest.PreventSystemSleep, out var preventSystemSleep, out message, "prevent-system-sleep", "system-required")) return false;
+#if LIDGUARD_LINUX || LIDGUARD_MACOS
+        if (CommandOptionReader.TryGetOption(options, out _, "prevent-away-mode-sleep", "away-mode-required"))
+        {
+            message = "The prevent-away-mode-sleep option is only supported on Windows. Use prevent-system-sleep on this platform.";
+            return false;
+        }
+
+        var preventAwayModeSleep = false;
+#else
         if (!CommandOptionReader.TryParseBooleanOption(options, basePowerRequest.PreventAwayModeSleep, out var preventAwayModeSleep, out message, "prevent-away-mode-sleep", "away-mode-required")) return false;
+#endif
         if (!CommandOptionReader.TryParseBooleanOption(options, basePowerRequest.PreventDisplaySleep, out var preventDisplaySleep, out message, "prevent-display-sleep", "display-required")) return false;
         if (!CommandOptionReader.TryParseBooleanOption(options, baseSettings.ChangeLidAction, out var changeLidAction, out message, "change-lid-action", "lid-action")) return false;
         if (!CommandOptionReader.TryParseBooleanOption(options, baseSettings.WatchParentProcess, out var watchParentProcess, out message, "watch-parent-process", "watch-parent")) return false;

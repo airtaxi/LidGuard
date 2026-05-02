@@ -70,8 +70,10 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         bool resetToDefaults = false,
         [Description("Set whether LidGuard prevents normal system sleep while sessions are active. Omit to keep the current value.")]
         bool? preventSystemSleep = null,
+#if !LIDGUARD_LINUX && !LIDGUARD_MACOS
         [Description("Set whether LidGuard requests away mode while sessions are active. Omit to keep the current value.")]
         bool? preventAwayModeSleep = null,
+#endif
         [Description("Set whether LidGuard prevents display sleep while sessions are active. Omit to keep the current value.")]
         bool? preventDisplaySleep = null,
         [Description("Set whether LidGuard temporarily changes the active power plan lid action to Do Nothing. Omit to keep the current value.")]
@@ -148,7 +150,9 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         {
             ResetToDefaults = resetToDefaults,
             PreventSystemSleep = preventSystemSleep,
+#if !LIDGUARD_LINUX && !LIDGUARD_MACOS
             PreventAwayModeSleep = preventAwayModeSleep,
+#endif
             PreventDisplaySleep = preventDisplaySleep,
             ChangeLidAction = changeLidAction,
             WatchParentProcess = watchParentProcess,

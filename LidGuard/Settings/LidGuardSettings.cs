@@ -96,7 +96,11 @@ public sealed class LidGuardSettings
             PowerRequest = new PowerRequestOptions
             {
                 PreventSystemSleep = powerRequest.PreventSystemSleep,
+#if LIDGUARD_LINUX || LIDGUARD_MACOS
+                PreventAwayModeSleep = false,
+#else
                 PreventAwayModeSleep = powerRequest.PreventAwayModeSleep,
+#endif
                 PreventDisplaySleep = powerRequest.PreventDisplaySleep,
                 Reason = string.IsNullOrWhiteSpace(powerRequest.Reason) ? PowerRequestOptions.Default.Reason : powerRequest.Reason
             },

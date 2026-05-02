@@ -23,7 +23,6 @@ public sealed class PowerRequestService : IPowerRequestService
     {
         var assertionFlags = new List<string>();
         if (options.PreventSystemSleep) assertionFlags.Add("-i");
-        if (options.PreventAwayModeSleep) assertionFlags.Add("-s");
         if (options.PreventDisplaySleep) assertionFlags.Add("-d");
         return assertionFlags;
     }

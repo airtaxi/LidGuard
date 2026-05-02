@@ -46,7 +46,9 @@ internal static class LidGuardCommandConsole
         var powerRequest = normalizedSettings.PowerRequest ?? PowerRequestOptions.Default;
         Console.WriteLine("Settings:");
         Console.WriteLine($"  Prevent system sleep: {powerRequest.PreventSystemSleep}");
+#if !LIDGUARD_LINUX && !LIDGUARD_MACOS
         Console.WriteLine($"  Prevent away mode sleep: {powerRequest.PreventAwayModeSleep}");
+#endif
         Console.WriteLine($"  Prevent display sleep: {powerRequest.PreventDisplaySleep}");
         Console.WriteLine($"  Change lid action: {normalizedSettings.ChangeLidAction}");
         Console.WriteLine($"  Watch parent process: {normalizedSettings.WatchParentProcess}");

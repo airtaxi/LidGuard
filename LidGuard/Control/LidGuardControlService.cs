@@ -314,7 +314,11 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             PowerRequest = new PowerRequestOptions
             {
                 PreventSystemSleep = settingsPatch.PreventSystemSleep ?? basePowerRequest.PreventSystemSleep,
+#if LIDGUARD_LINUX || LIDGUARD_MACOS
+                PreventAwayModeSleep = false,
+#else
                 PreventAwayModeSleep = settingsPatch.PreventAwayModeSleep ?? basePowerRequest.PreventAwayModeSleep,
+#endif
                 PreventDisplaySleep = settingsPatch.PreventDisplaySleep ?? basePowerRequest.PreventDisplaySleep,
                 Reason = settingsPatch.PowerRequestReason is null
                     ? basePowerRequest.Reason
@@ -450,7 +454,9 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         var changes = new List<string>();
 
         AppendChange(changes, previousPowerRequest.PreventSystemSleep, updatedPowerRequest.PreventSystemSleep, "preventSystemSleep");
+#if !LIDGUARD_LINUX && !LIDGUARD_MACOS
         AppendChange(changes, previousPowerRequest.PreventAwayModeSleep, updatedPowerRequest.PreventAwayModeSleep, "preventAwayModeSleep");
+#endif
         AppendChange(changes, previousPowerRequest.PreventDisplaySleep, updatedPowerRequest.PreventDisplaySleep, "preventDisplaySleep");
         AppendChange(changes, previousPowerRequest.Reason, updatedPowerRequest.Reason, "powerRequestReason");
         AppendChange(changes, previousStoredSettings.ChangeLidAction, updatedStoredSettings.ChangeLidAction, "changeLidAction");

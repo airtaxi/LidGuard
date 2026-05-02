@@ -23,7 +23,7 @@ public sealed class PowerRequestService : IPowerRequestService
     private static IReadOnlyList<string> CreateInhibitorTypes(PowerRequestOptions options)
     {
         var inhibitorTypes = new List<string>();
-        if (options.PreventSystemSleep || options.PreventAwayModeSleep) inhibitorTypes.Add("sleep");
+        if (options.PreventSystemSleep) inhibitorTypes.Add("sleep");
         if (options.PreventSystemSleep || options.PreventDisplaySleep) inhibitorTypes.Add("idle");
         return inhibitorTypes;
     }

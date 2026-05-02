@@ -29,7 +29,7 @@ The goal is to keep the supported local system awake while at least one tracked 
 - Agent sessions start through provider hooks.
 - LidGuard detects and tracks active sessions.
 - Claude Code and GitHub Copilot CLI sessions can enter a runtime-managed soft-lock state when provider notifications show the agent is waiting on user input.
-- While at least one non-soft-locked session is active, Windows should not enter idle sleep through `PowerRequestSystemRequired` and `PowerRequestAwayModeRequired`, Linux should hold systemd/logind sleep and idle inhibitors, and macOS should hold `caffeinate` assertions.
+- While at least one non-soft-locked session is active, Windows should not enter idle sleep through `PowerRequestSystemRequired` and `PowerRequestAwayModeRequired`, Linux should hold systemd/logind sleep and idle inhibitors, and macOS should hold `caffeinate -i` assertions that work on AC and DC power.
 - If every remaining active session is soft-locked, LidGuard should release temporary keep-awake protection, restore any temporary lid policy change, and start the configured suspend flow only when the lid is closed and no suspend-blocking visible display monitors remain attached to the desktop.
 - If a session has no activity after the configured session timeout, LidGuard should transition it to the soft-locked state and apply the same keep-awake release flow used for normal soft-lock operations.
 - Optional settings temporarily change the active power plan's lid close action to `Do Nothing` on Windows, hold a `handle-lid-switch` inhibitor on Linux, or temporarily set `pmset -a disablesleep 1` on macOS.
@@ -93,8 +93,9 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 
 - Linux support targets systemd/logind environments.
 - Use `systemd-inhibit` block inhibitors for normal sleep and idle prevention.
-- `PreventSystemSleep` and `PreventAwayModeSleep` map to the `sleep` inhibitor.
+- `PreventSystemSleep` maps to the `sleep` inhibitor.
 - `PreventSystemSleep` and `PreventDisplaySleep` map to the `idle` inhibitor.
+- `PreventAwayModeSleep` is Windows-only and must not affect Linux inhibitor selection or Linux settings/help output.
 - Temporary lid-close protection maps to a separate `handle-lid-switch` inhibitor only when `ChangeLidAction` is enabled.
 - `SystemdInhibitor` keeps the helper process alive by running a shell that waits on stdin, then normally releases the inhibitor by closing stdin; process-tree kill remains the fallback if the helper does not exit promptly. Do not switch this to `sleep infinity` unless the normal release path is intentionally changed to rely on process termination.
 - Inhibitor helper processes must be tied to the LidGuard runtime lifetime so they do not survive as stale orphaned inhibitors.
@@ -108,8 +109,8 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - The macOS Apple Silicon temperature fast path is allowed to use direct source-generated `LibraryImport` calls into CoreFoundation and IOKit, plus `NativeLibrary` export lookup for CoreFoundation callback tables, because CsWin32 does not cover macOS frameworks and no stable managed metadata surface exists for `IOHIDEventSystemClient`.
 - Use `caffeinate` assertions for normal idle sleep prevention.
 - `PreventSystemSleep` maps to `caffeinate -i`.
-- `PreventAwayModeSleep` maps to `caffeinate -s`, recognizing that macOS only honors that assertion on AC power.
 - `PreventDisplaySleep` maps to `caffeinate -d`.
+- Do not use `caffeinate -s` for LidGuard's cross-platform `PreventAwayModeSleep` setting. Away-mode sleep prevention is Windows-only, and macOS sleep prevention must rely on `caffeinate -i` so it works on both AC and DC power.
 - Temporary lid-close protection maps to `pmset -a disablesleep 1` only when `ChangeLidAction` is enabled.
 - Before changing `SleepDisabled`, save the original state through the pending lid-action backup JSON path; restore it when protection ends or during the next CLI recovery path before normal command execution.
 - Immediate Sleep uses `pmset sleepnow`.
@@ -295,7 +296,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 ### Settings Defaults
 
 - Normal idle sleep prevention: enabled.
-- Away-mode sleep prevention: enabled.
+- Away-mode sleep prevention: enabled on Windows only; Linux and macOS builds do not expose this setting and normalize it to disabled.
 - Display sleep prevention: disabled.
 - Temporary lid close action change: enabled for the headless CLI runtime and applied to AC/DC together.
 - Post-stop suspend delay: 10 seconds by default, `0` for immediate suspend.
@@ -692,7 +693,7 @@ lidguard settings --server-runtime-cleanup-delay-minutes off
 lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
 lidguard settings --post-session-end-webhook-url https://example.com/lidguard-session-ended
 lidguard settings --closed-lid-permission-request-decision allow
-lidguard settings --prevent-away-mode-sleep true --prevent-display-sleep true --power-request-reason "LidGuard keeps agent sessions awake"
+lidguard settings --prevent-system-sleep true --prevent-display-sleep true --power-request-reason "LidGuard keeps agent sessions awake"
 lidguard status
 lidguard cleanup-orphans
 ```
