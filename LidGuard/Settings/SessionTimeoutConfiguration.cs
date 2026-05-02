@@ -1,4 +1,4 @@
-using LidGuardLib.Commons.Settings;
+using LidGuard.Settings;
 
 namespace LidGuard.Settings;
 

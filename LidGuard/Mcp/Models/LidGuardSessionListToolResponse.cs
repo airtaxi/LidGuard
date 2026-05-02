@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using LidGuard.Ipc;
-using LidGuardLib.Commons.Power;
+using LidGuard.Power;
 
 namespace LidGuard.Mcp.Models;
 

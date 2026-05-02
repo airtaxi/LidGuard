@@ -1,6 +1,6 @@
-using LidGuardLib.Commons.Power;
-using LidGuardLib.Commons.Services;
-using LidGuardLib.Commons.Settings;
+using LidGuard.Power;
+using LidGuard.Services;
+using LidGuard.Settings;
 
 namespace LidGuard.Settings;
 

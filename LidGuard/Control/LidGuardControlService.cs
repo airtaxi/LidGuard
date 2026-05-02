@@ -1,10 +1,9 @@
-using LidGuardLib.Commons.Power;
-using LidGuardLib.Commons.Results;
-using LidGuardLib.Commons.Services;
-using LidGuardLib.Commons.Sessions;
-using LidGuardLib.Commons.Settings;
-using LidGuard.Ipc;
+using LidGuard.Power;
+using LidGuard.Results;
+using LidGuard.Services;
+using LidGuard.Sessions;
 using LidGuard.Settings;
+using LidGuard.Ipc;
 
 namespace LidGuard.Control;
 

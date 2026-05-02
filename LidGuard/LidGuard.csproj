@@ -13,7 +13,17 @@
     <IsTrimmable>true</IsTrimmable>
     <EnableAotAnalyzer>true</EnableAotAnalyzer>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+    <CsWin32RunAsBuildTask>true</CsWin32RunAsBuildTask>
+    <EffectiveTargetRuntimeIdentifier>$(RuntimeIdentifier)</EffectiveTargetRuntimeIdentifier>
+    <CurrentTargetPlatform>unknown</CurrentTargetPlatform>
+    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' != '' and $([System.String]::Copy('$(EffectiveTargetRuntimeIdentifier)').StartsWith('win'))">windows</CurrentTargetPlatform>
+    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' != '' and $([System.String]::Copy('$(EffectiveTargetRuntimeIdentifier)').StartsWith('linux'))">linux</CurrentTargetPlatform>
+    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' != '' and $([System.String]::Copy('$(EffectiveTargetRuntimeIdentifier)').StartsWith('osx'))">macOS</CurrentTargetPlatform>
+    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' == '' and '$(OS)' == 'Windows_NT'">windows</CurrentTargetPlatform>
+    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' == '' and $([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))">linux</CurrentTargetPlatform>
+    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' == '' and $([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))">macOS</CurrentTargetPlatform>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>lidguard</ToolCommandName>
     <PackageId>lidguard</PackageId>
@@ -26,19 +36,38 @@
     <PackageOutputPath>$(MSBuildProjectDirectory)\..\artifacts\packages</PackageOutputPath>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <UsesWmiLight>false</UsesWmiLight>
-    <UsesWmiLight Condition="'$(RuntimeIdentifier)' != '' and $([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win'))">true</UsesWmiLight>
-    <UsesWmiLight Condition="'$(RuntimeIdentifier)' == '' and '$(OS)' == 'Windows_NT'">true</UsesWmiLight>
+    <UsesWmiLight Condition="'$(CurrentTargetPlatform)' == 'windows'">true</UsesWmiLight>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.275" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Windows.WDK.Win32Metadata" Version="0.13.25-experimental" PrivateAssets="all" />
     <PackageReference Include="ModelContextProtocol" Version="1.2.0" />
+    <PackageReference Include="System.Windows.Extensions" Version="10.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LidGuardLib.Commons\LidGuardLib.Commons.csproj" />
-    <ProjectReference Include="..\LidGuardLib\LidGuardLib.csproj" AdditionalProperties="LidGuardTargetRuntimeIdentifier=$(RuntimeIdentifier)" />
+    <Compile Remove="**\*.windows.cs" />
+    <Compile Remove="**\*.linux.cs" />
+    <Compile Remove="**\*.macOS.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(CurrentTargetPlatform)' == 'windows'">
+    <Compile Include="**\*.windows.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(CurrentTargetPlatform)' == 'linux'">
+    <Compile Include="**\*.linux.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(CurrentTargetPlatform)' == 'macOS'">
+    <Compile Include="**\*.macOS.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(CurrentTargetPlatform)' == 'windows'">
+    <PackageReference Include="WmiLight" Version="7.2.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(UsesWmiLight)' == 'true'">

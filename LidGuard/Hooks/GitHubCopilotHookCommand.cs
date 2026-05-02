@@ -1,9 +1,7 @@
 using LidGuard.Ipc;
 using LidGuard.Settings;
-using LidGuardLib.Commons.Hooks;
-using LidGuardLib.Commons.Sessions;
-using LidGuardLib.Commons.Settings;
-using LidGuardLib.Hooks;
+using LidGuard.Hooks;
+using LidGuard.Sessions;
 
 namespace LidGuard.Hooks;
 

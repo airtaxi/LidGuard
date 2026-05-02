@@ -1,6 +1,6 @@
 using LidGuard.Control;
 using LidGuard.Mcp.Tools;
-using LidGuardLib.Platform;
+using LidGuard.Platform;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

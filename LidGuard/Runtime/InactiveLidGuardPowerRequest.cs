@@ -1,4 +1,4 @@
-using LidGuardLib.Commons.Services;
+using LidGuard.Services;
 
 namespace LidGuard.Runtime;
 

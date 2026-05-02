@@ -1,6 +1,5 @@
-using LidGuardLib.Commons.Hooks;
-using LidGuardLib.Commons.Sessions;
-using LidGuardLib.Hooks;
+using LidGuard.Hooks;
+using LidGuard.Sessions;
 
 namespace LidGuard.Commands;
 

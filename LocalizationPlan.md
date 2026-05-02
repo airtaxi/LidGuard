@@ -26,23 +26,9 @@ LidGuard/
   Resources/
     LidGuardText.resx
     LidGuardText.ko.resx
-
-LidGuardLib/
-  Localization/
-    LidGuardLibText.cs
-  Resources/
-    LidGuardLibText.resx
-    LidGuardLibText.ko.resx
-
-LidGuardLib.Commons/
-  Localization/
-    CommonText.cs
-  Resources/
-    CommonText.resx
-    CommonText.ko.resx
 ```
 
-Start with `LidGuard` if the first implementation only localizes CLI/help/status output. Add `LidGuardLib` and `LidGuardLib.Commons` resources when messages produced in those assemblies are localized at their source.
+Use the single `LidGuard` assembly resources for CLI/help/status output and other human-facing messages produced by the command, runtime, hook, settings, and platform layers.
 
 Avoid generated `.Designer.cs` files for the first pass. Use a manually maintained wrapper so the build does not depend on Visual Studio-specific resource designer behavior.
 
@@ -234,7 +220,7 @@ Localize in this order so each step is small and testable:
 7. Localize [HookManagementCommand.cs](LidGuard/Commands/HookManagementCommand.cs), [McpManagementCommand.cs](LidGuard/Commands/McpManagementCommand.cs), and [ProviderMcpManagementCommand.cs](LidGuard/Commands/ProviderMcpManagementCommand.cs) only for human-facing CLI text and inspection presentation, not generated config content or protocol payloads.
 8. Replace direct terminal printing of raw runtime or inspection `Message` strings with localized CLI presentation derived from structured fields or message codes while keeping raw protocol/log text stable where required.
 9. Audit hook output DTOs and MCP tool responses to ensure protocol JSON text remains English.
-10. Add `LidGuardLibText` and `CommonText` only when localizing human CLI presentation messages produced in those assemblies.
+10. Add new entries to `LidGuardText` only when localizing additional human CLI presentation messages produced in the single `LidGuard` assembly.
 
 Avoid broad string churn in one change. Each migration step should leave the CLI behavior and exit codes unchanged.
 

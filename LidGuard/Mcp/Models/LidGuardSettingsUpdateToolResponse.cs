@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using LidGuardLib.Commons.Settings;
+using LidGuard.Settings;
 using LidGuard.Control;
 
 namespace LidGuard.Mcp.Models;

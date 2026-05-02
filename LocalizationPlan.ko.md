@@ -26,23 +26,9 @@ LidGuard/
   Resources/
     LidGuardText.resx
     LidGuardText.ko.resx
-
-LidGuardLib/
-  Localization/
-    LidGuardLibText.cs
-  Resources/
-    LidGuardLibText.resx
-    LidGuardLibText.ko.resx
-
-LidGuardLib.Commons/
-  Localization/
-    CommonText.cs
-  Resources/
-    CommonText.resx
-    CommonText.ko.resx
 ```
 
-첫 작업이 CLI/help/status 출력만 현지화한다면 `LidGuard`부터 시작한다. `LidGuardLib` 또는 `LidGuardLib.Commons` 내부에서 생성되는 메시지를 그 위치에서 현지화해야 할 때 해당 assembly의 리소스를 추가한다.
+CLI/help/status 출력과 command, runtime, hook, settings, platform 계층에서 생성되는 기타 human-facing message는 단일 `LidGuard` assembly 리소스를 사용한다.
 
 첫 단계에서는 생성된 `.Designer.cs` 파일을 피한다. Visual Studio 전용 리소스 디자이너 동작에 빌드가 의존하지 않도록 수동 래퍼를 유지한다.
 
@@ -234,7 +220,7 @@ Hook 및 MCP 고려사항:
 7. [HookManagementCommand.cs](LidGuard/Commands/HookManagementCommand.cs), [McpManagementCommand.cs](LidGuard/Commands/McpManagementCommand.cs), [ProviderMcpManagementCommand.cs](LidGuard/Commands/ProviderMcpManagementCommand.cs)는 generated config content나 protocol payload가 아니라 human-facing CLI text와 inspection presentation만 현지화한다.
 8. Raw runtime 또는 inspection `Message` string을 terminal에 직접 출력하지 않도록 바꾸고, 필요한 경우 structured field 또는 message code에서 localized CLI presentation을 만들되 raw protocol/log text는 필요한 범위에서 안정적으로 유지한다.
 9. Hook output DTO와 MCP tool response를 점검해 protocol JSON text가 영어로 유지되는지 확인한다.
-10. 해당 assembly 안에서 생성되는 human CLI presentation message를 현지화해야 할 때만 `LidGuardLibText`와 `CommonText`를 추가한다.
+10. 단일 `LidGuard` assembly에서 생성되는 추가 human CLI presentation message를 현지화해야 할 때만 `LidGuardText`에 새 항목을 추가한다.
 
 한 변경에서 광범위한 문자열 이동을 하지 않는다. 각 단계는 CLI 동작과 exit code를 바꾸지 않아야 한다.
 

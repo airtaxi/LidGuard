@@ -1,5 +1,5 @@
-using LidGuardLib.Commons.Sessions;
-using LidGuardLib.Commons.Settings;
+using LidGuard.Sessions;
+using LidGuard.Settings;
 
 namespace LidGuard.Ipc;
 

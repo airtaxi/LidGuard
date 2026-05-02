@@ -2,9 +2,8 @@ using LidGuard.Commands.Help;
 using LidGuard.Ipc;
 using LidGuard.Runtime;
 using LidGuard.Settings;
-using LidGuardLib.Commons.Power;
-using LidGuardLib.Commons.Sessions;
-using LidGuardLib.Commons.Settings;
+using LidGuard.Power;
+using LidGuard.Sessions;
 
 namespace LidGuard.Commands;
 

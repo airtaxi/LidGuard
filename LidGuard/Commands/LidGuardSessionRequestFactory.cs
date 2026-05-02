@@ -1,7 +1,6 @@
 using LidGuard.Ipc;
 using LidGuard.Settings;
-using LidGuardLib.Commons.Sessions;
-using LidGuardLib.Commons.Settings;
+using LidGuard.Sessions;
 
 namespace LidGuard.Commands;
 

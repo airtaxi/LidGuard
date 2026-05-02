@@ -1,5 +1,5 @@
-using LidGuardLib.Commons.Results;
-using LidGuardLib.Commons.Services;
+using LidGuard.Results;
+using LidGuard.Services;
 using LidGuard.Settings;
 
 namespace LidGuard.Runtime;

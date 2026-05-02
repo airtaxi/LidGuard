@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using LidGuard.Settings;
-using LidGuardLib.Commons.Results;
+using LidGuard.Results;
 
 namespace LidGuard.Runtime;
 

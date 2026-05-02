@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using LidGuard.Mcp;
-using LidGuardLib.Hooks;
+using LidGuard.Hooks;
 
 namespace LidGuard.Commands;
 

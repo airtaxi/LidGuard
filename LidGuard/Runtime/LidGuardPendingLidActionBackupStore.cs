@@ -1,6 +1,6 @@
 using System.Text.Json;
 using LidGuard.Settings;
-using LidGuardLib.Commons.Power;
+using LidGuard.Power;
 
 namespace LidGuard.Runtime;
 

@@ -2,7 +2,7 @@ using System.ComponentModel;
 using LidGuard.Control;
 using LidGuard.Ipc;
 using LidGuard.Mcp.Models;
-using LidGuardLib.Commons.Sessions;
+using LidGuard.Sessions;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
 

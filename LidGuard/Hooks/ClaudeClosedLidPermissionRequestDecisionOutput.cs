@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-using LidGuardLib.Commons.Settings;
+using LidGuard.Settings;
 
 namespace LidGuard.Hooks;
 

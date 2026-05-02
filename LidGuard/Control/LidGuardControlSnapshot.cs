@@ -1,5 +1,5 @@
-using LidGuardLib.Commons.Power;
-using LidGuardLib.Commons.Settings;
+using LidGuard.Power;
+using LidGuard.Settings;
 using LidGuard.Ipc;
 
 namespace LidGuard.Control;

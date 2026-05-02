@@ -1,9 +1,8 @@
 using LidGuard.Ipc;
 using LidGuard.Runtime;
 using LidGuard.Settings;
-using LidGuardLib.Commons.Platform;
-using LidGuardLib.Commons.Services;
-using LidGuardLib.Commons.Settings;
+using LidGuard.Platform;
+using LidGuard.Services;
 
 namespace LidGuard.Commands;
 

@@ -49,21 +49,17 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 
 ## Repository Shape
 
-- `LidGuardLib.Commons`
-  - .NET 10 library.
-  - Common, platform-neutral models and policies.
-  - Nullable is intentionally not enabled in the csproj.
-  - `ImplicitUsings` is enabled.
-  - NativeAOT/trimming compatibility flags are enabled.
-- `LidGuardLib`
-  - .NET 10 library targeting `net10.0`.
-  - Shared provider/hook utilities live in regular `*.cs` files.
-  - Windows-specific runtime/process/power implementations live in `*.windows.cs`.
-  - Linux/macOS placeholder files exist only for the minimal public surface currently needed to keep cross-platform builds compiling.
-  - Uses CsWin32 with `CsWin32RunAsBuildTask=true` and `DisableRuntimeMarshalling=true` for AOT compatibility.
 - `LidGuard`
   - .NET 10 console app targeting `net10.0`.
   - Standalone hook-facing CLI plus in-process headless runtime and stdio MCP server hosting.
+  - Common, platform-neutral models and policies live in feature folders such as `Sessions`, `Settings`, `Power`, `Services`, `Results`, and `Processes`.
+  - Shared provider/hook utilities live under `Hooks` in regular `*.cs` files.
+  - Windows-specific runtime/process/power implementations live in `*.windows.cs`.
+  - Linux/macOS placeholder files exist only for the minimal public surface currently needed to keep cross-platform builds compiling.
+  - Nullable is intentionally not enabled in the csproj.
+  - `ImplicitUsings` is enabled.
+  - NativeAOT/trimming compatibility flags are enabled.
+  - Uses CsWin32 with `CsWin32RunAsBuildTask=true` and `DisableRuntimeMarshalling=true` for AOT compatibility.
   - Uses root namespace `LidGuard` and assembly/apphost name `lidguard`.
   - Prepared for .NET 10 RID-specific NativeAOT .NET tool distribution as NuGet package `lidguard` with tool command `lidguard`.
   - Supported package RIDs are `win-x64`, `win-x86`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, and `osx-arm64`.
@@ -77,7 +73,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
   - Stores subscriptions, webhook events, and delivery attempts in SQLite.
   - Uses server-side VAPID settings; VAPID private keys and access tokens must never be committed.
 - `LidGuard.slnx`
-  - Root solution file including `LidGuardLib.Commons`, `LidGuardLib`, `LidGuard`, and `LidGuard.Notifications`.
+  - Root solution file including `LidGuard` and `LidGuard.Notifications`.
 
 ## Technical Design
 
@@ -651,9 +647,9 @@ The Windows CLI hook receiving path is implemented for Codex, Claude Code, and G
 
 ## Design Constraints
 
-- Keep cross-platform-capable logic in `LidGuardLib.Commons`.
-- Keep Windows API calls and Windows-only assumptions in `LidGuardLib` `*.windows.cs` files.
-- Do not enable Nullable in the current library csproj files unless the user explicitly asks.
+- Keep cross-platform-capable logic in regular `LidGuard` feature folders and namespaces.
+- Keep Windows API calls and Windows-only assumptions in `LidGuard` `*.windows.cs` files.
+- Do not enable Nullable in `LidGuard.csproj` unless the user explicitly asks.
 - Keep `ImplicitUsings` enabled.
 - Keep NativeAOT/trimming compatibility in mind.
 - When adding an enum that may be serialized to JSON, attach `JsonStringEnumConverter<TEnum>` to the enum type so values are stored as strings, not numbers.

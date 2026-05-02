@@ -1,8 +1,7 @@
 using LidGuard.Control;
 using LidGuard.Ipc;
 using LidGuard.Settings;
-using LidGuardLib.Commons.Platform;
-using LidGuardLib.Commons.Settings;
+using LidGuard.Platform;
 
 namespace LidGuard.Commands;
 

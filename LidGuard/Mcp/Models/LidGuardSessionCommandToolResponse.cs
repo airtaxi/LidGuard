@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using LidGuard.Control;
-using LidGuardLib.Commons.Sessions;
+using LidGuard.Sessions;
 
 namespace LidGuard.Mcp.Models;
 

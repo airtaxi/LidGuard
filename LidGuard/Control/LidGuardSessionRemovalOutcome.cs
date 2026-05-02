@@ -1,4 +1,4 @@
-using LidGuardLib.Commons.Sessions;
+using LidGuard.Sessions;
 using LidGuard.Ipc;
 
 namespace LidGuard.Control;

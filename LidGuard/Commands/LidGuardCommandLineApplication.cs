@@ -5,12 +5,9 @@ using LidGuard.Ipc;
 using LidGuard.Mcp;
 using LidGuard.Runtime;
 using LidGuard.Settings;
-using LidGuardLib.Commons.Platform;
-using LidGuardLib.Commons.Power;
-using LidGuardLib.Commons.Services;
-using LidGuardLib.Commons.Settings;
-using LidGuardLib.Platform;
-using LidGuardLib.Power;
+using LidGuard.Platform;
+using LidGuard.Power;
+using LidGuard.Services;
 
 namespace LidGuard.Commands;
 

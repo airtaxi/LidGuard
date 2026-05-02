@@ -1,5 +1,5 @@
-using LidGuardLib.Commons.Platform;
-using LidGuardLib.Commons.Settings;
+using LidGuard.Platform;
+using LidGuard.Settings;
 
 namespace LidGuard.Commands;
 

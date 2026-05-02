@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using LidGuardLib.Commons.Sessions;
-using LidGuardLib.Hooks;
+using LidGuard.Sessions;
+using LidGuard.Hooks;
 
 namespace LidGuard.Commands;
 

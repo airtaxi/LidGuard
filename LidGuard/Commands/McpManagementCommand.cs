@@ -1,7 +1,7 @@
 using System.Text;
 using LidGuard.Mcp;
-using LidGuardLib.Commons.Sessions;
-using LidGuardLib.Hooks;
+using LidGuard.Sessions;
+using LidGuard.Hooks;
 
 namespace LidGuard.Commands;
 
