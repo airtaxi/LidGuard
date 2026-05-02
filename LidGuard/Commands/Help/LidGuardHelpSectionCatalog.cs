@@ -57,7 +57,11 @@ internal static class LidGuardHelpSectionCatalog
             $"Settings file: {settingsFilePath}",
             $"Session log: {sessionLogFilePath}",
             $"Suspend history log: {suspendHistoryLogFilePath}",
-            "Windows runtime behavior is implemented today. macOS and Linux currently print a support-planned message and exit successfully.",
+#if LIDGUARD_LINUX
+            "Linux runtime behavior is implemented for systemd/logind systems. macOS currently prints a support-planned message and exits successfully.",
+#else
+            "This build implements Windows runtime behavior. Linux runtime behavior is implemented in Linux builds; macOS currently prints a support-planned message and exits successfully.",
+#endif
             "Provider MCP integrations are best-effort only because correct behavior depends on the model calling the LidGuard MCP tools at the right times."
         ];
     }

@@ -34,6 +34,7 @@ public sealed class LidGuardRuntimeServiceSet(
 
     public void Dispose()
     {
+        LidActionPolicyController.Dispose();
         if (LidStateSource is IDisposable disposableLidStateSource) disposableLidStateSource.Dispose();
     }
 }

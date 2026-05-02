@@ -473,9 +473,18 @@ internal sealed class LidGuardRuntimeCoordinator
         var shouldExplainSkippedCodexFallback = request.Provider == AgentProvider.Codex
             && request.WatchedProcessIdentifier <= 0
             && _settings.WatchParentProcess;
-        if (shouldExplainSkippedCodexFallback) return " Codex fallback watchdog only attaches when the resolved Codex process or its direct parent is cmd.exe, pwsh.exe, or powershell.exe; a stop hook is required.";
+        if (shouldExplainSkippedCodexFallback) return $" Codex fallback watchdog only attaches when the resolved Codex process or its direct parent is {GetCodexShellHostDescription()}; a stop hook is required.";
 
         return " No watched process was resolved; a stop hook is required.";
+    }
+
+    private static string GetCodexShellHostDescription()
+    {
+#if LIDGUARD_LINUX
+        return "bash, zsh, fish, sh, dash, or pwsh";
+#else
+        return "cmd.exe, pwsh.exe, or powershell.exe";
+#endif
     }
 
     private LidGuardOperationResult UpdateSettingsInsideGate(LidGuardSettings settings)

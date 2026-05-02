@@ -1,11 +1,9 @@
 using System.Globalization;
-using System.Runtime.Versioning;
 using LidGuard.Settings;
 using WmiLight;
 
 namespace LidGuard.Power;
 
-[SupportedOSPlatform("windows6.1")]
 public static class SystemThermalInformation
 {
     private const string FormattedThermalZoneClassName = "Win32_PerfFormattedData_Counters_ThermalZoneInformation";

@@ -13,7 +13,7 @@ internal static class LidGuardWatchedProcessCleanup
         => string.Equals(
             NormalizeWorkingDirectory(leftWorkingDirectory),
             NormalizeWorkingDirectory(rightWorkingDirectory),
-            StringComparison.OrdinalIgnoreCase);
+            OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 
     public static string NormalizeWorkingDirectory(string workingDirectory)
     {

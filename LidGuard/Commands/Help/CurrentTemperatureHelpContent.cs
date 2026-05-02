@@ -17,7 +17,7 @@ internal static class CurrentTemperatureHelpContent
                 new LidGuardHelpOption("--temperature-mode default|low|average|high", "Optional. Use the saved LidGuard setting with default, or override it with low, average, or high for this command only.")
             ],
             [
-                "If Windows does not currently expose thermal-zone temperature data, the command reports that the value is unavailable.",
+                "If this platform does not currently expose thermal-zone temperature data, the command reports that the value is unavailable.",
                 "When the settings file does not exist yet, default uses LidGuard's headless runtime default mode: Average."
             ]);
     }

@@ -18,21 +18,21 @@
 - `Plan.md` was removed to avoid duplicated planning content.
 - When changing core behavior, update this file instead of reintroducing duplicated design notes elsewhere.
 - Any future repository-wide README that documents Provider MCP or model-managed MCP session flows must explicitly state that the behavior is not guaranteed, because correct operation depends entirely on the model choosing to call the LidGuard MCP tools at the right times.
-- Any future repository-wide README that documents Codex hook/session lifecycle behavior must explicitly state that Codex App can still leave `process=none` sessions in the same working directory, so LidGuard only uses the Codex working-directory watchdog fallback for shell-hosted CLI sessions whose resolved process or direct parent is `cmd.exe`, `pwsh.exe`, or `powershell.exe`, and that cleanup path must never remove `process=none` Codex sessions.
+- Any future repository-wide README that documents Codex hook/session lifecycle behavior must explicitly state that Codex App can still leave `process=none` sessions in the same working directory, so LidGuard only uses the Codex working-directory watchdog fallback for shell-hosted CLI sessions whose resolved process or direct parent is a platform-approved shell, and that cleanup path must never remove `process=none` Codex sessions.
 
 ## Product Goal
 
-LidGuard is a Windows-first utility for long-running local AI coding agents such as Codex, Claude Code, and GitHub Copilot CLI.
+LidGuard is a Windows-first utility with systemd/logind Linux support for long-running local AI coding agents such as Codex, Claude Code, and GitHub Copilot CLI.
 
-The goal is to keep Windows awake while at least one tracked agent session still needs protection, then restore the user's original power policy after the session ends or becomes suspend-eligible.
+The goal is to keep the supported local system awake while at least one tracked agent session still needs protection, then restore the user's original power policy after the session ends or becomes suspend-eligible.
 
 - Agent sessions start through provider hooks.
 - LidGuard detects and tracks active sessions.
 - Claude Code and GitHub Copilot CLI sessions can enter a runtime-managed soft-lock state when provider notifications show the agent is waiting on user input.
-- While at least one non-soft-locked session is active, Windows should not enter idle sleep through `PowerRequestSystemRequired` and `PowerRequestAwayModeRequired`.
+- While at least one non-soft-locked session is active, Windows should not enter idle sleep through `PowerRequestSystemRequired` and `PowerRequestAwayModeRequired`, and Linux should hold systemd/logind sleep and idle inhibitors.
 - If every remaining active session is soft-locked, LidGuard should release temporary keep-awake protection, restore any temporary lid policy change, and start the configured suspend flow only when the lid is closed and no suspend-blocking visible display monitors remain attached to the desktop.
 - If a session has no activity after the configured session timeout, LidGuard should transition it to the soft-locked state and apply the same keep-awake release flow used for normal soft-lock operations.
-- Optional settings temporarily change the active power plan's lid close action to `Do Nothing`.
+- Optional settings temporarily change the active power plan's lid close action to `Do Nothing` on Windows, or hold a `handle-lid-switch` inhibitor on Linux.
 - When sessions stop, all temporary power settings must be restored to the user's original values.
 - After the last active session stops, LidGuard should always request suspend when the laptop lid is closed and no suspend-blocking visible display monitors remain attached to the desktop.
 - Once the active session count reaches `0`, the server runtime should exit after the configured server runtime cleanup delay once any in-flight suspend or cleanup work finishes. The delay defaults to 10 minutes, and `off` means exit immediately after in-flight work finishes.
@@ -45,7 +45,7 @@ The goal is to keep Windows awake while at least one tracked agent session still
 - An optional post-session-end webhook URL remains off by default. When a provider reports a normal session end and that stop does not schedule the pre-suspend flow, LidGuard should POST a `PostSessionEnd` payload without blocking session cleanup. Abort, interrupt, manual stop/remove, watchdog, and orphan cleanup paths must not send it.
 - While keep-awake protection is applied and the laptop lid is closed with no suspend-blocking visible display monitors remaining on the desktop, an optional Emergency Hibernation thermal monitor should poll every 10 seconds and request immediate hibernation when the system temperature reaches the configured threshold.
 
-The key design rule is to treat normal idle sleep and lid-close sleep as separate problems. Power requests handle idle sleep. `LIDACTION` policy backup/change/restore handles lid-close behavior because standard sleep-prevention APIs cannot reliably block a user lid-close action.
+The key design rule is to treat normal idle sleep and lid-close sleep as separate problems. Power requests or systemd inhibitors handle idle sleep. Windows `LIDACTION` policy backup/change/restore and Linux `handle-lid-switch` inhibition handle lid-close behavior because standard sleep-prevention APIs cannot reliably block a user lid-close action.
 
 ## Repository Shape
 
@@ -55,7 +55,8 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
   - Common, platform-neutral models and policies live in feature folders such as `Sessions`, `Settings`, `Power`, `Services`, `Results`, and `Processes`.
   - Shared provider/hook utilities live under `Hooks` in regular `*.cs` files.
   - Windows-specific runtime/process/power implementations live in `*.windows.cs`.
-  - Linux/macOS placeholder files exist only for the minimal public surface currently needed to keep cross-platform builds compiling.
+  - Linux-specific systemd/logind, `/proc`, and `/sys` implementations live in `*.linux.cs`.
+  - macOS placeholder files exist only for the minimal public surface currently needed to keep cross-platform builds compiling.
   - Nullable is intentionally not enabled in the csproj.
   - `ImplicitUsings` is enabled.
   - NativeAOT/trimming compatibility flags are enabled.
@@ -63,10 +64,12 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
   - Uses root namespace `LidGuard` and assembly/apphost name `lidguard`.
   - Prepared for .NET 10 RID-specific NativeAOT .NET tool distribution as NuGet package `lidguard` with tool command `lidguard`.
   - Supported package RIDs are `win-x64`, `win-x86`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, and `osx-arm64`.
-  - Windows behavior is implemented; macOS/Linux currently print a support-planned message and return exit code `0`.
+  - Windows behavior is implemented.
+  - Linux behavior is implemented for systemd/logind systems.
+  - macOS currently prints a support-planned message and returns exit code `0`.
   - Uses a named pipe to send `start`, `stop`, `remove-session`, `status`, `settings`, and `cleanup-orphans` requests to the runtime.
   - Hosts the stdio MCP server through the `mcp-server` subcommand.
-  - Stores default settings JSON at `%LOCALAPPDATA%\LidGuard\settings.json`.
+  - Stores default settings JSON under the platform local application data directory, such as `%LOCALAPPDATA%\LidGuard\settings.json` on Windows or `~/.local/share/LidGuard/settings.json` on typical Linux desktops.
 - `LidGuard.Notifications`
   - .NET 10 ASP.NET Core Razor Pages app targeting `net10.0`.
   - Receives LidGuard pre-suspend and post-session-end webhooks and sends browser Web Push notifications to subscribed clients.
@@ -86,6 +89,19 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - Always clear power requests and close handles when protection ends.
 - Do not change sleep idle timeouts. That approach was rejected because runtime crashes could leave the user's system policy in a dangerous state.
 
+### Linux Power Control
+
+- Linux support targets systemd/logind environments.
+- Use `systemd-inhibit` block inhibitors for normal sleep and idle prevention.
+- `PreventSystemSleep` and `PreventAwayModeSleep` map to the `sleep` inhibitor.
+- `PreventSystemSleep` and `PreventDisplaySleep` map to the `idle` inhibitor.
+- Temporary lid-close protection maps to a separate `handle-lid-switch` inhibitor only when `ChangeLidAction` is enabled.
+- `SystemdInhibitor` keeps the helper process alive by running a shell that waits on stdin, then normally releases the inhibitor by closing stdin; process-tree kill remains the fallback if the helper does not exit promptly. Do not switch this to `sleep infinity` unless the normal release path is intentionally changed to rely on process termination.
+- Inhibitor helper processes must be tied to the LidGuard runtime lifetime so they do not survive as stale orphaned inhibitors.
+- Immediate sleep/hibernate uses `systemctl suspend` or `systemctl hibernate` and returns the command exit code/stderr when the request fails.
+- Linux remains a supported top-level platform when `OperatingSystem.IsLinux()` is true, and missing or incomplete systemd/logind prerequisites are reported by the specific runtime or diagnostic operation. This keeps `linux-permission status|check` and `/proc`/`/sys` diagnostics usable in partial environments such as WSL.
+- Linux runtime operation should not depend on a long-lived `sudo -v` cache. Persistent privileged logind actions should be prepared through the Linux polkit rule command.
+
 ### Lid Close Policy
 
 - The lid close setting is Windows power setting `LIDACTION`.
@@ -96,6 +112,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - During active sessions, write AC/DC values to `0 = Do Nothing` when the setting is enabled.
 - After the last active session stops, restore the backed-up AC/DC values.
 - v1 restores the scheme that was active at backup time. Future work may add policy for active scheme changes while LidGuard is running.
+- On Linux, `ChangeLidAction=true` means LidGuard holds a systemd/logind `handle-lid-switch` inhibitor while protection is applied. It does not edit distribution power configuration files.
 
 ### Lid State And Suspend
 
@@ -105,6 +122,9 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - Closed-lid policy decisions start from `GetSystemMetrics(SM_CMONITORS)` and exclude inactive monitor connections reported by Windows WMI. The final suspend eligibility check also excludes internal laptop panel connections while `LidSwitchState` is `Closed`; LidGuard only treats the machine as suspend-eligible for lid-close policy when the resulting visible display monitor count is `0`.
 - Immediate sleep/hibernate uses `SetSuspendState` after enabling `SeShutdownPrivilege`.
 - On Modern Standby systems, `SetSuspendState(false, ...)` can fail with `ERROR_NOT_SUPPORTED`; a later fallback may use a display-off strategy.
+- Linux lid state reads `/proc/acpi/button/lid/*/state` and reports `Unknown` when no readable lid state exists.
+- Linux visible display monitor count reads `/sys/class/drm/*/status` and counts `connected` connectors. The final suspend eligibility check excludes internal connector families such as `eDP`, `LVDS`, and `DSI` while `LidSwitchState` is `Closed`.
+- Linux immediate sleep/hibernate uses `systemctl suspend` or `systemctl hibernate`.
 - After the last active session stops, LidGuard should request suspend after the configured post-stop delay using the configured suspend mode only when the lid is closed and the suspend eligibility visible display monitor count is `0`. A delay of `0` means immediate suspend.
 - If a post-stop suspend sound is configured, LidGuard should wait for the delay first, then play the configured sound to completion, then re-check the lid/session state before requesting suspend.
 - If a post-stop suspend sound volume override is configured, LidGuard should capture the default output device master volume and mute state immediately before playback, temporarily unmute as needed, set the configured master volume percent for playback, then restore the previous volume and mute state in the sound playback cleanup path.
@@ -114,6 +134,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 ### Emergency Hibernation Thermal Monitor
 
 - Emergency Hibernation uses `SystemThermalInformation.GetSystemTemperatureCelsius(EmergencyHibernationTemperatureMode)` to read the selected available system thermal-zone temperature in Celsius.
+- On Linux, Emergency Hibernation temperature reads millidegree Celsius values from `/sys/class/thermal/thermal_zone*/temp` and applies the configured Low, Average, or High aggregation.
 - Emergency Hibernation temperature mode is configurable as Low, Average, or High, and defaults to Average.
 - The thermal monitor only runs while shared keep-awake protection is applied, the lid is closed, and the suspend eligibility visible display monitor count is `0`.
 - The thermal poll interval is fixed at 10 seconds.
@@ -127,16 +148,19 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 Hook stop events may be missed, so LidGuard also watches the agent process.
 
 - Prefer a provided parent process id when hooks can supply one.
-- When parent process id is missing, use `ICommandLineProcessResolver` with the hook working directory only for providers where that fallback is reliable enough. Codex is the main exception: allow the implicit fallback only when the resolved Codex candidate process or its direct parent is `cmd.exe`, `pwsh.exe`, or `powershell.exe`, and treat `process=none` Codex sessions as out of scope for that working-directory cleanup path.
+- When parent process id is missing, use `ICommandLineProcessResolver` with the hook working directory only for providers where that fallback is reliable enough. Codex is the main exception: allow the implicit fallback only when the resolved Codex candidate process or its direct parent is a platform-approved shell, and treat `process=none` Codex sessions as out of scope for that working-directory cleanup path.
 - On Windows, open the target process with synchronize/query rights and wait with `WaitForSingleObject`.
+- On Linux, use `/proc/<pid>/cwd`, `/proc/<pid>/comm`, `/proc/<pid>/cmdline`, and `/proc/<pid>/stat` for working-directory process resolution, and use `Process.GetProcessById().WaitForExitAsync()` for process exit watching.
+- On Linux, Codex shell-host fallback is allowed only when the resolved candidate process or its direct parent is `bash`, `zsh`, `fish`, `sh`, `dash`, or `pwsh`.
 - Treat the first cleanup signal as authoritative; later stop/watchdog events for the same session should be harmless.
 - If a provider launches a short-lived wrapper that exits before the real agent, provider-specific process selection may need follow-up work.
 
 ## Runtime Behavior
 
-### Current Windows CLI Path
+### Current CLI Path
 
 - `LidGuard` parses `help`, `start`, `stop`, `remove-pre-suspend-webhook`, `remove-post-session-end-webhook`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `current-lid-state`, `current-monitor-count`, `current-temperature`, `suspend-history`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `preview-current-sound`, `mcp-server`, and `provider-mcp-server`.
+- Linux builds additionally parse `linux-permission status`, `linux-permission check`, `linux-permission install`, and `linux-permission remove`. Windows builds must not include this command in routing or help output.
 - `help` prints a categorized command overview with short descriptions, and `help <command>` prints focused detailed help for one command or recognized command alias.
 - `<command> --help` uses the same help metadata and returns before the target command validates options or performs command-specific work.
 - `start`, the `UserPromptSubmit` path in `codex-hook` and `claude-hook`, and the `userPromptSubmitted` path in `copilot-hook` load persisted default settings and send them with the start IPC request.
@@ -144,10 +168,10 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `remove-session` manually removes active sessions by session identifier; when `--provider` is omitted, it removes every active session whose session identifier matches. When `--provider mcp` is used, `--provider-name` can narrow the removal to one MCP-backed provider; omitting `--provider-name` removes every MCP-backed session that shares that session identifier.
 - `remove-pre-suspend-webhook` clears the configured pre-suspend webhook URL and reports when no webhook is currently configured.
 - `remove-post-session-end-webhook` clears the configured post-session-end webhook URL and reports when no webhook is currently configured.
-- `current-lid-state` prints the current lid switch state using the same `GUID_LIDSWITCH_STATE_CHANGE` source LidGuard uses for closed-lid policy decisions.
-- `current-monitor-count` prints the current visible display monitor count using the same base Windows monitor visibility check LidGuard uses for closed-lid policy decisions, without the internal-display exclusion used by final suspend eligibility checks.
+- `current-lid-state` prints the current lid switch state using the same platform source LidGuard uses for closed-lid policy decisions.
+- `current-monitor-count` prints the current visible display monitor count using the same base platform monitor visibility check LidGuard uses for closed-lid policy decisions, without the internal-display exclusion used by final suspend eligibility checks.
 - `current-temperature` prints the currently recognized system thermal-zone temperature in Celsius using the selected aggregation mode, or reports when thermal-zone data is unavailable.
-- `suspend-history` prints recent suspend request history from `%LOCALAPPDATA%\LidGuard\suspend-history.log`, including mode, reason, result, active session count, and related session or Emergency Hibernation temperature details when available.
+- `suspend-history` prints recent suspend request history from the platform local application data directory, including mode, reason, result, active session count, and related session or Emergency Hibernation temperature details when available.
 - `status`, `suspend-history`, and `hook-events` display persisted timestamps in the current system local time while the underlying session, history, and hook log stores remain UTC.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
 - `settings` also exposes `--emergency-hibernation-on-high-temperature`, `--emergency-hibernation-temperature-mode`, and `--emergency-hibernation-temperature-celsius`; the threshold option accepts 70 through 110 only.
@@ -164,14 +188,25 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `mcp-status --provider all`, `mcp-install --provider all`, and `mcp-remove --provider all` only process providers whose default configuration roots already exist, and report missing providers as skipped.
 - When adding a new CLI command that takes a provider parameter, make omitted provider values prompt the user instead of silently defaulting.
 - When no runtime is listening, `start` launches detached `run-server`.
-- `run-server` acquires the named mutex `Local\LidGuard.Runtime.v1`.
+- `run-server` acquires the named mutex `Local\LidGuard.Runtime.v1` on Windows and `LidGuard.Runtime.v1` on Linux.
 - `run-server` is detached from inherited stdout/stderr so hook callers do not hang while reading child process output.
+- When the Linux CLI is run through the `dotnet` host during framework-dependent validation, automatic runtime launch must pass the built `lidguard.dll` path before `run-server`. Linux detached runtime launch prefers `setsid`, falls back to `nohup`, and redirects stdin/stdout/stderr to `/dev/null`.
 - Runtime communication uses a local named pipe.
-- Session execution events are logged as JSON lines at `%LOCALAPPDATA%\LidGuard\session-execution.log`, keeping the latest 500 entries. Timeout-triggered soft-lock transitions are logged as `session-timeout-softlock-recorded`.
-- First-chance, unhandled, and unobserved task exceptions are appended to `%LOCALAPPDATA%\LidGuard\log\exceptions.log`, including inner exception details. Unobserved task exceptions must be marked observed as part of that handling.
-- Recent suspend request history is logged as JSON lines at `%LOCALAPPDATA%\LidGuard\suspend-history.log`, keeping the latest configured entry count when enabled.
+- Session execution events are logged as JSON lines under the platform local application data directory, keeping the latest 500 entries. Timeout-triggered soft-lock transitions are logged as `session-timeout-softlock-recorded`.
+- First-chance, unhandled, and unobserved task exceptions are appended under the platform local application data directory at `log/exceptions.log`, including inner exception details. Unobserved task exceptions must be marked observed as part of that handling.
+- Recent suspend request history is logged as JSON lines under the platform local application data directory, keeping the latest configured entry count when enabled.
 - Provider hook event logs record the `prompt` field on received start events: Codex and Claude `UserPromptSubmit`, and GitHub Copilot CLI `userPromptSubmitted`.
-- Default settings are stored at `%LOCALAPPDATA%\LidGuard\settings.json`.
+- Default settings are stored under the platform local application data directory.
+
+### Linux Permission Command
+
+- `linux-permission` is compiled only into Linux builds and must not appear in Windows routing or help.
+- `linux-permission status` reports the current user, managed polkit rule state, `systemd-inhibit` availability, `systemctl` availability, and logind `CanSuspend` / `CanHibernate` capability values when queryable.
+- `linux-permission check` non-destructively verifies inhibitor acquire/release, `systemctl --version`, and logind suspend/hibernate capability queries. It must not request an actual suspend or hibernate.
+- `linux-permission install` writes `/etc/polkit-1/rules.d/49-lidguard.rules` using root privileges or one-time `sudo`, and grants only the current target user the logind actions LidGuard needs.
+- The managed polkit rule allows only `org.freedesktop.login1.suspend`, `suspend-multiple-sessions`, `hibernate`, `hibernate-multiple-sessions`, `inhibit-block-sleep`, `inhibit-block-idle`, and `inhibit-handle-lid-switch`.
+- `linux-permission remove` deletes the rule only when the file contains LidGuard's managed markers. It must refuse to delete unmanaged files.
+- Do not add a `sudo -v` prepare command; sudo credential caches are tty/timeout scoped and are not a reliable basis for long-running agent protection.
 
 ### MCP Server
 
@@ -205,7 +240,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Session state is ref-counted by active session.
 - `AgentProvider.Mcp` sessions also carry a provider name so multiple MCP-backed providers can reuse the same session identifier without colliding.
 - Each session also carries a last activity timestamp plus soft-lock state, reason, and timestamp.
-- One or more active sessions keep shared `SystemRequired` and `AwayModeRequired` power requests alive only while at least one active session is not soft-locked.
+- One or more active sessions keep shared platform keep-awake protection alive only while at least one active session is not soft-locked.
 - When all remaining active sessions are soft-locked, LidGuard treats the runtime as suspend-eligible even before those sessions emit stop events.
 - Start/update and provider activity such as new tool execution refresh that session's last activity timestamp. Provider activity also clears that session's current soft-lock state.
 - Setting a soft-lock does not refresh last activity, because it represents waiting rather than autonomous work.
@@ -215,7 +250,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - The Claude transcript profile prefers hook-provided `transcript_path` and otherwise falls back to a unique `~/.claude/projects` match by session id. If the latest transcript record is a `user` record whose text content is `[Request interrupted by user]` or `[Request interrupted by user for tool use]`, LidGuard treats it as an interrupted Claude turn and routes the session through the normal stop path instead of recording activity.
 - The GitHub Copilot CLI transcript profile prefers hook-provided `transcriptPath` / `transcript_path` and otherwise falls back to `COPILOT_HOME\session-state\<sessionId>\events.jsonl` or `%USERPROFILE%\.copilot\session-state\<sessionId>\events.jsonl`. If the latest JSONL record has top-level `type` of `abort`, LidGuard treats it as a Copilot abort signal and routes the session through the normal stop path instead of recording activity.
 - `AgentProvider.Mcp` sessions do not auto-resolve a watched process from the working directory, because model-managed Provider MCP sessions do not reliably identify one owning CLI process.
-- `AgentProvider.Codex` sessions only auto-resolve a watched process from the working directory when no explicit watched process id is supplied and the resolved candidate process is shell-hosted through `cmd.exe`, `pwsh.exe`, or `powershell.exe` as the process itself or its direct parent.
+- `AgentProvider.Codex` sessions only auto-resolve a watched process from the working directory when no explicit watched process id is supplied and the resolved candidate process is shell-hosted through a platform-approved shell as the process itself or its direct parent. Approved shells are `cmd.exe`, `pwsh.exe`, and `powershell.exe` on Windows, and `bash`, `zsh`, `fish`, `sh`, `dash`, and `pwsh` on Linux.
 - When a shell-hosted Codex watchdog or `cleanup-orphans` removes sessions by working directory, it removes only watched Codex sessions in that directory and intentionally leaves `process=none` Codex sessions untouched.
 - Optional lid action changes are backed up once and restored after the last active session stops.
 - While shared protection remains applied and the lid is closed, the Emergency Hibernation thermal monitor polls every 10 seconds and stops automatically once protection is restored or disabled.
@@ -380,7 +415,7 @@ The notification server is optional and external to the core LidGuard runtime. I
   - Uses Windows Core Audio endpoint volume APIs to capture, temporarily apply, and restore the default render output master volume and mute state for post-stop suspend sound playback.
 - `LidGuardRuntimePlatform`
   - Adapts Windows power/process services into the Commons runtime platform abstraction.
-  - Reports unsupported platforms before Windows-only services are constructed.
+  - Reports unsupported platforms before platform services are constructed.
 - `CodexHookInstaller`
   - Resolves `%USERPROFILE%\.codex\config.toml` or `CODEX_HOME\config.toml`.
   - Installs, removes, and inspects the LidGuard-managed Codex hook block.
@@ -465,7 +500,7 @@ The notification server is optional and external to the core LidGuard runtime. I
 - For `Stop`, and for `SessionEnd` when a Codex build emits it, it sends internal `stop --provider codex`.
 - Notification-driven soft-lock detection is currently unsupported for Codex because the current public hook surface does not expose a comparable `Notification` event. LidGuard instead supports Codex `request_user_input` soft-locking from transcript JSONL. Future hook-level support can be added if Codex exposes notification or machine-readable pending-state hooks later.
 - Because Codex lacks a notification-style soft-lock clear signal and comparable tool activity hooks, LidGuard records `transcript_path` from `UserPromptSubmit` and monitors the transcript JSONL through the shared transcript monitor. If recent `response_item` records include a `payload.type = function_call` with `payload.name = request_user_input`, LidGuard tracks that `payload.call_id` as pending and marks the session soft-locked with reason `codex_transcript_request_user_input_pending` until a matching `payload.type = function_call_output` appears. When no stop or pending `request_user_input` signal is detected, transcript JSONL length growth or `LastWriteTimeUtc` advancement is treated as Codex provider activity, refreshing `LastActivityAt` and clearing the current soft-lock state through the standard activity path. If `transcript_path` is missing, LidGuard falls back to a unique `~/.codex/sessions` transcript match by session id. The transcript monitor combines file-system change notifications with a short metadata polling fallback. A latest-record `turn_aborted` event is handled as an interrupted turn and stops the tracked Codex session rather than refreshing activity.
-- Codex hook input does not provide a stable parent process id. LidGuard therefore prefers an explicit watched process id for Codex, but when none is supplied it can still use a working-directory fallback if the resolved Codex candidate process is shell-hosted through `cmd.exe`, `pwsh.exe`, or `powershell.exe` as the process itself or its direct parent. That cleanup path never removes `process=none` Codex sessions.
+- Codex hook input does not provide a stable parent process id. LidGuard therefore prefers an explicit watched process id for Codex, but when none is supplied it can still use a working-directory fallback if the resolved Codex candidate process is shell-hosted through a platform-approved shell as the process itself or its direct parent. That cleanup path never removes `process=none` Codex sessions.
 - Codex `PermissionRequest` exits successfully with structured JSON stdout only for effective closed-lid decisions; when the lid is open, unknown, any visible display monitor remains active, or runtime status is unavailable, it exits successfully with empty stdout. LidGuard records diagnostics locally and should not block the Codex task when a runtime request fails.
 - This behavior is based on analyzing the `openai/codex` `codex-rs` hook source: `exit 0` with empty stdout is treated as a no-op success, while non-empty stdout may be parsed as hook JSON or interpreted as plain-text context depending on the event.
 
@@ -601,6 +636,10 @@ lidguard current-lid-state
 lidguard current-monitor-count
 lidguard current-temperature
 lidguard current-temperature --temperature-mode high
+lidguard linux-permission status
+lidguard linux-permission check
+lidguard linux-permission install
+lidguard linux-permission remove
 lidguard suspend-history
 lidguard preview-system-sound --name Asterisk
 lidguard preview-current-sound
@@ -637,12 +676,21 @@ lidguard mcp-server
 - Retry the same validation command before taking any broader recovery action; when this specific issue is the cause, a retry is typically enough.
 - Do not bring down any build server just because the first validation attempt failed with this known Defender issue.
 
+## Current Validation Scope
+
+- Current manual runtime validation has only covered Windows with Codex.
+- Windows, Linux, and macOS RID compile validation can catch platform compilation regressions, but it is not a substitute for runtime behavior validation on each target OS.
+- Linux systemd/logind runtime behavior, Claude Code hooks, GitHub Copilot CLI hooks, Provider MCP flows, and cross-provider concurrent-session behavior still need real environment validation before being treated as verified.
+
 ## Missing Work
 
-The Windows CLI hook receiving path is implemented for Codex, Claude Code, and GitHub Copilot CLI. Remaining work is now focused on lifecycle polish and automated regression coverage.
+The Windows and Linux CLI hook receiving path is implemented for Codex, Claude Code, and GitHub Copilot CLI. Remaining work is now focused on lifecycle polish and automated regression coverage.
 
 - Implement immediate runtime shutdown after the last session stops once the remaining post-stop cleanup work is complete.
-- Add automated regression tests or verification scripts for the already manually verified provider/Windows behavior: latest Codex hook behavior, Claude Code hook stdout behavior, GitHub Copilot CLI hook output behavior, GitHub Copilot CLI user-level `~/.copilot/hooks/` loading and inline `~/.copilot/settings.json` hook composition, GitHub Copilot CLI session id stability, `PowerReadACValueIndex`/`PowerReadDCValueIndex` read/write behavior under normal user permissions, and Group Policy or MDM blocked power setting fallback messages.
+- Validate Linux behavior on a real systemd/logind laptop: `systemd-inhibit` lifecycle, `handle-lid-switch` inhibition, `systemctl suspend` / `systemctl hibernate`, closed-lid plus monitor-count suspend eligibility, `/proc/acpi/button/lid` lid-state reads, `/sys/class/drm` monitor detection, `/sys/class/thermal` temperature aggregation, Emergency Hibernation, and suspend history logging.
+- Validate `linux-permission status|check|install|remove` on non-root and root paths, including busctl `CanSuspend` / `CanHibernate`, managed marker refusal for unmanaged polkit files, sudo failure paths, and removal safety.
+- Validate Linux post-stop sound behavior with no player installed, `pw-play`, `paplay`, `aplay`, missing desktop sound-theme assets, `.wav` paths, and `pactl` volume override capture/apply/restore failure paths.
+- Add automated regression tests or verification scripts for the already manually verified provider behavior, Windows behavior, and Linux systemd/logind behavior: latest Codex hook behavior, Claude Code hook stdout behavior, GitHub Copilot CLI hook output behavior, GitHub Copilot CLI user-level `~/.copilot/hooks/` loading and inline `~/.copilot/settings.json` hook composition, GitHub Copilot CLI session id stability, `PowerReadACValueIndex`/`PowerReadDCValueIndex` read/write behavior under normal user permissions, Linux inhibitor lifecycle, Linux polkit rule management, and Group Policy or MDM blocked power setting fallback messages.
 - Add direct Codex soft-lock support only if Codex later exposes a notification or machine-readable pending-state hook surface.
 
 ## Design Constraints

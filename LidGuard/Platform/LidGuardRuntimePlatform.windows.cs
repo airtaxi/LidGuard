@@ -12,7 +12,7 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
 {
     public bool IsSupported => OperatingSystem.IsWindowsVersionAtLeast(6, 1);
 
-    public string UnsupportedMessage => "LidGuard currently supports Windows only. macOS and Linux support is planned.";
+    public string UnsupportedMessage => "This LidGuard build requires Windows 7 or later.";
 
     public LidGuardOperationResult<LidGuardRuntimeServiceSet> CreateRuntimeServiceSet()
     {

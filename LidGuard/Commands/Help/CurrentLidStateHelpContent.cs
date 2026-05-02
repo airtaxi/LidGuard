@@ -12,10 +12,10 @@ internal static class CurrentLidStateHelpContent
             [],
             LidGuardHelpSectionTitles.Diagnostics,
             $"{commandDisplayName} {LidGuardPipeCommands.CurrentLidState}",
-            "Report the current lid switch state using the same Windows lid-state source LidGuard uses for closed-lid policy decisions.",
+            "Report the current lid switch state using the same platform lid-state source LidGuard uses for closed-lid policy decisions.",
             [],
             [
-                "This reports Open, Closed, or Unknown based on the current `GUID_LIDSWITCH_STATE_CHANGE` value."
+                "This reports Open, Closed, or Unknown based on the current platform lid-state source."
             ]);
     }
 }

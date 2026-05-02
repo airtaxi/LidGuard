@@ -4,7 +4,7 @@ using LidGuard.Settings;
 
 namespace LidGuard.Power;
 
-public sealed class LidActionPolicyController(ILidActionService lidActionService)
+public sealed class LidActionPolicyController(ILidActionService lidActionService) : IDisposable
 {
     public LidGuardOperationResult<LidActionBackup> CaptureBackup(LidGuardSettings settings)
     {
@@ -92,5 +92,10 @@ public sealed class LidActionPolicyController(ILidActionService lidActionService
         }
 
         return lidActionService.ApplyPowerScheme(backup.PowerSchemeIdentifier);
+    }
+
+    public void Dispose()
+    {
+        if (lidActionService is IDisposable disposableLidActionService) disposableLidActionService.Dispose();
     }
 }

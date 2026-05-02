@@ -9,6 +9,10 @@ internal sealed class LidGuardRuntimeClient
 {
     private static readonly TimeSpan s_runtimeConnectionTimeout = TimeSpan.FromMilliseconds(750);
     private static readonly TimeSpan s_runtimeStartupTimeout = TimeSpan.FromSeconds(5);
+    private static readonly string s_unixDetachedLauncherScript =
+        "if command -v setsid >/dev/null 2>&1; then setsid \"$@\" </dev/null >/dev/null 2>&1 & " +
+        "elif command -v nohup >/dev/null 2>&1; then nohup \"$@\" </dev/null >/dev/null 2>&1 & " +
+        "else \"$@\" </dev/null >/dev/null 2>&1 & fi";
 
     public async Task<LidGuardPipeResponse> SendAsync(
         LidGuardPipeRequest request,
@@ -95,24 +99,93 @@ internal sealed class LidGuardRuntimeClient
 
     private static bool TryStartRuntime()
     {
-        var runtimeExecutablePath = Environment.ProcessPath;
-        if (string.IsNullOrWhiteSpace(runtimeExecutablePath)) return false;
-
-        var processStartInfo = new ProcessStartInfo
-        {
-            FileName = runtimeExecutablePath,
-            UseShellExecute = true,
-            WindowStyle = ProcessWindowStyle.Hidden,
-            WorkingDirectory = AppContext.BaseDirectory
-        };
-
-        processStartInfo.Arguments = LidGuardPipeCommands.RunServer;
+        if (!TryCreateRuntimeProcessStartInfo(out var processStartInfo)) return false;
 
         try
         {
+            if (!OperatingSystem.IsWindows()) return TryStartUnixDetachedRuntime(processStartInfo);
+
             using var process = Process.Start(processStartInfo);
             return process is not null;
         }
         catch { return false; }
+    }
+
+    private static bool TryCreateRuntimeProcessStartInfo(out ProcessStartInfo processStartInfo)
+    {
+        processStartInfo = null;
+        var runtimeExecutablePath = Environment.ProcessPath;
+        if (string.IsNullOrWhiteSpace(runtimeExecutablePath)) return false;
+
+        processStartInfo = new ProcessStartInfo
+        {
+            FileName = runtimeExecutablePath,
+            WorkingDirectory = AppContext.BaseDirectory
+        };
+
+        if (!TryAddRuntimeArguments(processStartInfo, runtimeExecutablePath)) return false;
+        if (OperatingSystem.IsWindows())
+        {
+            processStartInfo.UseShellExecute = true;
+            processStartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+        }
+        else
+        {
+            processStartInfo.UseShellExecute = false;
+            processStartInfo.RedirectStandardOutput = true;
+            processStartInfo.RedirectStandardError = true;
+            processStartInfo.CreateNoWindow = true;
+        }
+
+        return true;
+    }
+
+    private static bool TryAddRuntimeArguments(ProcessStartInfo processStartInfo, string runtimeExecutablePath)
+    {
+        if (IsDotnetHost(runtimeExecutablePath))
+        {
+            var runtimeAssemblyPath = Path.Combine(AppContext.BaseDirectory, "lidguard.dll");
+            if (!File.Exists(runtimeAssemblyPath)) return false;
+
+            processStartInfo.ArgumentList.Add(runtimeAssemblyPath);
+        }
+
+        processStartInfo.ArgumentList.Add(LidGuardPipeCommands.RunServer);
+        return true;
+    }
+
+    private static bool IsDotnetHost(string runtimeExecutablePath)
+        => Path.GetFileNameWithoutExtension(runtimeExecutablePath).Equals("dotnet", StringComparison.OrdinalIgnoreCase);
+
+    private static bool TryStartUnixDetachedRuntime(ProcessStartInfo runtimeProcessStartInfo)
+    {
+        if (!File.Exists("/bin/sh")) return TryStartProcess(runtimeProcessStartInfo);
+
+        var processStartInfo = new ProcessStartInfo
+        {
+            FileName = "/bin/sh",
+            WorkingDirectory = AppContext.BaseDirectory,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+
+        processStartInfo.ArgumentList.Add("-c");
+        processStartInfo.ArgumentList.Add(s_unixDetachedLauncherScript);
+        processStartInfo.ArgumentList.Add("lidguard-runtime-launcher");
+        processStartInfo.ArgumentList.Add(runtimeProcessStartInfo.FileName);
+        foreach (var argument in runtimeProcessStartInfo.ArgumentList) processStartInfo.ArgumentList.Add(argument);
+
+        using var process = Process.Start(processStartInfo);
+        if (process is null) return false;
+        if (!process.WaitForExit((int)TimeSpan.FromSeconds(2).TotalMilliseconds)) return true;
+        return process.ExitCode == 0;
+    }
+
+    private static bool TryStartProcess(ProcessStartInfo processStartInfo)
+    {
+        using var process = Process.Start(processStartInfo);
+        return process is not null;
     }
 }

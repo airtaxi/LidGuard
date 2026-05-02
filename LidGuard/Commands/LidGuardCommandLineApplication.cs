@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Runtime.Versioning;
 using LidGuard.Hooks;
 using LidGuard.Ipc;
 using LidGuard.Mcp;
@@ -38,6 +37,11 @@ internal static class LidGuardCommandLineApplication
         if (commandName == LidGuardMcpServerCommand.CommandName) return await LidGuardMcpServerCommand.RunAsync(commandLineArguments[1..]);
         if (commandName == ProviderMcpServerCommand.CommandName) return await ProviderMcpServerCommand.RunAsync(commandLineArguments[1..]);
         if (commandName == LidGuardPipeCommands.RunServer) return await RunServerAsync(runtimePlatform);
+#if LIDGUARD_LINUX
+        if (commandName == LinuxPermissionCommand.CommandName) return LinuxPermissionCommand.Run(commandLineArguments[1..]);
+#endif
+
+        if (!IsOptionParsedCommandName(commandName)) return LidGuardCommandConsole.WriteUnknownCommand(requestedCommandName);
 
         if (!CommandOptionReader.TryParseOptions(commandLineArguments, 1, out var options, out var parseMessage))
         {
@@ -100,6 +104,38 @@ internal static class LidGuardCommandLineApplication
 
         return false;
     }
+
+    private static bool IsOptionParsedCommandName(string commandName)
+        => commandName is LidGuardPipeCommands.Start
+            or LidGuardPipeCommands.Stop
+            or LidGuardPipeCommands.RemovePreSuspendWebhook
+            or LidGuardPipeCommands.RemovePostSessionEndWebhook
+            or LidGuardPipeCommands.RemoveSession
+            or LidGuardPipeCommands.Status
+            or LidGuardPipeCommands.CleanupOrphans
+            or LidGuardPipeCommands.CurrentLidState
+            or LidGuardPipeCommands.CurrentMonitorCount
+            or LidGuardPipeCommands.CurrentTemperature
+            or LidGuardPipeCommands.SuspendHistory
+            or LidGuardPipeCommands.Settings
+            or LidGuardPipeCommands.PreviewCurrentSound
+            or LidGuardPipeCommands.PreviewSystemSound
+            or LidGuardPipeCommands.ClaudeHooks
+            or LidGuardPipeCommands.CopilotHooks
+            or LidGuardPipeCommands.CodexHooks
+            or LidGuardPipeCommands.HookStatus
+            or LidGuardPipeCommands.HookInstall
+            or LidGuardPipeCommands.HookRemove
+            or "hook-uninstall"
+            or LidGuardPipeCommands.HookEvents
+            or LidGuardPipeCommands.McpStatus
+            or LidGuardPipeCommands.McpInstall
+            or LidGuardPipeCommands.McpRemove
+            or "mcp-uninstall"
+            or LidGuardPipeCommands.ProviderMcpStatus
+            or LidGuardPipeCommands.ProviderMcpInstall
+            or LidGuardPipeCommands.ProviderMcpRemove
+            or "provider-mcp-uninstall";
 
     private static async Task<int> RunServerAsync(ILidGuardRuntimePlatform runtimePlatform)
     {
@@ -292,12 +328,6 @@ internal static class LidGuardCommandLineApplication
 
     private static int WriteCurrentTemperature(IReadOnlyDictionary<string, string> options)
     {
-        if (!OperatingSystem.IsWindowsVersionAtLeast(6, 1))
-        {
-            Console.WriteLine("Current recognized system temperature is unavailable on this platform.");
-            return 0;
-        }
-
         if (!TryResolveCurrentTemperatureMode(options, out var emergencyHibernationTemperatureMode, out var message))
         {
             Console.Error.WriteLine(message);
@@ -308,7 +338,7 @@ internal static class LidGuardCommandLineApplication
         if (!currentTemperatureCelsius.HasValue)
         {
             Console.WriteLine(
-                $"Current recognized system temperature is unavailable from Windows thermal-zone information using {emergencyHibernationTemperatureMode} mode.");
+                $"Current recognized system temperature is unavailable from this platform's thermal-zone information using {emergencyHibernationTemperatureMode} mode.");
             return 0;
         }
 
@@ -362,7 +392,6 @@ internal static class LidGuardCommandLineApplication
         return lidSwitchState;
     }
 
-    [SupportedOSPlatform("windows6.1")]
     private static int? GetCurrentTemperatureCelsius(EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
         => SystemThermalInformation.GetSystemTemperatureCelsius(emergencyHibernationTemperatureMode);
 

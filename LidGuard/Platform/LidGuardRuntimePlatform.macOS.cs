@@ -8,7 +8,7 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
 {
     public bool IsSupported => false;
 
-    public string UnsupportedMessage => "LidGuard currently supports Windows only. macOS and Linux support is planned.";
+    public string UnsupportedMessage => "LidGuard currently supports Windows and systemd/logind Linux. macOS support is planned.";
 
     public LidGuardOperationResult<LidGuardRuntimeServiceSet> CreateRuntimeServiceSet()
         => LidGuardOperationResult<LidGuardRuntimeServiceSet>.Failure(UnsupportedMessage);

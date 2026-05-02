@@ -2,7 +2,7 @@
 
 🌐 [한국어](README.ko.md)
 
-LidGuard is a command-line tool for long-running local AI coding agent sessions. Windows protection is currently implemented; macOS and Linux support is planned and currently exits successfully with a support message.
+LidGuard is a command-line tool for long-running local AI coding agent sessions. Windows protection is implemented, Linux protection is implemented for systemd/logind systems, and macOS support is planned.
 
 ## Install
 
@@ -84,13 +84,17 @@ lidguard current-lid-state
 lidguard current-monitor-count
 lidguard current-temperature
 lidguard current-temperature --temperature-mode high
+lidguard linux-permission status
+lidguard linux-permission check
 ```
 
-`current-lid-state` prints the current lid switch state as `Open`, `Closed`, or `Unknown` using the same Windows lid-state source LidGuard uses for closed-lid policy decisions.
+`current-lid-state` prints the current lid switch state as `Open`, `Closed`, or `Unknown` using the same platform lid-state source LidGuard uses for closed-lid policy decisions.
 
-`current-monitor-count` prints the current visible display monitor count using the same base Windows monitor visibility check LidGuard uses for closed-lid suspend policy decisions. LidGuard starts from `SM_CMONITORS` and excludes inactive monitor connections reported by Windows WMI. Internal laptop panel connections are only excluded by the final suspend eligibility check.
+`current-monitor-count` prints the current visible display monitor count using the same base platform monitor visibility check LidGuard uses for closed-lid suspend policy decisions. Internal laptop panel connections are only excluded by the final suspend eligibility check.
 
 `current-temperature` prints the current recognized system thermal-zone temperature in Celsius using the selected aggregation mode. Use `--temperature-mode default|low|average|high` to reuse the saved setting or override it for one command. When the settings file does not exist yet, `default` falls back to LidGuard's `Average` headless runtime default.
+
+On Linux, `linux-permission status` and `linux-permission check` inspect the systemd/logind permission environment without suspending the system. Use `linux-permission install` to install a LidGuard-managed polkit rule for the current user, and `linux-permission remove` to remove only that managed rule file.
 
 ## Hook Integration
 
@@ -139,10 +143,14 @@ LidGuard stores its default settings and runtime logs under:
 %LOCALAPPDATA%\LidGuard
 ```
 
+On typical Linux desktops, this resolves under `~/.local/share/LidGuard`.
+
 The default settings file is `settings.json`. Runtime session execution events are written to `session-execution.log` as JSON lines, with only the latest 500 entries retained. Inactive-session timeout expiry is logged as `session-timeout-softlock-recorded`.
 
 ## Notes
 
-This package targets `net10.0` and is packaged as RID-specific NativeAOT .NET tool packages for Windows, Linux, and macOS. Windows is the only implemented runtime platform in the current release.
+This package targets `net10.0` and is packaged as RID-specific NativeAOT .NET tool packages for Windows, Linux, and macOS. Windows and systemd/logind Linux are implemented runtime platforms in the current release; macOS currently reports planned support.
+
+On Linux, idle sleep protection uses systemd/logind `sleep` and `idle` inhibitors. Lid-close handling is separate: `--change-lid-action true` holds a `handle-lid-switch` inhibitor, while `false` leaves distribution lid-close handling unchanged. Partial systemd/logind environments report missing prerequisites per operation so diagnostics can still explain what is unavailable.
 
 Provider MCP integrations are best-effort only. They depend on the model actually calling the LidGuard MCP tools at the right times, so LidGuard cannot guarantee that a provider will start, soft-lock, clear, and stop sessions correctly.

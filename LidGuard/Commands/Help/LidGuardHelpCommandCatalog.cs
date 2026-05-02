@@ -21,6 +21,9 @@ internal static class LidGuardHelpCommandCatalog
             CurrentMonitorCountHelpContent.Create(documentContext),
             CurrentTemperatureHelpContent.Create(documentContext),
             SuspendHistoryHelpContent.Create(documentContext),
+#if LIDGUARD_LINUX
+            LinuxPermissionHelpContent.Create(documentContext),
+#endif
             HookStatusHelpContent.Create(documentContext),
             HookInstallHelpContent.Create(documentContext),
             HookRemoveHelpContent.Create(documentContext),
