@@ -112,8 +112,8 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - After the last active session stops, LidGuard should request suspend after the configured post-stop delay using the configured suspend mode only when the lid is closed and the suspend eligibility visible display monitor count is `0`. A delay of `0` means immediate suspend.
 - If a post-stop suspend sound is configured, LidGuard should wait for the delay first, then play the configured sound to completion, then re-check the lid/session state before requesting suspend.
 - If a post-stop suspend sound volume override is configured, LidGuard should capture the default output device master volume and mute state immediately before playback, temporarily unmute as needed, set the configured master volume percent for playback, then restore the previous volume and mute state in the sound playback cleanup path.
-- If a pre-suspend webhook URL is configured, LidGuard should POST JSON before requesting suspend. The body must include `eventType = PreSuspend` and `reason`, and soft-lock-triggered suspend must also include the soft-locked session count. Notification receivers must continue accepting the legacy payload shape that omits `eventType`.
-- If a post-session-end webhook URL is configured, LidGuard should POST JSON after a provider-reported normal session end only when that stop does not schedule suspend. The body must include `eventType = PostSessionEnd`, `reason = SessionEnded`, provider/session identity, UTC start/activity/end timestamps, end reason metadata, active session count, working directory, and transcript path when available.
+- If a pre-suspend webhook URL is configured, LidGuard should POST JSON with a 5-second timeout before requesting suspend. The body must include `eventType = PreSuspend` and `reason`, and soft-lock-triggered suspend must also include the soft-locked session count. Notification receivers must continue accepting the legacy payload shape that omits `eventType`.
+- If a post-session-end webhook URL is configured, LidGuard should POST JSON with a 5-second timeout after a provider-reported normal session end only when that stop does not schedule suspend. The body must include `eventType = PostSessionEnd`, `reason = SessionEnded`, provider/session identity, UTC start/activity/end timestamps, end reason metadata, active session count, working directory, and transcript path when available.
 
 ### Emergency Hibernation Thermal Monitor
 
@@ -224,8 +224,8 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Optional lid action changes are backed up once and restored after the last active session stops.
 - While shared protection remains applied and the lid is closed, the Emergency Hibernation thermal monitor polls every 10 seconds and stops automatically once protection is restored or disabled.
 - Multiple stop signals for the same session should not cause repeated cleanup side effects.
-- When the active session count reaches `0`, the runtime should shut down after the configured server runtime cleanup delay once no post-stop suspend request, lid-action restore, pre-suspend webhook, post-stop sound, or equivalent cleanup work remains pending.
-- When a provider-reported normal stop removes an active session and no suspend is scheduled from that stop, the runtime sends the post-session-end webhook in the background and logs webhook failures without failing the stop.
+- When the active session count reaches `0`, the runtime should shut down after the configured server runtime cleanup delay once no post-stop suspend request, lid-action restore, pre-suspend webhook, post-session-end webhook, post-stop sound, or equivalent cleanup work remains pending.
+- When a provider-reported normal stop removes an active session and no suspend is scheduled from that stop, the runtime sends the post-session-end webhook in the background, keeps runtime cleanup pending until that send finishes or times out, and logs webhook failures without failing the stop.
 - Persistent pending backup state is still missing and is the next resilience priority.
 
 ### Settings Defaults

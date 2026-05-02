@@ -37,7 +37,8 @@ internal static class SuspendWebhookSender
     public static async Task<LidGuardOperationResult> SendPostSessionEndAsync(
         string postSessionEndWebhookUrl,
         LidGuardWebhookRequest request,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        TimeSpan? timeout = null)
     {
         if (!PostSessionEndWebhookConfiguration.TryNormalizeConfiguredValue(postSessionEndWebhookUrl, out var normalizedPostSessionEndWebhookUrl, out var message)) return LidGuardOperationResult.Failure(message);
 
@@ -46,7 +47,8 @@ internal static class SuspendWebhookSender
             normalizedPostSessionEndWebhookUrl,
             request,
             "post-session-end",
-            cancellationToken);
+            cancellationToken,
+            timeout);
     }
 
     private static async Task<LidGuardOperationResult> SendCoreAsync(

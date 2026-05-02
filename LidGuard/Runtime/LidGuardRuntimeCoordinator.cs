@@ -18,6 +18,8 @@ internal sealed class LidGuardRuntimeCoordinator
     private const string ServerRuntimeCleanupCommandName = "server-runtime-cleanup";
 
     private static readonly TimeSpan s_processWatchInterval = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan s_preSuspendWebhookTimeout = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan s_postSessionEndWebhookTimeout = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan s_emergencyHibernationWebhookTimeout = TimeSpan.FromSeconds(5);
     private readonly ICommandLineProcessResolver _commandLineProcessResolver;
     private readonly IProcessExitWatcher _processExitWatcher;
@@ -39,6 +41,7 @@ internal sealed class LidGuardRuntimeCoordinator
     private CancellationTokenSource _pendingSuspendCancellationTokenSource;
     private CancellationTokenSource _sessionTimeoutCancellationTokenSource;
     private CancellationTokenSource _serverRuntimeCleanupCancellationTokenSource;
+    private int _pendingPostSessionEndWebhookCount;
     private bool _serverRuntimeStopRequested;
 
     public LidGuardRuntimeCoordinator(
@@ -634,6 +637,7 @@ internal sealed class LidGuardRuntimeCoordinator
         CancelServerRuntimeCleanupInsideGate();
         if (_sessionRegistry.HasActiveSessions) return;
         if (_pendingSuspendCancellationTokenSource is not null) return;
+        if (_pendingPostSessionEndWebhookCount > 0) return;
 
         if (_settings.ServerRuntimeCleanupDelayMinutes is not { } serverRuntimeCleanupDelayMinutes)
         {
@@ -940,9 +944,9 @@ internal sealed class LidGuardRuntimeCoordinator
             _sessionRegistry.ActiveSessionCount,
             out var suspendScheduled);
         ReconfigureSessionTimeoutMonitorInsideGate();
+        if (!suspendScheduled) QueuePostSessionEndWebhookIfRequired(request, stoppedSnapshot, eventName, commandName, _sessionRegistry.ActiveSessionCount);
         ReconfigureServerRuntimeCleanupInsideGate();
         LidGuardRuntimeLogWriter.AppendSessionLog(eventName, request, successResponse, stoppedSnapshot, commandName);
-        if (!suspendScheduled) QueuePostSessionEndWebhookIfRequired(request, stoppedSnapshot, eventName, commandName, _sessionRegistry.ActiveSessionCount);
         return successResponse;
     }
 
@@ -1239,7 +1243,8 @@ internal sealed class LidGuardRuntimeCoordinator
             preSuspendWebhookUrl,
             suspendWebhookReason,
             suspendTriggerSessionCount,
-            cancellationToken);
+            cancellationToken,
+            s_preSuspendWebhookTimeout);
         if (sendResult.Succeeded) return;
 
         await _gate.WaitAsync(CancellationToken.None);
@@ -1281,6 +1286,7 @@ internal sealed class LidGuardRuntimeCoordinator
             TranscriptPath = string.IsNullOrWhiteSpace(snapshot.TranscriptPath) ? null : snapshot.TranscriptPath
         };
 
+        _pendingPostSessionEndWebhookCount++;
         _ = SendPostSessionEndWebhookAsync(
             postSessionEndWebhookUrl,
             webhookRequest,
@@ -1291,7 +1297,7 @@ internal sealed class LidGuardRuntimeCoordinator
             activeSessionCount);
     }
 
-    private static async Task SendPostSessionEndWebhookAsync(
+    private async Task SendPostSessionEndWebhookAsync(
         string postSessionEndWebhookUrl,
         LidGuardWebhookRequest webhookRequest,
         LidGuardSessionStopRequest request,
@@ -1300,23 +1306,45 @@ internal sealed class LidGuardRuntimeCoordinator
         string commandName,
         int activeSessionCount)
     {
-        LidGuardOperationResult sendResult;
         try
         {
-            sendResult = await SuspendWebhookSender.SendPostSessionEndAsync(
-                postSessionEndWebhookUrl,
-                webhookRequest,
-                CancellationToken.None);
+            LidGuardOperationResult sendResult;
+            try
+            {
+                sendResult = await SuspendWebhookSender.SendPostSessionEndAsync(
+                    postSessionEndWebhookUrl,
+                    webhookRequest,
+                    CancellationToken.None,
+                    s_postSessionEndWebhookTimeout);
+            }
+            catch (Exception exception)
+            {
+                sendResult = LidGuardOperationResult.Failure($"Failed to send the post-session-end webhook: {exception.Message}");
+            }
+
+            if (sendResult.Succeeded) return;
+
+            var response = LidGuardPipeResponse.Failure(sendResult.Message, activeSessionCount);
+            LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-post-session-end-webhook-failed", request, response, snapshot, commandName);
         }
-        catch (Exception exception)
+        finally
         {
-            sendResult = LidGuardOperationResult.Failure($"Failed to send the post-session-end webhook: {exception.Message}");
+            await CompletePostSessionEndWebhookAsync();
         }
+    }
 
-        if (sendResult.Succeeded) return;
-
-        var response = LidGuardPipeResponse.Failure(sendResult.Message, activeSessionCount);
-        LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-post-session-end-webhook-failed", request, response, snapshot, commandName);
+    private async Task CompletePostSessionEndWebhookAsync()
+    {
+        await _gate.WaitAsync(CancellationToken.None);
+        try
+        {
+            if (_pendingPostSessionEndWebhookCount > 0) _pendingPostSessionEndWebhookCount--;
+            ReconfigureServerRuntimeCleanupInsideGate(false);
+        }
+        finally
+        {
+            _gate.Release();
+        }
     }
 
     private async Task HandleEmergencyHibernationThresholdReachedAsync(
