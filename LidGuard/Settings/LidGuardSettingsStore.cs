@@ -1,5 +1,4 @@
 using System.Text.Json;
-using LidGuard.Power;
 using LidGuard.Settings;
 
 namespace LidGuard.Settings;
@@ -74,46 +73,13 @@ internal static class LidGuardSettingsStore
         }
     }
 
-    private static LidGuardSettings MigrateLoadedSettings(string content, LidGuardSettings loadedSettings)
-    {
-        var normalizedSettings = LidGuardSettings.Normalize(loadedSettings);
-        if (HasPowerRequestProperty(content, nameof(PowerRequestOptions.PreventAwayModeSleep))) return normalizedSettings;
-
-        var powerRequest = normalizedSettings.PowerRequest ?? PowerRequestOptions.Default;
-        return new LidGuardSettings
-        {
-            PowerRequest = new PowerRequestOptions
-            {
-                PreventSystemSleep = powerRequest.PreventSystemSleep,
-                PreventAwayModeSleep = PowerRequestOptions.Default.PreventAwayModeSleep,
-                PreventDisplaySleep = powerRequest.PreventDisplaySleep,
-                Reason = powerRequest.Reason
-            },
-            ChangeLidAction = normalizedSettings.ChangeLidAction,
-            SuspendMode = normalizedSettings.SuspendMode,
-            PostStopSuspendDelaySeconds = normalizedSettings.PostStopSuspendDelaySeconds,
-            PostStopSuspendSound = normalizedSettings.PostStopSuspendSound,
-            PostStopSuspendSoundVolumeOverridePercent = normalizedSettings.PostStopSuspendSoundVolumeOverridePercent,
-            SuspendHistoryEntryCount = normalizedSettings.SuspendHistoryEntryCount,
-            PreSuspendWebhookUrl = normalizedSettings.PreSuspendWebhookUrl,
-            PostSessionEndWebhookUrl = normalizedSettings.PostSessionEndWebhookUrl,
-            ClosedLidPermissionRequestDecision = normalizedSettings.ClosedLidPermissionRequestDecision,
-            WatchParentProcess = normalizedSettings.WatchParentProcess,
-            SessionTimeoutMinutes = normalizedSettings.SessionTimeoutMinutes,
-            ServerRuntimeCleanupDelayMinutes = normalizedSettings.ServerRuntimeCleanupDelayMinutes,
-            EmergencyHibernationOnHighTemperature = normalizedSettings.EmergencyHibernationOnHighTemperature,
-            EmergencyHibernationTemperatureMode = normalizedSettings.EmergencyHibernationTemperatureMode,
-            EmergencyHibernationTemperatureCelsius = normalizedSettings.EmergencyHibernationTemperatureCelsius
-        };
-    }
-
     private static bool TryLoad(string settingsFilePath, out LidGuardSettings settings, out string message)
     {
         try
         {
             var content = File.ReadAllText(settingsFilePath);
             var loadedSettings = JsonSerializer.Deserialize(content, LidGuardSettingsFileJsonSerializerContext.Default.LidGuardSettings);
-            settings = MigrateLoadedSettings(content, loadedSettings);
+            settings = LidGuardSettings.Normalize(loadedSettings);
             message = string.Empty;
             return true;
         }
@@ -125,17 +91,5 @@ internal static class LidGuardSettingsStore
         }
     }
 
-    private static bool HasPowerRequestProperty(string content, string propertyName)
-    {
-        using var jsonDocument = JsonDocument.Parse(content);
-        if (!jsonDocument.RootElement.TryGetProperty(nameof(LidGuardSettings.PowerRequest), out var powerRequestElement)) return false;
-
-        foreach (var jsonProperty in powerRequestElement.EnumerateObject())
-        {
-            if (jsonProperty.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase)) return true;
-        }
-
-        return false;
-    }
 }
 

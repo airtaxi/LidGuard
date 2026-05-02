@@ -108,7 +108,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - After the last active session stops, LidGuard should request suspend after the configured post-stop delay using the configured suspend mode only when the lid is closed and the suspend eligibility visible display monitor count is `0`. A delay of `0` means immediate suspend.
 - If a post-stop suspend sound is configured, LidGuard should wait for the delay first, then play the configured sound to completion, then re-check the lid/session state before requesting suspend.
 - If a post-stop suspend sound volume override is configured, LidGuard should capture the default output device master volume and mute state immediately before playback, temporarily unmute as needed, set the configured master volume percent for playback, then restore the previous volume and mute state in the sound playback cleanup path.
-- If a pre-suspend webhook URL is configured, LidGuard should POST JSON with a 5-second timeout before requesting suspend. The body must include `eventType = PreSuspend` and `reason`, and soft-lock-triggered suspend must also include the soft-locked session count. Notification receivers must continue accepting the legacy payload shape that omits `eventType`.
+- If a pre-suspend webhook URL is configured, LidGuard should POST JSON with a 5-second timeout before requesting suspend. The body must include `eventType = PreSuspend` and `reason`, and soft-lock-triggered suspend must also include the soft-locked session count. Notification receivers should reject webhook payloads that omit `eventType`.
 - If a post-session-end webhook URL is configured, LidGuard should POST JSON with a 5-second timeout after a provider-reported normal session end only when that stop does not schedule suspend. The body must include `eventType = PostSessionEnd`, `reason = SessionEnded`, provider/session identity, UTC start/activity/end timestamps, end reason metadata, active session count, working directory, and transcript path when available.
 
 ### Emergency Hibernation Thermal Monitor
@@ -349,7 +349,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `Pages`
   - Token login, browser subscription dashboard, and webhook event history.
 
-The notification server is optional and external to the core LidGuard runtime. It receives both the existing pre-suspend webhook payload and the post-session-end payload, accepts legacy pre-suspend bodies without `eventType`, and must keep VAPID private keys on the server only.
+The notification server is optional and external to the core LidGuard runtime. It receives pre-suspend and post-session-end webhook payloads that include `eventType`, and must keep VAPID private keys on the server only.
 
 ### Windows
 
