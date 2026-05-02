@@ -1,0 +1,31 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<section class="dashboard-grid">
+    <div class="panel">
+        <h1>Notifications</h1>
+        <div class="metric-row">
+            <span>Active subscriptions</span>
+            <strong>@Model.ActiveSubscriptionCount</strong>
+        </div>
+        <div class="button-row">
+            <button id="subscribeButton" type="button">Subscribe browser</button>
+            <button id="unsubscribeButton" type="button" class="secondary">Unsubscribe</button>
+        </div>
+        <p id="subscriptionStatus" class="status-text" role="status">Ready.</p>
+    </div>
+
+    <div class="panel">
+        <h2>LidGuard webhook</h2>
+        <code class="webhook-url">@Model.WebhookUrl</code>
+        @if (!Model.HasPublicBaseUrl)
+        {
+            <p class="muted">PublicBaseUrl is not configured.</p>
+        }
+    </div>
+</section>
+
+<script src="~/app.js" asp-append-version="true"></script>

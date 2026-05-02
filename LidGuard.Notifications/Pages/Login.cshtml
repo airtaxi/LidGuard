@@ -1,0 +1,19 @@
+@page
+@model LoginModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<section class="auth-shell">
+    <form method="post" class="panel auth-panel">
+        <h1>LidGuard Notifications</h1>
+        <label asp-for="AccessToken">Access token</label>
+        <input asp-for="AccessToken" type="password" autocomplete="current-password" autofocus />
+        <span asp-validation-for="AccessToken" class="field-error"></span>
+        @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+        {
+            <p class="field-error" role="alert">@Model.ErrorMessage</p>
+        }
+        <button type="submit">Sign in</button>
+    </form>
+</section>

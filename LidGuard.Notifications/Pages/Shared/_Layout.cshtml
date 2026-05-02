@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - LidGuard Notifications</title>
+    <link rel="stylesheet" href="~/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <a asp-page="/Index" class="brand">LidGuard Notifications</a>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <nav>
+                <a asp-page="/Index">Dashboard</a>
+                <a asp-page="/Events">Events</a>
+                <form method="post" action="/logout">
+                    <button type="submit" class="link-button">Sign out</button>
+                </form>
+            </nav>
+        }
+    </header>
+    <main>
+        @RenderBody()
+    </main>
+</body>
+</html>

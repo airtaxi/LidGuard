@@ -1,0 +1,46 @@
+@page
+@model EventsModel
+@{
+    ViewData["Title"] = "Events";
+}
+
+<section class="panel">
+    <h1>Webhook events</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Received</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Deliveries</th>
+                <th>Last error</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var webhookEvent in Model.Events)
+            {
+                <tr>
+                    <td>@webhookEvent.ReceivedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>
+                        @webhookEvent.Reason
+                        @if (webhookEvent.SoftLockedSessionCount is not null)
+                        {
+                            <span class="muted">(@webhookEvent.SoftLockedSessionCount)</span>
+                        }
+                    </td>
+                    <td>@webhookEvent.Status</td>
+                    <td>
+                        @webhookEvent.SuccessCount success /
+                        @webhookEvent.PermanentFailureCount permanent /
+                        @webhookEvent.TransientFailureCount transient
+                    </td>
+                    <td>@(webhookEvent.LastError ?? "-")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    @if (Model.Events.Count == 0)
+    {
+        <p class="muted">No events recorded.</p>
+    }
+</section>

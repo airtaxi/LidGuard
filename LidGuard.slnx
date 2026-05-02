@@ -7,5 +7,6 @@
   <Project Path="LidGuardLib.Commons/LidGuardLib.Commons.csproj" />
   <Project Path="LidGuardLib/LidGuardLib.csproj" />
   <Project Path="LidGuard/LidGuard.csproj" />
+  <Project Path="LidGuard.Notifications/LidGuard.Notifications.csproj" />
 </Solution>
 

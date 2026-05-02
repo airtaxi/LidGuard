@@ -70,8 +70,13 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
   - Uses a named pipe to send `start`, `stop`, `remove-session`, `status`, `settings`, and `cleanup-orphans` requests to the runtime.
   - Hosts the stdio MCP server through the `mcp-server` subcommand.
   - Stores default settings JSON at `%LOCALAPPDATA%\LidGuard\settings.json`.
+- `LidGuard.Notifications`
+  - .NET 10 ASP.NET Core Razor Pages app targeting `net10.0`.
+  - Receives LidGuard pre-suspend webhooks and sends browser Web Push notifications to subscribed clients.
+  - Stores subscriptions, webhook events, and delivery attempts in SQLite.
+  - Uses server-side VAPID settings; VAPID private keys and access tokens must never be committed.
 - `LidGuard.slnx`
-  - Root solution file including `LidGuardLib.Commons`, `LidGuardLib`, and `LidGuard`.
+  - Root solution file including `LidGuardLib.Commons`, `LidGuardLib`, `LidGuard`, and `LidGuard.Notifications`.
 
 ## Technical Design
 
@@ -318,6 +323,19 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - `SuspendHistoryLogStore`
 
 `LidGuardControlService` loads/saves stored settings and can push updated settings into a running runtime without requiring the CLI entrypoint.
+
+### LidGuard Notifications App
+
+- `Configuration`
+  - `LidGuardNotificationsOptions`
+- `Data`
+  - SQLite connection, schema initialization, subscription storage, webhook event storage, and delivery logging.
+- `Services`
+  - Web Push sending, webhook API endpoints, and background notification dispatch.
+- `Pages`
+  - Token login, browser subscription dashboard, and webhook event history.
+
+The notification server is optional and external to the core LidGuard runtime. It receives the existing pre-suspend webhook payload and must keep VAPID private keys on the server only.
 
 ### Windows
 
