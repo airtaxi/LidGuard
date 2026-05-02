@@ -1,5 +1,7 @@
 # LidGuard.Notifications
 
+🌐 [한국어](README.ko.md)
+
 ## Overview
 
 `LidGuard.Notifications` is a small ASP.NET Core Razor Pages server that receives LidGuard pre-suspend webhooks and forwards them to subscribed browsers through Web Push. It stores browser subscriptions, webhook events, and delivery results in SQLite.

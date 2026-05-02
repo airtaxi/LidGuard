@@ -1,4 +1,6 @@
-﻿# LidGuard CLI
+# LidGuard CLI
+
+🌐 [한국어](README.ko.md)
 
 LidGuard is a command-line tool for long-running local AI coding agent sessions. Windows protection is currently implemented; macOS and Linux support is planned and currently exits successfully with a support message.
 
