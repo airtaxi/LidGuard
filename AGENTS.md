@@ -172,6 +172,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `run-server` is detached from inherited stdout/stderr so hook callers do not hang while reading child process output.
 - Runtime communication uses a local named pipe.
 - Session execution events are logged as JSON lines at `%LOCALAPPDATA%\LidGuard\session-execution.log`, keeping the latest 500 entries. Timeout-triggered soft-lock transitions are logged as `session-timeout-softlock-recorded`.
+- First-chance, unhandled, and unobserved task exceptions are appended to `%LOCALAPPDATA%\LidGuard\log\exceptions.log`, including inner exception details. Unobserved task exceptions must be marked observed as part of that handling.
 - Recent suspend request history is logged as JSON lines at `%LOCALAPPDATA%\LidGuard\suspend-history.log`, keeping the latest configured entry count when enabled.
 - Provider hook event logs record the `prompt` field on received start events: Codex and Claude `UserPromptSubmit`, and GitHub Copilot CLI `userPromptSubmitted`.
 - Default settings are stored at `%LOCALAPPDATA%\LidGuard\settings.json`.
