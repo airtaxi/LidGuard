@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "LidGuard.Notifications": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:5445;http://localhost:5446"
+    }
+  }
+}
