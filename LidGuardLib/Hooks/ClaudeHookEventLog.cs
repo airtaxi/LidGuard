@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using LidGuardLib.Commons.Hooks;
 
@@ -79,7 +80,7 @@ public static class ClaudeHookEventLog
 
     private static string CreateLogLine(string kind, string hookEventName, string sessionIdentifier, string workingDirectory, string details)
     {
-        var timestamp = DateTimeOffset.UtcNow.ToString("O");
+        var timestamp = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
         return $"{timestamp} kind={Sanitize(kind)} event={Sanitize(hookEventName)} session={Sanitize(sessionIdentifier)} workingDirectory={Sanitize(workingDirectory)} {details}".TrimEnd();
     }
 

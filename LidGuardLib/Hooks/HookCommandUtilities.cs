@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace LidGuardLib.Hooks;
 
 public static class HookCommandUtilities
@@ -40,7 +42,7 @@ public static class HookCommandUtilities
 
     public static string CreateBackupFilePath(string configurationFilePath)
     {
-        var timestamp = DateTimeOffset.Now.ToString("yyyyMMddHHmmss");
+        var timestamp = DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
         return $"{configurationFilePath}.{timestamp}.bak";
     }
 

@@ -80,8 +80,9 @@ internal static class SuspendHistoryCommand
 
     private static void WriteHistoryEntry(SuspendHistoryEntry historyEntry)
     {
+        var recordedAt = LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(historyEntry.RecordedAt);
         Console.WriteLine(
-            $"- {historyEntry.RecordedAt:O} mode={historyEntry.SuspendMode} reason={historyEntry.Reason} succeeded={historyEntry.Succeeded} activeSessions={historyEntry.ActiveSessionCount} triggerSessions={historyEntry.SuspendTriggerSessionCount}");
+            $"- {recordedAt} mode={historyEntry.SuspendMode} reason={historyEntry.Reason} succeeded={historyEntry.Succeeded} activeSessions={historyEntry.ActiveSessionCount} triggerSessions={historyEntry.SuspendTriggerSessionCount}");
 
         if (!string.IsNullOrWhiteSpace(historyEntry.SessionIdentifier))
         {

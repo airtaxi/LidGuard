@@ -28,8 +28,10 @@ internal static class LidGuardCommandConsole
             {
                 var processText = session.WatchedProcessIdentifier > 0 ? session.WatchedProcessIdentifier.ToString() : "none";
                 var providerDisplayText = AgentProviderDisplay.CreateProviderDisplayText(session.Provider, session.ProviderName);
+                var startedAt = LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(session.StartedAt);
+                var lastActivityAt = LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(session.LastActivityAt);
                 Console.WriteLine(
-                    $"- {providerDisplayText}:{session.SessionIdentifier} process={processText} softLock={DescribeSoftLockStatus(session)} cwd=\"{session.WorkingDirectory}\" started={session.StartedAt:O} lastActivity={session.LastActivityAt:O}");
+                    $"- {providerDisplayText}:{session.SessionIdentifier} process={processText} softLock={DescribeSoftLockStatus(session)} cwd=\"{session.WorkingDirectory}\" started={startedAt} lastActivity={lastActivityAt}");
             }
         }
 
@@ -142,7 +144,7 @@ internal static class LidGuardCommandConsole
 
         var details = session.SoftLockState.ToString();
         if (!string.IsNullOrWhiteSpace(session.SoftLockReason)) details = $"{details}:{session.SoftLockReason}";
-        if (session.SoftLockedAt is not null) details = $"{details}@{session.SoftLockedAt.Value:O}";
+        if (session.SoftLockedAt is not null) details = $"{details}@{LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(session.SoftLockedAt.Value)}";
         return details;
     }
 }

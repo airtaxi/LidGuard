@@ -8,6 +8,7 @@
 - This repository is NativeAOT and trimming sensitive. Avoid APIs that trigger IL2026 / IL3050 warnings, and prefer AOT-safe overloads plus source-generated `System.Text.Json` serializers over reflection-driven or dynamic JSON helpers.
 - Windows native interop must stay centralized through CsWin32-generated APIs. Do not add direct `[DllImport]` / `[LibraryImport]`, `NativeLibrary` / `GetProcAddress`, or manual COM vtable calls in project code unless CsWin32 or available metadata cannot express the API and the exception is documented in this file.
 - `Microsoft.Windows.WDK.Win32Metadata` is intentionally referenced only to let CsWin32 generate WDK-backed APIs such as `NtQueryInformationProcess`; keep it `PrivateAssets="all"` and do not use it as permission to add hand-written native declarations.
+- Persisted timestamps for sessions, runtime logs, hook logs, suspend history, backup state, notification data, and timestamped backup file names must be recorded from UTC sources such as `DateTimeOffset.UtcNow`; user-facing CLI and web output must convert stored timestamps to the current system local time immediately before display.
 - You MUST NOT run builds unless the user explicitly asks for one, except when the changes are huge.
 - If something is unclear or ambiguous, ask the user immediately and provide selectable choices where possible.
 
@@ -149,6 +150,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `current-monitor-count` prints the current visible display monitor count using the same base Windows monitor visibility check LidGuard uses for closed-lid policy decisions, without the internal-display exclusion used by final suspend eligibility checks.
 - `current-temperature` prints the currently recognized system thermal-zone temperature in Celsius using the selected aggregation mode, or reports when thermal-zone data is unavailable.
 - `suspend-history` prints recent suspend request history from `%LOCALAPPDATA%\LidGuard\suspend-history.log`, including mode, reason, result, active session count, and related session or Emergency Hibernation temperature details when available.
+- `status`, `suspend-history`, and `hook-events` display persisted timestamps in the current system local time while the underlying session, history, and hook log stores remain UTC.
 - `settings` prints and updates default settings, and updates a running runtime when one is listening.
 - `settings` also exposes `--emergency-hibernation-on-high-temperature`, `--emergency-hibernation-temperature-mode`, and `--emergency-hibernation-temperature-celsius`; the threshold option accepts 70 through 110 only.
 - `settings` exposes `--post-stop-suspend-sound-volume-override-percent off|<1-100>` for temporary post-stop sound playback master volume override; `off` disables it and out-of-range values are rejected.
@@ -608,11 +610,11 @@ lidguard cleanup-orphans
 lidguard mcp-server
 ```
 
-## Local Packaging Note
+## Build Validation Note
 
-- `pack-local-reinstall.bat` can fail once because of transient Windows Defender file-lock interference.
-- Retry the script before taking any broader recovery action; when this specific issue is the cause, a retry is typically enough.
-- Do not bring down any build server just because the first `pack-local-reinstall.bat` attempt failed with this known Defender issue.
+- Local build, test, publish, pack, and reinstall validation commands can fail once because of transient Windows Defender file-lock interference.
+- Retry the same validation command before taking any broader recovery action; when this specific issue is the cause, a retry is typically enough.
+- Do not bring down any build server just because the first validation attempt failed with this known Defender issue.
 
 ## Missing Work
 

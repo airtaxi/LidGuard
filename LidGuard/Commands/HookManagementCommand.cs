@@ -160,7 +160,7 @@ internal static class HookManagementCommand
             }
             else
             {
-                foreach (var eventLine in eventLines) Console.WriteLine(eventLine);
+                foreach (var eventLine in eventLines) Console.WriteLine(LidGuardCommandTimestampFormatter.FormatHookEventLineForDisplay(eventLine));
             }
 
             if (providers.Count > 1) Console.WriteLine();
