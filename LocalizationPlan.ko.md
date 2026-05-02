@@ -229,7 +229,7 @@ Hook 및 MCP 고려사항:
 2. 기본값 `auto`의 persisted UI culture setting과 `lidguard settings --ui-culture <auto|en|ko|culture-name>`를 추가한다.
 3. CLI output이 생성되기 전에 effective UI culture를 적용한다.
 4. [LidGuardCommandConsole.cs](LidGuard/Commands/LidGuardCommandConsole.cs)의 label, unknown-command, help rendering을 현지화한다.
-5. [LidGuardHelpContent.cs](LidGuard/Commands/LidGuardHelpContent.cs)를 현지화하되 command syntax와 option name은 literal로 유지한다.
+5. [LidGuard/Commands/Help](LidGuard/Commands/Help) 아래의 help content 파일을 현지화하되 command syntax와 option name은 literal로 유지한다.
 6. [LidGuardSettingsCommand.cs](LidGuard/Commands/LidGuardSettingsCommand.cs)의 prompt와 settings update message를 현지화한다.
 7. [HookManagementCommand.cs](LidGuard/Commands/HookManagementCommand.cs), [McpManagementCommand.cs](LidGuard/Commands/McpManagementCommand.cs), [ProviderMcpManagementCommand.cs](LidGuard/Commands/ProviderMcpManagementCommand.cs)는 generated config content나 protocol payload가 아니라 human-facing CLI text와 inspection presentation만 현지화한다.
 8. Raw runtime 또는 inspection `Message` string을 terminal에 직접 출력하지 않도록 바꾸고, 필요한 경우 structured field 또는 message code에서 localized CLI presentation을 만들되 raw protocol/log text는 필요한 범위에서 안정적으로 유지한다.

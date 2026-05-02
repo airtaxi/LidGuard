@@ -229,7 +229,7 @@ Localize in this order so each step is small and testable:
 2. Add the persisted UI culture setting with default `auto` and `lidguard settings --ui-culture <auto|en|ko|culture-name>`.
 3. Apply the effective UI culture before CLI output is produced.
 4. Localize [LidGuardCommandConsole.cs](LidGuard/Commands/LidGuardCommandConsole.cs) labels and unknown-command/help rendering.
-5. Localize [LidGuardHelpContent.cs](LidGuard/Commands/LidGuardHelpContent.cs), keeping command syntax and option names literal.
+5. Localize the help content files under [LidGuard/Commands/Help](LidGuard/Commands/Help), keeping command syntax and option names literal.
 6. Localize [LidGuardSettingsCommand.cs](LidGuard/Commands/LidGuardSettingsCommand.cs) prompts and settings update messages.
 7. Localize [HookManagementCommand.cs](LidGuard/Commands/HookManagementCommand.cs), [McpManagementCommand.cs](LidGuard/Commands/McpManagementCommand.cs), and [ProviderMcpManagementCommand.cs](LidGuard/Commands/ProviderMcpManagementCommand.cs) only for human-facing CLI text and inspection presentation, not generated config content or protocol payloads.
 8. Replace direct terminal printing of raw runtime or inspection `Message` strings with localized CLI presentation derived from structured fields or message codes while keeping raw protocol/log text stable where required.

@@ -1,3 +1,4 @@
+using LidGuard.Commands.Help;
 using LidGuard.Ipc;
 using LidGuard.Runtime;
 using LidGuard.Settings;
