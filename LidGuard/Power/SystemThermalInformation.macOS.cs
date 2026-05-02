@@ -11,6 +11,11 @@ public static class SystemThermalInformation
 
     public static int? GetSystemTemperatureCelsius(EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
     {
+        var appleSiliconTemperatureCelsius = AggregateTemperatures(
+            MacOSAppleSiliconHumanInterfaceDeviceTemperatureSensor.ReadProcessorTemperaturesCelsius(),
+            emergencyHibernationTemperatureMode);
+        if (appleSiliconTemperatureCelsius is not null) return appleSiliconTemperatureCelsius;
+
         var commandResult = MacOSPowerSettings.RunPrivilegedCommand(
             "powermetrics",
             ["--samplers", "smc", "-n", "1", "-i", "1000"],

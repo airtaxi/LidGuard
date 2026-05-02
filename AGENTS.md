@@ -66,7 +66,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
   - Supported package RIDs are `win-x64`, `win-x86`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, and `osx-arm64`.
   - Windows behavior is implemented.
   - Linux behavior is implemented for systemd/logind systems.
-  - macOS behavior is implemented with `caffeinate`, `pmset`, `ioreg`, `system_profiler`, `powermetrics`, and `osascript`/`afplay` where needed.
+  - macOS behavior is implemented with `caffeinate`, `pmset`, `ioreg`, `system_profiler`, Apple Silicon `IOHIDEventSystemClient` temperature sensors, `powermetrics`, and `osascript`/`afplay` where needed.
   - Uses a named pipe to send `start`, `stop`, `remove-session`, `status`, `settings`, and `cleanup-orphans` requests to the runtime.
   - Hosts the stdio MCP server through the `mcp-server` subcommand.
   - Stores default settings JSON under the platform local application data directory, such as `%LOCALAPPDATA%\LidGuard\settings.json` on Windows, `~/.local/share/LidGuard/settings.json` on typical Linux desktops, or the .NET local application data path on macOS.
@@ -104,7 +104,8 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 
 ### macOS Power Control
 
-- macOS support targets local macOS systems with `caffeinate`, `pmset`, `ioreg`, `system_profiler`, and best-effort `powermetrics`.
+- macOS support targets local macOS systems with `caffeinate`, `pmset`, `ioreg`, `system_profiler`, Apple Silicon `IOHIDEventSystemClient` temperature sensors, and best-effort `powermetrics`.
+- The macOS Apple Silicon temperature fast path is allowed to use direct source-generated `LibraryImport` calls into CoreFoundation and IOKit, plus `NativeLibrary` export lookup for CoreFoundation callback tables, because CsWin32 does not cover macOS frameworks and no stable managed metadata surface exists for `IOHIDEventSystemClient`.
 - Use `caffeinate` assertions for normal idle sleep prevention.
 - `PreventSystemSleep` maps to `caffeinate -i`.
 - `PreventAwayModeSleep` maps to `caffeinate -s`, recognizing that macOS only honors that assertion on AC power.
@@ -152,7 +153,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 
 - Emergency Hibernation uses `SystemThermalInformation.GetSystemTemperatureCelsius(EmergencyHibernationTemperatureMode)` to read the selected available system thermal-zone temperature in Celsius.
 - On Linux, Emergency Hibernation temperature reads millidegree Celsius values from `/sys/class/thermal/thermal_zone*/temp` and applies the configured Low, Average, or High aggregation.
-- On macOS, Emergency Hibernation temperature is best-effort from `powermetrics --samplers smc` Celsius sensor output and applies the configured Low, Average, or High aggregation. Permission failures, unsupported samplers, missing numeric Celsius values, and timeouts must report unavailable and must not trigger Emergency Hibernation.
+- On macOS, Emergency Hibernation temperature first uses best-effort Apple Silicon `IOHIDEventSystemClient` processor temperature sensors, then falls back to `powermetrics --samplers smc` Celsius sensor output, and applies the configured Low, Average, or High aggregation. Unsupported sensors, permission failures, unsupported samplers, missing numeric Celsius values, and timeouts must report unavailable and must not trigger Emergency Hibernation.
 - Emergency Hibernation temperature mode is configurable as Low, Average, or High, and defaults to Average.
 - The thermal monitor only runs while shared keep-awake protection is applied, the lid is closed, and the suspend eligibility visible display monitor count is `0`.
 - The thermal poll interval is fixed at 10 seconds.
@@ -722,7 +723,7 @@ The Windows, Linux, and macOS CLI hook receiving path is implemented for Codex, 
 - Validate Linux behavior on a real systemd/logind laptop: `systemd-inhibit` lifecycle, `handle-lid-switch` inhibition, `systemctl suspend` / `systemctl hibernate`, closed-lid plus monitor-count suspend eligibility, `/proc/acpi/button/lid` lid-state reads, `/sys/class/drm` monitor detection, `/sys/class/thermal` temperature aggregation, Emergency Hibernation, and suspend history logging.
 - Validate `linux-permission status|check|install|remove` on non-root and root paths, including busctl `CanSuspend` / `CanHibernate`, managed marker refusal for unmanaged polkit files, sudo failure paths, and removal safety.
 - Validate Linux post-stop sound behavior with no player installed, `pw-play`, `paplay`, `aplay`, missing desktop sound-theme assets, `.wav` paths, and `pactl` volume override capture/apply/restore failure paths.
-- Validate macOS behavior on a real MacBook: `caffeinate` lifecycle, `pmset disablesleep` backup/restore, `pmset sleepnow`, temporary `hibernatemode 25` hibernate with deferred recovery restore, closed-lid plus monitor-count suspend eligibility, `ioreg` lid-state reads, `system_profiler` monitor detection, best-effort `powermetrics` temperature aggregation, Emergency Hibernation, and suspend history logging.
+- Validate macOS behavior on a real MacBook: `caffeinate` lifecycle, `pmset disablesleep` backup/restore, `pmset sleepnow`, temporary `hibernatemode 25` hibernate with deferred recovery restore, closed-lid plus monitor-count suspend eligibility, `ioreg` lid-state reads, `system_profiler` monitor detection, best-effort Apple Silicon `IOHIDEventSystemClient` and `powermetrics` temperature aggregation, Emergency Hibernation, and suspend history logging.
 - Validate `macos-permission status|check|install|remove` on non-root and root paths, including managed marker refusal for unmanaged sudoers files, `visudo` validation, non-interactive sudo failure paths, and removal safety.
 - Validate macOS post-stop sound behavior with missing `afplay`, SystemSounds mapping, `.wav` paths, and `osascript` volume override capture/apply/restore failure paths.
 - Add automated regression tests or verification scripts for the already manually verified provider behavior, Windows behavior, Linux systemd/logind behavior, and macOS behavior: latest Codex hook behavior, Claude Code hook stdout behavior, GitHub Copilot CLI hook output behavior, GitHub Copilot CLI user-level `~/.copilot/hooks/` loading and inline `~/.copilot/settings.json` hook composition, GitHub Copilot CLI session id stability, `PowerReadACValueIndex`/`PowerReadDCValueIndex` read/write behavior under normal user permissions, Linux inhibitor lifecycle, Linux polkit rule management, macOS parser/permission management, and Group Policy or MDM blocked power setting fallback messages.

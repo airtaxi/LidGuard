@@ -70,7 +70,7 @@ LidGuard는 Codex, Claude Code, GitHub Copilot CLI처럼 오래 실행되는 로
   - 지원 패키지 RID는 `win-x64`, `win-x86`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`다.
   - Windows 동작이 구현되어 있다.
   - Linux 동작은 systemd/logind 시스템을 대상으로 구현되어 있다.
-  - macOS 동작은 `caffeinate`, `pmset`, `ioreg`, `system_profiler`, `powermetrics`, 필요한 경우 `osascript`/`afplay`를 사용해 구현되어 있다.
+  - macOS 동작은 `caffeinate`, `pmset`, `ioreg`, `system_profiler`, Apple Silicon `IOHIDEventSystemClient` 온도 센서, `powermetrics`, 필요한 경우 `osascript`/`afplay`를 사용해 구현되어 있다.
   - named pipe로 runtime에 `start`, `stop`, `remove-session`, `status`, `settings`, `cleanup-orphans` 요청을 보낸다.
   - `mcp-server` 서브커맨드로 stdio MCP 서버를 호스팅한다.
   - 기본 설정 JSON은 플랫폼 local application data directory에 저장한다. 예를 들어 Windows는 `%LOCALAPPDATA%\LidGuard\settings.json`, 일반적인 Linux 데스크톱은 `~/.local/share/LidGuard/settings.json`, macOS는 .NET의 현재 사용자 local application data path를 사용한다.
@@ -105,7 +105,8 @@ LidGuard는 Codex, Claude Code, GitHub Copilot CLI처럼 오래 실행되는 로
 
 ### macOS 전원 제어
 
-- macOS 지원은 `caffeinate`, `pmset`, `ioreg`, `system_profiler`, best-effort `powermetrics`를 사용할 수 있는 로컬 macOS 시스템을 대상으로 한다.
+- macOS 지원은 `caffeinate`, `pmset`, `ioreg`, `system_profiler`, Apple Silicon `IOHIDEventSystemClient` 온도 센서, best-effort `powermetrics`를 사용할 수 있는 로컬 macOS 시스템을 대상으로 한다.
+- macOS Apple Silicon temperature fast path는 CoreFoundation 및 IOKit에 대한 source-generated `LibraryImport` 직접 호출과 CoreFoundation callback table을 찾기 위한 `NativeLibrary` export lookup 사용을 허용한다. CsWin32가 macOS framework를 다루지 않고 `IOHIDEventSystemClient`에 대한 안정적인 managed metadata surface가 없기 때문이다.
 - 일반 idle sleep 방지는 `caffeinate` assertion을 사용한다.
 - `PreventSystemSleep`은 `caffeinate -i`에 매핑된다.
 - `PreventAwayModeSleep`은 `caffeinate -s`에 매핑되며, macOS가 AC 전원에서만 이 assertion을 인정한다는 점을 전제로 한다.
@@ -153,7 +154,7 @@ LidGuard는 Codex, Claude Code, GitHub Copilot CLI처럼 오래 실행되는 로
 
 - Emergency Hibernation은 `SystemThermalInformation.GetSystemTemperatureCelsius(EmergencyHibernationTemperatureMode)`를 사용해 선택된 기준의 시스템 thermal zone 섭씨 온도를 읽는다.
 - Linux의 Emergency Hibernation 온도는 `/sys/class/thermal/thermal_zone*/temp`의 millidegree Celsius 값을 읽고 설정된 Low, Average, High 집계를 적용한다.
-- macOS의 Emergency Hibernation 온도는 `powermetrics --samplers smc` Celsius sensor output에서 best-effort로 읽고 설정된 Low, Average, High 집계를 적용한다. 권한 실패, 지원되지 않는 sampler, 숫자 Celsius 값 부재, timeout은 unavailable로 처리하며 Emergency Hibernation을 trigger하면 안 된다.
+- macOS의 Emergency Hibernation 온도는 먼저 Apple Silicon `IOHIDEventSystemClient` processor temperature sensor에서 best-effort로 읽고, 실패하면 `powermetrics --samplers smc` Celsius sensor output으로 fallback한 뒤 설정된 Low, Average, High 집계를 적용한다. 지원되지 않는 sensor, 권한 실패, 지원되지 않는 sampler, 숫자 Celsius 값 부재, timeout은 unavailable로 처리하며 Emergency Hibernation을 trigger하면 안 된다.
 - Emergency Hibernation 온도 기준은 Low, Average, High로 설정 가능하며 기본값은 Average다.
 - thermal monitor는 공유 keep-awake 보호가 적용 중이고, 덮개가 닫혀 있으며, suspend 가능성 기준의 visible display monitor count가 `0`일 때만 동작한다.
 - thermal poll 주기는 10초 고정이다.
@@ -715,7 +716,7 @@ Windows, Linux, macOS CLI hook 수신 경로는 Codex, Claude Code, GitHub Copil
 - 마지막 세션 종료 뒤 남은 post-stop cleanup 작업이 끝나는 즉시 runtime이 종료되도록 구현한다.
 - 실제 systemd/logind 노트북에서 Linux 동작을 검증한다. 대상은 `systemd-inhibit` lifecycle, `handle-lid-switch` inhibition, `systemctl suspend` / `systemctl hibernate`, closed-lid plus monitor-count suspend eligibility, `/proc/acpi/button/lid` lid-state read, `/sys/class/drm` monitor detection, `/sys/class/thermal` temperature aggregation, Emergency Hibernation, suspend history logging이다.
 - `linux-permission status|check|install|remove`의 non-root/root path, unmanaged polkit file에 대한 managed marker refusal, sudo failure path, removal safety를 검증한다.
-- 실제 MacBook에서 macOS 동작을 검증한다. 대상은 `caffeinate` lifecycle, `pmset disablesleep` backup/restore, `pmset sleepnow`, deferred recovery restore를 동반한 임시 `hibernatemode 25` hibernate, closed-lid plus monitor-count suspend eligibility, `ioreg` lid-state read, `system_profiler` monitor detection, best-effort `powermetrics` temperature aggregation, Emergency Hibernation, suspend history logging이다.
+- 실제 MacBook에서 macOS 동작을 검증한다. 대상은 `caffeinate` lifecycle, `pmset disablesleep` backup/restore, `pmset sleepnow`, deferred recovery restore를 동반한 임시 `hibernatemode 25` hibernate, closed-lid plus monitor-count suspend eligibility, `ioreg` lid-state read, `system_profiler` monitor detection, best-effort Apple Silicon `IOHIDEventSystemClient` 및 `powermetrics` temperature aggregation, Emergency Hibernation, suspend history logging이다.
 - `macos-permission status|check|install|remove`의 non-root/root path, unmanaged sudoers file에 대한 managed marker refusal, `visudo` validation, non-interactive sudo failure path, removal safety를 검증한다.
 - 이미 수동 테스트가 완료된 provider/Windows 동작과 Linux/macOS 동작에 대한 자동 회귀 테스트 또는 검증 스크립트를 추가한다. 대상은 최신 Codex hook 동작, Claude Code hook stdout 동작, GitHub Copilot CLI hook 출력 동작, GitHub Copilot CLI user-level `~/.copilot/hooks/` 로딩과 inline `~/.copilot/settings.json` hook 조합, GitHub Copilot CLI session id 안정성, 일반 사용자 권한의 `PowerReadACValueIndex`/`PowerReadDCValueIndex` 읽기/쓰기 동작, Linux inhibitor lifecycle, Linux polkit rule management, macOS parser/permission management, Group Policy 또는 MDM으로 전원 설정이 막힌 경우의 fallback 메시지다.
 - Codex가 향후 notification 또는 기계가 읽을 수 있는 pending-state hook 표면을 제공할 때만 direct Codex soft-lock 지원을 추가한다.
