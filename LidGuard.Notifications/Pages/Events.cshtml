@@ -1,4 +1,5 @@
 @page
+@using System.Globalization
 @model EventsModel
 @{
     ViewData["Title"] = "Events";
@@ -21,8 +22,13 @@
         <tbody>
             @foreach (var webhookEvent in Model.Events)
             {
+                var receivedAtUtc = webhookEvent.ReceivedAtUtc.ToUniversalTime();
+                var receivedAtIsoTimestamp = receivedAtUtc.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+                var receivedAtFallbackText = receivedAtUtc.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
                 <tr>
-                    <td>@webhookEvent.ReceivedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>
+                        <time datetime="@receivedAtIsoTimestamp" data-device-time="true">@receivedAtFallbackText</time>
+                    </td>
                     <td>@webhookEvent.EventType</td>
                     <td>
                         @webhookEvent.Reason
@@ -74,3 +80,5 @@
         <p class="muted">No events recorded.</p>
     }
 </section>
+
+<script src="~/local-time.js" asp-append-version="true"></script>
