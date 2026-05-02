@@ -303,7 +303,7 @@ Translation rules:
 
 ## Documentation Maintenance
 
-When `Localization.md` changes meaningfully, update `Localization.ko.md` in the same turn.
+When `LocalizationPlan.md` changes meaningfully, update `LocalizationPlan.ko.md` in the same turn.
 
 When localization changes public behavior, update `AGENTS.md` and `AGENTS.ko.md` as the source of truth. This includes:
 

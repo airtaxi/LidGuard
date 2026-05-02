@@ -303,7 +303,7 @@ NativeAOT publish가 framework-dependent publish와 동일하게 동작한다고
 
 ## 문서 유지 관리
 
-`Localization.md`가 의미 있게 바뀌면 같은 변경에서 `Localization.ko.md`를 함께 갱신한다.
+`LocalizationPlan.md`가 의미 있게 바뀌면 같은 변경에서 `LocalizationPlan.ko.md`를 함께 갱신한다.
 
 현지화가 공개 동작을 바꾸면 기준 문서인 `AGENTS.md`와 `AGENTS.ko.md`도 갱신한다. 여기에 포함되는 예:
 
