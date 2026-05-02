@@ -98,8 +98,8 @@ public sealed class CommandLineProcessResolver : ICommandLineProcessResolver
             if (!int.TryParse(fields[0], out var processIdentifier)) continue;
             if (!int.TryParse(fields[1], out var parentProcessIdentifier)) continue;
 
-            var processName = Path.GetFileName(fields[2]);
-            if (string.IsNullOrWhiteSpace(processName)) processName = fields[2];
+            var processName = NormalizeProcessName(Path.GetFileName(fields[2]));
+            if (string.IsNullOrWhiteSpace(processName)) processName = NormalizeProcessName(fields[2]);
             processRows.Add(new MacOSProcessRow(processIdentifier, parentProcessIdentifier, processName));
         }
 
@@ -162,6 +162,16 @@ public sealed class CommandLineProcessResolver : ICommandLineProcessResolver
 
     private static bool DirectoryMatches(string normalizedWorkingDirectory, string processWorkingDirectory)
         => string.Equals(normalizedWorkingDirectory, NormalizeDirectory(processWorkingDirectory), StringComparison.Ordinal);
+
+    private static string NormalizeProcessName(string processName)
+    {
+        if (string.IsNullOrWhiteSpace(processName)) return string.Empty;
+
+        var normalizedProcessName = processName.Trim();
+        return normalizedProcessName.Length > 1 && normalizedProcessName[0] == '-'
+            ? normalizedProcessName[1..]
+            : normalizedProcessName;
+    }
 
     private static string NormalizeDirectory(string directory)
     {
