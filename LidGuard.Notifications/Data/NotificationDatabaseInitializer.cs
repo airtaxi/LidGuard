@@ -11,8 +11,6 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
             command.CommandText = commandText;
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
-
-        await EnsureWebhookEventColumnsAsync(connection, cancellationToken);
     }
 
     private static IReadOnlyList<string> CreateSchemaCommands()
@@ -37,7 +35,7 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
             """
             CREATE TABLE IF NOT EXISTS WebhookEvents (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                EventType TEXT NOT NULL DEFAULT 'PreSuspend',
+                EventType TEXT NOT NULL,
                 Reason TEXT NOT NULL,
                 SoftLockedSessionCount INTEGER NULL,
                 Provider TEXT NULL,
@@ -74,50 +72,4 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
             "CREATE INDEX IF NOT EXISTS IX_WebhookEvents_Status_Id ON WebhookEvents(Status, Id);",
             "CREATE INDEX IF NOT EXISTS IX_NotificationDeliveries_WebhookEventId ON NotificationDeliveries(WebhookEventId);"
         ];
-
-    private static async Task EnsureWebhookEventColumnsAsync(Microsoft.Data.Sqlite.SqliteConnection connection, CancellationToken cancellationToken)
-    {
-        await EnsureColumnAsync(connection, "WebhookEvents", "EventType", "TEXT NOT NULL DEFAULT 'PreSuspend'", cancellationToken);
-        await EnsureColumnAsync(connection, "WebhookEvents", "Provider", "TEXT NULL", cancellationToken);
-        await EnsureColumnAsync(connection, "WebhookEvents", "ProviderName", "TEXT NULL", cancellationToken);
-        await EnsureColumnAsync(connection, "WebhookEvents", "SessionIdentifier", "TEXT NULL", cancellationToken);
-        await EnsureColumnAsync(connection, "WebhookEvents", "StartedAtUtc", "TEXT NULL", cancellationToken);
-        await EnsureColumnAsync(connection, "WebhookEvents", "LastActivityAtUtc", "TEXT NULL", cancellationToken);
-        await EnsureColumnAsync(connection, "WebhookEvents", "EndedAtUtc", "TEXT NULL", cancellationToken);
-        await EnsureColumnAsync(connection, "WebhookEvents", "EndReason", "TEXT NULL", cancellationToken);
-        await EnsureColumnAsync(connection, "WebhookEvents", "ActiveSessionCount", "INTEGER NULL", cancellationToken);
-        await EnsureColumnAsync(connection, "WebhookEvents", "WorkingDirectory", "TEXT NULL", cancellationToken);
-        await EnsureColumnAsync(connection, "WebhookEvents", "TranscriptPath", "TEXT NULL", cancellationToken);
-    }
-
-    private static async Task EnsureColumnAsync(
-        Microsoft.Data.Sqlite.SqliteConnection connection,
-        string tableName,
-        string columnName,
-        string columnDefinition,
-        CancellationToken cancellationToken)
-    {
-        if (await HasColumnAsync(connection, tableName, columnName, cancellationToken)) return;
-
-        using var command = connection.CreateCommand();
-        command.CommandText = $"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnDefinition};";
-        await command.ExecuteNonQueryAsync(cancellationToken);
-    }
-
-    private static async Task<bool> HasColumnAsync(
-        Microsoft.Data.Sqlite.SqliteConnection connection,
-        string tableName,
-        string columnName,
-        CancellationToken cancellationToken)
-    {
-        using var command = connection.CreateCommand();
-        command.CommandText = $"PRAGMA table_info({tableName});";
-        using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            if (reader.GetString(1).Equals(columnName, StringComparison.OrdinalIgnoreCase)) return true;
-        }
-
-        return false;
-    }
 }

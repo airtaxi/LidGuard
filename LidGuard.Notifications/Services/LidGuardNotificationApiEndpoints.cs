@@ -161,13 +161,13 @@ internal static class LidGuardNotificationApiEndpoints
         out int? softLockedSessionCount,
         out string errorMessage)
     {
-        eventType = request?.EventType?.Trim() ?? LidGuardWebhookEventTypes.PreSuspend;
+        eventType = request?.EventType?.Trim() ?? string.Empty;
         reason = request?.Reason?.Trim() ?? string.Empty;
         softLockedSessionCount = request?.SoftLockedSessionCount;
 
         if (!LidGuardWebhookEventTypes.IsRecognized(eventType))
         {
-            errorMessage = "eventType must be PreSuspend or PostSessionEnd.";
+            errorMessage = "eventType is required and must be PreSuspend or PostSessionEnd.";
             return false;
         }
 

@@ -103,7 +103,7 @@ curl.exe -X POST "https://host/api/webhooks/lidguard/{webhookSecret}" -H "Conten
 curl.exe -X POST "https://host/api/webhooks/lidguard/{webhookSecret}" -H "Content-Type: application/json" -d "{\"eventType\":\"PostSessionEnd\",\"reason\":\"SessionEnded\",\"provider\":\"Codex\",\"sessionIdentifier\":\"abc123\",\"startedAtUtc\":\"2026-05-02T00:00:00Z\",\"lastActivityAtUtc\":\"2026-05-02T00:03:00Z\",\"endedAtUtc\":\"2026-05-02T00:04:00Z\",\"endReason\":\"SessionEnd\",\"activeSessionCount\":0}"
 ```
 
-Webhook endpoint는 event를 기록하고 즉시 `202 Accepted`를 반환합니다. `eventType`이 없는 legacy pre-suspend payload는 계속 `PreSuspend`로 받습니다. 이후 background service가 알림을 보내고 delivery 결과를 기록합니다.
+Webhook endpoint는 event를 기록하고 즉시 `202 Accepted`를 반환합니다. 이후 background service가 알림을 보내고 delivery 결과를 기록합니다.
 
 ## 운영 체크리스트
 

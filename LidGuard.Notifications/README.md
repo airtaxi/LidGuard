@@ -103,7 +103,7 @@ curl.exe -X POST "https://host/api/webhooks/lidguard/{webhookSecret}" -H "Conten
 curl.exe -X POST "https://host/api/webhooks/lidguard/{webhookSecret}" -H "Content-Type: application/json" -d "{\"eventType\":\"PostSessionEnd\",\"reason\":\"SessionEnded\",\"provider\":\"Codex\",\"sessionIdentifier\":\"abc123\",\"startedAtUtc\":\"2026-05-02T00:00:00Z\",\"lastActivityAtUtc\":\"2026-05-02T00:03:00Z\",\"endedAtUtc\":\"2026-05-02T00:04:00Z\",\"endReason\":\"SessionEnd\",\"activeSessionCount\":0}"
 ```
 
-The webhook endpoint records the event and immediately returns `202 Accepted`. Legacy pre-suspend payloads without `eventType` are still accepted as `PreSuspend`. The background service then sends notifications and records delivery results.
+The webhook endpoint records the event and immediately returns `202 Accepted`. The background service then sends notifications and records delivery results.
 
 ## Operations Checklist
 
