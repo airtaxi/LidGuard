@@ -17,5 +17,7 @@ public sealed class LidGuardOperationResult
 
     public static LidGuardOperationResult Success() => new(true, string.Empty, 0);
 
+    public static LidGuardOperationResult Success(string message) => new(true, message, 0);
+
     public static LidGuardOperationResult Failure(string message, int nativeErrorCode = 0) => new(false, message, nativeErrorCode);
 }

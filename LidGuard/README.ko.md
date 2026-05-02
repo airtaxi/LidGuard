@@ -155,6 +155,6 @@ LidGuard는 기본 설정과 runtime log를 다음 위치에 저장합니다:
 
 Linux에서는 idle sleep protection이 systemd/logind `sleep`, `idle` inhibitor를 사용합니다. Lid-close handling은 별도이며 `--change-lid-action true`는 `handle-lid-switch` inhibitor를 유지하고, `false`는 배포판의 lid-close 처리를 변경하지 않습니다.
 
-macOS에서는 idle sleep protection이 `caffeinate`를 사용합니다. `--change-lid-action true`의 lid-close protection은 `pmset -a disablesleep 1`을 임시 적용하고 원래 `SleepDisabled` 상태를 pending backup으로 저장한 뒤, 보호 종료 또는 다음 CLI recovery path에서 복구합니다. Hibernate는 지원되는 `hibernatemode` 값을 임시로 `25`로 바꾸고 `pmset sleepnow`를 요청한 뒤 원래 mode를 복구합니다. 온도는 best-effort `powermetrics --samplers smc` sample이며, sensor나 권한이 없으면 Emergency Hibernation poll을 건너뜁니다.
+macOS에서는 idle sleep protection이 `caffeinate`를 사용합니다. `--change-lid-action true`의 lid-close protection은 `pmset -a disablesleep 1`을 임시 적용하고 원래 `SleepDisabled` 상태를 pending backup으로 저장한 뒤, 보호 종료 또는 다음 CLI recovery path에서 복구합니다. Hibernate는 지원되는 `hibernatemode` 값을 임시로 `25`로 바꾸고 `pmset sleepnow`를 요청한 뒤, 원래 mode는 pending backup에 남겨 이후 CLI recovery에서 복구합니다. 온도는 best-effort `powermetrics --samplers smc` sample이며, sensor나 권한이 없으면 Emergency Hibernation poll을 건너뜁니다.
 
 Provider MCP 통합은 best-effort 방식입니다. 이 통합은 모델이 적절한 시점에 실제로 LidGuard MCP tool을 호출하는지에 의존하므로, LidGuard는 provider가 세션을 올바르게 시작, soft-lock, clear, stop한다고 보장할 수 없습니다.

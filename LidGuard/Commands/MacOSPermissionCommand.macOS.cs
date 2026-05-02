@@ -56,6 +56,7 @@ internal static class MacOSPermissionCommand
         Console.WriteLine($"  User: {targetUserName}");
         Console.WriteLine($"  Sudoers path: {RuleFilePath}");
         Console.WriteLine($"  Sudoers rule: {DescribeRuleStatus(ruleInspection)}");
+        Console.WriteLine($"  Privileged pmset usability: {DescribePrivilegedPmsetUsability()}");
         Console.WriteLine($"  caffeinate: {DescribeExecutableAvailability("caffeinate")}");
         Console.WriteLine($"  pmset: {DescribeExecutableAvailability("pmset")}");
         Console.WriteLine($"  powermetrics: {DescribeExecutableAvailability("powermetrics")}");
@@ -340,16 +341,18 @@ internal static class MacOSPermissionCommand
         return readResult.Succeeded ? readResult.Value.ToString() : $"unavailable ({readResult.Message})";
     }
 
+    private static string DescribePrivilegedPmsetUsability()
+    {
+        var readResult = MacOSPowerSettings.ReadSleepDisabled();
+        if (!readResult.Succeeded) return $"unavailable ({readResult.Message})";
+
+        var writeResult = MacOSPowerSettings.SetSleepDisabled(readResult.Value);
+        return writeResult.Succeeded ? "ok" : $"failed ({writeResult.Message})";
+    }
+
     private static RuleInspection InspectRule(string targetUserName)
     {
         var readResult = ReadRuleContentDirect();
-        if (!readResult.Succeeded && readResult.IsInconclusive)
-        {
-            var sudoReadResult = ReadRuleContentWithNonInteractiveSudo();
-            readResult = sudoReadResult.Succeeded || sudoReadResult.NotFound
-                ? sudoReadResult
-                : RuleContentReadResult.Inconclusive($"{readResult.Message} {sudoReadResult.Message}".Trim());
-        }
 
         if (readResult.NotFound) return RuleInspection.NotInstalled();
         if (!readResult.Succeeded) return RuleInspection.Inconclusive(readResult.Message);
@@ -362,7 +365,7 @@ internal static class MacOSPermissionCommand
 
     private static string DescribeRuleStatus(RuleInspection ruleInspection)
     {
-        if (!ruleInspection.InspectionSucceeded) return $"unable to inspect ({ruleInspection.Message})";
+        if (!ruleInspection.InspectionSucceeded) return $"content inspection unavailable ({ruleInspection.Message})";
         if (!ruleInspection.Exists) return "not installed";
         if (!ruleInspection.IsManaged) return "present but not managed by LidGuard";
         return ruleInspection.IsForCurrentUser ? "installed for current user" : "installed for another user";
@@ -374,18 +377,6 @@ internal static class MacOSPermissionCommand
         catch (FileNotFoundException) { return RuleContentReadResult.NotFoundResult(); }
         catch (DirectoryNotFoundException) { return RuleContentReadResult.NotFoundResult(); }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { return RuleContentReadResult.Inconclusive(exception.Message); }
-    }
-
-    private static RuleContentReadResult ReadRuleContentWithNonInteractiveSudo()
-    {
-        if (!MacOSCommandPathResolver.TryFindExecutable("sudo", out var sudoExecutablePath)) return RuleContentReadResult.Inconclusive("sudo was not found on PATH.");
-
-        var commandResult = MacOSCommandRunner.Run(sudoExecutablePath, ["-n", "cat", RuleFilePath], s_checkCommandTimeout);
-        if (commandResult.Succeeded) return RuleContentReadResult.Success(commandResult.StandardOutput);
-
-        var failureMessage = commandResult.CreateFailureMessage("sudo -n cat");
-        if (failureMessage.Contains("No such file", StringComparison.OrdinalIgnoreCase)) return RuleContentReadResult.NotFoundResult();
-        return RuleContentReadResult.Inconclusive(failureMessage);
     }
 
     private static string CreateRuleContent(string targetUserName)
@@ -511,14 +502,13 @@ internal static class MacOSPermissionCommand
     private readonly record struct RuleContentReadResult(
         bool Succeeded,
         bool NotFound,
-        bool IsInconclusive,
         string Content,
         string Message)
     {
-        public static RuleContentReadResult Success(string content) => new(true, false, false, content ?? string.Empty, string.Empty);
+        public static RuleContentReadResult Success(string content) => new(true, false, content ?? string.Empty, string.Empty);
 
-        public static RuleContentReadResult NotFoundResult() => new(false, true, false, string.Empty, string.Empty);
+        public static RuleContentReadResult NotFoundResult() => new(false, true, string.Empty, string.Empty);
 
-        public static RuleContentReadResult Inconclusive(string message) => new(false, false, true, string.Empty, message ?? string.Empty);
+        public static RuleContentReadResult Inconclusive(string message) => new(false, false, string.Empty, message ?? string.Empty);
     }
 }

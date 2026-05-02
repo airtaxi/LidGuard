@@ -6,8 +6,6 @@ namespace LidGuard.Power;
 
 public sealed class SystemSuspendService : ISystemSuspendService
 {
-    private static readonly TimeSpan s_hibernateRestoreDelay = TimeSpan.FromSeconds(5);
-
     public LidGuardOperationResult Suspend(SystemSuspendMode suspendMode)
     {
         if (suspendMode != SystemSuspendMode.Hibernate) return MacOSPowerSettings.SleepNow();
@@ -26,19 +24,16 @@ public sealed class SystemSuspendService : ISystemSuspendService
         if (!applyResult.Succeeded) return MacOSPendingPowerStateBackupManager.RollBackFailedApply(captureResult.Value, applyResult);
 
         var sleepResult = MacOSPowerSettings.SleepNow();
-        if (sleepResult.Succeeded) Thread.Sleep(s_hibernateRestoreDelay);
+        if (sleepResult.Succeeded) return LidGuardOperationResult.Success(CreateDeferredHibernateRestoreMessage());
 
         var restoreResult = MacOSPendingPowerStateBackupManager.Restore(captureResult.Value);
-        if (!sleepResult.Succeeded && !restoreResult.Succeeded)
+        if (!restoreResult.Succeeded)
         {
             var message = $"{CreateResultMessage(sleepResult)} Restore failed: {CreateResultMessage(restoreResult)}";
             return LidGuardOperationResult.Failure(message, GetNativeErrorCode(sleepResult, restoreResult));
         }
 
-        if (!sleepResult.Succeeded) return sleepResult;
-        if (!restoreResult.Succeeded) return restoreResult;
-
-        return LidGuardOperationResult.Success();
+        return sleepResult;
     }
 
     private static int GetNativeErrorCode(params LidGuardOperationResult[] results)
@@ -56,4 +51,7 @@ public sealed class SystemSuspendService : ISystemSuspendService
         if (result.NativeErrorCode == 0) return result.Message;
         return $"{result.Message} Native error: {result.NativeErrorCode}.";
     }
+
+    private static string CreateDeferredHibernateRestoreMessage()
+        => $"macOS hibernatemode restore was deferred through pending backup: {MacOSPendingPowerStateBackupStore.GetDefaultFilePath()}.";
 }

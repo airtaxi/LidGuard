@@ -1118,7 +1118,9 @@ internal sealed class LidGuardRuntimeCoordinator
                 SuspendMode = suspendMode,
                 Reason = suspendWebhookReason,
                 Succeeded = suspendResult.Succeeded,
-                Message = suspendResult.Succeeded ? $"Requested {suspendMode} {DescribeSuspendReason(activeSessionCount)}" : CreateResultMessage(suspendResult),
+                Message = suspendResult.Succeeded
+                    ? CreateSuspendHistorySuccessMessage(suspendResult, $"Requested {suspendMode} {DescribeSuspendReason(activeSessionCount)}")
+                    : CreateResultMessage(suspendResult),
                 EventName = suspendResult.Succeeded ? $"{eventName}-suspend-requested" : $"{eventName}-suspend-failed",
                 CommandName = pendingSuspendContext.CommandName,
                 Provider = pendingSuspendContext.Provider,
@@ -1496,7 +1498,9 @@ internal sealed class LidGuardRuntimeCoordinator
                 Reason = SuspendWebhookReason.EmergencyHibernation,
                 Succeeded = hibernationResult.Succeeded,
                 Message = hibernationResult.Succeeded
-                    ? $"Requested Emergency Hibernation because system temperature reached {DescribeEmergencyHibernationTemperature(observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode)}."
+                    ? CreateSuspendHistorySuccessMessage(
+                        hibernationResult,
+                        $"Requested Emergency Hibernation because system temperature reached {DescribeEmergencyHibernationTemperature(observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode)}.")
                     : CreateResultMessage(hibernationResult),
                 EventName = hibernationResult.Succeeded ? "emergency-hibernation-requested" : "emergency-hibernation-failed",
                 CommandName = "emergency-hibernation-monitor",
@@ -1630,6 +1634,9 @@ internal sealed class LidGuardRuntimeCoordinator
         if (result.NativeErrorCode == 0) return result.Message;
         return $"{result.Message} Native error: {result.NativeErrorCode}.";
     }
+
+    private static string CreateSuspendHistorySuccessMessage(LidGuardOperationResult result, string defaultMessage)
+        => string.IsNullOrWhiteSpace(result.Message) ? defaultMessage : $"{defaultMessage} {result.Message}";
 
     private ClosedLidPolicyApplicability EvaluateClosedLidPolicyApplicability(string actionName)
     {
