@@ -10,6 +10,16 @@ internal static class LinuxPermissionCommand
     private const string ManagedMarker = "Managed by LidGuard Linux permission command.";
     private const string VersionMarker = "LidGuard Linux polkit rule v1.";
     private static readonly TimeSpan s_checkCommandTimeout = TimeSpan.FromSeconds(5);
+    private static readonly string s_installRuleScript =
+        "if [ -e \"$2\" ]; then " +
+        "if ! grep -Fq -- \"$3\" \"$2\" || ! grep -Fq -- \"$4\" \"$2\"; then " +
+        "echo \"Refusing to overwrite unmanaged polkit rule file: $2\" >&2; exit 17; " +
+        "fi; fi; install -m 0644 \"$1\" \"$2\"";
+    private static readonly string s_removeRuleScript =
+        "if [ ! -e \"$1\" ]; then exit 2; fi; " +
+        "if ! grep -Fq -- \"$2\" \"$1\" || ! grep -Fq -- \"$3\" \"$1\"; then " +
+        "echo \"Refusing to remove unmanaged polkit rule file: $1\" >&2; exit 17; " +
+        "fi; rm -f \"$1\"";
 
     private static readonly string[] s_allowedActionIdentifiers =
     [
@@ -108,16 +118,22 @@ internal static class LinuxPermissionCommand
     private static int InstallRule()
     {
         var targetUserName = GetTargetUserName();
-        var ruleInspection = InspectRule(targetUserName);
-        if (ruleInspection.Exists && !ruleInspection.IsManaged)
-        {
-            Console.Error.WriteLine($"Refusing to overwrite unmanaged polkit rule file: {RuleFilePath}");
-            return 1;
-        }
-
         var ruleContent = CreateRuleContent(targetUserName);
         if (IsRootUser())
         {
+            var ruleInspection = InspectRule(targetUserName);
+            if (!ruleInspection.InspectionSucceeded)
+            {
+                Console.Error.WriteLine($"Failed to inspect existing polkit rule: {ruleInspection.Message}");
+                return 1;
+            }
+
+            if (ruleInspection.Exists && !ruleInspection.IsManaged)
+            {
+                Console.Error.WriteLine($"Refusing to overwrite unmanaged polkit rule file: {RuleFilePath}");
+                return 1;
+            }
+
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(RuleFilePath) ?? "/etc/polkit-1/rules.d");
@@ -132,7 +148,7 @@ internal static class LinuxPermissionCommand
             }
         }
 
-        if (!LinuxCommandPathResolver.TryFindExecutable("sudo", out var sudoPath))
+        if (!LinuxCommandPathResolver.TryFindExecutable("sudo", out var sudoExecutablePath))
         {
             Console.Error.WriteLine("sudo was not found on PATH. Run this command as root or install sudo.");
             return 1;
@@ -142,7 +158,19 @@ internal static class LinuxPermissionCommand
         try
         {
             File.WriteAllText(temporaryRuleFilePath, ruleContent);
-            var installResult = LinuxCommandRunner.Run(sudoPath, ["install", "-m", "0644", temporaryRuleFilePath, RuleFilePath], TimeSpan.FromMinutes(2));
+            var installResult = LinuxCommandRunner.Run(
+                sudoExecutablePath,
+                [
+                    "sh",
+                    "-c",
+                    s_installRuleScript,
+                    "lidguard-rule-install",
+                    temporaryRuleFilePath,
+                    RuleFilePath,
+                    ManagedMarker,
+                    VersionMarker
+                ],
+                TimeSpan.FromMinutes(2));
             if (!installResult.Succeeded)
             {
                 Console.Error.WriteLine(installResult.CreateFailureMessage("sudo install"));
@@ -166,21 +194,27 @@ internal static class LinuxPermissionCommand
     private static int RemoveRule()
     {
         var targetUserName = GetTargetUserName();
-        var ruleInspection = InspectRule(targetUserName);
-        if (!ruleInspection.Exists)
-        {
-            Console.WriteLine($"LidGuard polkit rule is not installed: {RuleFilePath}");
-            return 0;
-        }
-
-        if (!ruleInspection.IsManaged)
-        {
-            Console.Error.WriteLine($"Refusing to remove unmanaged polkit rule file: {RuleFilePath}");
-            return 1;
-        }
-
         if (IsRootUser())
         {
+            var ruleInspection = InspectRule(targetUserName);
+            if (!ruleInspection.InspectionSucceeded)
+            {
+                Console.Error.WriteLine($"Failed to inspect existing polkit rule: {ruleInspection.Message}");
+                return 1;
+            }
+
+            if (!ruleInspection.Exists)
+            {
+                Console.WriteLine($"LidGuard polkit rule is not installed: {RuleFilePath}");
+                return 0;
+            }
+
+            if (!ruleInspection.IsManaged)
+            {
+                Console.Error.WriteLine($"Refusing to remove unmanaged polkit rule file: {RuleFilePath}");
+                return 1;
+            }
+
             try
             {
                 File.Delete(RuleFilePath);
@@ -194,13 +228,30 @@ internal static class LinuxPermissionCommand
             }
         }
 
-        if (!LinuxCommandPathResolver.TryFindExecutable("sudo", out var sudoPath))
+        if (!LinuxCommandPathResolver.TryFindExecutable("sudo", out var sudoExecutablePath))
         {
             Console.Error.WriteLine("sudo was not found on PATH. Run this command as root or install sudo.");
             return 1;
         }
 
-        var removeResult = LinuxCommandRunner.Run(sudoPath, ["rm", "-f", RuleFilePath], TimeSpan.FromMinutes(2));
+        var removeResult = LinuxCommandRunner.Run(
+            sudoExecutablePath,
+            [
+                "sh",
+                "-c",
+                s_removeRuleScript,
+                "lidguard-rule-remove",
+                RuleFilePath,
+                ManagedMarker,
+                VersionMarker
+            ],
+            TimeSpan.FromMinutes(2));
+        if (removeResult.Started && removeResult.ExitCode == 2)
+        {
+            Console.WriteLine($"LidGuard polkit rule is not installed: {RuleFilePath}");
+            return 0;
+        }
+
         if (!removeResult.Succeeded)
         {
             Console.Error.WriteLine(removeResult.CreateFailureMessage("sudo rm"));
@@ -275,24 +326,50 @@ internal static class LinuxPermissionCommand
 
     private static RuleInspection InspectRule(string targetUserName)
     {
-        try
+        var readResult = ReadRuleContentDirect();
+        if (!readResult.Succeeded && readResult.IsInconclusive)
         {
-            if (!File.Exists(RuleFilePath)) return new RuleInspection(false, false, false);
-
-            var content = File.ReadAllText(RuleFilePath);
-            var isManaged = content.Contains(ManagedMarker, StringComparison.Ordinal)
-                && content.Contains(VersionMarker, StringComparison.Ordinal);
-            var isForCurrentUser = content.Contains($"subject.user == \"{EscapeJavaScriptString(targetUserName)}\"", StringComparison.Ordinal);
-            return new RuleInspection(true, isManaged, isForCurrentUser);
+            var sudoReadResult = ReadRuleContentWithNonInteractiveSudo();
+            readResult = sudoReadResult.Succeeded || sudoReadResult.NotFound
+                ? sudoReadResult
+                : RuleContentReadResult.Inconclusive($"{readResult.Message} {sudoReadResult.Message}".Trim());
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { return new RuleInspection(true, false, false); }
+
+        if (readResult.NotFound) return RuleInspection.NotInstalled();
+        if (!readResult.Succeeded) return RuleInspection.Inconclusive(readResult.Message);
+
+        var isManaged = readResult.Content.Contains(ManagedMarker, StringComparison.Ordinal)
+            && readResult.Content.Contains(VersionMarker, StringComparison.Ordinal);
+        var isForCurrentUser = readResult.Content.Contains($"subject.user == \"{EscapeJavaScriptString(targetUserName)}\"", StringComparison.Ordinal);
+        return new RuleInspection(true, isManaged, isForCurrentUser, true, string.Empty);
     }
 
     private static string DescribeRuleStatus(RuleInspection ruleInspection)
     {
+        if (!ruleInspection.InspectionSucceeded) return $"unable to inspect ({ruleInspection.Message})";
         if (!ruleInspection.Exists) return "not installed";
         if (!ruleInspection.IsManaged) return "present but not managed by LidGuard";
         return ruleInspection.IsForCurrentUser ? "installed for current user" : "installed for another user";
+    }
+
+    private static RuleContentReadResult ReadRuleContentDirect()
+    {
+        try { return RuleContentReadResult.Success(File.ReadAllText(RuleFilePath)); }
+        catch (FileNotFoundException) { return RuleContentReadResult.NotFoundResult(); }
+        catch (DirectoryNotFoundException) { return RuleContentReadResult.NotFoundResult(); }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { return RuleContentReadResult.Inconclusive(exception.Message); }
+    }
+
+    private static RuleContentReadResult ReadRuleContentWithNonInteractiveSudo()
+    {
+        if (!LinuxCommandPathResolver.TryFindExecutable("sudo", out var sudoExecutablePath)) return RuleContentReadResult.Inconclusive("sudo was not found on PATH.");
+
+        var commandResult = LinuxCommandRunner.Run(sudoExecutablePath, ["-n", "cat", RuleFilePath], s_checkCommandTimeout);
+        if (commandResult.Succeeded) return RuleContentReadResult.Success(commandResult.StandardOutput);
+
+        var failureMessage = commandResult.CreateFailureMessage("sudo -n cat");
+        if (failureMessage.Contains("No such file", StringComparison.OrdinalIgnoreCase)) return RuleContentReadResult.NotFoundResult();
+        return RuleContentReadResult.Inconclusive(failureMessage);
     }
 
     private static string CreateRuleContent(string targetUserName)
@@ -362,5 +439,29 @@ polkit.addRule(function(action, subject) {
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
     }
 
-    private readonly record struct RuleInspection(bool Exists, bool IsManaged, bool IsForCurrentUser);
+    private readonly record struct RuleInspection(
+        bool Exists,
+        bool IsManaged,
+        bool IsForCurrentUser,
+        bool InspectionSucceeded,
+        string Message)
+    {
+        public static RuleInspection NotInstalled() => new(false, false, false, true, string.Empty);
+
+        public static RuleInspection Inconclusive(string message) => new(false, false, false, false, message);
+    }
+
+    private readonly record struct RuleContentReadResult(
+        bool Succeeded,
+        bool NotFound,
+        bool IsInconclusive,
+        string Content,
+        string Message)
+    {
+        public static RuleContentReadResult Success(string content) => new(true, false, false, content ?? string.Empty, string.Empty);
+
+        public static RuleContentReadResult NotFoundResult() => new(false, true, false, string.Empty, string.Empty);
+
+        public static RuleContentReadResult Inconclusive(string message) => new(false, false, true, string.Empty, message ?? string.Empty);
+    }
 }
