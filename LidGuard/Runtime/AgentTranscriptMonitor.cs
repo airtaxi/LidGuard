@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using LidGuardLib.Commons.Sessions;
 
@@ -6,7 +7,8 @@ namespace LidGuard.Runtime;
 internal sealed class AgentTranscriptMonitor(
     AgentTranscriptMonitoringProfile monitoringProfile,
     Func<AgentTranscriptActivityDetectedContext, Task> transcriptActivityDetectedAsync,
-    Func<AgentTranscriptStopDetectedContext, Task> transcriptStopDetectedAsync)
+    Func<AgentTranscriptStopDetectedContext, Task> transcriptStopDetectedAsync,
+    Func<AgentTranscriptSoftLockDetectedContext, Task> transcriptSoftLockDetectedAsync)
 {
     private const int TranscriptPollingIntervalMilliseconds = 1000;
     private readonly object _gate = new();
@@ -107,6 +109,7 @@ internal sealed class AgentTranscriptMonitor(
     {
         AgentTranscriptActivityDetectedContext transcriptActivityDetectedContext = null;
         AgentTranscriptStopDetectedContext transcriptStopDetectedContext = null;
+        AgentTranscriptSoftLockDetectedContext transcriptSoftLockDetectedContext = null;
 
         lock (_gate)
         {
@@ -142,6 +145,18 @@ internal sealed class AgentTranscriptMonitor(
                     StopReasonDescription = monitoringProfile.StopReasonDescription
                 };
             }
+            else if (monitoringProfile.SoftLockDetector(monitoredSessionState.TranscriptPath, out var softLockReason))
+            {
+                transcriptSoftLockDetectedContext = new AgentTranscriptSoftLockDetectedContext
+                {
+                    SessionKey = monitoredSessionState.SessionKey,
+                    WorkingDirectory = monitoredSessionState.WorkingDirectory,
+                    TranscriptPath = monitoredSessionState.TranscriptPath,
+                    SoftLockCommandName = monitoringProfile.SoftLockCommandName,
+                    SoftLockEventName = monitoringProfile.SoftLockEventName,
+                    SoftLockReason = softLockReason
+                };
+            }
             else
             {
                 transcriptActivityDetectedContext = new AgentTranscriptActivityDetectedContext
@@ -157,6 +172,12 @@ internal sealed class AgentTranscriptMonitor(
         if (transcriptStopDetectedContext is not null)
         {
             _ = NotifyTranscriptStopDetectedAsync(transcriptStopDetectedContext, transcriptStopDetectedAsync);
+            return;
+        }
+
+        if (transcriptSoftLockDetectedContext is not null)
+        {
+            _ = NotifyTranscriptSoftLockDetectedAsync(transcriptSoftLockDetectedContext, transcriptSoftLockDetectedAsync);
             return;
         }
 
@@ -184,6 +205,19 @@ internal sealed class AgentTranscriptMonitor(
         try
         {
             await transcriptStopDetectedAsync(transcriptStopDetectedContext);
+        }
+        catch
+        {
+        }
+    }
+
+    private static async Task NotifyTranscriptSoftLockDetectedAsync(
+        AgentTranscriptSoftLockDetectedContext transcriptSoftLockDetectedContext,
+        Func<AgentTranscriptSoftLockDetectedContext, Task> transcriptSoftLockDetectedAsync)
+    {
+        try
+        {
+            await transcriptSoftLockDetectedAsync(transcriptSoftLockDetectedContext);
         }
         catch
         {
@@ -306,12 +340,20 @@ internal sealed class AgentTranscriptMonitoringProfile
 
     public required Func<string, bool> StopDetector { get; init; }
 
+    public AgentTranscriptSoftLockDetector SoftLockDetector { get; init; } = AgentTranscriptSoftLockDetectors.None;
+
     public required string ActivityReason { get; init; }
 
     public required string StopCommandName { get; init; }
 
     public required string StopReasonDescription { get; init; }
+
+    public string SoftLockCommandName { get; init; } = "transcript-softlock";
+
+    public string SoftLockEventName { get; init; } = "transcript-softlock-recorded";
 }
+
+internal delegate bool AgentTranscriptSoftLockDetector(string transcriptPath, out string softLockReason);
 
 internal sealed class AgentTranscriptMonitoringRegistrationResult
 {
@@ -344,6 +386,145 @@ internal sealed class AgentTranscriptStopDetectedContext
     public required string StopCommandName { get; init; }
 
     public required string StopReasonDescription { get; init; }
+}
+
+internal sealed class AgentTranscriptSoftLockDetectedContext
+{
+    public required LidGuardSessionKey SessionKey { get; init; }
+
+    public required string WorkingDirectory { get; init; }
+
+    public required string TranscriptPath { get; init; }
+
+    public required string SoftLockCommandName { get; init; }
+
+    public required string SoftLockEventName { get; init; }
+
+    public required string SoftLockReason { get; init; }
+}
+
+internal static class AgentTranscriptSoftLockDetectors
+{
+    private const int RecentTranscriptLineLimit = 1024;
+    private const int RecentTranscriptByteLimit = 1_048_576;
+    private const string CodexRequestUserInputFunctionName = "request_user_input";
+    private const string CodexRequestUserInputSoftLockReason = "codex_transcript_request_user_input_pending";
+
+    public static bool None(string transcriptPath, out string softLockReason)
+    {
+        softLockReason = string.Empty;
+        return false;
+    }
+
+    public static bool HasPendingCodexRequestUserInput(string transcriptPath, out string softLockReason)
+    {
+        softLockReason = string.Empty;
+        var pendingFunctionCallIdentifiers = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var transcriptLine in ReadRecentTranscriptLines(transcriptPath, RecentTranscriptLineLimit, RecentTranscriptByteLimit))
+        {
+            if (!TryInspectCodexTranscriptResponseItem(transcriptLine, out var payloadType, out var functionName, out var functionCallIdentifier)) continue;
+            if (payloadType.Equals("function_call", StringComparison.Ordinal)
+                && functionName.Equals(CodexRequestUserInputFunctionName, StringComparison.Ordinal)
+                && !string.IsNullOrWhiteSpace(functionCallIdentifier))
+            {
+                pendingFunctionCallIdentifiers.Add(functionCallIdentifier);
+                continue;
+            }
+
+            if (payloadType.Equals("function_call_output", StringComparison.Ordinal)
+                && !string.IsNullOrWhiteSpace(functionCallIdentifier))
+            {
+                pendingFunctionCallIdentifiers.Remove(functionCallIdentifier);
+            }
+        }
+
+        if (pendingFunctionCallIdentifiers.Count == 0) return false;
+
+        softLockReason = CodexRequestUserInputSoftLockReason;
+        return true;
+    }
+
+    private static bool TryInspectCodexTranscriptResponseItem(
+        string transcriptLine,
+        out string payloadType,
+        out string functionName,
+        out string functionCallIdentifier)
+    {
+        payloadType = string.Empty;
+        functionName = string.Empty;
+        functionCallIdentifier = string.Empty;
+        if (string.IsNullOrWhiteSpace(transcriptLine)) return false;
+
+        try
+        {
+            using var document = JsonDocument.Parse(transcriptLine);
+            var rootElement = document.RootElement;
+            if (!TryGetStringProperty(rootElement, "type", out var recordType)) return false;
+            if (!recordType.Equals("response_item", StringComparison.Ordinal)) return false;
+            if (!rootElement.TryGetProperty("payload", out var payloadElement)) return false;
+            if (!TryGetStringProperty(payloadElement, "type", out payloadType)) return false;
+
+            TryGetStringProperty(payloadElement, "name", out functionName);
+            TryGetStringProperty(payloadElement, "call_id", out functionCallIdentifier);
+            return true;
+        }
+        catch (JsonException) { return false; }
+    }
+
+    private static string[] ReadRecentTranscriptLines(
+        string transcriptPath,
+        int lineLimit,
+        int byteLimit)
+    {
+        try
+        {
+            using var stream = new FileStream(transcriptPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            if (stream.Length == 0) return [];
+
+            var transcriptLength = stream.Length;
+            var bytesToRead = (int)Math.Min(transcriptLength, byteLimit);
+            var startsAtBeginning = transcriptLength <= bytesToRead;
+            var buffer = new byte[bytesToRead];
+            stream.Seek(-bytesToRead, SeekOrigin.End);
+            var bytesRead = 0;
+            while (bytesRead < bytesToRead)
+            {
+                var currentBytesRead = stream.Read(buffer, bytesRead, bytesToRead - bytesRead);
+                if (currentBytesRead == 0) break;
+                bytesRead += currentBytesRead;
+            }
+
+            var transcriptText = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            if (!startsAtBeginning)
+            {
+                var firstNewLineIndex = transcriptText.IndexOf('\n');
+                transcriptText = firstNewLineIndex >= 0 ? transcriptText[(firstNewLineIndex + 1)..] : string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(transcriptText)) return [];
+
+            return transcriptText
+                .Split('\n')
+                .Select(transcriptLine => transcriptLine.TrimEnd('\r'))
+                .Where(transcriptLine => !string.IsNullOrWhiteSpace(transcriptLine))
+                .TakeLast(lineLimit)
+                .ToArray();
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException)
+        {
+            return [];
+        }
+    }
+
+    private static bool TryGetStringProperty(JsonElement element, string propertyName, out string value)
+    {
+        value = string.Empty;
+        if (!element.TryGetProperty(propertyName, out var propertyElement)) return false;
+        if (propertyElement.ValueKind != JsonValueKind.String) return false;
+
+        value = propertyElement.GetString() ?? string.Empty;
+        return true;
+    }
 }
 
 internal static class AgentTranscriptStopDetectors

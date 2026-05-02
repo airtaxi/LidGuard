@@ -12,6 +12,7 @@ internal sealed class LidGuardRuntimeCoordinator
 {
     private const string SessionTimeoutCommandName = "session-timeout";
     private const string CodexTranscriptTurnAbortedCommandName = "codex-transcript-turn-aborted";
+    private const string CodexTranscriptRequestUserInputPendingCommandName = "codex-transcript-request-user-input-pending";
     private const string ClaudeTranscriptInterruptedCommandName = "claude-transcript-interrupted";
     private const string GitHubCopilotTranscriptAbortCommandName = "github-copilot-transcript-abort";
     private const string ServerRuntimeCleanupCommandName = "server-runtime-cleanup";
@@ -63,15 +64,18 @@ internal sealed class LidGuardRuntimeCoordinator
         _codexTranscriptMonitor = new AgentTranscriptMonitor(
             CreateCodexTranscriptMonitoringProfile(),
             HandleTranscriptActivityDetectedAsync,
-            HandleTranscriptStopDetectedAsync);
+            HandleTranscriptStopDetectedAsync,
+            HandleTranscriptSoftLockDetectedAsync);
         _claudeTranscriptMonitor = new AgentTranscriptMonitor(
             CreateClaudeTranscriptMonitoringProfile(),
             HandleTranscriptActivityDetectedAsync,
-            HandleTranscriptStopDetectedAsync);
+            HandleTranscriptStopDetectedAsync,
+            HandleTranscriptSoftLockDetectedAsync);
         _gitHubCopilotTranscriptMonitor = new AgentTranscriptMonitor(
             CreateGitHubCopilotTranscriptMonitoringProfile(),
             HandleTranscriptActivityDetectedAsync,
-            HandleTranscriptStopDetectedAsync);
+            HandleTranscriptStopDetectedAsync,
+            HandleTranscriptSoftLockDetectedAsync);
         _emergencyHibernationThermalMonitor = new EmergencyHibernationThermalMonitor(
             CreateEmergencyHibernationThermalMonitorState,
             HandleEmergencyHibernationThresholdReachedAsync);
@@ -1877,6 +1881,26 @@ internal sealed class LidGuardRuntimeCoordinator
         }
     }
 
+    private async Task HandleTranscriptSoftLockDetectedAsync(AgentTranscriptSoftLockDetectedContext transcriptSoftLockDetectedContext)
+    {
+        await _gate.WaitAsync(CancellationToken.None);
+        try
+        {
+            MarkSessionSoftLockedInsideGate(
+                transcriptSoftLockDetectedContext.SoftLockCommandName,
+                transcriptSoftLockDetectedContext.SoftLockEventName,
+                transcriptSoftLockDetectedContext.SessionKey.Provider,
+                transcriptSoftLockDetectedContext.SessionKey.ProviderName,
+                transcriptSoftLockDetectedContext.SessionKey.SessionIdentifier,
+                transcriptSoftLockDetectedContext.SoftLockReason,
+                transcriptSoftLockDetectedContext.SessionKey);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     private static AgentTranscriptMonitoringProfile CreateCodexTranscriptMonitoringProfile()
         => new()
         {
@@ -1885,9 +1909,12 @@ internal sealed class LidGuardRuntimeCoordinator
             FallbackRootDescription = "Codex sessions",
             FallbackRootPathResolver = GetCodexSessionsDirectoryPath,
             StopDetector = AgentTranscriptStopDetectors.IsLastCodexTranscriptLineTurnAborted,
+            SoftLockDetector = AgentTranscriptSoftLockDetectors.HasPendingCodexRequestUserInput,
             ActivityReason = "codex_transcript_activity_detected",
             StopCommandName = CodexTranscriptTurnAbortedCommandName,
-            StopReasonDescription = "the Codex transcript reported turn_aborted"
+            StopReasonDescription = "the Codex transcript reported turn_aborted",
+            SoftLockCommandName = CodexTranscriptRequestUserInputPendingCommandName,
+            SoftLockEventName = "codex-transcript-softlock-recorded"
         };
 
     private static AgentTranscriptMonitoringProfile CreateClaudeTranscriptMonitoringProfile()
