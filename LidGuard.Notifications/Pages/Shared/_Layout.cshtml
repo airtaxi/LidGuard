@@ -2,6 +2,7 @@
     var currentLanguageName = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("ko", StringComparison.OrdinalIgnoreCase) ? "ko" : "en";
     var currentReturnUrl = $"{Context.Request.PathBase}{Context.Request.Path}";
     var languageAction = $"{Context.Request.PathBase}/language";
+    var initialThemeSwitchLabel = LidGuardNotificationText.ThemeSwitchTo(LidGuardNotificationText.ThemeDarkMode.ToLower(CultureInfo.CurrentCulture));
 }
 <!DOCTYPE html>
 <html lang="@CultureInfo.CurrentUICulture.Name">
@@ -19,24 +20,35 @@
             <form method="post" action="@languageAction" class="language-form">
                 <input type="hidden" name="returnUrl" value="@currentReturnUrl" />
                 <label for="languageSelect" class="visually-hidden">@LidGuardNotificationText.LanguageLabel</label>
-                <select
-                    id="languageSelect"
-                    name="culture"
-                    class="language-select"
-                    aria-label="@LidGuardNotificationText.LanguageLabel"
-                    onchange="this.form.submit()">
-                    <option value="en" selected="@(currentLanguageName == "en")">@LidGuardNotificationText.LanguageEnglish</option>
-                    <option value="ko" selected="@(currentLanguageName == "ko")">@LidGuardNotificationText.LanguageKorean</option>
-                </select>
+                <span class="language-select-shell">
+                    <span class="icon icon-globe control-icon" aria-hidden="true"></span>
+                    <select
+                        id="languageSelect"
+                        name="culture"
+                        class="language-select"
+                        aria-label="@LidGuardNotificationText.LanguageLabel"
+                        title="@LidGuardNotificationText.LanguageLabel"
+                        onchange="this.form.submit()">
+                        <option value="en" selected="@(currentLanguageName == "en")">@LidGuardNotificationText.LanguageEnglish</option>
+                        <option value="ko" selected="@(currentLanguageName == "ko")">@LidGuardNotificationText.LanguageKorean</option>
+                    </select>
+                    <span class="icon icon-chevron-down select-chevron" aria-hidden="true"></span>
+                </span>
             </form>
             <button
                 id="themeToggle"
                 type="button"
-                class="theme-toggle"
-                aria-label="@LidGuardNotificationText.ThemeSwitchTo(LidGuardNotificationText.ThemeDarkMode.ToLower(CultureInfo.CurrentCulture))"
+                class="theme-toggle icon-button"
+                aria-label="@initialThemeSwitchLabel"
+                title="@initialThemeSwitchLabel"
                 data-dark-mode-label="@LidGuardNotificationText.ThemeDarkMode"
                 data-light-mode-label="@LidGuardNotificationText.ThemeLightMode"
-                data-switch-to-format="@LidGuardNotificationText.ThemeSwitchToFormat">@LidGuardNotificationText.ThemeDarkMode</button>
+                data-switch-to-format="@LidGuardNotificationText.ThemeSwitchToFormat"
+                data-next-theme="dark"
+                data-theme-state="light">
+                <span class="icon icon-moon theme-icon theme-icon-moon" aria-hidden="true"></span>
+                <span class="icon icon-sun theme-icon theme-icon-sun" aria-hidden="true"></span>
+            </button>
             @if (User.Identity?.IsAuthenticated == true)
             {
                 <nav>

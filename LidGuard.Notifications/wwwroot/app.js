@@ -36,22 +36,28 @@ async function copyTextToClipboard(text) {
 
 async function copyCommand(button) {
     const copyLabel = getText("copyLabel", "Copy");
-    const copiedLabel = getText("copiedLabel", "V");
+    const copiedLabel = getText("copiedLabel", "Copied");
     const copyFailedLabel = getText("copyFailedLabel", "Copy failed");
     const resetHandle = copyResetHandles.get(button);
     if (resetHandle) window.clearTimeout(resetHandle);
 
     try {
         await copyTextToClipboard(button.dataset.copyText || "");
-        button.textContent = copiedLabel;
+        setCopyButtonState(button, "copied", copiedLabel);
     } catch {
-        button.textContent = copyFailedLabel;
+        setCopyButtonState(button, "failed", copyFailedLabel);
     }
 
     copyResetHandles.set(button, window.setTimeout(() => {
-        button.textContent = copyLabel;
+        setCopyButtonState(button, "idle", copyLabel);
         copyResetHandles.delete(button);
     }, 1200));
+}
+
+function setCopyButtonState(button, state, label) {
+    button.dataset.state = state;
+    button.setAttribute("aria-label", label);
+    button.title = label;
 }
 
 async function updateActiveSubscriptionCount(response) {
@@ -153,5 +159,6 @@ async function unsubscribeBrowser() {
 subscribeButton?.addEventListener("click", subscribeBrowser);
 unsubscribeButton?.addEventListener("click", unsubscribeBrowser);
 for (const button of document.querySelectorAll("[data-copy-text]")) {
+    setCopyButtonState(button, "idle", getText("copyLabel", "Copy"));
     button.addEventListener("click", () => copyCommand(button));
 }

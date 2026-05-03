@@ -50,7 +50,7 @@
         const accessibleModeLabel = label.toLocaleLowerCase(document.documentElement.lang || undefined);
 
         const accessibleLabel = switchToFormat.replace("{0}", accessibleModeLabel);
-        button.textContent = label;
+        button.dataset.themeState = effectiveTheme;
         button.dataset.nextTheme = nextTheme;
         button.setAttribute("aria-label", accessibleLabel);
         button.title = accessibleLabel;

@@ -48,12 +48,32 @@
             <div class="command-example">
                 <span>@LidGuardNotificationText.PreSuspendWebhookCommandLabel</span>
                 <code>@preSuspendWebhookCommand</code>
-                <button type="button" class="secondary copy-button" data-copy-text="@preSuspendWebhookCommand">@LidGuardNotificationText.CopyButton</button>
+                <button
+                    type="button"
+                    class="secondary copy-button icon-button"
+                    data-copy-text="@preSuspendWebhookCommand"
+                    data-state="idle"
+                    aria-label="@LidGuardNotificationText.CopyButton"
+                    title="@LidGuardNotificationText.CopyButton">
+                    <span class="icon icon-copy copy-icon copy-icon-idle" aria-hidden="true"></span>
+                    <span class="icon icon-check copy-icon copy-icon-copied" aria-hidden="true"></span>
+                    <span class="icon icon-triangle-alert copy-icon copy-icon-failed" aria-hidden="true"></span>
+                </button>
             </div>
             <div class="command-example">
                 <span>@LidGuardNotificationText.PostSessionEndWebhookCommandLabel</span>
                 <code>@postSessionEndWebhookCommand</code>
-                <button type="button" class="secondary copy-button" data-copy-text="@postSessionEndWebhookCommand">@LidGuardNotificationText.CopyButton</button>
+                <button
+                    type="button"
+                    class="secondary copy-button icon-button"
+                    data-copy-text="@postSessionEndWebhookCommand"
+                    data-state="idle"
+                    aria-label="@LidGuardNotificationText.CopyButton"
+                    title="@LidGuardNotificationText.CopyButton">
+                    <span class="icon icon-copy copy-icon copy-icon-idle" aria-hidden="true"></span>
+                    <span class="icon icon-check copy-icon copy-icon-copied" aria-hidden="true"></span>
+                    <span class="icon icon-triangle-alert copy-icon copy-icon-failed" aria-hidden="true"></span>
+                </button>
             </div>
         </div>
     </div>

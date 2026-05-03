@@ -43,7 +43,7 @@
     <value>LidGuard 설정 명령</value>
   </data>
   <data name="CopiedButton" xml:space="preserve">
-    <value>V</value>
+    <value>복사됨</value>
   </data>
   <data name="CopyButton" xml:space="preserve">
     <value>복사</value>
