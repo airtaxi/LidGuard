@@ -23,6 +23,7 @@ internal static class LidGuardRuntimeResponseLocalizer
         return messageCode switch
         {
             LidGuardPipeResponseMessageCodes.CleanupOrphansCompleted => Format("RuntimeResponseCleanupOrphansCompleted", "Cleaned {0} orphan session(s).", Argument(messageArguments, 0)),
+            LidGuardPipeResponseMessageCodes.CodexWatchedProcessLostCanceled => Format("RuntimeResponseCodexWatchedProcessLostCanceled", "Canceled {0} because a new Codex start no longer had a watched process after the session previously had one.", Argument(messageArguments, 0)),
             LidGuardPipeResponseMessageCodes.FailedToStartRuntime => Get("RuntimeResponseFailedToStartRuntime", "Failed to start the LidGuard runtime."),
             LidGuardPipeResponseMessageCodes.RuntimeIsRunning => Get("RuntimeResponseRuntimeIsRunning", "LidGuard runtime is running."),
             LidGuardPipeResponseMessageCodes.RuntimeNotRunning => LidGuardText.ConsoleRuntimeNotRunning,

@@ -3,6 +3,7 @@ namespace LidGuard.Ipc;
 internal static class LidGuardPipeResponseMessageCodes
 {
     public const string CleanupOrphansCompleted = "cleanup-orphans-completed";
+    public const string CodexWatchedProcessLostCanceled = "codex-watched-process-lost-canceled";
     public const string FailedToStartRuntime = "failed-to-start-runtime";
     public const string RuntimeIsRunning = "runtime-is-running";
     public const string RuntimeNotRunning = "runtime-not-running";

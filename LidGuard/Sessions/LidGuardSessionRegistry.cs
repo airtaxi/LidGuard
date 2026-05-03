@@ -26,28 +26,41 @@ public sealed class LidGuardSessionRegistry
         ArgumentNullException.ThrowIfNull(request);
         if (string.IsNullOrWhiteSpace(request.SessionIdentifier)) throw new ArgumentException("Session identifier is required.", nameof(request));
 
-        var snapshot = new LidGuardSessionSnapshot
-        {
-            SessionIdentifier = request.SessionIdentifier,
-            Provider = request.Provider,
-            ProviderName = AgentProviderDisplay.NormalizeProviderName(request.Provider, request.ProviderName),
-            StartedAt = request.StartedAt,
-            LastActivityAt = request.LastActivityAt,
-            SoftLockState = LidGuardSessionSoftLockState.None,
-            SoftLockReason = string.Empty,
-            SoftLockedAt = null,
-            WatchedProcessIdentifier = request.WatchedProcessIdentifier,
-            WatchRegistrationKind = request.WatchRegistrationKind,
-            InputPromptPreview = request.InputPromptPreview,
-            WorkingDirectory = request.WorkingDirectory,
-            TranscriptPath = request.TranscriptPath
-        };
-
         lock (_gate)
         {
+            var key = new LidGuardSessionKey(request.Provider, request.SessionIdentifier, request.ProviderName);
+            var hasExistingSnapshot = _sessions.TryGetValue(key, out var existingSnapshot);
+            var hasEverHadWatchedProcess = request.WatchedProcessIdentifier > 0
+                || hasExistingSnapshot && (existingSnapshot.HasEverHadWatchedProcess || existingSnapshot.HasWatchedProcess);
+            var snapshot = new LidGuardSessionSnapshot
+            {
+                SessionIdentifier = request.SessionIdentifier,
+                Provider = request.Provider,
+                ProviderName = AgentProviderDisplay.NormalizeProviderName(request.Provider, request.ProviderName),
+                StartedAt = request.StartedAt,
+                LastActivityAt = request.LastActivityAt,
+                SoftLockState = LidGuardSessionSoftLockState.None,
+                SoftLockReason = string.Empty,
+                SoftLockedAt = null,
+                WatchedProcessIdentifier = request.WatchedProcessIdentifier,
+                HasEverHadWatchedProcess = hasEverHadWatchedProcess,
+                WatchRegistrationKind = request.WatchRegistrationKind,
+                InputPromptPreview = request.InputPromptPreview,
+                WorkingDirectory = request.WorkingDirectory,
+                TranscriptPath = request.TranscriptPath
+            };
             _sessions[snapshot.Key] = snapshot;
             return snapshot;
         }
+    }
+
+    public bool TryGetSnapshot(AgentProvider provider, string sessionIdentifier, string providerName, out LidGuardSessionSnapshot snapshot)
+    {
+        snapshot = LidGuardSessionSnapshot.Empty;
+        if (string.IsNullOrWhiteSpace(sessionIdentifier)) return false;
+
+        var key = new LidGuardSessionKey(provider, sessionIdentifier, providerName);
+        lock (_gate) return _sessions.TryGetValue(key, out snapshot);
     }
 
     public bool Stop(LidGuardSessionStopRequest request, out LidGuardSessionSnapshot snapshot)
@@ -163,6 +176,7 @@ public sealed class LidGuardSessionRegistry
             SoftLockReason = softLockReason,
             SoftLockedAt = softLockedAt,
             WatchedProcessIdentifier = snapshot.WatchedProcessIdentifier,
+            HasEverHadWatchedProcess = snapshot.HasEverHadWatchedProcess,
             WatchRegistrationKind = snapshot.WatchRegistrationKind,
             InputPromptPreview = snapshot.InputPromptPreview,
             WorkingDirectory = snapshot.WorkingDirectory,

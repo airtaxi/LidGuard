@@ -13,6 +13,7 @@ public sealed class LidGuardSessionSnapshot
         SoftLockReason = string.Empty,
         SoftLockedAt = null,
         WatchedProcessIdentifier = 0,
+        HasEverHadWatchedProcess = false,
         WatchRegistrationKind = LidGuardSessionWatchRegistrationKind.None,
         InputPromptPreview = string.Empty,
         WorkingDirectory = string.Empty,
@@ -36,6 +37,8 @@ public sealed class LidGuardSessionSnapshot
     public DateTimeOffset? SoftLockedAt { get; init; }
 
     public int WatchedProcessIdentifier { get; init; }
+
+    public bool HasEverHadWatchedProcess { get; init; }
 
     public LidGuardSessionWatchRegistrationKind WatchRegistrationKind { get; init; }
 

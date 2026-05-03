@@ -11,6 +11,7 @@ namespace LidGuard.Runtime;
 internal sealed class LidGuardRuntimeCoordinator
 {
     private const string SessionTimeoutCommandName = "session-timeout";
+    private const string CodexWatchedProcessLostCommandName = "codex-watched-process-lost";
     private const string CodexTranscriptTurnAbortedCommandName = "codex-transcript-turn-aborted";
     private const string CodexTranscriptRequestUserInputPendingCommandName = "codex-transcript-request-user-input-pending";
     private const string ClaudeTranscriptInterruptedCommandName = "claude-transcript-interrupted";
@@ -143,8 +144,10 @@ internal sealed class LidGuardRuntimeCoordinator
                 }
             }
 
-            var transcriptMonitoringRegistrationResult = RegisterTranscriptMonitor(request);
             var watchedProcessResolution = ResolveWatchedProcess(request);
+            if (TryCancelCodexSessionThatLostWatchedProcessInsideGate(request, watchedProcessResolution, out var canceledResponse)) return canceledResponse;
+
+            var transcriptMonitoringRegistrationResult = RegisterTranscriptMonitor(request);
             var startedAt = DateTimeOffset.UtcNow;
             var startRequest = new LidGuardSessionStartRequest
             {
@@ -497,6 +500,34 @@ internal sealed class LidGuardRuntimeCoordinator
             ? LidGuardSessionWatchRegistrationKind.CodexShellHostedWorkingDirectoryFallback
             : LidGuardSessionWatchRegistrationKind.WorkingDirectoryFallback;
         return new WatchedProcessResolution(resolvedCandidate.ProcessIdentifier, watchRegistrationKind);
+    }
+
+    private bool TryCancelCodexSessionThatLostWatchedProcessInsideGate(
+        LidGuardPipeRequest request,
+        WatchedProcessResolution watchedProcessResolution,
+        out LidGuardPipeResponse response)
+    {
+        response = null;
+        if (request.Provider != AgentProvider.Codex) return false;
+        if (!_settings.WatchParentProcess) return false;
+        if (watchedProcessResolution.ProcessIdentifier > 0) return false;
+        if (!_sessionRegistry.TryGetSnapshot(request.Provider, request.SessionIdentifier, request.ProviderName, out var existingSnapshot)) return false;
+        if (!existingSnapshot.HasEverHadWatchedProcess && !existingSnapshot.HasWatchedProcess) return false;
+
+        var sessionKey = existingSnapshot.Key.ToString();
+        response = StopInsideGate(
+            new LidGuardSessionStopRequest
+            {
+                SessionIdentifier = existingSnapshot.SessionIdentifier,
+                Provider = existingSnapshot.Provider,
+                ProviderName = existingSnapshot.ProviderName
+            },
+            $"Canceled {sessionKey} because a new Codex start no longer had a watched process after the session previously had one.",
+            "codex-watched-process-lost-canceled",
+            CodexWatchedProcessLostCommandName,
+            LidGuardPipeResponseMessageCodes.CodexWatchedProcessLostCanceled,
+            [sessionKey]);
+        return true;
     }
 
     private string CreateWatcherStatusMessage(string watcherStatusKind, LidGuardSessionSnapshot snapshot)

@@ -1269,6 +1269,9 @@
   <data name="RuntimeResponseCleanupOrphansCompleted" xml:space="preserve">
     <value>Cleaned {0} orphan session(s).</value>
   </data>
+  <data name="RuntimeResponseCodexWatchedProcessLostCanceled" xml:space="preserve">
+    <value>Canceled {0} because a new Codex start no longer had a watched process after the session previously had one.</value>
+  </data>
   <data name="RuntimeResponseFailedToStartRuntime" xml:space="preserve">
     <value>Failed to start the LidGuard runtime.</value>
   </data>
