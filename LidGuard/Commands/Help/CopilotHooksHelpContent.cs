@@ -11,10 +11,10 @@ internal static class CopilotHooksHelpContent
             LidGuardPipeCommands.CopilotHooks,
             [],
             LidGuardHelpSectionTitles.HookIntegration,
-            $"{commandDisplayName} copilot-hooks [--format config-json|hooks-json]",
+            $"{commandDisplayName} copilot-hooks [config-json|json|hooks-json]",
             "Print a managed GitHub Copilot CLI hook configuration snippet.",
             [
-                new LidGuardHelpOption("--format <format>", "Optional. Defaults to config-json. Also accepts json or hooks-json.")
+                new LidGuardHelpOption("<format>", "Optional positional value. Defaults to config-json. Accepts config-json, json, or hooks-json.")
             ],
             []);
     }

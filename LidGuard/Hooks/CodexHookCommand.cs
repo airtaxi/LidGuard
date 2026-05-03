@@ -47,9 +47,8 @@ internal static class CodexHookCommand
         return 0;
     }
 
-    public static int WriteHookSnippet(IReadOnlyDictionary<string, string> options)
+    public static int WriteHookSnippet(string format)
     {
-        var format = GetOption(options, "format");
         if (string.IsNullOrWhiteSpace(format)) format = ConfigTomlFormat;
 
         var executablePath = HookCommandUtilities.GetDefaultHookExecutableReference();
@@ -194,14 +193,5 @@ internal static class CodexHookCommand
         Console.WriteLine(hasTrailingComma ? "    ]," : "    ]");
     }
 
-    private static string GetOption(IReadOnlyDictionary<string, string> options, params string[] optionNames)
-    {
-        foreach (var optionName in optionNames)
-        {
-            if (options.TryGetValue(optionName, out var optionValue)) return optionValue;
-        }
-
-        return string.Empty;
-    }
 }
 

@@ -11,10 +11,10 @@ internal static class PreviewSystemSoundHelpContent
             LidGuardPipeCommands.PreviewSystemSound,
             [],
             LidGuardHelpSectionTitles.SettingsAndSuspend,
-            $"{commandDisplayName} preview-system-sound --name Asterisk|Beep|Exclamation|Hand|Question",
+            $"{commandDisplayName} preview-system-sound Asterisk|Beep|Exclamation|Hand|Question",
             "Play one supported SystemSound name now, using the saved temporary volume setting.",
             [
-                new LidGuardHelpOption("--name <sound>", "Required. Allowed values: Asterisk, Beep, Exclamation, Hand, or Question.")
+                new LidGuardHelpOption("<sound>", "Required positional value. Allowed values: Asterisk, Beep, Exclamation, Hand, or Question.")
             ],
             [
                 "This command waits until playback finishes."

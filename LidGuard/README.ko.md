@@ -71,7 +71,7 @@ lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
 lidguard settings --post-session-end-webhook-url https://example.com/lidguard-session-ended
 lidguard remove-pre-suspend-webhook
 lidguard remove-post-session-end-webhook
-lidguard preview-system-sound --name Asterisk
+lidguard preview-system-sound Asterisk
 lidguard preview-current-sound
 ```
 
@@ -83,7 +83,7 @@ lidguard preview-current-sound
 lidguard current-lid-state
 lidguard current-monitor-count
 lidguard current-temperature
-lidguard current-temperature --temperature-mode high
+lidguard current-temperature high
 lidguard linux-permission status
 lidguard linux-permission check
 lidguard macos-permission status
@@ -94,7 +94,7 @@ lidguard macos-permission check
 
 `current-monitor-count`는 LidGuard가 덮개 닫힘 절전 정책 판단에 사용하는 동일한 기본 플랫폼 monitor visibility check로 현재 visible display monitor count를 출력합니다. 내부 노트북 패널 connection은 최종 suspend eligibility check에서만 제외됩니다.
 
-`current-temperature`는 선택한 집계 모드로 현재 인식된 system thermal-zone 온도를 Celsius로 출력합니다. `--temperature-mode default|low|average|high`를 사용하면 저장된 설정을 재사용하거나 한 번의 명령에 대해서만 override할 수 있습니다. 설정 파일이 아직 없을 때 `default`는 LidGuard의 `Average` headless runtime 기본값으로 fallback합니다.
+`current-temperature`는 선택한 집계 모드로 현재 인식된 system thermal-zone 온도를 Celsius로 출력합니다. 선택 위치 인자로 `default`, `low`, `average`, `high` 중 하나를 전달하면 저장된 설정을 재사용하거나 한 번의 명령에 대해서만 override할 수 있습니다. 설정 파일이 아직 없을 때 `default`는 LidGuard의 `Average` headless runtime 기본값으로 fallback합니다.
 
 Linux에서는 `linux-permission status`와 `linux-permission check`가 실제 suspend를 요청하지 않고 systemd/logind permission environment를 점검합니다. `linux-permission install`은 현재 사용자를 위한 LidGuard-managed polkit rule을 설치하고, `linux-permission remove`는 해당 managed rule file만 제거합니다.
 
@@ -117,15 +117,15 @@ lidguard copilot-hooks
 ## MCP 통합
 
 ```powershell
-lidguard mcp-status --provider codex
-lidguard mcp-install --provider codex
-lidguard mcp-remove --provider codex
+lidguard mcp-status codex
+lidguard mcp-install codex
+lidguard mcp-remove codex
 lidguard provider-mcp-status --config "<json-path>"
 lidguard provider-mcp-install --config "<json-path>" --provider-name "<name>"
 lidguard provider-mcp-remove --config "<json-path>"
 ```
 
-`mcp-status`, `mcp-install`, `mcp-remove`에서 `--provider`를 생략하면 LidGuard가 provider를 물어봅니다. `mcp-install`을 다시 실행하면 기존 managed LidGuard MCP server를 먼저 제거한 뒤 현재 명령으로 다시 설치하여 갱신합니다. `--provider all`을 사용하면 LidGuard는 기본 설정 루트가 이미 존재하는 provider만 처리하고, 없는 provider는 skipped로 보고합니다.
+`mcp-status`, `mcp-install`, `mcp-remove`에서 provider 위치 인자를 생략하면 LidGuard가 provider를 물어봅니다. `mcp-install`을 다시 실행하면 기존 managed LidGuard MCP server를 먼저 제거한 뒤 현재 명령으로 다시 설치하여 갱신합니다. `all`을 사용하면 LidGuard는 기본 설정 루트가 이미 존재하는 provider만 처리하고, 없는 provider는 skipped로 보고합니다.
 
 ## Managed / 내부 명령
 

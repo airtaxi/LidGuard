@@ -61,9 +61,8 @@ internal static class ClaudeHookCommand
         return 0;
     }
 
-    public static int WriteHookSnippet(IReadOnlyDictionary<string, string> options)
+    public static int WriteHookSnippet(string format)
     {
-        var format = GetOption(options, "format");
         if (string.IsNullOrWhiteSpace(format)) format = SettingsJsonFormat;
 
         var executablePath = HookCommandUtilities.GetDefaultHookExecutableReference();
@@ -247,13 +246,4 @@ internal static class ClaudeHookCommand
         return $"{hookEventName}:{toolName}";
     }
 
-    private static string GetOption(IReadOnlyDictionary<string, string> options, params string[] optionNames)
-    {
-        foreach (var optionName in optionNames)
-        {
-            if (options.TryGetValue(optionName, out var optionValue)) return optionValue;
-        }
-
-        return string.Empty;
-    }
 }

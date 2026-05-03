@@ -11,10 +11,10 @@ internal static class CodexHooksHelpContent
             LidGuardPipeCommands.CodexHooks,
             [],
             LidGuardHelpSectionTitles.HookIntegration,
-            $"{commandDisplayName} codex-hooks [--format config-toml|hooks-json]",
+            $"{commandDisplayName} codex-hooks [config-toml|toml|hooks-json|json]",
             "Print a managed Codex hook configuration snippet.",
             [
-                new LidGuardHelpOption("--format <format>", "Optional. Defaults to config-toml. Also accepts toml or hooks-json.")
+                new LidGuardHelpOption("<format>", "Optional positional value. Defaults to config-toml. Accepts config-toml, toml, hooks-json, or json.")
             ],
             []);
     }

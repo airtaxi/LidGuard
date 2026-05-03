@@ -45,6 +45,17 @@ internal static class LidGuardCommandLineApplication
         if (commandName == MacOSPermissionCommand.CommandName) return MacOSPermissionCommand.Run(commandLineArguments[1..]);
 #endif
 
+        if (IsSingleValueCommandName(commandName))
+        {
+            if (!TryParseOptionalSingleValueArgument(commandLineArguments, out var commandArgument, out var singleValueParseMessage))
+            {
+                Console.Error.WriteLine(singleValueParseMessage);
+                return 1;
+            }
+
+            return RunSingleValueCommand(commandName, commandArgument, runtimePlatform);
+        }
+
         if (!IsOptionParsedCommandName(commandName)) return LidGuardCommandConsole.WriteUnknownCommand(requestedCommandName);
 
         if (!CommandOptionReader.TryParseOptions(commandLineArguments, 1, out var options, out var parseMessage))
@@ -64,21 +75,12 @@ internal static class LidGuardCommandLineApplication
             LidGuardPipeCommands.CleanupOrphans => await SendCleanupOrphansAsync(),
             LidGuardPipeCommands.CurrentLidState => WriteCurrentLidState(runtimePlatform),
             LidGuardPipeCommands.CurrentMonitorCount => WriteCurrentMonitorCount(runtimePlatform),
-            LidGuardPipeCommands.CurrentTemperature => WriteCurrentTemperature(options),
-            LidGuardPipeCommands.SuspendHistory => SuspendHistoryCommand.WriteHistory(options),
             LidGuardPipeCommands.Settings => await LidGuardSettingsCommand.SendSettingsAsync(options, runtimePlatform),
             LidGuardPipeCommands.PreviewCurrentSound => LidGuardSettingsCommand.PreviewCurrentSound(options, runtimePlatform),
-            LidGuardPipeCommands.PreviewSystemSound => LidGuardSettingsCommand.PreviewSystemSound(options, runtimePlatform),
-            LidGuardPipeCommands.ClaudeHooks => ClaudeHookCommand.WriteHookSnippet(options),
-            LidGuardPipeCommands.CopilotHooks => GitHubCopilotHookCommand.WriteHookSnippet(options),
-            LidGuardPipeCommands.CodexHooks => CodexHookCommand.WriteHookSnippet(options),
             LidGuardPipeCommands.HookStatus => HookManagementCommand.WriteHookStatus(options),
             LidGuardPipeCommands.HookInstall => HookManagementCommand.InstallHook(options),
             LidGuardPipeCommands.HookRemove or "hook-uninstall" => HookManagementCommand.RemoveHook(options),
             LidGuardPipeCommands.HookEvents => HookManagementCommand.WriteHookEvents(options),
-            LidGuardPipeCommands.McpStatus => McpManagementCommand.WriteMcpStatus(options),
-            LidGuardPipeCommands.McpInstall => McpManagementCommand.InstallMcp(options),
-            LidGuardPipeCommands.McpRemove or "mcp-uninstall" => McpManagementCommand.RemoveMcp(options),
             LidGuardPipeCommands.ProviderMcpStatus => ProviderMcpManagementCommand.WriteProviderMcpStatus(options),
             LidGuardPipeCommands.ProviderMcpInstall => ProviderMcpManagementCommand.InstallProviderMcp(options),
             LidGuardPipeCommands.ProviderMcpRemove or "provider-mcp-uninstall" => ProviderMcpManagementCommand.RemoveProviderMcp(options),
@@ -109,6 +111,63 @@ internal static class LidGuardCommandLineApplication
         return false;
     }
 
+    private static bool IsSingleValueCommandName(string commandName)
+        => commandName is LidGuardPipeCommands.CurrentTemperature
+            or LidGuardPipeCommands.SuspendHistory
+            or LidGuardPipeCommands.PreviewSystemSound
+            or LidGuardPipeCommands.ClaudeHooks
+            or LidGuardPipeCommands.CopilotHooks
+            or LidGuardPipeCommands.CodexHooks
+            or LidGuardPipeCommands.McpStatus
+            or LidGuardPipeCommands.McpInstall
+            or LidGuardPipeCommands.McpRemove
+            or "mcp-uninstall";
+
+    private static bool TryParseOptionalSingleValueArgument(
+        string[] commandLineArguments,
+        out string commandArgument,
+        out string message)
+    {
+        commandArgument = string.Empty;
+        message = string.Empty;
+        if (commandLineArguments.Length == 1) return true;
+
+        for (var argumentIndex = 1; argumentIndex < commandLineArguments.Length; argumentIndex++)
+        {
+            if (!commandLineArguments[argumentIndex].StartsWith("--", StringComparison.Ordinal)) continue;
+
+            message = LidGuardText.CommandUnexpectedArgument(commandLineArguments[argumentIndex]);
+            return false;
+        }
+
+        if (commandLineArguments.Length == 2)
+        {
+            commandArgument = commandLineArguments[1];
+            return true;
+        }
+
+        message = LidGuardText.CommandUnexpectedArgument(commandLineArguments[2]);
+        return false;
+    }
+
+    private static int RunSingleValueCommand(
+        string commandName,
+        string commandArgument,
+        ILidGuardRuntimePlatform runtimePlatform)
+        => commandName switch
+        {
+            LidGuardPipeCommands.CurrentTemperature => WriteCurrentTemperature(commandArgument),
+            LidGuardPipeCommands.SuspendHistory => SuspendHistoryCommand.WriteHistory(commandArgument),
+            LidGuardPipeCommands.PreviewSystemSound => LidGuardSettingsCommand.PreviewSystemSound(commandArgument, runtimePlatform),
+            LidGuardPipeCommands.ClaudeHooks => ClaudeHookCommand.WriteHookSnippet(commandArgument),
+            LidGuardPipeCommands.CopilotHooks => GitHubCopilotHookCommand.WriteHookSnippet(commandArgument),
+            LidGuardPipeCommands.CodexHooks => CodexHookCommand.WriteHookSnippet(commandArgument),
+            LidGuardPipeCommands.McpStatus => McpManagementCommand.WriteMcpStatus(commandArgument),
+            LidGuardPipeCommands.McpInstall => McpManagementCommand.InstallMcp(commandArgument),
+            LidGuardPipeCommands.McpRemove or "mcp-uninstall" => McpManagementCommand.RemoveMcp(commandArgument),
+            _ => LidGuardCommandConsole.WriteUnknownCommand(commandName)
+        };
+
     private static bool IsOptionParsedCommandName(string commandName)
         => commandName is LidGuardPipeCommands.Start
             or LidGuardPipeCommands.Stop
@@ -119,23 +178,13 @@ internal static class LidGuardCommandLineApplication
             or LidGuardPipeCommands.CleanupOrphans
             or LidGuardPipeCommands.CurrentLidState
             or LidGuardPipeCommands.CurrentMonitorCount
-            or LidGuardPipeCommands.CurrentTemperature
-            or LidGuardPipeCommands.SuspendHistory
             or LidGuardPipeCommands.Settings
             or LidGuardPipeCommands.PreviewCurrentSound
-            or LidGuardPipeCommands.PreviewSystemSound
-            or LidGuardPipeCommands.ClaudeHooks
-            or LidGuardPipeCommands.CopilotHooks
-            or LidGuardPipeCommands.CodexHooks
             or LidGuardPipeCommands.HookStatus
             or LidGuardPipeCommands.HookInstall
             or LidGuardPipeCommands.HookRemove
             or "hook-uninstall"
             or LidGuardPipeCommands.HookEvents
-            or LidGuardPipeCommands.McpStatus
-            or LidGuardPipeCommands.McpInstall
-            or LidGuardPipeCommands.McpRemove
-            or "mcp-uninstall"
             or LidGuardPipeCommands.ProviderMcpStatus
             or LidGuardPipeCommands.ProviderMcpInstall
             or LidGuardPipeCommands.ProviderMcpRemove
@@ -354,9 +403,9 @@ internal static class LidGuardCommandLineApplication
         return LidGuardCommandConsole.WriteResponse(response);
     }
 
-    private static int WriteCurrentTemperature(IReadOnlyDictionary<string, string> options)
+    private static int WriteCurrentTemperature(string temperatureModeText)
     {
-        if (!TryResolveCurrentTemperatureMode(options, out var emergencyHibernationTemperatureMode, out var message))
+        if (!TryResolveCurrentTemperatureMode(temperatureModeText, out var emergencyHibernationTemperatureMode, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -431,20 +480,18 @@ internal static class LidGuardCommandLineApplication
         => SystemThermalInformation.GetSystemTemperatureCelsius(emergencyHibernationTemperatureMode);
 
     private static bool TryResolveCurrentTemperatureMode(
-        IReadOnlyDictionary<string, string> options,
+        string temperatureModeText,
         out EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode,
         out string message)
     {
         emergencyHibernationTemperatureMode = LidGuardSettings.HeadlessRuntimeDefault.EmergencyHibernationTemperatureMode;
         message = string.Empty;
-        if (!CommandOptionReader.TryGetOption(options, out var temperatureModeText, "temperature-mode")) return TryLoadCurrentTemperatureModeFromSettings(out emergencyHibernationTemperatureMode, out message);
-
         if (string.IsNullOrWhiteSpace(temperatureModeText) || temperatureModeText.Trim().Equals("default", StringComparison.OrdinalIgnoreCase)) return TryLoadCurrentTemperatureModeFromSettings(out emergencyHibernationTemperatureMode, out message);
         if (LidGuardSettingsCommand.TryParseEmergencyHibernationTemperatureMode(temperatureModeText, out emergencyHibernationTemperatureMode)) return true;
 
         message = LidGuardText.GetResourceString(
             "ConsoleCurrentTemperatureModeValidation",
-            "The temperature-mode option must be default, low, average, or high.");
+            "The temperature mode must be default, low, average, or high.");
         return false;
     }
 

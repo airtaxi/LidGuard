@@ -834,6 +834,9 @@
   <data name="Help_ManagedProvider_ProviderOption" xml:space="preserve">
     <value>Optional. Allowed values: codex, claude, copilot, or all. When omitted, LidGuard prompts for a provider.</value>
   </data>
+  <data name="Help_Mcp_ProviderArgument" xml:space="preserve">
+    <value>Optional positional value. Allowed values: codex, claude, copilot, or all. When omitted, LidGuard prompts for a provider.</value>
+  </data>
   <data name="Help_ProviderMcp_ServerNameOption" xml:space="preserve">
     <value>Optional managed server entry name. Defaults to lidguard-provider.</value>
   </data>
@@ -925,7 +928,7 @@
     <value>The sudoers file is not removed if it does not contain LidGuard's managed markers.</value>
   </data>
   <data name="Help_CurrentTemperature_TemperatureModeOption" xml:space="preserve">
-    <value>Optional. Use default to follow the saved setting, or choose low, average, or high for this command only.</value>
+    <value>Optional positional value. Use default to follow the saved setting, or choose low, average, or high for this command only.</value>
   </data>
   <data name="Help_RemoveSession_ProviderOption" xml:space="preserve">
     <value>Optional. Narrows removal to one provider. Allowed values: codex, claude, copilot, custom, mcp, or unknown.</value>
@@ -1047,6 +1050,9 @@
   <data name="Help_ManagedProvider_AllProvidersNote" xml:space="preserve">
     <value>With --provider all, only providers whose default configuration roots already exist are processed. Missing providers are reported and skipped.</value>
   </data>
+  <data name="Help_ManagedProvider_AllProvidersArgumentNote" xml:space="preserve">
+    <value>With all, only providers whose default configuration roots already exist are processed. Missing providers are reported and skipped.</value>
+  </data>
   <data name="Help_Paths_WindowsRuntimeBehavior" xml:space="preserve">
     <value>This build includes Windows support. Linux and macOS support is implemented in their platform builds.</value>
   </data>
@@ -1060,7 +1066,7 @@
     <value>Read Claude Code hook JSON from standard input and forward start, stop, activity, soft-lock, elicitation, or permission decisions to LidGuard.</value>
   </data>
   <data name="Help_SuspendHistory_CountNote" xml:space="preserve">
-    <value>The saved suspend-history-count setting controls how many entries are retained. The --count option only limits how many retained entries are displayed.</value>
+    <value>The saved suspend-history-count setting controls how many entries are retained. The count argument only limits how many retained entries are displayed.</value>
   </data>
   <data name="Help_Settings_ClosedLidPermissionRequestDecisionOption" xml:space="preserve">
     <value>Choose how closed-lid PermissionRequest hooks respond when LidGuard reports the lid is closed.</value>
@@ -1195,7 +1201,7 @@
     <value>If no runtime is listening, start launches the detached runtime server automatically.</value>
   </data>
   <data name="Help_PreviewSystemSound_NameOption" xml:space="preserve">
-    <value>Required. Allowed values: Asterisk, Beep, Exclamation, Hand, or Question.</value>
+    <value>Required positional value. Allowed values: Asterisk, Beep, Exclamation, Hand, or Question.</value>
   </data>
   <data name="Help_Settings_ChangeLidActionOption" xml:space="preserve">
     <value>Change whether LidGuard temporarily sets the active power plan's lid close action to Do Nothing.</value>
@@ -1204,16 +1210,16 @@
     <value>Optional. Session identifier to track. When omitted, LidGuard derives one from the provider display name and normalized working directory.</value>
   </data>
   <data name="Help_CodexHooks_FormatOption" xml:space="preserve">
-    <value>Optional. Defaults to config-toml. Also accepts toml or hooks-json.</value>
+    <value>Optional positional value. Defaults to config-toml. Accepts config-toml, toml, hooks-json, or json.</value>
   </data>
   <data name="Help_ClaudeHooks_FormatOption" xml:space="preserve">
-    <value>Optional. Defaults to settings-json. Also accepts json or hooks-json.</value>
+    <value>Optional positional value. Defaults to settings-json. Accepts settings-json, json, or hooks-json.</value>
   </data>
   <data name="Help_CopilotHook_EventOption" xml:space="preserve">
     <value>Required. Typical values include sessionStart, sessionEnd, userPromptSubmitted, preToolUse, postToolUse, permissionRequest, agentStop, errorOccurred, and notification.</value>
   </data>
   <data name="Help_CopilotHooks_FormatOption" xml:space="preserve">
-    <value>Optional. Defaults to config-json. Also accepts json or hooks-json.</value>
+    <value>Optional positional value. Defaults to config-json. Accepts config-json, json, or hooks-json.</value>
   </data>
   <data name="DisplayClosedLidPermissionRequestDecisionDeny" xml:space="preserve">
     <value>Deny</value>
@@ -1345,7 +1351,7 @@
     <value>Current recognized system temperature using {0} mode: {1} Celsius</value>
   </data>
   <data name="ConsoleCurrentTemperatureModeValidation" xml:space="preserve">
-    <value>The temperature-mode option must be default, low, average, or high.</value>
+    <value>The temperature mode must be default, low, average, or high.</value>
   </data>
   <data name="SuspendHistoryFile" xml:space="preserve">
     <value>Suspend history file: {0}</value>
@@ -1363,7 +1369,7 @@
     <value>{0} does not accept --{1}.</value>
   </data>
   <data name="SuspendHistoryCountValidation" xml:space="preserve">
-    <value>The count option must be an integer of at least {0}.</value>
+    <value>The count argument must be an integer of at least {0}.</value>
   </data>
   <data name="SuspendHistoryEntryLine" xml:space="preserve">
     <value>- {0} mode={1} reason={2} succeeded={3} activeSessions={4} triggerSessions={5}</value>

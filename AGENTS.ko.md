@@ -210,10 +210,10 @@ Hook stop 이벤트가 누락될 수 있으므로 LidGuard는 에이전트 프�
 - Windows에서 effective UI culture가 영어가 아니면, LidGuard는 사람이 읽는 CLI text를 쓰기 전에 console input/output encoding을 UTF-8로 설정해 한국어 같은 localized non-ASCII 출력이 물음표로 깨지지 않게 한다. 이 동작이 hook 또는 MCP JSON protocol text를 바꾸면 안 된다.
 - `preview-system-sound`와 `preview-current-sound`는 저장된 post-stop suspend sound volume override 설정을 적용하고 재생이 끝날 때까지 기다린다. `preview-current-sound`는 저장된 post-stop suspend sound를 재생하며, 설정된 sound가 없으면 설정 안내를 출력한다.
 - `hook-install`, `hook-status`, `hook-remove`, `hook-events`는 `--provider`가 생략되면 `codex`, `claude`, `copilot`, `all` 중 선택을 요청한다.
-- `mcp-status`, `mcp-install`, `mcp-remove`도 `--provider`가 생략되면 `codex`, `claude`, `copilot`, `all` 중 선택을 요청한다.
+- `mcp-status`, `mcp-install`, `mcp-remove`도 provider 위치 인자가 생략되면 `codex`, `claude`, `copilot`, `all` 중 선택을 요청한다.
 - `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`는 Codex, Claude Code, GitHub Copilot CLI 전용 MCP 등록 명령을 쓰지 않고, 호출자가 넘긴 JSON 설정 파일 경로를 직접 수정한다.
 - `--provider all`은 기본 configuration root가 이미 존재하는 provider에 대해서만 설치/제거/상태 확인/hook event 출력을 수행하고, 없는 provider는 skipped로 보고한다.
-- `mcp-status --provider all`, `mcp-install --provider all`, `mcp-remove --provider all`도 기본 configuration root가 이미 존재하는 provider에 대해서만 처리하고, 없는 provider는 skipped로 보고한다.
+- `mcp-status all`, `mcp-install all`, `mcp-remove all`도 기본 configuration root가 이미 존재하는 provider에 대해서만 처리하고, 없는 provider는 skipped로 보고한다.
 - provider 파라미터를 받는 새 CLI 명령을 추가할 때는 provider 생략 시 조용히 기본값을 쓰지 말고 사용자에게 선택을 요청한다.
 - runtime이 없으면 `start`가 detached `run-server`를 실행한다.
 - `run-server`는 Windows에서 named mutex `Local\LidGuard.Runtime.v1`을 획득하고, Linux와 macOS에서는 `LidGuard.Runtime.v1`을 획득한다.
@@ -527,9 +527,9 @@ CLI webhook option name `--pre-suspend-webhook-url` 또는 `--post-session-end-w
 - 필수 stop event: `Stop`.
 - 선택적 호환 stop event: Codex build가 실제로 내보낼 때의 `SessionEnd`.
 - Command path: 전역 tool이 PATH에 있으면 `lidguard codex-hook`, 아니면 현재 실행 파일 경로와 `codex-hook`.
-- Snippet command: `lidguard codex-hooks --format config-toml`.
+- Snippet command: `lidguard codex-hooks config-toml`.
 - Install/status/remove commands: `lidguard hook-install --provider codex`, `lidguard hook-status --provider codex`, `lidguard hook-remove --provider codex`.
-- MCP status/install/remove commands: `lidguard mcp-status --provider codex`, `lidguard mcp-install --provider codex`, `lidguard mcp-remove --provider codex`.
+- MCP status/install/remove commands: `lidguard mcp-status codex`, `lidguard mcp-install codex`, `lidguard mcp-remove codex`.
 - Codex는 `features.codex_hooks = true`가 필요할 수 있다.
 - Codex MCP 등록은 `codex mcp add/remove`에 위임하고, `lidguard`라는 이름의 전역 stdio 서버 항목을 기록한다.
 - `hook-install`과 `hook-status`는 `UserPromptSubmit`, `PermissionRequest`, `Stop`을 필수로 보고, `SessionEnd`는 있을 때만 별도로 표시하는 선택 훅으로 다룬다.
@@ -557,9 +557,9 @@ CLI webhook option name `--pre-suspend-webhook-url` 또는 `--post-session-end-w
 - Soft-lock notification event: `Notification`.
 - Stop events: `Stop`, `StopFailure`, `SessionEnd`.
 - Command path: 전역 tool이 PATH에 있으면 `lidguard claude-hook`, 아니면 현재 실행 파일 경로와 `claude-hook`.
-- Snippet command: `lidguard claude-hooks --format settings-json`.
+- Snippet command: `lidguard claude-hooks settings-json`.
 - Install/status/remove commands: `lidguard hook-install --provider claude`, `lidguard hook-status --provider claude`, `lidguard hook-remove --provider claude`.
-- MCP status/install/remove commands: `lidguard mcp-status --provider claude`, `lidguard mcp-install --provider claude`, `lidguard mcp-remove --provider claude`.
+- MCP status/install/remove commands: `lidguard mcp-status claude`, `lidguard mcp-install claude`, `lidguard mcp-remove claude`.
 - `hook-install`과 `hook-status`는 `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `Stop`, `StopFailure`, `Elicitation`, `PermissionRequest`, `Notification`, `SessionEnd`를 모두 필수 managed hook으로 본다.
 - 기본 config 경로: `CLAUDE_CONFIG_DIR`가 설정되어 있으면 `CLAUDE_CONFIG_DIR\settings.json`, 아니면 `%USERPROFILE%\.claude\settings.json`.
 - Claude MCP 등록은 `%USERPROFILE%\.claude.json`의 user-scope global config를 사용하며 `claude mcp add/remove --scope user`에 위임한다.
@@ -594,9 +594,9 @@ CLI webhook option name `--pre-suspend-webhook-url` 또는 `--post-session-end-w
 - Soft-lock notification event: `notification_type` / `notificationType`이 `permission_prompt` 또는 `elicitation_dialog`인 `notification`.
 - Telemetry-only event: `sessionStart`, `errorOccurred`.
 - Command path: 전역 tool이 PATH에 있으면 `lidguard copilot-hook --event <event-name>`, 아니면 현재 실행 파일 경로와 `copilot-hook --event <event-name>`.
-- Snippet command: `lidguard copilot-hooks --format config-json`.
+- Snippet command: `lidguard copilot-hooks config-json`.
 - Install/status/remove commands: `lidguard hook-install --provider copilot`, `lidguard hook-status --provider copilot`, `lidguard hook-remove --provider copilot`.
-- MCP status/install/remove commands: `lidguard mcp-status --provider copilot`, `lidguard mcp-install --provider copilot`, `lidguard mcp-remove --provider copilot`.
+- MCP status/install/remove commands: `lidguard mcp-status copilot`, `lidguard mcp-install copilot`, `lidguard mcp-remove copilot`.
 - 기본 전역 config 경로: `COPILOT_HOME`이 설정되어 있으면 `COPILOT_HOME\hooks\lidguard-copilot-cli.json`, 아니면 `%USERPROFILE%\.copilot\hooks\lidguard-copilot-cli.json`.
 - GitHub Copilot CLI MCP 등록은 `copilot mcp add/remove`에 위임하고 `%USERPROFILE%\.copilot\mcp-config.json` user config를 사용한다.
 - GitHub Copilot CLI는 `~/.copilot/settings.json`의 inline user hooks도 지원하고, `.github/hooks/` 및 repository Copilot settings는 user hooks와 함께 로드되므로 `hook-install`과 `hook-status`는 이 소스들도 충돌 검사용으로 함께 본다.
@@ -636,37 +636,37 @@ lidguard remove-session --session "<session-id>" --provider codex
 lidguard start --provider claude --session "<session-id>"
 lidguard stop --provider claude --session "<session-id>"
 lidguard claude-hook
-lidguard claude-hooks --format settings-json
+lidguard claude-hooks settings-json
 lidguard start --provider copilot --session "<session-id>"
 lidguard stop --provider copilot --session "<session-id>"
 lidguard copilot-hook --event userPromptSubmitted
-lidguard copilot-hooks --format config-json
+lidguard copilot-hooks config-json
 lidguard codex-hook
-lidguard codex-hooks --format config-toml
+lidguard codex-hooks config-toml
 lidguard hook-status --provider copilot
 lidguard hook-install --provider copilot
 lidguard hook-remove --provider copilot
 lidguard hook-events --provider copilot --count 50
-lidguard mcp-status --provider copilot
-lidguard mcp-install --provider copilot
-lidguard mcp-remove --provider copilot
+lidguard mcp-status copilot
+lidguard mcp-install copilot
+lidguard mcp-remove copilot
 lidguard hook-status --provider claude
 lidguard hook-install --provider claude
 lidguard hook-remove --provider claude
 lidguard hook-events --provider claude --count 50
-lidguard mcp-status --provider claude
-lidguard mcp-install --provider claude
-lidguard mcp-remove --provider claude
+lidguard mcp-status claude
+lidguard mcp-install claude
+lidguard mcp-remove claude
 lidguard hook-status --provider codex
 lidguard hook-install --provider codex
 lidguard hook-remove --provider codex
 lidguard hook-events --provider codex --count 50
-lidguard mcp-status --provider codex
-lidguard mcp-install --provider codex
-lidguard mcp-remove --provider codex
-lidguard mcp-status --provider all
-lidguard mcp-install --provider all
-lidguard mcp-remove --provider all
+lidguard mcp-status codex
+lidguard mcp-install codex
+lidguard mcp-remove codex
+lidguard mcp-status all
+lidguard mcp-install all
+lidguard mcp-remove all
 lidguard provider-mcp-status --config "C:\path\to\mcp.json"
 lidguard provider-mcp-install --config "C:\path\to\mcp.json" --provider-name "ExampleProvider"
 lidguard provider-mcp-remove --config "C:\path\to\mcp.json"
@@ -674,9 +674,10 @@ lidguard provider-mcp-server --provider-name "ExampleProvider"
 lidguard current-lid-state
 lidguard current-monitor-count
 lidguard current-temperature
-lidguard current-temperature --temperature-mode high
+lidguard current-temperature high
 lidguard suspend-history
-lidguard preview-system-sound --name Asterisk
+lidguard suspend-history 20
+lidguard preview-system-sound Asterisk
 lidguard preview-current-sound
 lidguard settings
 lidguard settings --emergency-hibernation-temperature-mode average

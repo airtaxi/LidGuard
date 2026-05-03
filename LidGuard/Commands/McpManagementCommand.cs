@@ -27,9 +27,9 @@ internal static class McpManagementCommand
         public bool IsManagedMcpServerInstalled => HasNamedServerEntry && MatchesManagedMcpServer;
     }
 
-    public static int WriteMcpStatus(IReadOnlyDictionary<string, string> options)
+    public static int WriteMcpStatus(string providerText)
     {
-        if (!ManagedProviderSelection.TrySelectProviders(options, LidGuardText.GetResourceString("ManagementPromptMcpStatus", "Show MCP server status for provider"), out var selectedProviders, out var message))
+        if (!ManagedProviderSelection.TrySelectProviders(providerText, LidGuardText.GetResourceString("ManagementPromptMcpStatus", "Show MCP server status for provider"), out var selectedProviders, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -60,9 +60,9 @@ internal static class McpManagementCommand
         return exitCode;
     }
 
-    public static int InstallMcp(IReadOnlyDictionary<string, string> options)
+    public static int InstallMcp(string providerText)
     {
-        if (!ManagedProviderSelection.TrySelectProviders(options, LidGuardText.GetResourceString("ManagementPromptMcpInstall", "Install MCP server for provider"), out var selectedProviders, out var message))
+        if (!ManagedProviderSelection.TrySelectProviders(providerText, LidGuardText.GetResourceString("ManagementPromptMcpInstall", "Install MCP server for provider"), out var selectedProviders, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -98,9 +98,9 @@ internal static class McpManagementCommand
         return exitCode;
     }
 
-    public static int RemoveMcp(IReadOnlyDictionary<string, string> options)
+    public static int RemoveMcp(string providerText)
     {
-        if (!ManagedProviderSelection.TrySelectProviders(options, LidGuardText.GetResourceString("ManagementPromptMcpRemove", "Remove MCP server for provider"), out var selectedProviders, out var message))
+        if (!ManagedProviderSelection.TrySelectProviders(providerText, LidGuardText.GetResourceString("ManagementPromptMcpRemove", "Remove MCP server for provider"), out var selectedProviders, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;

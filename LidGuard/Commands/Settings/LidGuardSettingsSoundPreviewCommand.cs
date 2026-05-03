@@ -59,7 +59,7 @@ internal static class LidGuardSettingsSoundPreviewCommand
             LidGuardText.SettingsPreviewPlayedCurrentPostStopSuspendSound(PostStopSuspendSoundConfiguration.GetDisplayValue(normalizeResult.Value)));
     }
 
-    public static int PreviewSystemSound(IReadOnlyDictionary<string, string> options, ILidGuardRuntimePlatform runtimePlatform)
+    public static int PreviewSystemSound(string systemSoundName, ILidGuardRuntimePlatform runtimePlatform)
     {
         var postStopSuspendSoundPlayerResult = runtimePlatform.CreatePostStopSuspendSoundPlayer();
         if (!postStopSuspendSoundPlayerResult.Succeeded)
@@ -81,7 +81,6 @@ internal static class LidGuardSettingsSoundPreviewCommand
             return 1;
         }
 
-        var systemSoundName = CommandOptionReader.GetOption(options, "name", "system-sound");
         if (string.IsNullOrWhiteSpace(systemSoundName))
         {
             Console.Error.WriteLine(LidGuardText.SettingsPreviewSystemSoundNameRequired(LidGuardSupportedSystemSounds.Describe()));

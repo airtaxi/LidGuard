@@ -11,10 +11,10 @@ internal static class CurrentTemperatureHelpContent
             LidGuardPipeCommands.CurrentTemperature,
             [],
             LidGuardHelpSectionTitles.Diagnostics,
-            $"{commandDisplayName} {LidGuardPipeCommands.CurrentTemperature} [--temperature-mode default|low|average|high]",
+            $"{commandDisplayName} {LidGuardPipeCommands.CurrentTemperature} [default|low|average|high]",
             "Report the current system temperature in Celsius using the selected temperature mode.",
             [
-                new LidGuardHelpOption("--temperature-mode default|low|average|high", "Optional. Use default to follow the saved setting, or choose low, average, or high for this command only.")
+                new LidGuardHelpOption("<mode>", "Optional positional value. Use default to follow the saved setting, or choose low, average, or high for this command only.")
             ],
             [
                 "If no supported temperature sensor data is available on this platform, the command reports that the value is unavailable.",

@@ -834,6 +834,9 @@
   <data name="Help_ManagedProvider_ProviderOption" xml:space="preserve">
     <value>선택 사항입니다. 허용 값: codex, claude, copilot, all. 생략하면 LidGuard가 제공자를 묻습니다.</value>
   </data>
+  <data name="Help_Mcp_ProviderArgument" xml:space="preserve">
+    <value>선택 위치 인자입니다. 허용 값: codex, claude, copilot, all. 생략하면 LidGuard가 제공자를 묻습니다.</value>
+  </data>
   <data name="Help_ProviderMcp_ServerNameOption" xml:space="preserve">
     <value>선택 사항인 관리 서버 항목 이름입니다. 기본값은 lidguard-provider입니다.</value>
   </data>
@@ -925,7 +928,7 @@
     <value>sudoers 파일에 LidGuard 관리 marker가 없으면 제거하지 않습니다.</value>
   </data>
   <data name="Help_CurrentTemperature_TemperatureModeOption" xml:space="preserve">
-    <value>선택 사항입니다. default는 저장된 설정을 따르고, low, average, high는 이 명령에서만 적용됩니다.</value>
+    <value>선택 위치 인자입니다. default는 저장된 설정을 따르고, low, average, high는 이 명령에서만 적용됩니다.</value>
   </data>
   <data name="Help_RemoveSession_ProviderOption" xml:space="preserve">
     <value>선택 사항입니다. 제거 대상을 제공자 하나로 좁힙니다. 허용 값: codex, claude, copilot, custom, mcp, unknown.</value>
@@ -1047,6 +1050,9 @@
   <data name="Help_ManagedProvider_AllProvidersNote" xml:space="preserve">
     <value>--provider all에서는 기본 구성 루트가 이미 존재하는 제공자만 처리합니다. 없는 제공자는 보고 후 건너뜁니다.</value>
   </data>
+  <data name="Help_ManagedProvider_AllProvidersArgumentNote" xml:space="preserve">
+    <value>all에서는 기본 구성 루트가 이미 존재하는 제공자만 처리합니다. 없는 제공자는 보고 후 건너뜁니다.</value>
+  </data>
   <data name="Help_Paths_WindowsRuntimeBehavior" xml:space="preserve">
     <value>이 빌드는 Windows 동작을 구현합니다. Linux와 macOS 동작은 각 플랫폼 빌드에 구현되어 있습니다.</value>
   </data>
@@ -1060,7 +1066,7 @@
     <value>표준 입력에서 Claude Code hook JSON을 읽고 start, stop, activity, soft-lock, elicitation 또는 permission 결정을 LidGuard로 전달합니다.</value>
   </data>
   <data name="Help_SuspendHistory_CountNote" xml:space="preserve">
-    <value>저장된 절전 기록 보존 개수 설정은 유지할 항목 수를 제어합니다. --count 옵션은 유지된 항목 중 표시할 개수만 제한합니다.</value>
+    <value>저장된 절전 기록 보존 개수 설정은 유지할 항목 수를 제어합니다. count 인자는 유지된 항목 중 표시할 개수만 제한합니다.</value>
   </data>
   <data name="Help_Settings_ClosedLidPermissionRequestDecisionOption" xml:space="preserve">
     <value>LidGuard가 덮개 닫힘을 보고할 때 덮개 닫힘 권한 요청 hook이 어떻게 응답할지 선택합니다.</value>
@@ -1195,7 +1201,7 @@
     <value>실행 중인 LidGuard가 없으면 start가 백그라운드 서버를 자동으로 시작합니다.</value>
   </data>
   <data name="Help_PreviewSystemSound_NameOption" xml:space="preserve">
-    <value>필수입니다. 허용 값: Asterisk, Beep, Exclamation, Hand, Question.</value>
+    <value>필수 위치 인자입니다. 허용 값: Asterisk, Beep, Exclamation, Hand, Question.</value>
   </data>
   <data name="Help_Settings_ChangeLidActionOption" xml:space="preserve">
     <value>활성 전원 플랜의 덮개 닫기 동작 임시 덮어쓰기 동작을 변경합니다.</value>
@@ -1204,16 +1210,16 @@
     <value>선택 사항입니다. 추적할 세션 식별자입니다. 생략하면 LidGuard가 제공자 표시 이름과 정규화된 작업 폴더에서 파생합니다.</value>
   </data>
   <data name="Help_CodexHooks_FormatOption" xml:space="preserve">
-    <value>선택 사항입니다. 기본값은 config-toml입니다. toml 또는 hooks-json도 받습니다.</value>
+    <value>선택 위치 인자입니다. 기본값은 config-toml입니다. config-toml, toml, hooks-json, json을 받습니다.</value>
   </data>
   <data name="Help_ClaudeHooks_FormatOption" xml:space="preserve">
-    <value>선택 사항입니다. 기본값은 settings-json입니다. json 또는 hooks-json도 받습니다.</value>
+    <value>선택 위치 인자입니다. 기본값은 settings-json입니다. settings-json, json, hooks-json을 받습니다.</value>
   </data>
   <data name="Help_CopilotHook_EventOption" xml:space="preserve">
     <value>필수입니다. 일반적인 값은 sessionStart, sessionEnd, userPromptSubmitted, preToolUse, postToolUse, permissionRequest, agentStop, errorOccurred, notification입니다.</value>
   </data>
   <data name="Help_CopilotHooks_FormatOption" xml:space="preserve">
-    <value>선택 사항입니다. 기본값은 config-json입니다. json 또는 hooks-json도 받습니다.</value>
+    <value>선택 위치 인자입니다. 기본값은 config-json입니다. config-json, json, hooks-json을 받습니다.</value>
   </data>
   <data name="DisplayClosedLidPermissionRequestDecisionDeny" xml:space="preserve">
     <value>거부</value>
@@ -1345,7 +1351,7 @@
     <value>{0} 모드의 현재 시스템 온도: 섭씨 {1}도</value>
   </data>
   <data name="ConsoleCurrentTemperatureModeValidation" xml:space="preserve">
-    <value>temperature-mode 옵션은 default, low, average, high 중 하나여야 합니다.</value>
+    <value>온도 모드는 default, low, average, high 중 하나여야 합니다.</value>
   </data>
   <data name="SuspendHistoryFile" xml:space="preserve">
     <value>절전 기록 파일: {0}</value>
@@ -1363,7 +1369,7 @@
     <value>{0} 명령은 --{1} 옵션을 받지 않습니다.</value>
   </data>
   <data name="SuspendHistoryCountValidation" xml:space="preserve">
-    <value>count 옵션은 {0} 이상의 정수여야 합니다.</value>
+    <value>count 인자는 {0} 이상의 정수여야 합니다.</value>
   </data>
   <data name="SuspendHistoryEntryLine" xml:space="preserve">
     <value>- {0} mode={1} reason={2} succeeded={3} activeSessions={4} triggerSessions={5}</value>

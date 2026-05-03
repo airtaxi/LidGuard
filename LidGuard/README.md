@@ -71,7 +71,7 @@ lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
 lidguard settings --post-session-end-webhook-url https://example.com/lidguard-session-ended
 lidguard remove-pre-suspend-webhook
 lidguard remove-post-session-end-webhook
-lidguard preview-system-sound --name Asterisk
+lidguard preview-system-sound Asterisk
 lidguard preview-current-sound
 ```
 
@@ -83,7 +83,7 @@ Running `settings` with no options starts interactive editing. Session timeout d
 lidguard current-lid-state
 lidguard current-monitor-count
 lidguard current-temperature
-lidguard current-temperature --temperature-mode high
+lidguard current-temperature high
 lidguard linux-permission status
 lidguard linux-permission check
 lidguard macos-permission status
@@ -94,7 +94,7 @@ lidguard macos-permission check
 
 `current-monitor-count` prints the current visible display monitor count using the same base platform monitor visibility check LidGuard uses for closed-lid suspend policy decisions. Internal laptop panel connections are only excluded by the final suspend eligibility check.
 
-`current-temperature` prints the current recognized system thermal-zone temperature in Celsius using the selected aggregation mode. Use `--temperature-mode default|low|average|high` to reuse the saved setting or override it for one command. When the settings file does not exist yet, `default` falls back to LidGuard's `Average` headless runtime default.
+`current-temperature` prints the current recognized system thermal-zone temperature in Celsius using the selected aggregation mode. Pass `default`, `low`, `average`, or `high` as the optional positional value to reuse the saved setting or override it for one command. When the settings file does not exist yet, `default` falls back to LidGuard's `Average` headless runtime default.
 
 On Linux, `linux-permission status` and `linux-permission check` inspect the systemd/logind permission environment without suspending the system. Use `linux-permission install` to install a LidGuard-managed polkit rule for the current user, and `linux-permission remove` to remove only that managed rule file.
 
@@ -117,15 +117,15 @@ If `--provider` is omitted on `hook-status`, `hook-install`, `hook-remove`, or `
 ## MCP Integration
 
 ```powershell
-lidguard mcp-status --provider codex
-lidguard mcp-install --provider codex
-lidguard mcp-remove --provider codex
+lidguard mcp-status codex
+lidguard mcp-install codex
+lidguard mcp-remove codex
 lidguard provider-mcp-status --config "<json-path>"
 lidguard provider-mcp-install --config "<json-path>" --provider-name "<name>"
 lidguard provider-mcp-remove --config "<json-path>"
 ```
 
-If `--provider` is omitted on `mcp-status`, `mcp-install`, or `mcp-remove`, LidGuard prompts for a provider. Re-running `mcp-install` refreshes an existing managed LidGuard MCP server by removing it first and then installing the current command. With `--provider all`, LidGuard only processes providers whose default configuration roots already exist and reports missing providers as skipped.
+If the provider positional value is omitted on `mcp-status`, `mcp-install`, or `mcp-remove`, LidGuard prompts for a provider. Re-running `mcp-install` refreshes an existing managed LidGuard MCP server by removing it first and then installing the current command. With `all`, LidGuard only processes providers whose default configuration roots already exist and reports missing providers as skipped.
 
 ## Managed / Internal Commands
 

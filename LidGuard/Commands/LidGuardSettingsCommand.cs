@@ -17,8 +17,8 @@ internal static class LidGuardSettingsCommand
     public static int PreviewCurrentSound(IReadOnlyDictionary<string, string> options, ILidGuardRuntimePlatform runtimePlatform)
         => LidGuardSettingsSoundPreviewCommand.PreviewCurrentSound(options, runtimePlatform);
 
-    public static int PreviewSystemSound(IReadOnlyDictionary<string, string> options, ILidGuardRuntimePlatform runtimePlatform)
-        => LidGuardSettingsSoundPreviewCommand.PreviewSystemSound(options, runtimePlatform);
+    public static int PreviewSystemSound(string systemSoundName, ILidGuardRuntimePlatform runtimePlatform)
+        => LidGuardSettingsSoundPreviewCommand.PreviewSystemSound(systemSoundName, runtimePlatform);
 
     public static bool TryParseEmergencyHibernationTemperatureMode(
         string emergencyHibernationTemperatureModeText,

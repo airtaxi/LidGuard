@@ -1,4 +1,3 @@
-using LidGuard.Ipc;
 using LidGuard.Localization;
 using LidGuard.Runtime;
 using LidGuard.Settings;
@@ -8,22 +7,16 @@ namespace LidGuard.Commands;
 
 internal static class SuspendHistoryCommand
 {
-    public static int WriteHistory(IReadOnlyDictionary<string, string> options)
+    public static int WriteHistory(string historyEntryCountText)
     {
-        if (!TryValidateOptions(options, out var message))
-        {
-            Console.Error.WriteLine(message);
-            return 1;
-        }
-
-        if (!LidGuardSettingsStore.TryLoadExistingOrDefault(out var storedSettings, out _, out message))
+        if (!LidGuardSettingsStore.TryLoadExistingOrDefault(out var storedSettings, out _, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
         }
 
         var normalizedSettings = LidGuardSettings.Normalize(storedSettings);
-        if (!TryResolveHistoryEntryCount(options, normalizedSettings, out var historyEntryCount, out message))
+        if (!TryResolveHistoryEntryCount(historyEntryCountText, normalizedSettings, out var historyEntryCount, out message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -48,35 +41,19 @@ internal static class SuspendHistoryCommand
         return 0;
     }
 
-    private static bool TryValidateOptions(IReadOnlyDictionary<string, string> options, out string message)
-    {
-        message = string.Empty;
-        foreach (var optionName in options.Keys)
-        {
-            if (optionName.Equals("count", StringComparison.OrdinalIgnoreCase)) continue;
-
-            message = LidGuardText.GetResourceString("SuspendHistoryOptionNotAccepted", "{0} does not accept --{1}.")
-                .Replace("{0}", LidGuardPipeCommands.SuspendHistory, StringComparison.Ordinal)
-                .Replace("{1}", optionName, StringComparison.Ordinal);
-            return false;
-        }
-
-        return true;
-    }
-
     private static bool TryResolveHistoryEntryCount(
-        IReadOnlyDictionary<string, string> options,
+        string historyEntryCountText,
         LidGuardSettings settings,
         out int historyEntryCount,
         out string message)
     {
         historyEntryCount = settings.SuspendHistoryEntryCount ?? LidGuardSettings.DefaultSuspendHistoryEntryCount;
         message = string.Empty;
-        if (!CommandOptionReader.TryGetOption(options, out var historyEntryCountText, "count")) return true;
+        if (string.IsNullOrWhiteSpace(historyEntryCountText)) return true;
 
         if (int.TryParse(historyEntryCountText.Trim(), out historyEntryCount) && historyEntryCount >= LidGuardSettings.MinimumSuspendHistoryEntryCount) return true;
 
-        message = LidGuardText.GetResourceString("SuspendHistoryCountValidation", "The count option must be an integer of at least {0}.")
+        message = LidGuardText.GetResourceString("SuspendHistoryCountValidation", "The count argument must be an integer of at least {0}.")
             .Replace("{0}", LidGuardSettings.MinimumSuspendHistoryEntryCount.ToString(), StringComparison.Ordinal);
         return false;
     }

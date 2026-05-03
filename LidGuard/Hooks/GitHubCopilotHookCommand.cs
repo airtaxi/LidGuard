@@ -43,9 +43,8 @@ internal static class GitHubCopilotHookCommand
         return 0;
     }
 
-    public static int WriteHookSnippet(IReadOnlyDictionary<string, string> options)
+    public static int WriteHookSnippet(string format)
     {
-        var format = GetOption(options, "format");
         if (string.IsNullOrWhiteSpace(format)) format = ConfigurationJsonFormat;
 
         var executablePath = HookCommandUtilities.GetDefaultHookExecutableReference();
@@ -72,16 +71,6 @@ internal static class GitHubCopilotHookCommand
 
         Console.Error.WriteLine("Unsupported GitHub Copilot hook snippet format. Use config-json or hooks-json.");
         return 1;
-    }
-
-    private static string GetOption(IReadOnlyDictionary<string, string> options, params string[] optionNames)
-    {
-        foreach (var optionName in optionNames)
-        {
-            if (options.TryGetValue(optionName, out var optionValue)) return optionValue;
-        }
-
-        return string.Empty;
     }
 
     private static string GetSessionIdentifier(GitHubCopilotHookInput hookInput)

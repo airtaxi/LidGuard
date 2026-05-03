@@ -38,11 +38,17 @@ internal static class ManagedProviderSelection
         string prompt,
         out IReadOnlyList<AgentProvider> providers,
         out string message)
+        => TrySelectProviders(GetOption(options, "provider"), prompt, out providers, out message);
+
+    public static bool TrySelectProviders(
+        string providerText,
+        string prompt,
+        out IReadOnlyList<AgentProvider> providers,
+        out string message)
     {
         providers = [];
         message = string.Empty;
 
-        var providerText = GetOption(options, "provider");
         return string.IsNullOrWhiteSpace(providerText)
             ? TryReadProviders(prompt, out providers, out message)
             : TryParseProviderSelection(providerText, out providers, out message);
