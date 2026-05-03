@@ -22,6 +22,29 @@ LidGuard is currently officially tested with Codex on Windows. Linux, macOS, Cla
 
 ## Install
 
+### Let Your Agent Install It
+
+LidGuard is built for local AI agents, so letting an agent install the agent-awake tool is a fairly reasonable division of labor. Hand it the prompt below, grant command execution when it asks, and let it check .NET, install the NuGet tool, wire provider hooks/MCP, and walk you through the safety settings.
+
+For most agents:
+
+```text
+Read https://raw.githubusercontent.com/airtaxi/LidGuard/master/.github/agent-install.md and install LidGuard for this machine. You may run the commands needed for installation after explaining them, and you should ask me before any administrator, sudo, password, provider hook, MCP, or safety-related settings step.
+```
+
+For Codex, start with `/plan` so it can use its interactive question flow:
+
+```text
+/plan
+Read https://raw.githubusercontent.com/airtaxi/LidGuard/master/.github/agent-install.md and install LidGuard for this machine. You may run the commands needed for installation after explaining them, and you should ask me before any administrator, sudo, password, provider hook, MCP, or safety-related settings step.
+```
+
+The agent-facing instructions live at [.github/agent-install.md](.github/agent-install.md).
+
+After hooks or MCP servers are installed, the current conversation might not pick them up immediately. Start a new provider session or conversation when you want to verify the integration.
+
+### Manual Install
+
 ```powershell
 dotnet tool install --global lidguard
 ```

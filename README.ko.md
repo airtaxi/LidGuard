@@ -22,6 +22,29 @@ LidGuard는 현재 Windows의 Codex 환경에서 공식 검증되었습니다. L
 
 ## 설치
 
+### 에이전트에게 설치 맡기기
+
+LidGuard는 로컬 AI 에이전트를 위한 도구이니, 에이전트를 깨워 두는 도구 설치도 에이전트에게 맡기는 편이 제법 자연스럽습니다. 아래 프롬프트를 복사해서 전달하고, 명령 실행 권한을 요청하면 승인해 주세요. 에이전트가 .NET 확인, NuGet tool 설치, provider hook/MCP 연결, 안전 설정 질문까지 진행할 수 있습니다.
+
+대부분의 에이전트용:
+
+```text
+Read https://raw.githubusercontent.com/airtaxi/LidGuard/master/.github/agent-install.md and install LidGuard for this machine. You may run the commands needed for installation after explaining them, and you should ask me before any administrator, sudo, password, provider hook, MCP, or safety-related settings step.
+```
+
+Codex에서는 interactive 질문 흐름을 사용할 수 있게 `/plan`으로 시작하세요:
+
+```text
+/plan
+Read https://raw.githubusercontent.com/airtaxi/LidGuard/master/.github/agent-install.md and install LidGuard for this machine. You may run the commands needed for installation after explaining them, and you should ask me before any administrator, sudo, password, provider hook, MCP, or safety-related settings step.
+```
+
+에이전트용 설치 지시문은 [.github/agent-install.md](.github/agent-install.md)에 있습니다.
+
+Hook 또는 MCP server를 설치해도 현재 대화에서는 provider 구현 방식에 따라 바로 반영되지 않을 수 있습니다. 통합 동작을 확인하려면 새 provider 세션이나 새 대화에서 시작해 주세요.
+
+### 수동 설치
+
 ```powershell
 dotnet tool install --global lidguard
 ```
