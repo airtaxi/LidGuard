@@ -85,8 +85,8 @@ lidguard provider-mcp-install --config "C:\path\to\mcp.json" --provider-name "Ex
 
 ## 문서
 
-- [명령줄 상세 문서](LidGuard/README.md)
-- [웹훅 알림 서버](LidGuard.Notifications/README.md)
+- [명령줄 상세 문서](LidGuard/README.ko.md)
+- [웹훅 알림 서버](LidGuard.Notifications/README.ko.md)
 
 ## 안전 및 책임
 
