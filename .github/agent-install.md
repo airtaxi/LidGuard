@@ -6,6 +6,12 @@ LidGuard is distributed from NuGet.org as the global .NET tool package `lidguard
 
 You need permission to run shell commands, install software, modify shell profile files, install provider hooks/MCP entries, and possibly run privileged Linux/macOS permission setup. Explain elevated commands before running them, and ask the user before any step that requires administrator, sudo, or password entry.
 
+## 0. Ask The User For Their Language
+
+Before starting installation or running setup commands, ask the user which language they want you to use for the installation conversation and final report.
+
+Use the selected language for all user-facing prompts, questions, progress updates, and summaries. If the user does not answer clearly, ask again before continuing.
+
 ## 1. Detect The Platform
 
 Detect the operating system and shell:
@@ -135,7 +141,7 @@ Be explicit that Provider MCP is not guaranteed. It depends entirely on the mode
 
 ## 6. Ask The User For Settings
 
-Ask these questions in the user's language. Use an interactive user-input tool when your environment provides one. Prefer concise multiple-choice questions with a short explanation of the tradeoff. If no such tool exists, ask the questions directly and wait for the user's answers before changing settings.
+Ask these questions in the user's selected language. Use an interactive user-input tool when your environment provides one. Prefer concise multiple-choice questions with a short explanation of the tradeoff. If no such tool exists, ask the questions directly and wait for the user's answers before changing settings.
 
 If you are Codex and the user started this from a prompt that begins with `/plan`, use Plan-mode interactive questions before running the final settings commands.
 
@@ -267,6 +273,20 @@ Do not configure webhook URLs unless the user provides an endpoint or explicitly
 
 ## 8. Final Message To The User
 
+Before writing the final message, run:
+
+```bash
+lidguard status
+```
+
+Use the current `lidguard status` output as the source of truth for the final report. Report only the current settings concretely instead of saying only that settings were applied. Include the values shown in status for the relevant protection, suspend, sound, webhook, timeout, runtime cleanup, and localization settings when they are present.
+
+Also tell the user that they can run this command to see detailed explanations for the settings parameters shown in status:
+
+```bash
+lidguard help settings
+```
+
 When finished, summarize:
 
 - The detected platform.
@@ -274,7 +294,7 @@ When finished, summarize:
 - The installed LidGuard version if you can determine it.
 - Which provider hooks and MCP servers were installed or skipped.
 - Whether Provider MCP was installed for a non-native provider, including the provider name and config path.
-- Which settings were applied.
+- The concrete current settings from `lidguard status`.
 - Any permission checks that still need manual attention.
 
 Also tell the user that provider hooks and MCP changes may not affect the current conversation/session depending on the provider, but should be picked up from the next new conversation or provider session.
