@@ -33,9 +33,9 @@ if not defined TOOL_ARCH (
     goto finalize
 )
 
-set "REPO_ROOT=%~dp0"
-set "PROJECT_FILE=%REPO_ROOT%LidGuard\LidGuard.csproj"
-set "PACKAGE_DIR=%REPO_ROOT%artifacts\packages"
+for %%I in ("%~dp0..") do set "REPO_ROOT=%%~fI"
+set "PROJECT_FILE=%REPO_ROOT%\LidGuard\LidGuard.csproj"
+set "PACKAGE_DIR=%REPO_ROOT%\artifacts\packages"
 
 cd /d "%REPO_ROOT%" || (
     set "EXIT_CODE=1"
@@ -90,8 +90,8 @@ echo Detected system architecture: %NATIVE_ARCH% ^(packing win-%TOOL_ARCH% packa
 echo Removing stale %PACKAGE_VERSION% package outputs...
 if exist "%PACKAGE_DIR%\lidguard.%PACKAGE_VERSION%.nupkg" del /f /q "%PACKAGE_DIR%\lidguard.%PACKAGE_VERSION%.nupkg"
 if exist "%PACKAGE_DIR%\lidguard.win-%TOOL_ARCH%.%PACKAGE_VERSION%.nupkg" del /f /q "%PACKAGE_DIR%\lidguard.win-%TOOL_ARCH%.%PACKAGE_VERSION%.nupkg"
-if exist "%REPO_ROOT%LidGuard\obj\Release\lidguard.%PACKAGE_VERSION%.nuspec" del /f /q "%REPO_ROOT%LidGuard\obj\Release\lidguard.%PACKAGE_VERSION%.nuspec"
-if exist "%REPO_ROOT%LidGuard\obj\Release\lidguard.win-%TOOL_ARCH%.%PACKAGE_VERSION%.nuspec" del /f /q "%REPO_ROOT%LidGuard\obj\Release\lidguard.win-%TOOL_ARCH%.%PACKAGE_VERSION%.nuspec"
+if exist "%REPO_ROOT%\LidGuard\obj\Release\lidguard.%PACKAGE_VERSION%.nuspec" del /f /q "%REPO_ROOT%\LidGuard\obj\Release\lidguard.%PACKAGE_VERSION%.nuspec"
+if exist "%REPO_ROOT%\LidGuard\obj\Release\lidguard.win-%TOOL_ARCH%.%PACKAGE_VERSION%.nuspec" del /f /q "%REPO_ROOT%\LidGuard\obj\Release\lidguard.win-%TOOL_ARCH%.%PACKAGE_VERSION%.nuspec"
 
 echo Packing lidguard %PACKAGE_VERSION%...
 dotnet pack ".\LidGuard\LidGuard.csproj" -c Release

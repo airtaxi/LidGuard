@@ -16,9 +16,10 @@ set "EXIT_CODE=1"
 goto finalize
 
 :args_done
-set "REPO_ROOT=%~dp0"
-set "PACK_SCRIPT=%REPO_ROOT%pack-local.bat"
-set "REINSTALL_SCRIPT=%REPO_ROOT%reinstall-local.bat"
+set "SCRIPT_DIR=%~dp0"
+for %%I in ("%SCRIPT_DIR%..") do set "REPO_ROOT=%%~fI"
+set "PACK_SCRIPT=%SCRIPT_DIR%pack-local.bat"
+set "REINSTALL_SCRIPT=%SCRIPT_DIR%reinstall-local.bat"
 
 cd /d "%REPO_ROOT%" || (
     set "EXIT_CODE=1"

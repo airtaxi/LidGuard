@@ -33,8 +33,8 @@ if not defined TOOL_ARCH (
     goto finalize
 )
 
-set "REPO_ROOT=%~dp0"
-set "PACKAGE_DIR=%REPO_ROOT%artifacts\packages"
+for %%I in ("%~dp0..") do set "REPO_ROOT=%%~fI"
+set "PACKAGE_DIR=%REPO_ROOT%\artifacts\packages"
 set "PACKAGE_FILE=%PACKAGE_DIR%\lidguard.%PACKAGE_VERSION%.nupkg"
 set "RID_PACKAGE_FILE=%PACKAGE_DIR%\lidguard.win-%TOOL_ARCH%.%PACKAGE_VERSION%.nupkg"
 
@@ -77,13 +77,13 @@ exit /b %EXIT_CODE%
 :run_once
 if not exist "%PACKAGE_FILE%" (
     echo Local package was not found: "%PACKAGE_FILE%"
-    echo Run pack-local.bat first, then rerun reinstall-local.bat.
+    echo Run Scripts\pack-local.bat first, then rerun Scripts\reinstall-local.bat.
     exit /b 1
 )
 
 if not exist "%RID_PACKAGE_FILE%" (
     echo Local package was not found: "%RID_PACKAGE_FILE%"
-    echo Run pack-local.bat first, then rerun reinstall-local.bat.
+    echo Run Scripts\pack-local.bat first, then rerun Scripts\reinstall-local.bat.
     exit /b 1
 )
 

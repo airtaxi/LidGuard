@@ -20,7 +20,7 @@ PACKAGE_VERSION=0.1.0
 MAX_ATTEMPT_COUNT=2
 CURRENT_ATTEMPT=1
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-REPO_ROOT=$SCRIPT_DIR
+REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 PACKAGE_DIR=$REPO_ROOT/artifacts/packages
 TEMP_CONFIG_DIR=
 EXIT_CODE=0
@@ -167,13 +167,13 @@ run_once() {
 
     if [ ! -f "$PACKAGE_FILE" ]; then
         echo "Local package was not found: $PACKAGE_FILE" >&2
-        echo "Run pack-local.sh first, then rerun reinstall-local.sh." >&2
+        echo "Run Scripts/pack-local.sh first, then rerun Scripts/reinstall-local.sh." >&2
         return 1
     fi
 
     if [ ! -f "$RID_PACKAGE_FILE" ]; then
         echo "Local package was not found: $RID_PACKAGE_FILE" >&2
-        echo "Run pack-local.sh first, then rerun reinstall-local.sh." >&2
+        echo "Run Scripts/pack-local.sh first, then rerun Scripts/reinstall-local.sh." >&2
         return 1
     fi
 

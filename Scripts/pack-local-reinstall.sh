@@ -17,10 +17,11 @@ while [ "$#" -gt 0 ]; do
 done
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 PACK_SCRIPT=$SCRIPT_DIR/pack-local.sh
 REINSTALL_SCRIPT=$SCRIPT_DIR/reinstall-local.sh
 
-cd "$SCRIPT_DIR" || exit 1
+cd "$REPO_ROOT" || exit 1
 
 if [ ! -f "$PACK_SCRIPT" ]; then
     echo "Pack script was not found: $PACK_SCRIPT" >&2
