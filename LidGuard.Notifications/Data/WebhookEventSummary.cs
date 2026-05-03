@@ -13,6 +13,8 @@ public sealed record WebhookEventSummary(
     DateTimeOffset? EndedAtUtc,
     string? EndReason,
     int? ActiveSessionCount,
+    string? InputPromptPreview,
+    string? LastResponse,
     string? WorkingDirectory,
     string? TranscriptPath,
     DateTimeOffset ReceivedAtUtc,

@@ -46,7 +46,7 @@ LidGuard는 Codex, Claude Code, GitHub Copilot CLI처럼 오래 실행되는 로
 - 마지막 세션 종료 후 재생할 소리도 선택 설정이며 기본값은 off이고, 지원되는 SystemSounds 이름 또는 재생 가능한 `.wav` 경로를 사용할 수 있다.
 - post-stop suspend sound 볼륨 override도 선택 설정이며 기본값은 off이고, 허용되는 master volume 범위는 1%에서 100%다.
 - 비활동 세션 timeout도 설정 가능하며 기본값은 12분, `off`로 비활성화할 수 있고, 활성화된 값은 최소 1분이어야 한다.
-- 선택 사항인 post-session-end webhook URL은 기본 off다. Provider가 정상 session end를 보고했고 그 stop이 pre-suspend 흐름을 예약하지 않는 경우, LidGuard는 cleanup을 막지 않고 `PostSessionEnd` payload를 POST해야 한다. Abort, interrupt, 수동 stop/remove, watchdog, orphan cleanup 경로는 이 webhook을 보내면 안 된다.
+- 선택 사항인 post-session-end webhook URL은 기본 off다. Provider가 정상 session end를 보고했고 그 stop이 pre-suspend 흐름을 예약하지 않는 경우, LidGuard는 cleanup을 막지 않고 `PostSessionEnd` payload를 POST해야 한다. Stop이 pre-suspend 흐름을 예약했지만 pre-suspend webhook 시도 전에 그 흐름이 취소되면 LidGuard는 같은 `PostSessionEnd` payload로 fallback 전송해야 한다. Abort, interrupt, 수동 stop/remove, watchdog, orphan cleanup 경로는 이 webhook을 보내면 안 된다.
 - keep-awake 보호가 적용 중이고 노트북 덮개가 닫혀 있으며 데스크톱에 suspend를 막는 보이는 활성 모니터가 하나도 없을 때는, 선택적 Emergency Hibernation thermal monitor가 10초마다 시스템 온도를 확인하고 설정된 임계값에 도달하면 즉시 hibernate를 요청해야 한다.
 
 핵심 설계 원칙은 일반 idle sleep과 lid-close sleep을 분리해서 처리하는 것이다. 일반 idle sleep은 power request, systemd inhibitor, `caffeinate`로 막고, lid-close sleep은 일반 절전 방지 API로 안정적으로 막을 수 없으므로 Windows `LIDACTION`, Linux `handle-lid-switch` inhibitor, macOS `pmset disablesleep` 백업/변경/복원으로 처리한다.
@@ -146,10 +146,10 @@ LidGuard는 Codex, Claude Code, GitHub Copilot CLI처럼 오래 실행되는 로
 - macOS visible display monitor count는 `system_profiler SPDisplaysDataType -json`을 읽는다. 최종 suspend 가능성 확인에서는 `LidSwitchState`가 `Closed`일 때 built-in/internal display entry를 제외한다.
 - macOS 즉시 sleep은 `pmset sleepnow`를 사용하고, macOS hibernate는 위의 임시 `hibernatemode 25` 흐름을 사용한다.
 - 마지막 활성 세션이 끝났을 때는 덮개가 닫혀 있고 suspend 가능성 기준의 visible display monitor count가 `0`일 때만, 설정된 지연 시간 후에 설정된 suspend 모드로 suspend를 요청해야 한다. 지연 시간이 `0`이면 즉시 suspend다.
-- post-stop suspend sound가 설정되어 있으면, LidGuard는 먼저 지연 시간을 기다리고, 지정된 소리를 끝까지 재생한 뒤, 다시 덮개/세션 상태를 확인하고 suspend를 요청해야 한다.
+- post-stop suspend sound가 설정되어 있으면, LidGuard는 먼저 지연 시간을 기다리고, pre-suspend webhook이 설정되어 있으면 이를 보낸 뒤, 지정된 소리를 끝까지 재생하고, 다시 덮개/세션 상태를 확인하고 suspend를 요청해야 한다.
 - post-stop suspend sound 볼륨 override가 설정되어 있으면, LidGuard는 재생 직전에 기본 출력 장치의 master volume과 mute 상태를 캡처하고, 필요한 경우 일시적으로 unmute한 뒤, 설정된 master volume percent로 소리를 재생하고, sound playback cleanup 경로에서 이전 volume과 mute 상태를 복원해야 한다.
-- pre-suspend webhook URL이 설정되어 있으면, LidGuard는 suspend를 요청하기 전에 5초 timeout으로 JSON을 POST해야 한다. body에는 `eventType = PreSuspend`와 `reason`이 포함되어야 하고, soft-lock 때문에 suspend되는 경우에는 soft-locked session 수까지 포함해야 한다. Notification receiver는 `eventType`이 빠진 webhook payload를 거부해야 한다.
-- post-session-end webhook URL이 설정되어 있으면 LidGuard는 provider가 보고한 정상 session end 이후, 해당 stop이 suspend를 예약하지 않을 때만 5초 timeout으로 JSON을 POST해야 한다. Body에는 `eventType = PostSessionEnd`, `reason = SessionEnded`, provider/session identity, UTC start/activity/end timestamp, end reason metadata, active session count, working directory, 가능한 경우 transcript path가 포함되어야 한다.
+- pre-suspend webhook URL이 설정되어 있으면, LidGuard는 post-stop suspend delay 이후, post-stop suspend sound 재생 전에 5초 timeout으로 JSON을 POST해야 한다. body에는 `eventType = PreSuspend`와 `reason`이 포함되어야 하고, soft-lock 때문에 suspend되는 경우에는 soft-locked session 수까지 포함해야 한다. Provider가 보고한 정상 session end가 suspend를 예약해서 별도 `PostSessionEnd` webhook이 생략되는 경우, `PreSuspend` body에는 가능한 경우 별도 `PostSessionEnd` webhook이 담았을 provider/session identity, UTC start/activity/end timestamp, end reason metadata, active session count, working directory, transcript path, `inputPromptPreview`, `lastResponse` 필드도 함께 포함되어야 한다. Pre-suspend webhook 시도 전에 pending suspend가 취소되면, 설정된 경우 생략됐던 정상 session-end notification은 `PostSessionEnd`로 fallback 전송해야 한다. Notification receiver는 `eventType`이 빠진 webhook payload를 거부해야 한다.
+- post-session-end webhook URL이 설정되어 있으면 LidGuard는 provider가 보고한 정상 session end 이후, 해당 stop이 suspend를 예약하지 않거나 예약된 suspend가 pre-suspend webhook 시도 전에 취소된 경우 5초 timeout으로 JSON을 POST해야 한다. Body에는 `eventType = PostSessionEnd`, `reason = SessionEnded`, provider/session identity, UTC start/activity/end timestamp, end reason metadata, active session count, working directory, 가능한 경우 transcript path, 가능한 경우 한 줄짜리 `inputPromptPreview`, 그리고 가능한 경우 전체 `lastResponse`가 포함되어야 한다. Prompt preview 값은 `\r\n`과 `\r`을 `\n`으로 정규화하고, 줄바꿈을 space로 대체하며, 길이가 50자를 넘으면 가능한 경우 word boundary 기준으로 `...`를 붙여 trimming해야 한다. Notification event 목록과 push text는 `lastResponse`에서 50자 preview를 파생하고, event details UI는 전체 응답을 노출해야 한다.
 
 ### Emergency Hibernation Thermal Monitor
 
@@ -292,7 +292,7 @@ Hook stop 이벤트가 누락될 수 있으므로 LidGuard는 에이전트 프�
 - 공유 보호가 유지되고 덮개가 닫혀 있는 동안 Emergency Hibernation thermal monitor는 10초마다 poll하고, 보호가 해제되거나 기능이 꺼지면 자동으로 멈춘다.
 - 같은 세션에 여러 stop 신호가 와도 cleanup side effect가 반복되면 안 된다.
 - 활성 세션 수가 `0`이 되면, post-stop suspend 요청, lid-action 복원, pre-suspend webhook, post-session-end webhook, post-stop sound 같은 후처리가 더 이상 남아 있지 않은 상태에서 설정된 server runtime cleanup 지연 시간이 지난 뒤 runtime은 종료해야 한다.
-- Provider가 보고한 정상 stop이 active session을 제거했고 그 stop에서 suspend가 예약되지 않으면, runtime은 post-session-end webhook을 background로 보내고, 그 전송이 끝나거나 timeout될 때까지 runtime cleanup을 pending으로 유지하며, webhook 실패는 stop 실패로 만들지 않고 log만 남긴다.
+- Provider가 보고한 정상 stop이 active session을 제거했고 그 stop에서 suspend가 예약되지 않았거나 예약된 suspend가 pre-suspend webhook 시도 전에 취소되면, runtime은 post-session-end webhook을 background로 보내고, 그 전송이 끝나거나 timeout될 때까지 runtime cleanup을 pending으로 유지하며, webhook 실패는 stop 실패로 만들지 않고 log만 남긴다.
 - persistent pending backup state는 아직 없으며, 다음 resilience 우선순위다.
 
 ### 설정 기본값

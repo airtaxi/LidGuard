@@ -46,6 +46,8 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
                 EndedAtUtc TEXT NULL,
                 EndReason TEXT NULL,
                 ActiveSessionCount INTEGER NULL,
+                InputPromptPreview TEXT NULL,
+                LastResponse TEXT NULL,
                 WorkingDirectory TEXT NULL,
                 TranscriptPath TEXT NULL,
                 ReceivedAtUtc TEXT NOT NULL,

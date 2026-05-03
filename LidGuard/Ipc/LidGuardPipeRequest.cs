@@ -27,6 +27,8 @@ internal sealed class LidGuardPipeRequest
 
     public string SessionStateReason { get; init; } = string.Empty;
 
+    public string InputPrompt { get; init; } = string.Empty;
+
     public string WorkingDirectory { get; init; } = string.Empty;
 
     public string TranscriptPath { get; init; } = string.Empty;

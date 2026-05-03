@@ -38,6 +38,7 @@ public sealed class LidGuardSessionRegistry
             SoftLockedAt = null,
             WatchedProcessIdentifier = request.WatchedProcessIdentifier,
             WatchRegistrationKind = request.WatchRegistrationKind,
+            InputPromptPreview = request.InputPromptPreview,
             WorkingDirectory = request.WorkingDirectory,
             TranscriptPath = request.TranscriptPath
         };
@@ -163,6 +164,7 @@ public sealed class LidGuardSessionRegistry
             SoftLockedAt = softLockedAt,
             WatchedProcessIdentifier = snapshot.WatchedProcessIdentifier,
             WatchRegistrationKind = snapshot.WatchRegistrationKind,
+            InputPromptPreview = snapshot.InputPromptPreview,
             WorkingDirectory = snapshot.WorkingDirectory,
             TranscriptPath = snapshot.TranscriptPath
         };

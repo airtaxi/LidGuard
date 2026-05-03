@@ -37,7 +37,8 @@ internal static class PushNotificationMessageFactory
     }
 
     private static string CreatePreSuspendBody(PendingWebhookEvent webhookEvent)
-        => webhookEvent.Reason switch
+    {
+        var baseBody = webhookEvent.Reason switch
         {
             LidGuardWebhookReasons.Completed => "The last active session ended and LidGuard is preparing the configured suspend flow.",
             LidGuardWebhookReasons.SoftLocked => CreateSoftLockedBody(webhookEvent.SoftLockedSessionCount),
@@ -45,7 +46,20 @@ internal static class PushNotificationMessageFactory
             _ => "LidGuard received a pre-suspend webhook event."
         };
 
+        return AppendSessionEndDetails(baseBody, webhookEvent);
+    }
+
     private static string CreatePostSessionEndBody(PendingWebhookEvent webhookEvent)
+        => CreateSessionEndDetails(webhookEvent, "ended normally.");
+
+    private static string AppendSessionEndDetails(string baseBody, PendingWebhookEvent webhookEvent)
+    {
+        if (string.IsNullOrWhiteSpace(webhookEvent.SessionIdentifier)) return baseBody;
+
+        return $"{baseBody} {CreateSessionEndDetails(webhookEvent, "ended before suspend.")}";
+    }
+
+    private static string CreateSessionEndDetails(PendingWebhookEvent webhookEvent, string statusText)
     {
         var providerText = string.IsNullOrWhiteSpace(webhookEvent.ProviderName)
             ? webhookEvent.Provider
@@ -61,7 +75,14 @@ internal static class PushNotificationMessageFactory
         var activeSessionText = webhookEvent.ActiveSessionCount is null
             ? string.Empty
             : $" Active sessions remaining: {webhookEvent.ActiveSessionCount.Value}.";
-        return $"{providerText} {sessionText} ended normally.{endReasonText}{activeSessionText}";
+        var inputPromptText = string.IsNullOrWhiteSpace(webhookEvent.InputPromptPreview)
+            ? string.Empty
+            : $" Prompt: {webhookEvent.InputPromptPreview}.";
+        var lastResponsePreview = WebhookTextPreview.Create(webhookEvent.LastResponse);
+        var lastResponseText = string.IsNullOrWhiteSpace(lastResponsePreview)
+            ? string.Empty
+            : $" Last response: {lastResponsePreview}.";
+        return $"{providerText} {sessionText} {statusText}{endReasonText}{activeSessionText}{inputPromptText}{lastResponseText}";
     }
 
     private static string CreateSoftLockedBody(int? softLockedSessionCount)

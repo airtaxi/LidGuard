@@ -24,6 +24,10 @@ internal sealed class LidGuardWebhookRequest
 
     public int? ActiveSessionCount { get; init; }
 
+    public string? InputPromptPreview { get; init; }
+
+    public string? LastResponse { get; init; }
+
     public string? WorkingDirectory { get; init; }
 
     public string? TranscriptPath { get; init; }

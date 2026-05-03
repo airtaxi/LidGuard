@@ -91,6 +91,8 @@ internal static class LidGuardNotificationApiEndpoints
                 webhookRequest?.EndedAtUtc,
                 webhookRequest?.EndReason?.Trim(),
                 webhookRequest?.ActiveSessionCount,
+                webhookRequest?.InputPromptPreview?.Trim(),
+                webhookRequest?.LastResponse?.Trim(),
                 webhookRequest?.WorkingDirectory?.Trim(),
                 webhookRequest?.TranscriptPath?.Trim(),
                 cancellationToken);

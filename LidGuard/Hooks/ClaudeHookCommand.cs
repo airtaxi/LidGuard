@@ -158,6 +158,7 @@ internal static class ClaudeHookCommand
             SessionIdentifier = GetSessionIdentifier(hookInput),
             IsProviderSessionEnd = isProviderSessionEnd,
             SessionEndReason = isProviderSessionEnd ? CreateSessionEndReason(hookInput) : string.Empty,
+            InputPrompt = commandName == LidGuardPipeCommands.Start ? hookInput.Prompt : string.Empty,
             WorkingDirectory = GetWorkingDirectory(hookInput),
             TranscriptPath = hookInput.TranscriptPath,
             HasSettings = hasSettings,

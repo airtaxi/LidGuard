@@ -128,6 +128,7 @@ internal static class GitHubCopilotHookCommand
             SessionIdentifier = GetSessionIdentifier(hookInput),
             IsProviderSessionEnd = isProviderSessionEnd,
             SessionEndReason = isProviderSessionEnd ? CreateSessionEndReason(configuredHookEventName, hookInput) : string.Empty,
+            InputPrompt = commandName == LidGuardPipeCommands.Start ? hookInput.Prompt : string.Empty,
             Settings = settings,
             TranscriptPath = hookInput.TranscriptPath,
             WorkingDirectory = GetWorkingDirectory(hookInput)

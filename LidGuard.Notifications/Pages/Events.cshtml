@@ -1,5 +1,6 @@
 @page
 @using System.Globalization
+@using LidGuard.Notifications.Models
 @model EventsModel
 @{
     ViewData["Title"] = "Events";
@@ -25,6 +26,7 @@
                 var receivedAtUtc = webhookEvent.ReceivedAtUtc.ToUniversalTime();
                 var receivedAtIsoTimestamp = receivedAtUtc.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
                 var receivedAtFallbackText = receivedAtUtc.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+                var lastResponsePreview = WebhookTextPreview.Create(webhookEvent.LastResponse);
                 <tr>
                     <td>
                         <time datetime="@receivedAtIsoTimestamp" data-device-time="true">@receivedAtFallbackText</time>
@@ -49,6 +51,17 @@
                             @if (webhookEvent.ActiveSessionCount is not null)
                             {
                                 <span class="muted"> active=@webhookEvent.ActiveSessionCount</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(webhookEvent.InputPromptPreview))
+                            {
+                                <span class="muted"> prompt=@webhookEvent.InputPromptPreview</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(lastResponsePreview))
+                            {
+                                <details class="event-details">
+                                    <summary class="muted">last=@lastResponsePreview</summary>
+                                    <pre>@webhookEvent.LastResponse</pre>
+                                </details>
                             }
                             @if (!string.IsNullOrWhiteSpace(webhookEvent.WorkingDirectory))
                             {

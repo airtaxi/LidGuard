@@ -34,6 +34,23 @@ internal static class SuspendWebhookSender
             timeout);
     }
 
+    public static async Task<LidGuardOperationResult> SendAsync(
+        string preSuspendWebhookUrl,
+        LidGuardWebhookRequest request,
+        CancellationToken cancellationToken,
+        TimeSpan? timeout = null)
+    {
+        if (!PreSuspendWebhookConfiguration.TryNormalizeConfiguredValue(preSuspendWebhookUrl, out var normalizedPreSuspendWebhookUrl, out var message)) return LidGuardOperationResult.Failure(message);
+
+        if (string.IsNullOrWhiteSpace(normalizedPreSuspendWebhookUrl)) return LidGuardOperationResult.Success();
+        return await SendCoreAsync(
+            normalizedPreSuspendWebhookUrl,
+            request,
+            "pre-suspend",
+            cancellationToken,
+            timeout);
+    }
+
     public static async Task<LidGuardOperationResult> SendPostSessionEndAsync(
         string postSessionEndWebhookUrl,
         LidGuardWebhookRequest request,

@@ -160,6 +160,25 @@ button:disabled {
     padding: 12px;
 }
 
+.event-details {
+    margin-top: 4px;
+}
+
+.event-details summary {
+    cursor: pointer;
+}
+
+.event-details pre {
+    background: #edf2f4;
+    border-radius: 6px;
+    margin: 8px 0 0;
+    max-width: 520px;
+    overflow-x: auto;
+    padding: 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
 table {
     border-collapse: collapse;
     width: 100%;
@@ -212,7 +231,8 @@ th {
     }
 
     input,
-    .webhook-url {
+    .webhook-url,
+    .event-details pre {
         background: #101820;
         border-color: #40515c;
         color: #e9f0f3;

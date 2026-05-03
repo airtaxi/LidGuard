@@ -8,4 +8,7 @@ internal readonly record struct PendingSuspendContext(
     string SessionIdentifier,
     string WorkingDirectory,
     string CommandName,
-    string SessionStateReason);
+    string SessionStateReason,
+    bool IsProviderSessionEnd,
+    string SessionEndReason,
+    DateTimeOffset? ProviderSessionEndedAt);

@@ -17,6 +17,8 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         DateTimeOffset? endedAtUtc,
         string? endReason,
         int? activeSessionCount,
+        string? inputPromptPreview,
+        string? lastResponse,
         string? workingDirectory,
         string? transcriptPath,
         CancellationToken cancellationToken)
@@ -38,6 +40,8 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                 EndedAtUtc,
                 EndReason,
                 ActiveSessionCount,
+                InputPromptPreview,
+                LastResponse,
                 WorkingDirectory,
                 TranscriptPath,
                 ReceivedAtUtc,
@@ -55,6 +59,8 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                 $endedAtUtc,
                 $endReason,
                 $activeSessionCount,
+                $inputPromptPreview,
+                $lastResponse,
                 $workingDirectory,
                 $transcriptPath,
                 $receivedAtUtc,
@@ -73,6 +79,8 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         command.Parameters.AddWithValue("$endedAtUtc", ToDatabaseValue(endedAtUtc));
         command.Parameters.AddWithValue("$endReason", ToDatabaseValue(endReason));
         command.Parameters.AddWithValue("$activeSessionCount", ToDatabaseValue(activeSessionCount));
+        command.Parameters.AddWithValue("$inputPromptPreview", ToDatabaseValue(inputPromptPreview));
+        command.Parameters.AddWithValue("$lastResponse", ToDatabaseValue(lastResponse));
         command.Parameters.AddWithValue("$workingDirectory", ToDatabaseValue(workingDirectory));
         command.Parameters.AddWithValue("$transcriptPath", ToDatabaseValue(transcriptPath));
         command.Parameters.AddWithValue("$receivedAtUtc", now);
@@ -105,6 +113,8 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                     EndedAtUtc,
                     EndReason,
                     ActiveSessionCount,
+                    InputPromptPreview,
+                    LastResponse,
                     WorkingDirectory,
                     TranscriptPath,
                     ReceivedAtUtc,
@@ -137,8 +147,10 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                     reader.IsDBNull(11) ? null : reader.GetInt32(11),
                     reader.IsDBNull(12) ? null : reader.GetString(12),
                     reader.IsDBNull(13) ? null : reader.GetString(13),
-                    DateTimeOffset.Parse(reader.GetString(14), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                    Convert.ToInt32(reader.GetValue(15), CultureInfo.InvariantCulture) + 1));
+                    reader.IsDBNull(14) ? null : reader.GetString(14),
+                    reader.IsDBNull(15) ? null : reader.GetString(15),
+                    DateTimeOffset.Parse(reader.GetString(16), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                    Convert.ToInt32(reader.GetValue(17), CultureInfo.InvariantCulture) + 1));
             }
         }
 
@@ -222,6 +234,8 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                 events.EndedAtUtc,
                 events.EndReason,
                 events.ActiveSessionCount,
+                events.InputPromptPreview,
+                events.LastResponse,
                 events.WorkingDirectory,
                 events.TranscriptPath,
                 events.ReceivedAtUtc,
@@ -261,15 +275,17 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                 reader.IsDBNull(11) ? null : reader.GetInt32(11),
                 reader.IsDBNull(12) ? null : reader.GetString(12),
                 reader.IsDBNull(13) ? null : reader.GetString(13),
-                DateTimeOffset.Parse(reader.GetString(14), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                reader.IsDBNull(15) ? null : DateTimeOffset.Parse(reader.GetString(15), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                reader.GetString(16),
-                Convert.ToInt32(reader.GetValue(17), CultureInfo.InvariantCulture),
-                Convert.ToInt32(reader.GetValue(18), CultureInfo.InvariantCulture),
+                reader.IsDBNull(14) ? null : reader.GetString(14),
+                reader.IsDBNull(15) ? null : reader.GetString(15),
+                DateTimeOffset.Parse(reader.GetString(16), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                reader.IsDBNull(17) ? null : DateTimeOffset.Parse(reader.GetString(17), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                reader.GetString(18),
                 Convert.ToInt32(reader.GetValue(19), CultureInfo.InvariantCulture),
                 Convert.ToInt32(reader.GetValue(20), CultureInfo.InvariantCulture),
                 Convert.ToInt32(reader.GetValue(21), CultureInfo.InvariantCulture),
-                reader.IsDBNull(22) ? null : reader.GetString(22)));
+                Convert.ToInt32(reader.GetValue(22), CultureInfo.InvariantCulture),
+                Convert.ToInt32(reader.GetValue(23), CultureInfo.InvariantCulture),
+                reader.IsDBNull(24) ? null : reader.GetString(24)));
         }
 
         return events;

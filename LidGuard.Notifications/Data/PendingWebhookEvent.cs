@@ -13,6 +13,8 @@ internal sealed record PendingWebhookEvent(
     DateTimeOffset? EndedAtUtc,
     string? EndReason,
     int? ActiveSessionCount,
+    string? InputPromptPreview,
+    string? LastResponse,
     string? WorkingDirectory,
     string? TranscriptPath,
     DateTimeOffset ReceivedAtUtc,

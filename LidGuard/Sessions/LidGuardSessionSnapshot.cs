@@ -14,6 +14,7 @@ public sealed class LidGuardSessionSnapshot
         SoftLockedAt = null,
         WatchedProcessIdentifier = 0,
         WatchRegistrationKind = LidGuardSessionWatchRegistrationKind.None,
+        InputPromptPreview = string.Empty,
         WorkingDirectory = string.Empty,
         TranscriptPath = string.Empty
     };
@@ -37,6 +38,8 @@ public sealed class LidGuardSessionSnapshot
     public int WatchedProcessIdentifier { get; init; }
 
     public LidGuardSessionWatchRegistrationKind WatchRegistrationKind { get; init; }
+
+    public string InputPromptPreview { get; init; } = string.Empty;
 
     public string WorkingDirectory { get; init; } = string.Empty;
 

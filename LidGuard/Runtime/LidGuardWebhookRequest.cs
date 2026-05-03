@@ -46,6 +46,14 @@ internal sealed class LidGuardWebhookRequest
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? ActiveSessionCount { get; init; }
 
+    [JsonPropertyName("inputPromptPreview")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string InputPromptPreview { get; init; }
+
+    [JsonPropertyName("lastResponse")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string LastResponse { get; init; }
+
     [JsonPropertyName("workingDirectory")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string WorkingDirectory { get; init; }

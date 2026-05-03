@@ -121,6 +121,7 @@ internal static class CodexHookCommand
             SessionIdentifier = GetSessionIdentifier(hookInput),
             IsProviderSessionEnd = commandName == LidGuardPipeCommands.Stop,
             SessionEndReason = commandName == LidGuardPipeCommands.Stop ? CreateSessionEndReason(hookInput) : string.Empty,
+            InputPrompt = commandName == LidGuardPipeCommands.Start ? hookInput.Prompt : string.Empty,
             WorkingDirectory = GetWorkingDirectory(hookInput),
             TranscriptPath = hookInput.TranscriptPath,
             HasSettings = hasSettings,

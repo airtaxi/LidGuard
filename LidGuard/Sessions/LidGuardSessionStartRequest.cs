@@ -16,6 +16,8 @@ public sealed class LidGuardSessionStartRequest
 
     public LidGuardSessionWatchRegistrationKind WatchRegistrationKind { get; init; } = LidGuardSessionWatchRegistrationKind.None;
 
+    public string InputPromptPreview { get; init; } = string.Empty;
+
     public string WorkingDirectory { get; init; } = string.Empty;
 
     public string TranscriptPath { get; init; } = string.Empty;

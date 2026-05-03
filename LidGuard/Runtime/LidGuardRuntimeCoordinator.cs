@@ -155,6 +155,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 LastActivityAt = startedAt,
                 WatchedProcessIdentifier = watchedProcessResolution.ProcessIdentifier,
                 WatchRegistrationKind = watchedProcessResolution.WatchRegistrationKind,
+                InputPromptPreview = WebhookTextPreview.Create(request.InputPrompt),
                 WorkingDirectory = request.WorkingDirectory,
                 TranscriptPath = transcriptMonitoringRegistrationResult.ResolvedTranscriptPath
             };
@@ -1090,16 +1091,9 @@ internal sealed class LidGuardRuntimeCoordinator
         int postStopSuspendDelaySeconds,
         CancellationTokenSource pendingSuspendCancellationTokenSource)
     {
+        var preSuspendWebhookAttempted = false;
         try
         {
-            await SendPreSuspendWebhookAsync(
-                pendingSuspendContext,
-                snapshot,
-                eventName,
-                suspendWebhookReason,
-                suspendTriggerSessionCount,
-                pendingSuspendCancellationTokenSource.Token);
-
             if (postStopSuspendDelaySeconds > 0) await Task.Delay(TimeSpan.FromSeconds(postStopSuspendDelaySeconds), pendingSuspendCancellationTokenSource.Token);
 
             var postStopSuspendSound = string.Empty;
@@ -1111,6 +1105,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 {
                     var canceledResponse = CreateSuccessResponse("Skipped pending suspend because a session became active before suspend ran.");
                     LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-suspend-canceled", pendingSuspendContext, canceledResponse, snapshot);
+                    QueuePostSessionEndWebhookForCanceledSuspendInsideGate(pendingSuspendContext, snapshot, eventName, _sessionRegistry.ActiveSessionCount);
                     return;
                 }
 
@@ -1119,6 +1114,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 {
                     var canceledResponse = CreateSuccessResponse(closedLidPolicyApplicability.Message);
                     LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-suspend-canceled", pendingSuspendContext, canceledResponse, snapshot);
+                    QueuePostSessionEndWebhookForCanceledSuspendInsideGate(pendingSuspendContext, snapshot, eventName, _sessionRegistry.ActiveSessionCount);
                     return;
                 }
 
@@ -1130,6 +1126,14 @@ internal sealed class LidGuardRuntimeCoordinator
                 _gate.Release();
             }
 
+            preSuspendWebhookAttempted = true;
+            await SendPreSuspendWebhookAsync(
+                pendingSuspendContext,
+                snapshot,
+                eventName,
+                suspendWebhookReason,
+                suspendTriggerSessionCount,
+                pendingSuspendCancellationTokenSource.Token);
             await PlayPostStopSuspendSoundAsync(
                 pendingSuspendContext,
                 snapshot,
@@ -1144,6 +1148,10 @@ internal sealed class LidGuardRuntimeCoordinator
                 suspendWebhookReason,
                 suspendTriggerSessionCount,
                 pendingSuspendCancellationTokenSource.Token);
+        }
+        catch (OperationCanceledException) when (!preSuspendWebhookAttempted)
+        {
+            await QueuePostSessionEndWebhookForCanceledSuspendAsync(pendingSuspendContext, snapshot, eventName);
         }
         catch (OperationCanceledException) { }
         finally
@@ -1334,10 +1342,10 @@ internal sealed class LidGuardRuntimeCoordinator
             _gate.Release();
         }
 
+        var webhookRequest = CreatePreSuspendWebhookRequest(pendingSuspendContext, snapshot, suspendWebhookReason, suspendTriggerSessionCount);
         var sendResult = await SuspendWebhookSender.SendAsync(
             preSuspendWebhookUrl,
-            suspendWebhookReason,
-            suspendTriggerSessionCount,
+            webhookRequest,
             cancellationToken,
             s_preSuspendWebhookTimeout);
         if (sendResult.Succeeded) return;
@@ -1354,6 +1362,99 @@ internal sealed class LidGuardRuntimeCoordinator
         }
     }
 
+    private static LidGuardWebhookRequest CreatePreSuspendWebhookRequest(
+        PendingSuspendContext pendingSuspendContext,
+        LidGuardSessionSnapshot snapshot,
+        SuspendWebhookReason suspendWebhookReason,
+        int suspendTriggerSessionCount)
+    {
+        var webhookRequest = new LidGuardWebhookRequest
+        {
+            EventType = LidGuardWebhookEventTypes.PreSuspend,
+            Reason = suspendWebhookReason.ToString(),
+            SoftLockedSessionCount = suspendWebhookReason == SuspendWebhookReason.SoftLocked ? suspendTriggerSessionCount : null
+        };
+
+        if (!pendingSuspendContext.IsProviderSessionEnd) return webhookRequest;
+
+        return CreateSessionEndWebhookRequest(
+            LidGuardWebhookEventTypes.PreSuspend,
+            suspendWebhookReason.ToString(),
+            snapshot,
+            string.IsNullOrWhiteSpace(pendingSuspendContext.SessionEndReason) ? pendingSuspendContext.CommandName : pendingSuspendContext.SessionEndReason,
+            suspendTriggerSessionCount,
+            pendingSuspendContext.ProviderSessionEndedAt ?? DateTimeOffset.UtcNow,
+            suspendWebhookReason == SuspendWebhookReason.SoftLocked ? suspendTriggerSessionCount : null);
+    }
+
+    private static LidGuardWebhookRequest CreateSessionEndWebhookRequest(
+        string eventType,
+        string reason,
+        LidGuardSessionSnapshot snapshot,
+        string endReason,
+        int activeSessionCount,
+        DateTimeOffset endedAtUtc,
+        int? softLockedSessionCount = null)
+        => new()
+        {
+            EventType = eventType,
+            Reason = reason,
+            SoftLockedSessionCount = softLockedSessionCount,
+            Provider = snapshot.Provider.ToString(),
+            ProviderName = string.IsNullOrWhiteSpace(snapshot.ProviderName) ? null : snapshot.ProviderName,
+            SessionIdentifier = snapshot.SessionIdentifier,
+            StartedAtUtc = snapshot.StartedAt,
+            LastActivityAtUtc = snapshot.LastActivityAt,
+            EndedAtUtc = endedAtUtc,
+            EndReason = endReason,
+            ActiveSessionCount = activeSessionCount,
+            InputPromptPreview = string.IsNullOrWhiteSpace(snapshot.InputPromptPreview) ? null : snapshot.InputPromptPreview,
+            LastResponse = AgentTranscriptResponseExtractor.CreateLastResponse(snapshot.Provider, snapshot.TranscriptPath),
+            WorkingDirectory = string.IsNullOrWhiteSpace(snapshot.WorkingDirectory) ? null : snapshot.WorkingDirectory,
+            TranscriptPath = string.IsNullOrWhiteSpace(snapshot.TranscriptPath) ? null : snapshot.TranscriptPath
+        };
+
+    private async Task QueuePostSessionEndWebhookForCanceledSuspendAsync(
+        PendingSuspendContext pendingSuspendContext,
+        LidGuardSessionSnapshot snapshot,
+        string eventName)
+    {
+        await _gate.WaitAsync(CancellationToken.None);
+        try
+        {
+            QueuePostSessionEndWebhookForCanceledSuspendInsideGate(pendingSuspendContext, snapshot, eventName, _sessionRegistry.ActiveSessionCount);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    private void QueuePostSessionEndWebhookForCanceledSuspendInsideGate(
+        PendingSuspendContext pendingSuspendContext,
+        LidGuardSessionSnapshot snapshot,
+        string eventName,
+        int activeSessionCount)
+    {
+        if (!pendingSuspendContext.IsProviderSessionEnd) return;
+
+        var stopRequest = new LidGuardSessionStopRequest
+        {
+            Provider = snapshot.Provider,
+            ProviderName = snapshot.ProviderName,
+            SessionIdentifier = snapshot.SessionIdentifier,
+            IsProviderSessionEnd = true,
+            SessionEndReason = pendingSuspendContext.SessionEndReason
+        };
+        QueuePostSessionEndWebhookInsideGate(
+            stopRequest,
+            snapshot,
+            eventName,
+            pendingSuspendContext.CommandName,
+            activeSessionCount,
+            pendingSuspendContext.ProviderSessionEndedAt ?? DateTimeOffset.UtcNow);
+    }
+
     private void QueuePostSessionEndWebhookIfRequired(
         LidGuardSessionStopRequest request,
         LidGuardSessionSnapshot snapshot,
@@ -1362,24 +1463,27 @@ internal sealed class LidGuardRuntimeCoordinator
         int activeSessionCount)
     {
         if (!request.IsProviderSessionEnd) return;
+        QueuePostSessionEndWebhookInsideGate(request, snapshot, eventName, commandName, activeSessionCount, DateTimeOffset.UtcNow);
+    }
+
+    private void QueuePostSessionEndWebhookInsideGate(
+        LidGuardSessionStopRequest request,
+        LidGuardSessionSnapshot snapshot,
+        string eventName,
+        string commandName,
+        int activeSessionCount,
+        DateTimeOffset endedAtUtc)
+    {
         if (string.IsNullOrWhiteSpace(_settings.PostSessionEndWebhookUrl)) return;
 
         var postSessionEndWebhookUrl = _settings.PostSessionEndWebhookUrl;
-        var webhookRequest = new LidGuardWebhookRequest
-        {
-            EventType = LidGuardWebhookEventTypes.PostSessionEnd,
-            Reason = LidGuardWebhookReasons.SessionEnded,
-            Provider = snapshot.Provider.ToString(),
-            ProviderName = string.IsNullOrWhiteSpace(snapshot.ProviderName) ? null : snapshot.ProviderName,
-            SessionIdentifier = snapshot.SessionIdentifier,
-            StartedAtUtc = snapshot.StartedAt,
-            LastActivityAtUtc = snapshot.LastActivityAt,
-            EndedAtUtc = DateTimeOffset.UtcNow,
-            EndReason = string.IsNullOrWhiteSpace(request.SessionEndReason) ? commandName : request.SessionEndReason,
-            ActiveSessionCount = activeSessionCount,
-            WorkingDirectory = string.IsNullOrWhiteSpace(snapshot.WorkingDirectory) ? null : snapshot.WorkingDirectory,
-            TranscriptPath = string.IsNullOrWhiteSpace(snapshot.TranscriptPath) ? null : snapshot.TranscriptPath
-        };
+        var webhookRequest = CreateSessionEndWebhookRequest(
+            LidGuardWebhookEventTypes.PostSessionEnd,
+            LidGuardWebhookReasons.SessionEnded,
+            snapshot,
+            string.IsNullOrWhiteSpace(request.SessionEndReason) ? commandName : request.SessionEndReason,
+            activeSessionCount,
+            endedAtUtc);
 
         _pendingPostSessionEndWebhookCount++;
         _ = SendPostSessionEndWebhookAsync(
@@ -2168,7 +2272,10 @@ internal sealed class LidGuardRuntimeCoordinator
             request.SessionIdentifier,
             snapshot.WorkingDirectory,
             request.Command,
-            request.SessionStateReason);
+            request.SessionStateReason,
+            false,
+            string.Empty,
+            null);
 
     private static PendingSuspendContext CreatePendingSuspendContext(
         LidGuardSessionStopRequest request,
@@ -2180,7 +2287,10 @@ internal sealed class LidGuardRuntimeCoordinator
             request.SessionIdentifier,
             snapshot.WorkingDirectory,
             commandName,
-            string.Empty);
+            string.Empty,
+            request.IsProviderSessionEnd,
+            request.SessionEndReason,
+            request.IsProviderSessionEnd ? DateTimeOffset.UtcNow : null);
 
     private readonly record struct CleanupResult(LidGuardPipeResponse Response, int RemovedSessionCount);
 
