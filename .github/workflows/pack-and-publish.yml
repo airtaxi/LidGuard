@@ -1,0 +1,263 @@
+name: Pack and Publish NuGet
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish validated packages to NuGet from the macOS runner.
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lidguard-pack-and-publish
+  cancel-in-progress: false
+
+jobs:
+  preflight-windows:
+    if: ${{ github.actor == 'airtaxi' }}
+    name: Preflight Windows Runner
+    runs-on: [self-hosted, Windows, X64, lidguard, windows-host]
+    steps:
+      - name: Check runner
+        shell: pwsh
+        run: |
+          "runner.os=$env:RUNNER_OS"
+          "runner.arch=$env:RUNNER_ARCH"
+          "runner.name=$env:RUNNER_NAME"
+          hostname
+
+  preflight-linux:
+    if: ${{ github.actor == 'airtaxi' }}
+    name: Preflight Linux Runner
+    runs-on: [self-hosted, Linux, X64, lidguard, linux-x64]
+    steps:
+      - name: Check runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "runner.os=$RUNNER_OS"
+          echo "runner.arch=$RUNNER_ARCH"
+          echo "runner.name=$RUNNER_NAME"
+          hostname
+
+  preflight-macos:
+    if: ${{ github.actor == 'airtaxi' }}
+    name: Preflight macOS Runner
+    runs-on: [self-hosted, macOS, ARM64, lidguard, macos-arm64]
+    steps:
+      - name: Check runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "runner.os=$RUNNER_OS"
+          echo "runner.arch=$RUNNER_ARCH"
+          echo "runner.name=$RUNNER_NAME"
+          hostname
+
+  pack-windows:
+    if: ${{ github.actor == 'airtaxi' }}
+    name: Pack Windows Tool Packages
+    needs: [preflight-windows, preflight-linux, preflight-macos]
+    runs-on: [self-hosted, Windows, X64, lidguard, windows-host]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Pack Windows RIDs
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          [xml]$project = Get-Content -LiteralPath "LidGuard/LidGuard.csproj" -Raw
+          $version = ($project.Project.PropertyGroup | Where-Object { $_.VersionPrefix } | Select-Object -First 1).VersionPrefix
+          if ([string]::IsNullOrWhiteSpace($version)) { throw "VersionPrefix was not found." }
+
+          Remove-Item -LiteralPath "artifacts" -Recurse -Force -ErrorAction SilentlyContinue
+          $runtimeIdentifiers = @("win-x64", "win-x86", "win-arm64")
+          foreach ($runtimeIdentifier in $runtimeIdentifiers) {
+            dotnet pack "LidGuard/LidGuard.csproj" -c Release -r $runtimeIdentifier /p:ContinuousIntegrationBuild=true
+            if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for $runtimeIdentifier." }
+          }
+
+          foreach ($runtimeIdentifier in $runtimeIdentifiers) {
+            $packagePath = "artifacts/packages/lidguard.$runtimeIdentifier.$version.nupkg"
+            if (-not (Test-Path -LiteralPath $packagePath)) { throw "Missing expected package: $packagePath" }
+          }
+
+      - name: Upload Windows packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: lidguard-packages-windows
+          path: artifacts/packages/*.nupkg
+          if-no-files-found: error
+
+  pack-linux:
+    if: ${{ github.actor == 'airtaxi' }}
+    name: Pack Linux Tool Packages
+    needs: [preflight-windows, preflight-linux, preflight-macos]
+    runs-on: [self-hosted, Linux, X64, lidguard, linux-x64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Pack Linux RIDs
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's:.*<VersionPrefix>\(.*\)</VersionPrefix>.*:\1:p' LidGuard/LidGuard.csproj | head -n 1)"
+          if [ -z "$version" ]; then
+            echo "VersionPrefix was not found." >&2
+            exit 1
+          fi
+
+          rm -rf artifacts
+          runtime_identifiers="linux-x64 linux-arm64"
+          for runtime_identifier in $runtime_identifiers; do
+            dotnet pack LidGuard/LidGuard.csproj -c Release -r "$runtime_identifier" /p:ContinuousIntegrationBuild=true
+          done
+
+          for runtime_identifier in $runtime_identifiers; do
+            package_path="artifacts/packages/lidguard.$runtime_identifier.$version.nupkg"
+            if [ ! -f "$package_path" ]; then
+              echo "Missing expected package: $package_path" >&2
+              exit 1
+            fi
+          done
+
+      - name: Upload Linux packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: lidguard-packages-linux
+          path: artifacts/packages/*.nupkg
+          if-no-files-found: error
+
+  pack-macos:
+    if: ${{ github.actor == 'airtaxi' }}
+    name: Pack macOS Tool Packages
+    needs: [preflight-windows, preflight-linux, preflight-macos]
+    runs-on: [self-hosted, macOS, ARM64, lidguard, macos-arm64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Pack macOS RIDs and root tool package
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's:.*<VersionPrefix>\(.*\)</VersionPrefix>.*:\1:p' LidGuard/LidGuard.csproj | head -n 1)"
+          if [ -z "$version" ]; then
+            echo "VersionPrefix was not found." >&2
+            exit 1
+          fi
+
+          rm -rf artifacts
+          dotnet pack LidGuard/LidGuard.csproj -c Release /p:ContinuousIntegrationBuild=true
+          runtime_identifiers="osx-x64 osx-arm64"
+          for runtime_identifier in $runtime_identifiers; do
+            dotnet pack LidGuard/LidGuard.csproj -c Release -r "$runtime_identifier" /p:ContinuousIntegrationBuild=true
+          done
+
+          package_path="artifacts/packages/lidguard.$version.nupkg"
+          if [ ! -f "$package_path" ]; then
+            echo "Missing expected package: $package_path" >&2
+            exit 1
+          fi
+
+          for runtime_identifier in $runtime_identifiers; do
+            package_path="artifacts/packages/lidguard.$runtime_identifier.$version.nupkg"
+            if [ ! -f "$package_path" ]; then
+              echo "Missing expected package: $package_path" >&2
+              exit 1
+            fi
+          done
+
+      - name: Upload macOS packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: lidguard-packages-macos
+          path: artifacts/packages/*.nupkg
+          if-no-files-found: error
+
+  publish-nuget:
+    if: ${{ github.actor == 'airtaxi' && inputs.publish }}
+    name: Publish NuGet Packages
+    needs: [pack-windows, pack-linux, pack-macos]
+    runs-on: [self-hosted, macOS, ARM64, lidguard, macos-arm64]
+    environment:
+      name: nuget-production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: lidguard-packages-*
+          path: artifacts/packages
+          merge-multiple: true
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish packages to NuGet.org
+        shell: bash
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${NUGET_API_KEY:-}" ]; then
+            echo "NUGET_API_KEY secret is not configured." >&2
+            exit 1
+          fi
+
+          version="$(sed -n 's:.*<VersionPrefix>\(.*\)</VersionPrefix>.*:\1:p' LidGuard/LidGuard.csproj | head -n 1)"
+          if [ -z "$version" ]; then
+            echo "VersionPrefix was not found." >&2
+            exit 1
+          fi
+
+          packages="
+          artifacts/packages/lidguard.win-x64.$version.nupkg
+          artifacts/packages/lidguard.win-x86.$version.nupkg
+          artifacts/packages/lidguard.win-arm64.$version.nupkg
+          artifacts/packages/lidguard.linux-x64.$version.nupkg
+          artifacts/packages/lidguard.linux-arm64.$version.nupkg
+          artifacts/packages/lidguard.osx-x64.$version.nupkg
+          artifacts/packages/lidguard.osx-arm64.$version.nupkg
+          artifacts/packages/lidguard.$version.nupkg
+          "
+
+          for package in $packages; do
+            if [ ! -f "$package" ]; then
+              echo "Missing expected package: $package" >&2
+              exit 1
+            fi
+          done
+
+          for package in $packages; do
+            dotnet nuget push "$package" \
+              --api-key "$NUGET_API_KEY" \
+              --source "https://api.nuget.org/v3/index.json" \
+              --skip-duplicate
+          done
