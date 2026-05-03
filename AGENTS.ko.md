@@ -106,7 +106,7 @@ LidGuard는 Codex, Claude Code, GitHub Copilot CLI처럼 오래 실행되는 로
 
 ### macOS 전원 제어
 
-- macOS 지원은 `caffeinate`, `pmset`, `ioreg`, `system_profiler`, Apple Silicon `IOHIDEventSystemClient` 온도 센서, best-effort `powermetrics`를 사용할 수 있는 로컬 macOS 시스템을 대상으로 한다.
+- macOS 지원은 `caffeinate`, `pmset`, `ioreg`, `system_profiler`, Apple Silicon `IOHIDEventSystemClient` 온도 센서, 가능한 범위에서 사용하는 `powermetrics`를 사용할 수 있는 로컬 macOS 시스템을 대상으로 한다.
 - macOS Apple Silicon temperature fast path는 CoreFoundation 및 IOKit에 대한 source-generated `LibraryImport` 직접 호출과 CoreFoundation callback table을 찾기 위한 `NativeLibrary` export lookup 사용을 허용한다. CsWin32가 macOS framework를 다루지 않고 `IOHIDEventSystemClient`에 대한 안정적인 managed metadata surface가 없기 때문이다.
 - 일반 idle sleep 방지는 `caffeinate` assertion을 사용한다.
 - `PreventSystemSleep`은 `caffeinate -i`에 매핑된다.
@@ -155,12 +155,12 @@ LidGuard는 Codex, Claude Code, GitHub Copilot CLI처럼 오래 실행되는 로
 
 - Emergency Hibernation은 `SystemThermalInformation.GetSystemTemperatureCelsius(EmergencyHibernationTemperatureMode)`를 사용해 선택된 기준의 시스템 thermal zone 섭씨 온도를 읽는다.
 - Linux의 Emergency Hibernation 온도는 `/sys/class/thermal/thermal_zone*/temp`의 millidegree Celsius 값을 읽고 설정된 Low, Average, High 집계를 적용한다.
-- macOS의 Emergency Hibernation 온도는 먼저 Apple Silicon `IOHIDEventSystemClient` processor temperature sensor에서 best-effort로 읽고, 실패하면 `powermetrics --samplers smc` Celsius sensor output으로 fallback한 뒤 설정된 Low, Average, High 집계를 적용한다. 지원되지 않는 sensor, 권한 실패, 지원되지 않는 sampler, 숫자 Celsius 값 부재, timeout은 unavailable로 처리하며 Emergency Hibernation을 trigger하면 안 된다.
+- macOS의 Emergency Hibernation 온도는 먼저 Apple Silicon `IOHIDEventSystemClient` processor temperature sensor에서 가능한 범위에서 읽고, 실패하면 `powermetrics --samplers smc` Celsius sensor output으로 fallback한 뒤 설정된 Low, Average, High 집계를 적용한다. 지원되지 않는 sensor, 권한 실패, 지원되지 않는 sampler, 숫자 Celsius 값 부재, timeout은 unavailable로 처리하며 Emergency Hibernation을 trigger하면 안 된다.
 - Emergency Hibernation 온도 기준은 Low, Average, High로 설정 가능하며 기본값은 Average다.
 - thermal monitor는 공유 keep-awake 보호가 적용 중이고, 덮개가 닫혀 있으며, suspend 가능성 기준의 visible display monitor count가 `0`일 때만 동작한다.
 - thermal poll 주기는 10초 고정이다.
 - Emergency Hibernation 임계 온도는 설정 가능하며 기본값은 93도이고, runtime에서 사용하기 전에 항상 70도에서 110도 범위로 clamp해야 한다.
-- 관측 온도가 clamp된 임계값 이상이 되면, LidGuard는 pending post-stop suspend를 취소하고, `reason = EmergencyHibernation`으로 pre-suspend webhook을 5초 timeout으로 보낸 뒤 즉시 hibernate를 요청해야 한다. hibernate 요청이 실패하면 LidGuard는 즉시 best-effort fallback으로 Sleep을 요청하고 두 suspend 결과를 모두 기록해야 한다.
+- 관측 온도가 clamp된 임계값 이상이 되면, LidGuard는 pending post-stop suspend를 취소하고, `reason = EmergencyHibernation`으로 pre-suspend webhook을 5초 timeout으로 보낸 뒤 즉시 hibernate를 요청해야 한다. hibernate 요청이 실패하면 LidGuard는 즉시 Sleep을 대체 동작으로 요청하고 두 suspend 결과를 모두 기록해야 한다.
 - Emergency Hibernation은 일반 suspend mode, post-stop suspend delay, post-stop suspend sound, sound volume override 설정을 무시한다.
 - Emergency Hibernation webhook timeout 또는 실패가 즉시 hibernate 요청을 막으면 안 된다.
 
@@ -267,7 +267,7 @@ Hook stop 이벤트가 누락될 수 있으므로 LidGuard는 에이전트 프�
 - `provider_stop_session`은 작업이 정말 끝난 경우에만 턴 종료 전에 호출하도록 의도한다.
 - `provider_set_soft_lock`은 모델이 사용자 입력이 필요해 턴을 마치려 할 때 LidGuard keep-awake 보호를 해제하려고 호출하도록 의도한다. 이 도구 자체가 턴을 끝내주지는 않으며, 호출 뒤에도 모델이 직접 대화를 종료하거나 사용자에게 제어를 넘겨야 한다.
 - 사용자가 답해 이전에 soft lock된 Provider MCP 세션을 재개할 때는 새 세션을 다시 시작하지 말고, 먼저 기존 `sessionIdentifier`로 `provider_clear_soft_lock`을 호출해야 한다.
-- Provider MCP 동작은 본질적으로 모델 의존적이다. 모델이 이 도구들을 올바른 시점에 호출한다고 LidGuard가 보장할 수 없으므로, 이 통합은 항상 best-effort로 문서화해야 한다.
+- Provider MCP 동작은 본질적으로 모델 의존적이다. 모델이 이 도구들을 올바른 시점에 호출한다고 LidGuard가 보장할 수 없으므로, 이 통합은 항상 동작이 보장되지 않는 보조 통합으로 문서화해야 한다.
 - MCP 설정 변경은 CLI와 같은 named-pipe 클라이언트와 설정 저장소를 사용해 동기화하고, runtime이 없다고 해서 `run-server`를 새로 띄우지는 않는다.
 - MCP 서버 로그는 stdio 트래픽을 깨지 않도록 stderr에만 남겨야 한다.
 
@@ -726,7 +726,7 @@ Windows, Linux, macOS CLI hook 수신 경로는 Codex, Claude Code, GitHub Copil
 - 마지막 세션 종료 뒤 남은 post-stop cleanup 작업이 끝나는 즉시 runtime이 종료되도록 구현한다.
 - 실제 systemd/logind 노트북에서 Linux 동작을 검증한다. 대상은 `systemd-inhibit` lifecycle, `handle-lid-switch` inhibition, `systemctl suspend` / `systemctl hibernate`, closed-lid plus monitor-count suspend eligibility, `/proc/acpi/button/lid` lid-state read, `/sys/class/drm` monitor detection, `/sys/class/thermal` temperature aggregation, Emergency Hibernation, suspend history logging이다.
 - `linux-permission status|check|install|remove`의 non-root/root path, unmanaged polkit file에 대한 managed marker refusal, sudo failure path, removal safety를 검증한다.
-- 실제 MacBook에서 macOS 동작을 검증한다. 대상은 `caffeinate` lifecycle, `pmset disablesleep` backup/restore, `pmset sleepnow`, deferred recovery restore를 동반한 임시 `hibernatemode 25` hibernate, closed-lid plus monitor-count suspend eligibility, `ioreg` lid-state read, `system_profiler` monitor detection, best-effort Apple Silicon `IOHIDEventSystemClient` 및 `powermetrics` temperature aggregation, Emergency Hibernation, suspend history logging이다.
+- 실제 MacBook에서 macOS 동작을 검증한다. 대상은 `caffeinate` lifecycle, `pmset disablesleep` backup/restore, `pmset sleepnow`, deferred recovery restore를 동반한 임시 `hibernatemode 25` hibernate, closed-lid plus monitor-count suspend eligibility, `ioreg` lid-state read, `system_profiler` monitor detection, 가능한 범위에서 동작하는 Apple Silicon `IOHIDEventSystemClient` 및 `powermetrics` temperature aggregation, Emergency Hibernation, suspend history logging이다.
 - `macos-permission status|check|install|remove`의 non-root/root path, unmanaged sudoers file에 대한 managed marker refusal, `visudo` validation, non-interactive sudo failure path, removal safety를 검증한다.
 - 이미 수동 테스트가 완료된 provider/Windows 동작과 Linux/macOS 동작에 대한 자동 회귀 테스트 또는 검증 스크립트를 추가한다. 대상은 최신 Codex hook 동작, Claude Code hook stdout 동작, GitHub Copilot CLI hook 출력 동작, GitHub Copilot CLI user-level `~/.copilot/hooks/` 로딩과 inline `~/.copilot/settings.json` hook 조합, GitHub Copilot CLI session id 안정성, 일반 사용자 권한의 `PowerReadACValueIndex`/`PowerReadDCValueIndex` 읽기/쓰기 동작, Linux inhibitor lifecycle, Linux polkit rule management, macOS parser/permission management, Group Policy 또는 MDM으로 전원 설정이 막힌 경우의 fallback 메시지다.
 - Codex가 향후 notification 또는 기계가 읽을 수 있는 pending-state hook 표면을 제공할 때만 direct Codex soft-lock 지원을 추가한다.

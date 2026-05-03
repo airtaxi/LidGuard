@@ -57,7 +57,7 @@ lidguard mcp-install all
 
 ### 다른 에이전트를 위한 Provider MCP
 
-AI 도구에 LidGuard native hook 통합이 없지만 custom stdio MCP server를 등록할 수 있다면, Provider MCP를 best-effort 통합 경로로 사용할 수 있습니다.
+AI 도구에 LidGuard native hook 통합이 없지만 custom stdio MCP server를 등록할 수 있다면, Provider MCP를 동작이 보장되지는 않지만 가능한 범위에서 연결을 시도하는 통합 경로로 사용할 수 있습니다.
 
 ```powershell
 lidguard provider-mcp-install --config "C:\path\to\mcp.json" --provider-name "ExampleProvider"
