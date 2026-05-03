@@ -63,6 +63,8 @@ jobs:
     name: Pack Windows Tool Packages
     needs: [preflight-windows, preflight-linux, preflight-macos]
     runs-on: [self-hosted, Windows, X64, lidguard, windows-host]
+    env:
+      DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -104,6 +106,8 @@ jobs:
     name: Pack Linux Tool Packages
     needs: [preflight-windows, preflight-linux, preflight-macos]
     runs-on: [self-hosted, Linux, X64, lidguard, linux-x64]
+    env:
+      DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -149,6 +153,8 @@ jobs:
     name: Pack macOS Tool Packages
     needs: [preflight-windows, preflight-linux, preflight-macos]
     runs-on: [self-hosted, macOS, ARM64, lidguard, macos-arm64]
+    env:
+      DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -201,6 +207,8 @@ jobs:
     name: Publish NuGet Packages
     needs: [pack-windows, pack-linux, pack-macos]
     runs-on: [self-hosted, macOS, ARM64, lidguard, macos-arm64]
+    env:
+      DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet
     environment:
       name: nuget-production
     steps:
