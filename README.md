@@ -51,8 +51,7 @@ dotnet tool install --global lidguard
 
 ```powershell
 lidguard help
-lidguard hook-install --provider codex
-lidguard settings --ui-culture ko
+lidguard hook-install --provider all
 ```
 
 ## Documentation
