@@ -20,6 +20,22 @@ LidGuard is currently officially tested with Codex on Windows. Linux, macOS, Cla
 - Implements Windows, systemd/logind Linux, and macOS power control, packaged as a NativeAOT .NET tool.
 - Supports human CLI UI culture selection with `auto`, `en`, `ko`, or another culture name.
 
+## Full Feature Overview
+
+- Session tracking and status: active session count, provider/session identity, watched process id, SoftLock state, working directory, local start and last-activity times, current lid state, and visible display monitor count.
+- Provider integration: Codex, Claude Code, and GitHub Copilot CLI hooks; hook install/status/remove/events commands; regular MCP install/status/remove commands; and Provider MCP for other tools that can call a custom stdio MCP server.
+- Keep-awake controls: configurable system sleep prevention, display sleep prevention, Windows away-mode requests, and the Windows power request reason text shown by the operating system.
+- Lid-close handling: temporary Windows lid-action override, Linux `handle-lid-switch` inhibitor, macOS `pmset disablesleep`, and restoration of the user's original policy after protection ends or recovery runs.
+- Process and runtime cleanup: parent-process watching, orphan cleanup, inactive-session timeout SoftLocking, and automatic runtime exit after the configured cleanup delay once all sessions are gone.
+- Completion suspend flow: configurable Sleep or Hibernate, post-stop suspend delay in seconds, cancellation when sessions resume or the environment is no longer suspend-eligible, and recent suspend history retention.
+- Pre-suspend audio warning: optional off/system-sound/`.wav` warning sound before Sleep or Hibernate, plus an optional temporary master volume override from 1 through 100 percent that restores the previous volume and mute state afterward.
+- SoftLock and closed-lid permissions: provider waiting/input events and inactive timeouts can release keep-awake protection without removing the session. Closed-lid permission automation is safety-sensitive: choosing `allow` can approve permission-required provider work while the user may not be watching, so `deny` is the safer default.
+- Emergency Hibernation: optional closed-lid high-temperature monitor with low, average, or high sensor aggregation, a configurable Celsius threshold, immediate Hibernate, and Sleep fallback if Hibernate fails.
+- Webhooks and notifications: `PreSuspend` webhook before Sleep/Hibernate, `PostSessionEnd` webhook after normal completion when suspend is not pending, and optional `LidGuard.Notifications` Web Push companion server.
+- Diagnostics and logs: current lid state, visible monitor count, current temperature, suspend-history diagnostics, hook event logs, session execution logs, exception logs, and configurable suspend history count.
+- Platform setup and localization: Linux polkit helper commands, macOS sudoers helper commands, localized CLI output with `auto`, `en`, `ko`, or another culture name, and default settings/log storage under the platform local application data directory.
+- Packaging: .NET 10 NativeAOT global tool distribution for Windows, systemd/logind Linux, and macOS.
+
 ## Install
 
 ### Let Your Agent Install It
@@ -75,6 +91,8 @@ Provider MCP behavior is not guaranteed. Correct operation depends entirely on t
 ## Safety And Responsibility
 
 LidGuard is a power-management helper, not a guarantee that a laptop is safe to leave unattended in every environment. Do not put a running laptop in a bag, sleeve, drawer, or other heat-trapping space unless you have personally confirmed that the device is cool, stable, and safe.
+
+Closed-lid permission automation is also a supervision risk. If you configure LidGuard to allow provider permission requests while the lid is closed, permission-required agent actions may proceed while you are not watching the machine.
 
 SoftLock detection, provider hooks, process watchers, operating system behavior, CLI behavior, temperature sensors, permissions, firmware, and power policies can all fail or change in ways that prevent safety features from running as expected. Emergency hibernation and suspend flows are best-effort safeguards, not a substitute for checking the machine yourself.
 
