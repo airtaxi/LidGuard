@@ -116,6 +116,23 @@ lidguard mcp-status all
 
 Missing provider configuration roots can be reported as skipped. That is expected when the user has not installed or initialized a provider CLI.
 
+If the current AI provider is not one of LidGuard's native hook providers, or if the user wants to use another provider that supports custom stdio MCP servers, offer Provider MCP as a best-effort fallback. Ask the user for:
+
+- the provider display name to pass as `--provider-name`
+- the provider's MCP JSON configuration file path
+
+Then inspect and install the managed Provider MCP server entry:
+
+```bash
+lidguard provider-mcp-status --config "<json-path>"
+lidguard provider-mcp-install --config "<json-path>" --provider-name "<name>"
+lidguard provider-mcp-status --config "<json-path>"
+```
+
+After installing Provider MCP, tell the user to give [ProviderMcpModelPrompt.md](../ProviderMcpModelPrompt.md) to that provider's model as a provider/session instruction. If the agent needs to fetch it directly, use `https://raw.githubusercontent.com/airtaxi/LidGuard/master/ProviderMcpModelPrompt.md`. The model must follow that prompt so it knows when to call `provider_start_session`, `provider_set_soft_lock`, `provider_clear_soft_lock`, and `provider_stop_session`.
+
+Be explicit that Provider MCP is not guaranteed. It depends entirely on the model calling LidGuard's MCP tools at the right times, and it does not add operating system support beyond Windows, systemd/logind Linux, and macOS.
+
 ## 6. Ask The User For Settings
 
 Ask these questions in the user's language. Use an interactive user-input tool when your environment provides one. Prefer concise multiple-choice questions with a short explanation of the tradeoff. If no such tool exists, ask the questions directly and wait for the user's answers before changing settings.
@@ -256,6 +273,7 @@ When finished, summarize:
 - Whether .NET 10 was already present or installed.
 - The installed LidGuard version if you can determine it.
 - Which provider hooks and MCP servers were installed or skipped.
+- Whether Provider MCP was installed for a non-native provider, including the provider name and config path.
 - Which settings were applied.
 - Any permission checks that still need manual attention.
 

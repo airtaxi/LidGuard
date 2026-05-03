@@ -55,6 +55,18 @@ lidguard hook-install --provider all
 lidguard mcp-install all
 ```
 
+### 다른 에이전트를 위한 Provider MCP
+
+AI 도구에 LidGuard native hook 통합이 없지만 custom stdio MCP server를 등록할 수 있다면, Provider MCP를 best-effort 통합 경로로 사용할 수 있습니다.
+
+```powershell
+lidguard provider-mcp-install --config "C:\path\to\mcp.json" --provider-name "ExampleProvider"
+```
+
+서버를 등록한 뒤에는 모델이 `provider_start_session`, `provider_set_soft_lock`, `provider_clear_soft_lock`, `provider_stop_session`을 언제 호출해야 하는지 알 수 있도록 [ProviderMcpModelPrompt.md](ProviderMcpModelPrompt.md)를 provider/session 지시문으로 전달하세요.
+
+Provider MCP 동작은 보장되지 않습니다. 올바른 동작은 모델이 적절한 시점에 LidGuard MCP 도구를 호출하는지에 전적으로 달려 있으며, LidGuard의 운영체제 지원 범위를 Windows, systemd/logind Linux, macOS 밖으로 확장하지 않습니다.
+
 ## 문서
 
 - [CLI 상세 문서](LidGuard/README.md)
