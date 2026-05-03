@@ -1,19 +1,18 @@
 @page
-@using System.Globalization
 @using LidGuard.Notifications.Models
 @model EventsModel
 @{
-    ViewData["Title"] = "Events";
+    ViewData["Title"] = LidGuardNotificationText.EventsTitle;
 }
 
 <section class="events-page">
     <div class="page-heading">
-        <h1>Webhook events</h1>
-        <span class="muted">@Model.Events.Count recent</span>
+        <h1>@LidGuardNotificationText.WebhookEventsHeading</h1>
+        <span class="muted">@LidGuardNotificationText.RecentEvents(Model.Events.Count)</span>
     </div>
     @if (Model.Events.Count == 0)
     {
-        <p class="muted">No events recorded.</p>
+        <p class="muted">@LidGuardNotificationText.NoEventsRecorded</p>
     }
     else
     {
@@ -34,11 +33,11 @@
                     <div class="event-card-header">
                         <div>
                             <div class="event-title-row">
-                                <span class="event-type">@webhookEvent.EventType</span>
-                                <span class="reason-badge">@webhookEvent.Reason</span>
+                                <span class="event-type" title="@webhookEvent.EventType">@LidGuardNotificationText.DisplayWebhookEventType(webhookEvent.EventType)</span>
+                                <span class="reason-badge" title="@webhookEvent.Reason">@LidGuardNotificationText.DisplayWebhookReason(webhookEvent.Reason)</span>
                                 @if (webhookEvent.SoftLockedSessionCount is not null)
                                 {
-                                    <span class="reason-badge secondary">@webhookEvent.SoftLockedSessionCount soft-locked</span>
+                                    <span class="reason-badge secondary">@LidGuardNotificationText.SoftLockedSessionCount(webhookEvent.SoftLockedSessionCount.Value)</span>
                                 }
                             </div>
                             <div class="event-meta">
@@ -53,15 +52,15 @@
                                 }
                             </div>
                         </div>
-                        <span class="status-pill status-@statusClass">@webhookEvent.Status</span>
+                        <span class="status-pill status-@statusClass" title="@webhookEvent.Status">@LidGuardNotificationText.DisplayWebhookStatus(webhookEvent.Status)</span>
                     </div>
 
                     <div class="event-preview-grid">
                         <section class="event-preview-block">
-                            <span class="preview-label">Starting prompt</span>
+                            <span class="preview-label">@LidGuardNotificationText.StartingPromptLabel</span>
                             @if (string.IsNullOrWhiteSpace(webhookEvent.InputPromptPreview))
                             {
-                                <p class="muted">No prompt captured.</p>
+                                <p class="muted">@LidGuardNotificationText.NoPromptCaptured</p>
                             }
                             else
                             {
@@ -69,10 +68,10 @@
                             }
                         </section>
                         <section class="event-preview-block">
-                            <span class="preview-label">Last response</span>
+                            <span class="preview-label">@LidGuardNotificationText.LastResponseLabel</span>
                             @if (string.IsNullOrWhiteSpace(lastResponsePreview))
                             {
-                                <p class="muted">No response captured.</p>
+                                <p class="muted">@LidGuardNotificationText.NoResponseCaptured</p>
                             }
                             else
                             {
@@ -82,30 +81,30 @@
                     </div>
 
                     <details class="event-disclosure">
-                        <summary>Details</summary>
+                        <summary>@LidGuardNotificationText.DetailsLabel</summary>
                         <div class="event-detail-grid">
                             <div class="detail-item">
-                                <span>Webhook id</span>
+                                <span>@LidGuardNotificationText.WebhookIdLabel</span>
                                 <strong>@webhookEvent.WebhookEventIdentifier</strong>
                             </div>
                             <div class="detail-item">
-                                <span>Deliveries</span>
-                                <strong>@webhookEvent.SuccessCount success / @webhookEvent.PermanentFailureCount permanent / @webhookEvent.TransientFailureCount transient</strong>
+                                <span>@LidGuardNotificationText.DeliveriesLabel</span>
+                                <strong>@LidGuardNotificationText.DeliverySummary(webhookEvent.SuccessCount, webhookEvent.PermanentFailureCount, webhookEvent.TransientFailureCount)</strong>
                             </div>
                             <div class="detail-item">
-                                <span>Attempts</span>
-                                <strong>@webhookEvent.AttemptCount</strong>
+                                <span>@LidGuardNotificationText.AttemptsLabel</span>
+                                <strong>@webhookEvent.AttemptCount.ToString(CultureInfo.CurrentCulture)</strong>
                             </div>
                             <div class="detail-item">
-                                <span>Active sessions</span>
-                                <strong>@(webhookEvent.ActiveSessionCount?.ToString(CultureInfo.InvariantCulture) ?? "-")</strong>
+                                <span>@LidGuardNotificationText.ActiveSessionsLabel</span>
+                                <strong>@(webhookEvent.ActiveSessionCount?.ToString(CultureInfo.CurrentCulture) ?? "-")</strong>
                             </div>
                             <div class="detail-item">
-                                <span>End reason</span>
+                                <span>@LidGuardNotificationText.EndReasonLabel</span>
                                 <strong>@(webhookEvent.EndReason ?? "-")</strong>
                             </div>
                             <div class="detail-item detail-item-wide">
-                                <span>Last error</span>
+                                <span>@LidGuardNotificationText.LastErrorLabel</span>
                                 <strong>@(webhookEvent.LastError ?? "-")</strong>
                             </div>
                             @if (webhookEvent.StartedAtUtc is not null)
@@ -114,7 +113,7 @@
                                 var startedAtDateTimeAttribute = startedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
                                 var startedAtFallbackText = startedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
                                 <div class="detail-item">
-                                    <span>Started</span>
+                                    <span>@LidGuardNotificationText.StartedLabel</span>
                                     <strong><time datetime="@startedAtDateTimeAttribute" data-device-time="true">@startedAtFallbackText</time></strong>
                                 </div>
                             }
@@ -124,7 +123,7 @@
                                 var lastActivityAtDateTimeAttribute = lastActivityAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
                                 var lastActivityAtFallbackText = lastActivityAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
                                 <div class="detail-item">
-                                    <span>Last activity</span>
+                                    <span>@LidGuardNotificationText.LastActivityLabel</span>
                                     <strong><time datetime="@lastActivityAtDateTimeAttribute" data-device-time="true">@lastActivityAtFallbackText</time></strong>
                                 </div>
                             }
@@ -134,7 +133,7 @@
                                 var endedAtDateTimeAttribute = endedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
                                 var endedAtFallbackText = endedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
                                 <div class="detail-item">
-                                    <span>Ended</span>
+                                    <span>@LidGuardNotificationText.EndedLabel</span>
                                     <strong><time datetime="@endedAtDateTimeAttribute" data-device-time="true">@endedAtFallbackText</time></strong>
                                 </div>
                             }
@@ -144,28 +143,28 @@
                                 var processedAtDateTimeAttribute = processedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
                                 var processedAtFallbackText = processedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
                                 <div class="detail-item">
-                                    <span>Processed</span>
+                                    <span>@LidGuardNotificationText.ProcessedLabel</span>
                                     <strong><time datetime="@processedAtDateTimeAttribute" data-device-time="true">@processedAtFallbackText</time></strong>
                                 </div>
                             }
                             @if (!string.IsNullOrWhiteSpace(webhookEvent.WorkingDirectory))
                             {
                                 <div class="detail-item detail-item-wide">
-                                    <span>Working directory</span>
+                                    <span>@LidGuardNotificationText.WorkingDirectoryLabel</span>
                                     <strong>@webhookEvent.WorkingDirectory</strong>
                                 </div>
                             }
                             @if (!string.IsNullOrWhiteSpace(webhookEvent.TranscriptPath))
                             {
                                 <div class="detail-item detail-item-wide">
-                                    <span>Transcript</span>
+                                    <span>@LidGuardNotificationText.TranscriptLabel</span>
                                     <strong>@webhookEvent.TranscriptPath</strong>
                                 </div>
                             }
                             @if (!string.IsNullOrWhiteSpace(webhookEvent.LastResponse))
                             {
                                 <div class="detail-item detail-item-wide">
-                                    <span>Full last response</span>
+                                    <span>@LidGuardNotificationText.FullLastResponseLabel</span>
                                     <pre class="response-body">@webhookEvent.LastResponse</pre>
                                 </div>
                             }

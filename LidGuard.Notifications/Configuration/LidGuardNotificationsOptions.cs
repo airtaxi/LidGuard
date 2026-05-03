@@ -1,3 +1,5 @@
+using LidGuard.Notifications.Localization;
+
 namespace LidGuard.Notifications.Configuration;
 
 internal sealed class LidGuardNotificationsOptions
@@ -18,6 +20,8 @@ internal sealed class LidGuardNotificationsOptions
 
     public string PublicBaseUrl { get; set; } = string.Empty;
 
+    public string UserInterfaceCulture { get; set; } = NotificationUserInterfaceCultureConfiguration.AutomaticCultureName;
+
     public void Normalize()
     {
         AccessToken = AccessToken.Trim();
@@ -27,6 +31,7 @@ internal sealed class LidGuardNotificationsOptions
         VapidSubject = VapidSubject.Trim();
         DatabasePath = string.IsNullOrWhiteSpace(DatabasePath) ? GetDefaultDatabasePath() : Environment.ExpandEnvironmentVariables(DatabasePath.Trim());
         PublicBaseUrl = PublicBaseUrl.Trim().TrimEnd('/');
+        UserInterfaceCulture = NotificationUserInterfaceCultureConfiguration.NormalizeStoredValue(UserInterfaceCulture);
     }
 
     public bool TryValidate(out string message)
@@ -73,6 +78,12 @@ internal sealed class LidGuardNotificationsOptions
                     && (publicBaseUri.Scheme != Uri.UriSchemeHttp || publicBaseUri.Host != "localhost"))))
         {
             message = "PublicBaseUrl must be an HTTPS URL, or an HTTP localhost URL for development.";
+            return false;
+        }
+
+        if (!NotificationUserInterfaceCultureConfiguration.TryNormalizeConfiguredValue(UserInterfaceCulture, out _, out var cultureMessage))
+        {
+            message = $"UserInterfaceCulture is invalid: {cultureMessage}";
             return false;
         }
 

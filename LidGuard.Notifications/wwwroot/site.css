@@ -152,6 +152,12 @@ h2 {
     font-size: 1.15rem;
 }
 
+h3 {
+    font-size: 1rem;
+    letter-spacing: 0;
+    margin: 18px 0 10px;
+}
+
 label {
     font-weight: 600;
 }
@@ -163,6 +169,31 @@ input {
     color: var(--text);
     font: inherit;
     padding: 10px 12px;
+}
+
+.language-form {
+    margin: 0;
+}
+
+.language-select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    min-width: 96px;
+    padding: 6px 28px 6px 10px;
+}
+
+.visually-hidden {
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
 }
 
 button {
@@ -234,6 +265,37 @@ button:disabled {
     display: block;
     overflow-wrap: anywhere;
     padding: 12px;
+}
+
+.command-example-list {
+    display: grid;
+    gap: 10px;
+}
+
+.command-example {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 1fr auto;
+}
+
+.command-example span {
+    color: var(--muted);
+    font-size: 0.86rem;
+    font-weight: 700;
+    grid-column: 1 / -1;
+}
+
+.command-example code {
+    background: var(--surface-subtle);
+    border-radius: 6px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    padding: 10px;
+}
+
+.copy-button {
+    min-width: 72px;
 }
 
 .events-page {
@@ -442,6 +504,7 @@ th {
     }
 
     .dashboard-grid,
+    .command-example,
     .event-preview-grid,
     .event-detail-grid {
         grid-template-columns: 1fr;

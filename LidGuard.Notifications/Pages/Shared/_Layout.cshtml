@@ -1,24 +1,49 @@
+@{
+    var currentLanguageName = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("ko", StringComparison.OrdinalIgnoreCase) ? "ko" : "en";
+    var currentReturnUrl = $"{Context.Request.PathBase}{Context.Request.Path}";
+    var languageAction = $"{Context.Request.PathBase}/language";
+}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@CultureInfo.CurrentUICulture.Name">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - LidGuard Notifications</title>
+    <title>@ViewData["Title"] - @LidGuardNotificationText.Brand</title>
     <script src="~/theme.js" asp-append-version="true"></script>
     <link rel="stylesheet" href="~/site.css" asp-append-version="true" />
 </head>
 <body>
     <header>
-        <a asp-page="/Index" class="brand">LidGuard Notifications</a>
+        <a asp-page="/Index" class="brand">@LidGuardNotificationText.Brand</a>
         <div class="header-actions">
-            <button id="themeToggle" type="button" class="theme-toggle" aria-label="Switch color theme">Dark mode</button>
+            <form method="post" action="@languageAction" class="language-form">
+                <input type="hidden" name="returnUrl" value="@currentReturnUrl" />
+                <label for="languageSelect" class="visually-hidden">@LidGuardNotificationText.LanguageLabel</label>
+                <select
+                    id="languageSelect"
+                    name="culture"
+                    class="language-select"
+                    aria-label="@LidGuardNotificationText.LanguageLabel"
+                    onchange="this.form.submit()">
+                    <option value="en" selected="@(currentLanguageName == "en")">@LidGuardNotificationText.LanguageEnglish</option>
+                    <option value="ko" selected="@(currentLanguageName == "ko")">@LidGuardNotificationText.LanguageKorean</option>
+                </select>
+            </form>
+            <button
+                id="themeToggle"
+                type="button"
+                class="theme-toggle"
+                aria-label="@LidGuardNotificationText.ThemeSwitchTo(LidGuardNotificationText.ThemeDarkMode.ToLower(CultureInfo.CurrentCulture))"
+                data-dark-mode-label="@LidGuardNotificationText.ThemeDarkMode"
+                data-light-mode-label="@LidGuardNotificationText.ThemeLightMode"
+                data-switch-to-format="@LidGuardNotificationText.ThemeSwitchToFormat">@LidGuardNotificationText.ThemeDarkMode</button>
             @if (User.Identity?.IsAuthenticated == true)
             {
                 <nav>
-                    <a asp-page="/Index">Dashboard</a>
-                    <a asp-page="/Events">Events</a>
+                    <a asp-page="/Index">@LidGuardNotificationText.DashboardTitle</a>
+                    <a asp-page="/Events">@LidGuardNotificationText.EventsTitle</a>
                     <form method="post" action="/logout">
-                        <button type="submit" class="link-button">Sign out</button>
+                        <button type="submit" class="link-button">@LidGuardNotificationText.SignOutNavigation</button>
                     </form>
                 </nav>
             }

@@ -43,9 +43,13 @@
     function updateButton(button, theme) {
         const effectiveTheme = getEffectiveTheme(theme);
         const nextTheme = effectiveTheme === "dark" ? "light" : "dark";
-        const label = nextTheme === "dark" ? "Dark mode" : "Light mode";
+        const darkModeLabel = button.dataset.darkModeLabel || "Dark mode";
+        const lightModeLabel = button.dataset.lightModeLabel || "Light mode";
+        const switchToFormat = button.dataset.switchToFormat || "Switch to {0}";
+        const label = nextTheme === "dark" ? darkModeLabel : lightModeLabel;
+        const accessibleModeLabel = label.toLocaleLowerCase(document.documentElement.lang || undefined);
 
-        const accessibleLabel = `Switch to ${label.toLowerCase()}`;
+        const accessibleLabel = switchToFormat.replace("{0}", accessibleModeLabel);
         button.textContent = label;
         button.dataset.nextTheme = nextTheme;
         button.setAttribute("aria-label", accessibleLabel);

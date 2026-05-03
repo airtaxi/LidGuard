@@ -1,4 +1,5 @@
 using LidGuard.Notifications.Data;
+using LidGuard.Notifications.Localization;
 
 namespace LidGuard.Notifications.Models;
 
@@ -18,14 +19,14 @@ internal static class PushNotificationMessageFactory
 
     private static string CreateTitle(PendingWebhookEvent webhookEvent)
     {
-        if (webhookEvent.EventType.Equals(LidGuardWebhookEventTypes.PostSessionEnd, StringComparison.Ordinal)) return "LidGuard session ended";
+        if (webhookEvent.EventType.Equals(LidGuardWebhookEventTypes.PostSessionEnd, StringComparison.Ordinal)) return LidGuardNotificationText.PushTitlePostSessionEnd;
 
         return webhookEvent.Reason switch
         {
-            LidGuardWebhookReasons.Completed => "LidGuard session completed",
-            LidGuardWebhookReasons.SoftLocked => "LidGuard sessions are waiting",
-            LidGuardWebhookReasons.EmergencyHibernation => "LidGuard emergency hibernation",
-            _ => "LidGuard suspend event"
+            LidGuardWebhookReasons.Completed => LidGuardNotificationText.PushTitleCompleted,
+            LidGuardWebhookReasons.SoftLocked => LidGuardNotificationText.PushTitleSoftLocked,
+            LidGuardWebhookReasons.EmergencyHibernation => LidGuardNotificationText.PushTitleEmergencyHibernation,
+            _ => LidGuardNotificationText.PushTitleFallback
         };
     }
 
@@ -40,23 +41,23 @@ internal static class PushNotificationMessageFactory
     {
         var baseBody = webhookEvent.Reason switch
         {
-            LidGuardWebhookReasons.Completed => "The last active session ended and LidGuard is preparing the configured suspend flow.",
+            LidGuardWebhookReasons.Completed => LidGuardNotificationText.PushBodyCompleted,
             LidGuardWebhookReasons.SoftLocked => CreateSoftLockedBody(webhookEvent.SoftLockedSessionCount),
-            LidGuardWebhookReasons.EmergencyHibernation => "The emergency thermal threshold was reached and hibernation was requested immediately.",
-            _ => "LidGuard received a pre-suspend webhook event."
+            LidGuardWebhookReasons.EmergencyHibernation => LidGuardNotificationText.PushBodyEmergencyHibernation,
+            _ => LidGuardNotificationText.PushBodyFallback
         };
 
         return AppendSessionEndDetails(baseBody, webhookEvent);
     }
 
     private static string CreatePostSessionEndBody(PendingWebhookEvent webhookEvent)
-        => CreateSessionEndDetails(webhookEvent, "ended normally.");
+        => CreateSessionEndDetails(webhookEvent, LidGuardNotificationText.PushPostSessionEndStatus);
 
     private static string AppendSessionEndDetails(string baseBody, PendingWebhookEvent webhookEvent)
     {
         if (string.IsNullOrWhiteSpace(webhookEvent.SessionIdentifier)) return baseBody;
 
-        return $"{baseBody} {CreateSessionEndDetails(webhookEvent, "ended before suspend.")}";
+        return $"{baseBody} {CreateSessionEndDetails(webhookEvent, LidGuardNotificationText.PushPreSuspendSessionEndStatus)}";
     }
 
     private static string CreateSessionEndDetails(PendingWebhookEvent webhookEvent, string statusText)
@@ -64,31 +65,24 @@ internal static class PushNotificationMessageFactory
         var providerText = string.IsNullOrWhiteSpace(webhookEvent.ProviderName)
             ? webhookEvent.Provider
             : $"{webhookEvent.Provider}:{webhookEvent.ProviderName}";
-        if (string.IsNullOrWhiteSpace(providerText)) providerText = "Provider";
+        if (string.IsNullOrWhiteSpace(providerText)) providerText = LidGuardNotificationText.PushProviderFallback;
 
         var sessionText = string.IsNullOrWhiteSpace(webhookEvent.SessionIdentifier)
-            ? "session"
-            : $"session {webhookEvent.SessionIdentifier}";
-        var endReasonText = string.IsNullOrWhiteSpace(webhookEvent.EndReason)
-            ? string.Empty
-            : $" Reason: {webhookEvent.EndReason}.";
-        var activeSessionText = webhookEvent.ActiveSessionCount is null
-            ? string.Empty
-            : $" Active sessions remaining: {webhookEvent.ActiveSessionCount.Value}.";
-        var inputPromptText = string.IsNullOrWhiteSpace(webhookEvent.InputPromptPreview)
-            ? string.Empty
-            : $" Prompt: {webhookEvent.InputPromptPreview}.";
+            ? LidGuardNotificationText.PushSessionFallback
+            : LidGuardNotificationText.PushSession(webhookEvent.SessionIdentifier);
+        var details = new List<string> { $"{providerText} {sessionText} {statusText}" };
+        if (!string.IsNullOrWhiteSpace(webhookEvent.EndReason)) details.Add(LidGuardNotificationText.PushEndReason(webhookEvent.EndReason));
+        if (webhookEvent.ActiveSessionCount is not null) details.Add(LidGuardNotificationText.PushActiveSessionsRemaining(webhookEvent.ActiveSessionCount.Value));
+        if (!string.IsNullOrWhiteSpace(webhookEvent.InputPromptPreview)) details.Add(LidGuardNotificationText.PushInputPrompt(webhookEvent.InputPromptPreview));
         var lastResponsePreview = WebhookTextPreview.Create(webhookEvent.LastResponse);
-        var lastResponseText = string.IsNullOrWhiteSpace(lastResponsePreview)
-            ? string.Empty
-            : $" Last response: {lastResponsePreview}.";
-        return $"{providerText} {sessionText} {statusText}{endReasonText}{activeSessionText}{inputPromptText}{lastResponseText}";
+        if (!string.IsNullOrWhiteSpace(lastResponsePreview)) details.Add(LidGuardNotificationText.PushLastResponse(lastResponsePreview));
+        return string.Join(" ", details);
     }
 
     private static string CreateSoftLockedBody(int? softLockedSessionCount)
     {
-        if (softLockedSessionCount is null) return "All remaining sessions are soft-locked and LidGuard is preparing the configured suspend flow.";
+        if (softLockedSessionCount is null) return LidGuardNotificationText.PushSoftLockedAll;
 
-        return $"{softLockedSessionCount.Value} session(s) are soft-locked and LidGuard is preparing the configured suspend flow.";
+        return LidGuardNotificationText.PushSoftLockedSessionCount(softLockedSessionCount.Value);
     }
 }

@@ -424,6 +424,8 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
   - Token login, browser subscription dashboard, and webhook event history.
 
 The notification server is optional and external to the core LidGuard runtime. It receives pre-suspend and post-session-end webhook payloads that include `eventType`, and must keep VAPID private keys on the server only.
+The notification server's human-facing web UI, browser subscription status text, and Web Push notification title/body text must support the same localization language set as the core LidGuard UI. `UserInterfaceCulture` uses `auto` by default, accepts `en`, `ko`, or any `CultureInfo`-resolvable culture name, and `LIDGUARD_UI_CULTURE` overrides the configured value for testing and support.
+If the CLI webhook option names `--pre-suspend-webhook-url` or `--post-session-end-webhook-url` change, update the LidGuard Notifications dashboard command examples in the same change.
 
 ### Windows
 

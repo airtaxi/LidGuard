@@ -1,7 +1,8 @@
 self.addEventListener("push", event => {
+    const isKorean = self.navigator?.language?.toLowerCase().startsWith("ko") === true;
     const fallbackMessage = {
-        title: "LidGuard notification",
-        body: "LidGuard received a suspend event.",
+        title: isKorean ? "LidGuard 알림" : "LidGuard notification",
+        body: isKorean ? "LidGuard가 절전 이벤트를 받았습니다." : "LidGuard received a suspend event.",
         url: "/events",
         tag: "lidguard-suspend"
     };

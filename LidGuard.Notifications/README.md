@@ -70,11 +70,14 @@ dotnet user-secrets set "LidGuardNotifications:VapidPublicKey" "<vapid-public-ke
 dotnet user-secrets set "LidGuardNotifications:VapidPrivateKey" "<vapid-private-key>" --project LidGuard.Notifications
 dotnet user-secrets set "LidGuardNotifications:VapidSubject" "mailto:you@example.com" --project LidGuard.Notifications
 dotnet user-secrets set "LidGuardNotifications:PublicBaseUrl" "https://localhost:5001" --project LidGuard.Notifications
+dotnet user-secrets set "LidGuardNotifications:UserInterfaceCulture" "auto" --project LidGuard.Notifications
 ```
 
 `AccessToken` and `WebhookSecret` must be different values.
 
 `DatabasePath` is optional. When omitted, the server uses `%LOCALAPPDATA%\LidGuard\Notifications\notifications.sqlite` on Windows.
+
+`UserInterfaceCulture` is optional and defaults to `auto`. It accepts `en`, `ko`, or any `CultureInfo`-resolvable culture name. The `LIDGUARD_UI_CULTURE` environment variable overrides it.
 
 ## Environment Variable Configuration
 
@@ -88,6 +91,8 @@ $env:LidGuardNotifications__VapidPrivateKey = "<vapid-private-key>"
 $env:LidGuardNotifications__VapidSubject = "mailto:you@example.com"
 $env:LidGuardNotifications__PublicBaseUrl = "https://notify.example.com"
 $env:LidGuardNotifications__DatabasePath = "C:\Data\LidGuard\notifications.sqlite"
+$env:LidGuardNotifications__UserInterfaceCulture = "auto"
+$env:LIDGUARD_UI_CULTURE = "ko"
 ```
 
 ## Local Run

@@ -2,9 +2,56 @@ const subscribeButton = document.getElementById("subscribeButton");
 const unsubscribeButton = document.getElementById("unsubscribeButton");
 const activeSubscriptionCount = document.getElementById("activeSubscriptionCount");
 const subscriptionStatus = document.getElementById("subscriptionStatus");
+const notificationDashboard = document.getElementById("notificationDashboard");
+const copyResetHandles = new WeakMap();
 
 function setStatus(message) {
     subscriptionStatus.textContent = message;
+}
+
+function getText(name, fallback) {
+    return notificationDashboard?.dataset[name] || fallback;
+}
+
+async function copyTextToClipboard(text) {
+    if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+    }
+
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+        if (!document.execCommand("copy")) throw new Error(getText("copyFailedLabel", "Copy failed"));
+    } finally {
+        document.body.removeChild(textArea);
+    }
+}
+
+async function copyCommand(button) {
+    const copyLabel = getText("copyLabel", "Copy");
+    const copiedLabel = getText("copiedLabel", "V");
+    const copyFailedLabel = getText("copyFailedLabel", "Copy failed");
+    const resetHandle = copyResetHandles.get(button);
+    if (resetHandle) window.clearTimeout(resetHandle);
+
+    try {
+        await copyTextToClipboard(button.dataset.copyText || "");
+        button.textContent = copiedLabel;
+    } catch {
+        button.textContent = copyFailedLabel;
+    }
+
+    copyResetHandles.set(button, window.setTimeout(() => {
+        button.textContent = copyLabel;
+        copyResetHandles.delete(button);
+    }, 1200));
 }
 
 async function updateActiveSubscriptionCount(response) {
@@ -24,15 +71,15 @@ function convertBase64UrlToUint8Array(value) {
 }
 
 async function getRegistration() {
-    if (!("serviceWorker" in navigator)) throw new Error("Service workers are not available in this browser.");
-    if (!("PushManager" in window)) throw new Error("Web Push is not available in this browser.");
+    if (!("serviceWorker" in navigator)) throw new Error(getText("serviceWorkersUnavailable", "Service workers are not available in this browser."));
+    if (!("PushManager" in window)) throw new Error(getText("webPushUnavailable", "Web Push is not available in this browser."));
 
     return await navigator.serviceWorker.register("/service-worker.js");
 }
 
 async function getPublicKey() {
     const response = await fetch("/api/push/public-key", { credentials: "same-origin" });
-    if (!response.ok) throw new Error("Failed to load the VAPID public key.");
+    if (!response.ok) throw new Error(getText("vapidPublicKeyLoadFailed", "Failed to load the VAPID public key."));
 
     const publicKeyResponse = await response.json();
     return publicKeyResponse.publicKey;
@@ -43,7 +90,7 @@ async function subscribeBrowser() {
     try {
         const permission = await Notification.requestPermission();
         if (permission !== "granted") {
-            setStatus("Notification permission was not granted.");
+            setStatus(getText("notificationPermissionNotGranted", "Notification permission was not granted."));
             return;
         }
 
@@ -67,9 +114,9 @@ async function subscribeBrowser() {
         if (!response.ok) throw new Error(await response.text());
 
         await updateActiveSubscriptionCount(response);
-        setStatus("This browser is subscribed.");
+        setStatus(getText("browserSubscribed", "This browser is subscribed."));
     } catch (error) {
-        setStatus(error.message || "Subscription failed.");
+        setStatus(error.message || getText("subscriptionFailed", "Subscription failed."));
     } finally {
         subscribeButton.disabled = false;
     }
@@ -81,7 +128,7 @@ async function unsubscribeBrowser() {
         const registration = await getRegistration();
         const subscription = await registration.pushManager.getSubscription();
         if (!subscription) {
-            setStatus("This browser is not subscribed.");
+            setStatus(getText("browserNotSubscribed", "This browser is not subscribed."));
             return;
         }
 
@@ -95,9 +142,9 @@ async function unsubscribeBrowser() {
 
         await updateActiveSubscriptionCount(response);
         await subscription.unsubscribe();
-        setStatus("This browser is unsubscribed.");
+        setStatus(getText("browserUnsubscribed", "This browser is unsubscribed."));
     } catch (error) {
-        setStatus(error.message || "Unsubscribe failed.");
+        setStatus(error.message || getText("unsubscribeFailed", "Unsubscribe failed."));
     } finally {
         unsubscribeButton.disabled = false;
     }
@@ -105,3 +152,6 @@ async function unsubscribeBrowser() {
 
 subscribeButton?.addEventListener("click", subscribeBrowser);
 unsubscribeButton?.addEventListener("click", unsubscribeBrowser);
+for (const button of document.querySelectorAll("[data-copy-text]")) {
+    button.addEventListener("click", () => copyCommand(button));
+}

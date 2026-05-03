@@ -70,11 +70,14 @@ dotnet user-secrets set "LidGuardNotifications:VapidPublicKey" "<vapid-public-ke
 dotnet user-secrets set "LidGuardNotifications:VapidPrivateKey" "<vapid-private-key>" --project LidGuard.Notifications
 dotnet user-secrets set "LidGuardNotifications:VapidSubject" "mailto:you@example.com" --project LidGuard.Notifications
 dotnet user-secrets set "LidGuardNotifications:PublicBaseUrl" "https://localhost:5001" --project LidGuard.Notifications
+dotnet user-secrets set "LidGuardNotifications:UserInterfaceCulture" "auto" --project LidGuard.Notifications
 ```
 
 `AccessToken`과 `WebhookSecret`은 서로 다른 값이어야 합니다.
 
 `DatabasePath`는 선택 사항입니다. 생략하면 서버는 Windows에서 `%LOCALAPPDATA%\LidGuard\Notifications\notifications.sqlite`를 사용합니다.
+
+`UserInterfaceCulture`는 선택 사항이며 기본값은 `auto`입니다. `en`, `ko`, 또는 `CultureInfo`로 해석 가능한 culture name을 받습니다. `LIDGUARD_UI_CULTURE` 환경 변수가 이 값을 덮어씁니다.
 
 ## 환경 변수 설정
 
@@ -88,6 +91,8 @@ $env:LidGuardNotifications__VapidPrivateKey = "<vapid-private-key>"
 $env:LidGuardNotifications__VapidSubject = "mailto:you@example.com"
 $env:LidGuardNotifications__PublicBaseUrl = "https://notify.example.com"
 $env:LidGuardNotifications__DatabasePath = "C:\Data\LidGuard\notifications.sqlite"
+$env:LidGuardNotifications__UserInterfaceCulture = "auto"
+$env:LIDGUARD_UI_CULTURE = "ko"
 ```
 
 ## 로컬 실행

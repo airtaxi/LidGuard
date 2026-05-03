@@ -1,8 +1,12 @@
 using LidGuard.Notifications.Configuration;
 using LidGuard.Notifications.Data;
+using LidGuard.Notifications.Localization;
+using LidGuard.Notifications.Security;
 using LidGuard.Notifications.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.Options;
 using WebPush;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +28,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
     });
 builder.Services.AddAuthorization();
+builder.Services.AddLocalization();
 builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AuthorizeFolder("/");
@@ -41,6 +46,8 @@ builder.Services.AddSingleton<IWebPushNotificationSender, ClosureOpenSourceWebPu
 builder.Services.AddHostedService<NotificationDispatchService>();
 
 var app = builder.Build();
+var notificationOptions = app.Services.GetRequiredService<IOptions<LidGuardNotificationsOptions>>().Value;
+LidGuardNotificationCulture.ApplyDefaultCultureFromEnvironmentOrOptions(notificationOptions);
 
 using (var scope = app.Services.CreateScope())
 {
@@ -50,6 +57,7 @@ using (var scope = app.Services.CreateScope())
 
 if (!app.Environment.IsDevelopment()) app.UseExceptionHandler("/login");
 
+app.UseRequestLocalization(LidGuardNotificationCulture.CreateRequestLocalizationOptions(notificationOptions));
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
@@ -63,5 +71,28 @@ app.MapPost("/logout", async (HttpContext httpContext) =>
     await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     return Results.Redirect("/login");
 }).RequireAuthorization();
+
+app.MapPost("/language", async (HttpContext httpContext) =>
+{
+    var form = await httpContext.Request.ReadFormAsync(httpContext.RequestAborted);
+    var culture = form["culture"].ToString();
+    var returnUrl = form["returnUrl"].ToString();
+    if (LidGuardNotificationCulture.TryCreateSelectableCultureInfo(culture, out var cultureInfo))
+    {
+        var requestCulture = new RequestCulture(cultureInfo);
+        httpContext.Response.Cookies.Append(
+            CookieRequestCultureProvider.DefaultCookieName,
+            CookieRequestCultureProvider.MakeCookieValue(requestCulture),
+            new CookieOptions
+            {
+                Expires = DateTimeOffset.UtcNow.AddYears(1),
+                IsEssential = true,
+                SameSite = SameSiteMode.Lax,
+                Secure = httpContext.Request.IsHttps
+            });
+    }
+
+    return Results.Redirect(LocalRedirectPath.Normalize(returnUrl));
+});
 
 await app.RunAsync();

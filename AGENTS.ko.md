@@ -422,6 +422,8 @@ Hook stop 이벤트가 누락될 수 있으므로 LidGuard는 에이전트 프�
   - token login, browser subscription dashboard, webhook event history.
 
 notification server는 선택 사항이며 core LidGuard runtime 외부에서 동작한다. `eventType`을 포함한 pre-suspend 및 post-session-end webhook payload를 받고, VAPID private key는 서버에만 보관해야 한다.
+notification server의 사람이 읽는 web UI, browser subscription status text, Web Push notification title/body text는 core LidGuard UI와 동일한 localization language set을 지원해야 한다. `UserInterfaceCulture`는 기본값으로 `auto`를 사용하고, `en`, `ko`, 또는 `CultureInfo`로 해석 가능한 culture name을 받으며, `LIDGUARD_UI_CULTURE`는 testing과 support를 위해 설정값보다 우선한다.
+CLI webhook option name `--pre-suspend-webhook-url` 또는 `--post-session-end-webhook-url`이 바뀌면 같은 변경에서 LidGuard Notifications dashboard command example도 업데이트해야 한다.
 
 ### Windows
 

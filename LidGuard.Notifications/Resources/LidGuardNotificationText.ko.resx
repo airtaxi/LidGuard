@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AccessTokenLabel" xml:space="preserve">
+    <value>접근 토큰</value>
+  </data>
+  <data name="AccessTokenRequired" xml:space="preserve">
+    <value>접근 토큰을 입력해야 합니다.</value>
+  </data>
+  <data name="ActiveSessionsLabel" xml:space="preserve">
+    <value>활성 세션</value>
+  </data>
+  <data name="ActiveSubscriptionsLabel" xml:space="preserve">
+    <value>활성 구독</value>
+  </data>
+  <data name="AttemptsLabel" xml:space="preserve">
+    <value>시도 횟수</value>
+  </data>
+  <data name="Brand" xml:space="preserve">
+    <value>LidGuard 알림</value>
+  </data>
+  <data name="BrowserNotSubscribed" xml:space="preserve">
+    <value>이 브라우저는 구독되어 있지 않습니다.</value>
+  </data>
+  <data name="BrowserSubscribed" xml:space="preserve">
+    <value>이 브라우저가 구독되었습니다.</value>
+  </data>
+  <data name="BrowserUnsubscribed" xml:space="preserve">
+    <value>이 브라우저의 구독이 해제되었습니다.</value>
+  </data>
+  <data name="CommandExamplesTitle" xml:space="preserve">
+    <value>LidGuard 설정 명령</value>
+  </data>
+  <data name="CopiedButton" xml:space="preserve">
+    <value>V</value>
+  </data>
+  <data name="CopyButton" xml:space="preserve">
+    <value>복사</value>
+  </data>
+  <data name="CopyFailedButton" xml:space="preserve">
+    <value>복사 실패</value>
+  </data>
+  <data name="DashboardTitle" xml:space="preserve">
+    <value>대시보드</value>
+  </data>
+  <data name="DeliveriesLabel" xml:space="preserve">
+    <value>전송 결과</value>
+  </data>
+  <data name="DeliverySummary" xml:space="preserve">
+    <value>성공 {0} / 영구 실패 {1} / 일시 실패 {2}</value>
+  </data>
+  <data name="DetailsLabel" xml:space="preserve">
+    <value>세부 정보</value>
+  </data>
+  <data name="DisplayWebhookEventTypePostSessionEnd" xml:space="preserve">
+    <value>세션 종료</value>
+  </data>
+  <data name="DisplayWebhookEventTypePreSuspend" xml:space="preserve">
+    <value>절전 전</value>
+  </data>
+  <data name="DisplayWebhookReasonCompleted" xml:space="preserve">
+    <value>완료됨</value>
+  </data>
+  <data name="DisplayWebhookReasonEmergencyHibernation" xml:space="preserve">
+    <value>긴급 최대 절전</value>
+  </data>
+  <data name="DisplayWebhookReasonSessionEnded" xml:space="preserve">
+    <value>세션 종료</value>
+  </data>
+  <data name="DisplayWebhookReasonSoftLocked" xml:space="preserve">
+    <value>입력 대기</value>
+  </data>
+  <data name="DisplayWebhookStatusCompleted" xml:space="preserve">
+    <value>완료됨</value>
+  </data>
+  <data name="DisplayWebhookStatusFailed" xml:space="preserve">
+    <value>실패</value>
+  </data>
+  <data name="DisplayWebhookStatusPending" xml:space="preserve">
+    <value>대기 중</value>
+  </data>
+  <data name="DisplayWebhookStatusProcessing" xml:space="preserve">
+    <value>처리 중</value>
+  </data>
+  <data name="EndReasonLabel" xml:space="preserve">
+    <value>종료 사유</value>
+  </data>
+  <data name="EndedLabel" xml:space="preserve">
+    <value>종료됨</value>
+  </data>
+  <data name="EventsTitle" xml:space="preserve">
+    <value>이벤트</value>
+  </data>
+  <data name="FullLastResponseLabel" xml:space="preserve">
+    <value>마지막 응답 전체</value>
+  </data>
+  <data name="InvalidAccessToken" xml:space="preserve">
+    <value>접근 토큰이 올바르지 않습니다.</value>
+  </data>
+  <data name="LastActivityLabel" xml:space="preserve">
+    <value>마지막 활동</value>
+  </data>
+  <data name="LastErrorLabel" xml:space="preserve">
+    <value>마지막 오류</value>
+  </data>
+  <data name="LastResponseLabel" xml:space="preserve">
+    <value>마지막 응답</value>
+  </data>
+  <data name="LanguageEnglish" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="LanguageKorean" xml:space="preserve">
+    <value>한국어</value>
+  </data>
+  <data name="LanguageLabel" xml:space="preserve">
+    <value>언어</value>
+  </data>
+  <data name="LidGuardWebhookTitle" xml:space="preserve">
+    <value>LidGuard 웹훅</value>
+  </data>
+  <data name="LoginTitle" xml:space="preserve">
+    <value>로그인</value>
+  </data>
+  <data name="NoEventsRecorded" xml:space="preserve">
+    <value>기록된 이벤트가 없습니다.</value>
+  </data>
+  <data name="NoPromptCaptured" xml:space="preserve">
+    <value>기록된 시작 프롬프트가 없습니다.</value>
+  </data>
+  <data name="NoResponseCaptured" xml:space="preserve">
+    <value>기록된 응답이 없습니다.</value>
+  </data>
+  <data name="NotificationPermissionNotGranted" xml:space="preserve">
+    <value>알림 권한이 허용되지 않았습니다.</value>
+  </data>
+  <data name="ProcessedLabel" xml:space="preserve">
+    <value>처리됨</value>
+  </data>
+  <data name="PostSessionEndWebhookCommandLabel" xml:space="preserve">
+    <value>세션 종료 후 웹훅</value>
+  </data>
+  <data name="PreSuspendWebhookCommandLabel" xml:space="preserve">
+    <value>절전 전 웹훅</value>
+  </data>
+  <data name="PublicBaseUrlNotConfigured" xml:space="preserve">
+    <value>PublicBaseUrl이 설정되어 있지 않습니다.</value>
+  </data>
+  <data name="PushActiveSessionsRemaining" xml:space="preserve">
+    <value>남은 활성 세션: {0}.</value>
+  </data>
+  <data name="PushBodyCompleted" xml:space="preserve">
+    <value>마지막 활성 세션이 종료되어 LidGuard가 설정된 절전 흐름을 준비하고 있습니다.</value>
+  </data>
+  <data name="PushBodyEmergencyHibernation" xml:space="preserve">
+    <value>긴급 온도 임계값에 도달해 즉시 최대 절전을 요청했습니다.</value>
+  </data>
+  <data name="PushBodyFallback" xml:space="preserve">
+    <value>LidGuard가 절전 전 웹훅 이벤트를 받았습니다.</value>
+  </data>
+  <data name="PushEndReason" xml:space="preserve">
+    <value>사유: {0}.</value>
+  </data>
+  <data name="PushInputPrompt" xml:space="preserve">
+    <value>프롬프트: {0}.</value>
+  </data>
+  <data name="PushLastResponse" xml:space="preserve">
+    <value>마지막 응답: {0}.</value>
+  </data>
+  <data name="PushPostSessionEndStatus" xml:space="preserve">
+    <value>정상 종료되었습니다.</value>
+  </data>
+  <data name="PushPreSuspendSessionEndStatus" xml:space="preserve">
+    <value>절전 전에 종료되었습니다.</value>
+  </data>
+  <data name="PushProviderFallback" xml:space="preserve">
+    <value>Provider</value>
+  </data>
+  <data name="PushSession" xml:space="preserve">
+    <value>세션 {0}</value>
+  </data>
+  <data name="PushSessionFallback" xml:space="preserve">
+    <value>세션</value>
+  </data>
+  <data name="PushSoftLockedAll" xml:space="preserve">
+    <value>남은 모든 세션이 입력 대기 상태라 LidGuard가 설정된 절전 흐름을 준비하고 있습니다.</value>
+  </data>
+  <data name="PushSoftLockedSessionCount" xml:space="preserve">
+    <value>{0}개 세션이 입력 대기 상태라 LidGuard가 설정된 절전 흐름을 준비하고 있습니다.</value>
+  </data>
+  <data name="PushTitleCompleted" xml:space="preserve">
+    <value>LidGuard 세션 완료</value>
+  </data>
+  <data name="PushTitleEmergencyHibernation" xml:space="preserve">
+    <value>LidGuard 긴급 최대 절전</value>
+  </data>
+  <data name="PushTitleFallback" xml:space="preserve">
+    <value>LidGuard 절전 이벤트</value>
+  </data>
+  <data name="PushTitlePostSessionEnd" xml:space="preserve">
+    <value>LidGuard 세션 종료</value>
+  </data>
+  <data name="PushTitleSoftLocked" xml:space="preserve">
+    <value>LidGuard 세션 입력 대기</value>
+  </data>
+  <data name="ReadyStatus" xml:space="preserve">
+    <value>준비됨.</value>
+  </data>
+  <data name="RecentEvents" xml:space="preserve">
+    <value>최근 {0}개</value>
+  </data>
+  <data name="ServiceWorkersUnavailable" xml:space="preserve">
+    <value>이 브라우저에서는 서비스 워커를 사용할 수 없습니다.</value>
+  </data>
+  <data name="SignInButton" xml:space="preserve">
+    <value>로그인</value>
+  </data>
+  <data name="SignOutNavigation" xml:space="preserve">
+    <value>로그아웃</value>
+  </data>
+  <data name="SoftLockedSessionCount" xml:space="preserve">
+    <value>입력 대기 {0}개</value>
+  </data>
+  <data name="StartingPromptLabel" xml:space="preserve">
+    <value>시작 프롬프트</value>
+  </data>
+  <data name="StartedLabel" xml:space="preserve">
+    <value>시작됨</value>
+  </data>
+  <data name="SubscribeBrowserButton" xml:space="preserve">
+    <value>브라우저 구독</value>
+  </data>
+  <data name="SubscriptionFailed" xml:space="preserve">
+    <value>구독에 실패했습니다.</value>
+  </data>
+  <data name="ThemeDarkMode" xml:space="preserve">
+    <value>다크 모드</value>
+  </data>
+  <data name="ThemeLightMode" xml:space="preserve">
+    <value>라이트 모드</value>
+  </data>
+  <data name="ThemeSwitchTo" xml:space="preserve">
+    <value>{0}로 전환</value>
+  </data>
+  <data name="TranscriptLabel" xml:space="preserve">
+    <value>Transcript</value>
+  </data>
+  <data name="UnsubscribeButton" xml:space="preserve">
+    <value>구독 해제</value>
+  </data>
+  <data name="UnsubscribeFailed" xml:space="preserve">
+    <value>구독 해제에 실패했습니다.</value>
+  </data>
+  <data name="VapidPublicKeyLoadFailed" xml:space="preserve">
+    <value>VAPID 공개 키를 불러오지 못했습니다.</value>
+  </data>
+  <data name="WebPushUnavailable" xml:space="preserve">
+    <value>이 브라우저에서는 Web Push를 사용할 수 없습니다.</value>
+  </data>
+  <data name="WebhookEventsHeading" xml:space="preserve">
+    <value>웹훅 이벤트</value>
+  </data>
+  <data name="WebhookIdLabel" xml:space="preserve">
+    <value>웹훅 ID</value>
+  </data>
+  <data name="WorkingDirectoryLabel" xml:space="preserve">
+    <value>작업 디렉터리</value>
+  </data>
+</root>

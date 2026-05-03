@@ -1,30 +1,61 @@
 @page
 @model IndexModel
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = LidGuardNotificationText.DashboardTitle;
+    var commandWebhookUrl = Model.HasPublicBaseUrl ? Model.WebhookUrl : $"https://your-host{Model.WebhookUrl}";
+    var preSuspendWebhookCommand = $"lidguard settings --pre-suspend-webhook-url \"{commandWebhookUrl}\"";
+    var postSessionEndWebhookCommand = $"lidguard settings --post-session-end-webhook-url \"{commandWebhookUrl}\"";
 }
 
-<section class="dashboard-grid">
+<section
+    id="notificationDashboard"
+    class="dashboard-grid"
+    data-service-workers-unavailable="@LidGuardNotificationText.ServiceWorkersUnavailable"
+    data-web-push-unavailable="@LidGuardNotificationText.WebPushUnavailable"
+    data-vapid-public-key-load-failed="@LidGuardNotificationText.VapidPublicKeyLoadFailed"
+    data-notification-permission-not-granted="@LidGuardNotificationText.NotificationPermissionNotGranted"
+    data-browser-subscribed="@LidGuardNotificationText.BrowserSubscribed"
+    data-subscription-failed="@LidGuardNotificationText.SubscriptionFailed"
+    data-browser-not-subscribed="@LidGuardNotificationText.BrowserNotSubscribed"
+    data-browser-unsubscribed="@LidGuardNotificationText.BrowserUnsubscribed"
+    data-unsubscribe-failed="@LidGuardNotificationText.UnsubscribeFailed"
+    data-copy-label="@LidGuardNotificationText.CopyButton"
+    data-copied-label="@LidGuardNotificationText.CopiedButton"
+    data-copy-failed-label="@LidGuardNotificationText.CopyFailedButton">
     <div class="panel">
-        <h1>Notifications</h1>
+        <h1>@LidGuardNotificationText.Brand</h1>
         <div class="metric-row">
-            <span>Active subscriptions</span>
+            <span>@LidGuardNotificationText.ActiveSubscriptionsLabel</span>
             <strong id="activeSubscriptionCount">@Model.ActiveSubscriptionCount</strong>
         </div>
         <div class="button-row">
-            <button id="subscribeButton" type="button">Subscribe browser</button>
-            <button id="unsubscribeButton" type="button" class="secondary">Unsubscribe</button>
+            <button id="subscribeButton" type="button">@LidGuardNotificationText.SubscribeBrowserButton</button>
+            <button id="unsubscribeButton" type="button" class="secondary">@LidGuardNotificationText.UnsubscribeButton</button>
         </div>
-        <p id="subscriptionStatus" class="status-text" role="status">Ready.</p>
+        <p id="subscriptionStatus" class="status-text" role="status">@LidGuardNotificationText.ReadyStatus</p>
     </div>
 
     <div class="panel">
-        <h2>LidGuard webhook</h2>
+        <h2>@LidGuardNotificationText.LidGuardWebhookTitle</h2>
         <code class="webhook-url">@Model.WebhookUrl</code>
         @if (!Model.HasPublicBaseUrl)
         {
-            <p class="muted">PublicBaseUrl is not configured.</p>
+            <p class="muted">@LidGuardNotificationText.PublicBaseUrlNotConfigured</p>
         }
+
+        <h3>@LidGuardNotificationText.CommandExamplesTitle</h3>
+        <div class="command-example-list">
+            <div class="command-example">
+                <span>@LidGuardNotificationText.PreSuspendWebhookCommandLabel</span>
+                <code>@preSuspendWebhookCommand</code>
+                <button type="button" class="secondary copy-button" data-copy-text="@preSuspendWebhookCommand">@LidGuardNotificationText.CopyButton</button>
+            </div>
+            <div class="command-example">
+                <span>@LidGuardNotificationText.PostSessionEndWebhookCommandLabel</span>
+                <code>@postSessionEndWebhookCommand</code>
+                <button type="button" class="secondary copy-button" data-copy-text="@postSessionEndWebhookCommand">@LidGuardNotificationText.CopyButton</button>
+            </div>
+        </div>
     </div>
 </section>
 
