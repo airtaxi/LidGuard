@@ -9,7 +9,10 @@ namespace LidGuard.Localization;
 internal static class LidGuardCulture
 {
     public const string UserInterfaceCultureEnvironmentVariableName = "LIDGUARD_UI_CULTURE";
-    private static readonly CultureInfo s_processDefaultUserInterfaceCulture = CultureInfo.CurrentUICulture;
+    private static readonly CultureInfo s_processDefaultUserInterfaceCulture;
+
+    // Keep this as an explicit static constructor so auto culture is captured before stored settings are applied.
+    static LidGuardCulture() => s_processDefaultUserInterfaceCulture = CultureInfo.CurrentUICulture;
 
     public static void ApplyEffectiveCultureFromEnvironmentOrSettings()
     {

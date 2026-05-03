@@ -7,12 +7,15 @@ namespace LidGuard.Notifications.Localization;
 internal static class LidGuardNotificationCulture
 {
     public const string UserInterfaceCultureEnvironmentVariableName = "LIDGUARD_UI_CULTURE";
-    private static readonly CultureInfo s_processDefaultUserInterfaceCulture = CultureInfo.CurrentUICulture;
+    private static readonly CultureInfo s_processDefaultUserInterfaceCulture;
     private static readonly CultureInfo[] s_supportedUserInterfaceCultures =
     [
         CultureInfo.GetCultureInfo("en"),
         CultureInfo.GetCultureInfo("ko")
     ];
+
+    // Keep this as an explicit static constructor so auto culture is captured before stored options are applied.
+    static LidGuardNotificationCulture() => s_processDefaultUserInterfaceCulture = CultureInfo.CurrentUICulture;
 
     public static void ApplyDefaultCultureFromEnvironmentOrOptions(LidGuardNotificationsOptions options)
     {
