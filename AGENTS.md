@@ -63,7 +63,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
   - Uses CsWin32 with `CsWin32RunAsBuildTask=true` and `DisableRuntimeMarshalling=true` for AOT compatibility.
   - Uses root namespace `LidGuard` and assembly/apphost name `lidguard`.
   - Prepared for .NET 10 RID-specific NativeAOT .NET tool distribution as NuGet package `lidguard` with tool command `lidguard`.
-  - Supported package RIDs are `win-x64`, `win-x86`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, and `osx-arm64`.
+  - Package RID support is prepared for `win-x64`, `win-x86`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, and `osx-arm64`, but the release workflow currently excludes `linux-arm64` because of the NativeAOT cross-linking known issue documented in the .NET Tool Package Guidelines.
   - Windows behavior is implemented.
   - Linux behavior is implemented for systemd/logind systems.
   - macOS behavior is implemented with `caffeinate`, `pmset`, `ioreg`, `system_profiler`, Apple Silicon `IOHIDEventSystemClient` temperature sensors, `powermetrics`, and `osascript`/`afplay` where needed.
@@ -775,6 +775,8 @@ The Windows, Linux, and macOS CLI hook receiving path is implemented for Codex, 
 - Confirm license metadata before public NuGet.org upload. Add either `PackageLicenseExpression` or `PackageLicenseFile` before publishing publicly.
 - If `DOTNET_CLI_HOME` is set for packaging, delete that temporary directory immediately after packaging finishes.
 - After local packaging, test installation from the local package source before upload.
+- Manual local NuGet upload must use the `$publish-nuget` skill. The protected GitHub Actions `Pack and Publish NuGet` workflow is the release automation path and may use the `nuget-production` environment secret `NUGET_API_KEY` directly.
+- Known issue: `linux-arm64` NativeAOT packages are intentionally excluded from the release workflow for now. Cross-packing Linux ARM64 from the Linux x64 runner fails with `gcc : error : unrecognized command-line option '--target=aarch64-linux-gnu'`, matching dotnet/runtime#78559, which is closed as not planned. Do not re-add `linux-arm64` unless a native Linux ARM64 runner is available or the required cross-linker/toolchain path is proven in CI.
 
 Package commands:
 
@@ -792,6 +794,9 @@ artifacts\packages\lidguard.0.1.0.nupkg
 artifacts\packages\lidguard.win-x64.0.1.0.nupkg
 artifacts\packages\lidguard.win-x86.0.1.0.nupkg
 artifacts\packages\lidguard.win-arm64.0.1.0.nupkg
+artifacts\packages\lidguard.linux-x64.0.1.0.nupkg
+artifacts\packages\lidguard.osx-x64.0.1.0.nupkg
+artifacts\packages\lidguard.osx-arm64.0.1.0.nupkg
 ```
 
 Publish commands:

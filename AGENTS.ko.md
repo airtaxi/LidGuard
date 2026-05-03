@@ -67,7 +67,7 @@ LidGuard는 Codex, Claude Code, GitHub Copilot CLI처럼 오래 실행되는 로
   - AOT 호환성을 위해 CsWin32를 `CsWin32RunAsBuildTask=true`, `DisableRuntimeMarshalling=true`로 사용한다.
   - root namespace는 `LidGuard`, assembly/apphost 이름은 `lidguard`다.
   - NuGet package ID `lidguard`, tool command `lidguard`인 .NET tool 배포를 준비한다.
-  - 지원 패키지 RID는 `win-x64`, `win-x86`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`다.
+  - Package RID 지원은 `win-x64`, `win-x86`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`까지 준비되어 있지만, release workflow는 .NET Tool 패키지 지침에 문서화한 NativeAOT cross-linking known issue 때문에 현재 `linux-arm64`를 제외한다.
   - Windows 동작이 구현되어 있다.
   - Linux 동작은 systemd/logind 시스템을 대상으로 구현되어 있다.
   - macOS 동작은 `caffeinate`, `pmset`, `ioreg`, `system_profiler`, Apple Silicon `IOHIDEventSystemClient` 온도 센서, `powermetrics`, 필요한 경우 `osascript`/`afplay`를 사용해 구현되어 있다.
@@ -767,6 +767,8 @@ Windows, Linux, macOS CLI hook 수신 경로는 Codex, Claude Code, GitHub Copil
 - 공개 NuGet.org upload 전 license metadata를 확인한다. `PackageLicenseExpression` 또는 `PackageLicenseFile`이 필요하다.
 - Packaging에서 `DOTNET_CLI_HOME`을 설정했다면 packaging 직후 해당 임시 디렉터리를 삭제한다.
 - 로컬 packaging 후 upload 전 local package source에서 설치 smoke test를 수행한다.
+- 수동 로컬 NuGet upload는 `$publish-nuget` skill을 사용해야 한다. 보호된 GitHub Actions `Pack and Publish NuGet` workflow는 release automation 경로이며 `nuget-production` environment secret `NUGET_API_KEY`를 직접 사용할 수 있다.
+- Known issue: `linux-arm64` NativeAOT package는 현재 release workflow에서 의도적으로 제외한다. Linux x64 runner에서 Linux ARM64를 cross-pack하면 dotnet/runtime#78559와 동일하게 `gcc : error : unrecognized command-line option '--target=aarch64-linux-gnu'`로 실패하며, 해당 이슈는 closed as not planned 상태다. Native Linux ARM64 runner가 준비되거나 필요한 cross-linker/toolchain 경로가 CI에서 검증되기 전까지 `linux-arm64`를 다시 추가하지 않는다.
 
 Package commands:
 
@@ -784,6 +786,9 @@ artifacts\packages\lidguard.0.1.0.nupkg
 artifacts\packages\lidguard.win-x64.0.1.0.nupkg
 artifacts\packages\lidguard.win-x86.0.1.0.nupkg
 artifacts\packages\lidguard.win-arm64.0.1.0.nupkg
+artifacts\packages\lidguard.linux-x64.0.1.0.nupkg
+artifacts\packages\lidguard.osx-x64.0.1.0.nupkg
+artifacts\packages\lidguard.osx-arm64.0.1.0.nupkg
 ```
 
 Publish commands:

@@ -128,7 +128,7 @@ jobs:
           fi
 
           rm -rf artifacts
-          runtime_identifiers="linux-x64 linux-arm64"
+          runtime_identifiers="linux-x64"
           for runtime_identifier in $runtime_identifiers; do
             dotnet pack LidGuard/LidGuard.csproj -c Release -r "$runtime_identifier" /p:ContinuousIntegrationBuild=true
           done
@@ -250,7 +250,6 @@ jobs:
           artifacts/packages/lidguard.win-x86.$version.nupkg
           artifacts/packages/lidguard.win-arm64.$version.nupkg
           artifacts/packages/lidguard.linux-x64.$version.nupkg
-          artifacts/packages/lidguard.linux-arm64.$version.nupkg
           artifacts/packages/lidguard.osx-x64.$version.nupkg
           artifacts/packages/lidguard.osx-arm64.$version.nupkg
           artifacts/packages/lidguard.$version.nupkg
