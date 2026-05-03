@@ -6,91 +6,174 @@
     ViewData["Title"] = "Events";
 }
 
-<section class="panel">
-    <h1>Webhook events</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Received</th>
-                <th>Event</th>
-                <th>Reason</th>
-                <th>Session</th>
-                <th>Status</th>
-                <th>Deliveries</th>
-                <th>Last error</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var webhookEvent in Model.Events)
-            {
-                var receivedAtUtc = webhookEvent.ReceivedAtUtc.ToUniversalTime();
-                var receivedAtIsoTimestamp = receivedAtUtc.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
-                var receivedAtFallbackText = receivedAtUtc.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
-                var lastResponsePreview = WebhookTextPreview.Create(webhookEvent.LastResponse);
-                <tr>
-                    <td>
-                        <time datetime="@receivedAtIsoTimestamp" data-device-time="true">@receivedAtFallbackText</time>
-                    </td>
-                    <td>@webhookEvent.EventType</td>
-                    <td>
-                        @webhookEvent.Reason
-                        @if (webhookEvent.SoftLockedSessionCount is not null)
-                        {
-                            <span class="muted">(@webhookEvent.SoftLockedSessionCount)</span>
-                        }
-                    </td>
-                    <td>
-                        @if (!string.IsNullOrWhiteSpace(webhookEvent.SessionIdentifier))
-                        {
-                            <span>@(string.IsNullOrWhiteSpace(webhookEvent.ProviderName) ? webhookEvent.Provider : $"{webhookEvent.Provider}:{webhookEvent.ProviderName}")</span>
-                            <span class="muted"> @webhookEvent.SessionIdentifier</span>
-                            @if (!string.IsNullOrWhiteSpace(webhookEvent.EndReason))
-                            {
-                                <span class="muted"> @webhookEvent.EndReason</span>
-                            }
-                            @if (webhookEvent.ActiveSessionCount is not null)
-                            {
-                                <span class="muted"> active=@webhookEvent.ActiveSessionCount</span>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(webhookEvent.InputPromptPreview))
-                            {
-                                <span class="muted"> prompt=@webhookEvent.InputPromptPreview</span>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(lastResponsePreview))
-                            {
-                                <details class="event-details">
-                                    <summary class="muted">last=@lastResponsePreview</summary>
-                                    <pre>@webhookEvent.LastResponse</pre>
-                                </details>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(webhookEvent.WorkingDirectory))
-                            {
-                                <span class="muted"> cwd=@webhookEvent.WorkingDirectory</span>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(webhookEvent.TranscriptPath))
-                            {
-                                <span class="muted"> transcript=@webhookEvent.TranscriptPath</span>
-                            }
-                        }
-                        else
-                        {
-                            <span class="muted">-</span>
-                        }
-                    </td>
-                    <td>@webhookEvent.Status</td>
-                    <td>
-                        @webhookEvent.SuccessCount success /
-                        @webhookEvent.PermanentFailureCount permanent /
-                        @webhookEvent.TransientFailureCount transient
-                    </td>
-                    <td>@(webhookEvent.LastError ?? "-")</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+<section class="events-page">
+    <div class="page-heading">
+        <h1>Webhook events</h1>
+        <span class="muted">@Model.Events.Count recent</span>
+    </div>
     @if (Model.Events.Count == 0)
     {
         <p class="muted">No events recorded.</p>
+    }
+    else
+    {
+        <div class="event-list">
+            @foreach (var webhookEvent in Model.Events)
+            {
+                var receivedAtUniversalTime = webhookEvent.ReceivedAtUtc.ToUniversalTime();
+                var receivedAtDateTimeAttribute = receivedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+                var receivedAtFallbackText = receivedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+                var lastResponsePreview = WebhookTextPreview.Create(webhookEvent.LastResponse);
+                var statusClass = webhookEvent.Status.ToLowerInvariant();
+                var providerDisplayText = string.Empty;
+                if (!string.IsNullOrWhiteSpace(webhookEvent.Provider) && !string.IsNullOrWhiteSpace(webhookEvent.ProviderName)) providerDisplayText = $"{webhookEvent.Provider}:{webhookEvent.ProviderName}";
+                else if (!string.IsNullOrWhiteSpace(webhookEvent.Provider)) providerDisplayText = webhookEvent.Provider;
+                else if (!string.IsNullOrWhiteSpace(webhookEvent.ProviderName)) providerDisplayText = webhookEvent.ProviderName;
+
+                <article class="event-card">
+                    <div class="event-card-header">
+                        <div>
+                            <div class="event-title-row">
+                                <span class="event-type">@webhookEvent.EventType</span>
+                                <span class="reason-badge">@webhookEvent.Reason</span>
+                                @if (webhookEvent.SoftLockedSessionCount is not null)
+                                {
+                                    <span class="reason-badge secondary">@webhookEvent.SoftLockedSessionCount soft-locked</span>
+                                }
+                            </div>
+                            <div class="event-meta">
+                                <time datetime="@receivedAtDateTimeAttribute" data-device-time="true">@receivedAtFallbackText</time>
+                                @if (!string.IsNullOrWhiteSpace(providerDisplayText))
+                                {
+                                    <span>@providerDisplayText</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(webhookEvent.SessionIdentifier))
+                                {
+                                    <span>@webhookEvent.SessionIdentifier</span>
+                                }
+                            </div>
+                        </div>
+                        <span class="status-pill status-@statusClass">@webhookEvent.Status</span>
+                    </div>
+
+                    <div class="event-preview-grid">
+                        <section class="event-preview-block">
+                            <span class="preview-label">Starting prompt</span>
+                            @if (string.IsNullOrWhiteSpace(webhookEvent.InputPromptPreview))
+                            {
+                                <p class="muted">No prompt captured.</p>
+                            }
+                            else
+                            {
+                                <p>@webhookEvent.InputPromptPreview</p>
+                            }
+                        </section>
+                        <section class="event-preview-block">
+                            <span class="preview-label">Last response</span>
+                            @if (string.IsNullOrWhiteSpace(lastResponsePreview))
+                            {
+                                <p class="muted">No response captured.</p>
+                            }
+                            else
+                            {
+                                <p>@lastResponsePreview</p>
+                            }
+                        </section>
+                    </div>
+
+                    <details class="event-disclosure">
+                        <summary>Details</summary>
+                        <div class="event-detail-grid">
+                            <div class="detail-item">
+                                <span>Webhook id</span>
+                                <strong>@webhookEvent.WebhookEventIdentifier</strong>
+                            </div>
+                            <div class="detail-item">
+                                <span>Deliveries</span>
+                                <strong>@webhookEvent.SuccessCount success / @webhookEvent.PermanentFailureCount permanent / @webhookEvent.TransientFailureCount transient</strong>
+                            </div>
+                            <div class="detail-item">
+                                <span>Attempts</span>
+                                <strong>@webhookEvent.AttemptCount</strong>
+                            </div>
+                            <div class="detail-item">
+                                <span>Active sessions</span>
+                                <strong>@(webhookEvent.ActiveSessionCount?.ToString(CultureInfo.InvariantCulture) ?? "-")</strong>
+                            </div>
+                            <div class="detail-item">
+                                <span>End reason</span>
+                                <strong>@(webhookEvent.EndReason ?? "-")</strong>
+                            </div>
+                            <div class="detail-item detail-item-wide">
+                                <span>Last error</span>
+                                <strong>@(webhookEvent.LastError ?? "-")</strong>
+                            </div>
+                            @if (webhookEvent.StartedAtUtc is not null)
+                            {
+                                var startedAtUniversalTime = webhookEvent.StartedAtUtc.Value.ToUniversalTime();
+                                var startedAtDateTimeAttribute = startedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+                                var startedAtFallbackText = startedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+                                <div class="detail-item">
+                                    <span>Started</span>
+                                    <strong><time datetime="@startedAtDateTimeAttribute" data-device-time="true">@startedAtFallbackText</time></strong>
+                                </div>
+                            }
+                            @if (webhookEvent.LastActivityAtUtc is not null)
+                            {
+                                var lastActivityAtUniversalTime = webhookEvent.LastActivityAtUtc.Value.ToUniversalTime();
+                                var lastActivityAtDateTimeAttribute = lastActivityAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+                                var lastActivityAtFallbackText = lastActivityAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+                                <div class="detail-item">
+                                    <span>Last activity</span>
+                                    <strong><time datetime="@lastActivityAtDateTimeAttribute" data-device-time="true">@lastActivityAtFallbackText</time></strong>
+                                </div>
+                            }
+                            @if (webhookEvent.EndedAtUtc is not null)
+                            {
+                                var endedAtUniversalTime = webhookEvent.EndedAtUtc.Value.ToUniversalTime();
+                                var endedAtDateTimeAttribute = endedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+                                var endedAtFallbackText = endedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+                                <div class="detail-item">
+                                    <span>Ended</span>
+                                    <strong><time datetime="@endedAtDateTimeAttribute" data-device-time="true">@endedAtFallbackText</time></strong>
+                                </div>
+                            }
+                            @if (webhookEvent.ProcessedAtUtc is not null)
+                            {
+                                var processedAtUniversalTime = webhookEvent.ProcessedAtUtc.Value.ToUniversalTime();
+                                var processedAtDateTimeAttribute = processedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+                                var processedAtFallbackText = processedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+                                <div class="detail-item">
+                                    <span>Processed</span>
+                                    <strong><time datetime="@processedAtDateTimeAttribute" data-device-time="true">@processedAtFallbackText</time></strong>
+                                </div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(webhookEvent.WorkingDirectory))
+                            {
+                                <div class="detail-item detail-item-wide">
+                                    <span>Working directory</span>
+                                    <strong>@webhookEvent.WorkingDirectory</strong>
+                                </div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(webhookEvent.TranscriptPath))
+                            {
+                                <div class="detail-item detail-item-wide">
+                                    <span>Transcript</span>
+                                    <strong>@webhookEvent.TranscriptPath</strong>
+                                </div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(webhookEvent.LastResponse))
+                            {
+                                <div class="detail-item detail-item-wide">
+                                    <span>Full last response</span>
+                                    <pre class="response-body">@webhookEvent.LastResponse</pre>
+                                </div>
+                            }
+                        </div>
+                    </details>
+                </article>
+            }
+        </div>
     }
 </section>
 
