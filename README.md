@@ -52,6 +52,7 @@ dotnet tool install --global lidguard
 ```powershell
 lidguard help
 lidguard hook-install --provider all
+lidguard mcp-install all
 ```
 
 ## Documentation
