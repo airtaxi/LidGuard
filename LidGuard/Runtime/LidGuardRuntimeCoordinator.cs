@@ -1675,27 +1675,22 @@ internal sealed class LidGuardRuntimeCoordinator
             _gate.Release();
         }
 
+        var emergencyHibernationTemperatureDescription = DescribeEmergencyHibernationTemperature(
+            observedTemperatureCelsius,
+            emergencyHibernationTemperatureCelsius,
+            emergencyHibernationTemperatureMode);
         var hibernationResult = _systemSuspendService.Suspend(SystemSuspendMode.Hibernate);
-        SuspendHistoryLogStore.Append(
-            new SuspendHistoryEntry
-            {
-                RecordedAt = DateTimeOffset.UtcNow,
-                SuspendMode = SystemSuspendMode.Hibernate,
-                Reason = SuspendWebhookReason.EmergencyHibernation,
-                Succeeded = hibernationResult.Succeeded,
-                Message = hibernationResult.Succeeded
-                    ? CreateSuspendHistorySuccessMessage(
-                        hibernationResult,
-                        $"Requested Emergency Hibernation because system temperature reached {DescribeEmergencyHibernationTemperature(observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode)}.")
-                    : CreateResultMessage(hibernationResult),
-                EventName = hibernationResult.Succeeded ? "emergency-hibernation-requested" : "emergency-hibernation-failed",
-                CommandName = "emergency-hibernation-monitor",
-                ActiveSessionCount = activeSessionCount,
-                ObservedTemperatureCelsius = observedTemperatureCelsius,
-                EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius,
-                EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode
-            },
-            suspendHistoryEntryCount);
+        AppendEmergencyHibernationSuspendHistory(
+            suspendHistoryEntryCount,
+            activeSessionCount,
+            observedTemperatureCelsius,
+            emergencyHibernationTemperatureCelsius,
+            emergencyHibernationTemperatureMode,
+            SystemSuspendMode.Hibernate,
+            hibernationResult,
+            $"Requested Emergency Hibernation because system temperature reached {emergencyHibernationTemperatureDescription}.",
+            "emergency-hibernation-requested",
+            "emergency-hibernation-failed");
         if (hibernationResult.Succeeded) return;
 
         await _gate.WaitAsync(CancellationToken.None);
@@ -1712,6 +1707,85 @@ internal sealed class LidGuardRuntimeCoordinator
         {
             _gate.Release();
         }
+
+        await _gate.WaitAsync(CancellationToken.None);
+        try
+        {
+            LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
+                "emergency-hibernation-sleep-fallback-requesting",
+                CreateSuccessResponse(
+                    $"Emergency Hibernation failed. Requesting Sleep fallback because system temperature reached {emergencyHibernationTemperatureDescription}."),
+                observedTemperatureCelsius,
+                emergencyHibernationTemperatureCelsius,
+                emergencyHibernationTemperatureMode);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+
+        var sleepFallbackResult = _systemSuspendService.Suspend(SystemSuspendMode.Sleep);
+        AppendEmergencyHibernationSuspendHistory(
+            suspendHistoryEntryCount,
+            activeSessionCount,
+            observedTemperatureCelsius,
+            emergencyHibernationTemperatureCelsius,
+            emergencyHibernationTemperatureMode,
+            SystemSuspendMode.Sleep,
+            sleepFallbackResult,
+            $"Requested Sleep fallback after Emergency Hibernation failed because system temperature reached {emergencyHibernationTemperatureDescription}.",
+            "emergency-hibernation-sleep-fallback-requested",
+            "emergency-hibernation-sleep-fallback-failed");
+        if (sleepFallbackResult.Succeeded) return;
+
+        await _gate.WaitAsync(CancellationToken.None);
+        try
+        {
+            LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
+                "emergency-hibernation-sleep-fallback-failed",
+                CreateFailureResponse(sleepFallbackResult),
+                observedTemperatureCelsius,
+                emergencyHibernationTemperatureCelsius,
+                emergencyHibernationTemperatureMode);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    private static void AppendEmergencyHibernationSuspendHistory(
+        int? suspendHistoryEntryCount,
+        int activeSessionCount,
+        int observedTemperatureCelsius,
+        int emergencyHibernationTemperatureCelsius,
+        EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode,
+        SystemSuspendMode suspendMode,
+        LidGuardOperationResult suspendResult,
+        string successMessage,
+        string successEventName,
+        string failureEventName)
+    {
+        var message = suspendResult.Succeeded
+            ? CreateSuspendHistorySuccessMessage(suspendResult, successMessage)
+            : CreateResultMessage(suspendResult);
+        var eventName = suspendResult.Succeeded ? successEventName : failureEventName;
+        SuspendHistoryLogStore.Append(
+            new SuspendHistoryEntry
+            {
+                RecordedAt = DateTimeOffset.UtcNow,
+                SuspendMode = suspendMode,
+                Reason = SuspendWebhookReason.EmergencyHibernation,
+                Succeeded = suspendResult.Succeeded,
+                Message = message,
+                EventName = eventName,
+                CommandName = "emergency-hibernation-monitor",
+                ActiveSessionCount = activeSessionCount,
+                ObservedTemperatureCelsius = observedTemperatureCelsius,
+                EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius,
+                EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode
+            },
+            suspendHistoryEntryCount);
     }
 
     private EmergencyHibernationThermalMonitorState CreateEmergencyHibernationThermalMonitorState()

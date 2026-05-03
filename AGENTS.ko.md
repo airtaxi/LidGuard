@@ -160,7 +160,7 @@ LidGuard는 Codex, Claude Code, GitHub Copilot CLI처럼 오래 실행되는 로
 - thermal monitor는 공유 keep-awake 보호가 적용 중이고, 덮개가 닫혀 있으며, suspend 가능성 기준의 visible display monitor count가 `0`일 때만 동작한다.
 - thermal poll 주기는 10초 고정이다.
 - Emergency Hibernation 임계 온도는 설정 가능하며 기본값은 93도이고, runtime에서 사용하기 전에 항상 70도에서 110도 범위로 clamp해야 한다.
-- 관측 온도가 clamp된 임계값 이상이 되면, LidGuard는 pending post-stop suspend를 취소하고, `reason = EmergencyHibernation`으로 pre-suspend webhook을 5초 timeout으로 보낸 뒤 즉시 hibernate를 요청해야 한다.
+- 관측 온도가 clamp된 임계값 이상이 되면, LidGuard는 pending post-stop suspend를 취소하고, `reason = EmergencyHibernation`으로 pre-suspend webhook을 5초 timeout으로 보낸 뒤 즉시 hibernate를 요청해야 한다. hibernate 요청이 실패하면 LidGuard는 즉시 best-effort fallback으로 Sleep을 요청하고 두 suspend 결과를 모두 기록해야 한다.
 - Emergency Hibernation은 일반 suspend mode, post-stop suspend delay, post-stop suspend sound, sound volume override 설정을 무시한다.
 - Emergency Hibernation webhook timeout 또는 실패가 즉시 hibernate 요청을 막으면 안 된다.
 
@@ -749,7 +749,7 @@ Windows, Linux, macOS CLI hook 수신 경로는 Codex, Claude Code, GitHub Copil
 - Hook start는 성공했지만 stop이 누락됨: parent process watcher가 cleanup해야 한다.
 - Runtime이 lid action 변경 후 crash됨: 향후 pending backup state가 다음 CLI 실행 때 복원해야 한다.
 - 전원 설정 변경이 정책으로 거부됨: 일반 power request는 유지하고 실패를 알려야 한다.
-- Hibernate가 미지원이거나 꺼져 있음: 명확하게 실패하거나 향후 안전한 fallback을 사용한다.
+- Hibernate가 미지원이거나 꺼져 있음: Emergency Hibernation은 hibernate 실패를 기록한 뒤 Sleep으로 fallback한다. 그 외 Hibernate 요청은 향후 안전한 fallback이 의도적으로 추가되기 전까지 명확히 실패해야 한다.
 - 여러 provider가 동시에 실행됨: active session을 ref-count하고 마지막 세션이 끝난 뒤 복원한다.
 - 세션 중 활성 power scheme이 바뀜: v1은 원래 백업한 scheme을 복원한다.
 

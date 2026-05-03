@@ -159,7 +159,7 @@ The key design rule is to treat normal idle sleep and lid-close sleep as separat
 - The thermal monitor only runs while shared keep-awake protection is applied, the lid is closed, and the suspend eligibility visible display monitor count is `0`.
 - The thermal poll interval is fixed at 10 seconds.
 - The Emergency Hibernation threshold is configurable, defaults to 93 Celsius, and must always be clamped to 70 through 110 Celsius before runtime use.
-- When the observed temperature reaches the clamped threshold, LidGuard should cancel any pending post-stop suspend, send the pre-suspend webhook with `reason = EmergencyHibernation` using a 5-second timeout, then immediately request hibernate.
+- When the observed temperature reaches the clamped threshold, LidGuard should cancel any pending post-stop suspend, send the pre-suspend webhook with `reason = EmergencyHibernation` using a 5-second timeout, then immediately request hibernate. If the hibernate request fails, LidGuard should immediately request Sleep as a best-effort fallback and record both suspend results.
 - Emergency Hibernation ignores the regular suspend mode, post-stop suspend delay, post-stop suspend sound, and sound volume override settings.
 - Emergency Hibernation webhook timeout or failure must not block the immediate hibernation request.
 
@@ -757,7 +757,7 @@ The Windows, Linux, and macOS CLI hook receiving path is implemented for Codex, 
 - Hook start succeeds but stop is missed: parent process watcher should cleanup.
 - Runtime crashes after changing lid action: future pending backup state should restore on the next CLI run.
 - Power setting changes are denied by policy: keep normal power requests and surface the failure.
-- Hibernate is unsupported or disabled: fail clearly or use a future safe fallback.
+- Hibernate is unsupported or disabled: Emergency Hibernation falls back to Sleep after recording the hibernate failure; other Hibernate requests should fail clearly unless a future safe fallback is intentionally added.
 - Multiple providers run at once: ref-count active sessions and restore only after the last session stops.
 - Active power scheme changes during a session: v1 restores the originally backed-up scheme.
 
