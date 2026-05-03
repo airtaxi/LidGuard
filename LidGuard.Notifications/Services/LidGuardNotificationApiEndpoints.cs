@@ -37,7 +37,7 @@ internal static class LidGuardNotificationApiEndpoints
             }
 
             await subscriptionStore.UpsertAsync(endpoint, p256dhKey, authenticationSecret, cancellationToken);
-            response.StatusCode = StatusCodes.Status204NoContent;
+            await WriteSubscriptionChangeResponseAsync(response, subscriptionStore, cancellationToken);
         }).RequireAuthorization();
 
         app.MapDelete("/api/push/subscriptions", async (
@@ -54,7 +54,7 @@ internal static class LidGuardNotificationApiEndpoints
             }
 
             await subscriptionStore.DeactivateByEndpointAsync(subscriptionRequest.Endpoint, cancellationToken);
-            response.StatusCode = StatusCodes.Status204NoContent;
+            await WriteSubscriptionChangeResponseAsync(response, subscriptionStore, cancellationToken);
         }).RequireAuthorization();
 
         app.MapPost("/api/webhooks/lidguard/{webhookSecret}", async (
@@ -223,6 +223,21 @@ internal static class LidGuardNotificationApiEndpoints
         response.StatusCode = statusCode;
         response.ContentType = "application/json";
         await JsonSerializer.SerializeAsync(response.Body, value, jsonTypeInfo, cancellationToken);
+    }
+
+    private static async Task WriteSubscriptionChangeResponseAsync(
+        HttpResponse response,
+        PushSubscriptionStore subscriptionStore,
+        CancellationToken cancellationToken)
+    {
+        var activeSubscriptionCount = await subscriptionStore.CountActiveAsync(cancellationToken);
+        var subscriptionChangeResponse = new PushSubscriptionChangeResponse { ActiveSubscriptionCount = activeSubscriptionCount };
+        await WriteJsonAsync(
+            response,
+            subscriptionChangeResponse,
+            LidGuardNotificationsJsonSerializerContext.Default.PushSubscriptionChangeResponse,
+            StatusCodes.Status200OK,
+            cancellationToken);
     }
 
     private static async Task WriteTextAsync(HttpResponse response, string text, int statusCode, CancellationToken cancellationToken)

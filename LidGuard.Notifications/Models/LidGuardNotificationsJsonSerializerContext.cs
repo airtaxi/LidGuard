@@ -7,6 +7,7 @@ namespace LidGuard.Notifications.Models;
 [JsonSerializable(typeof(PublicKeyResponse))]
 [JsonSerializable(typeof(PushNotificationMessage))]
 [JsonSerializable(typeof(PushSubscriptionChangeRequest))]
+[JsonSerializable(typeof(PushSubscriptionChangeResponse))]
 [JsonSerializable(typeof(PushSubscriptionKeys))]
 internal sealed partial class LidGuardNotificationsJsonSerializerContext : JsonSerializerContext
 {

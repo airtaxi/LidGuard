@@ -1,9 +1,15 @@
 const subscribeButton = document.getElementById("subscribeButton");
 const unsubscribeButton = document.getElementById("unsubscribeButton");
+const activeSubscriptionCount = document.getElementById("activeSubscriptionCount");
 const subscriptionStatus = document.getElementById("subscriptionStatus");
 
 function setStatus(message) {
     subscriptionStatus.textContent = message;
+}
+
+async function updateActiveSubscriptionCount(response) {
+    const subscriptionChangeResponse = await response.json();
+    activeSubscriptionCount.textContent = subscriptionChangeResponse.activeSubscriptionCount.toString();
 }
 
 function convertBase64UrlToUint8Array(value) {
@@ -60,6 +66,7 @@ async function subscribeBrowser() {
 
         if (!response.ok) throw new Error(await response.text());
 
+        await updateActiveSubscriptionCount(response);
         setStatus("This browser is subscribed.");
     } catch (error) {
         setStatus(error.message || "Subscription failed.");
@@ -78,12 +85,15 @@ async function unsubscribeBrowser() {
             return;
         }
 
-        await fetch("/api/push/subscriptions", {
+        const response = await fetch("/api/push/subscriptions", {
             method: "DELETE",
             credentials: "same-origin",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ endpoint: subscription.endpoint })
         });
+        if (!response.ok) throw new Error(await response.text());
+
+        await updateActiveSubscriptionCount(response);
         await subscription.unsubscribe();
         setStatus("This browser is unsubscribed.");
     } catch (error) {
