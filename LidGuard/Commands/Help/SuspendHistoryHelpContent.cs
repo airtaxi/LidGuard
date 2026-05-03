@@ -12,7 +12,7 @@ internal static class SuspendHistoryHelpContent
             [],
             LidGuardHelpSectionTitles.Diagnostics,
             $"{commandDisplayName} {LidGuardPipeCommands.SuspendHistory} [--count <number>]",
-            "Print recent suspend request history from the local suspend history log.",
+            "Print recent sleep/hibernate request history from the local history log.",
             [
                 new LidGuardHelpOption("--count <number>", "Optional positive entry count to display. Defaults to the saved suspend-history-count value, or 10 when recording is off.")
             ],

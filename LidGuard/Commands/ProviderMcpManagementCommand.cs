@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using LidGuard.Mcp;
 using LidGuard.Hooks;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands;
 
@@ -27,7 +28,7 @@ internal static class ProviderMcpManagementCommand
 
         if (!HookCommandUtilities.HookExecutableExists(managedExecutableReference))
         {
-            Console.Error.WriteLine($"LidGuard executable or command does not exist: {managedExecutableReference}");
+            Console.Error.WriteLine(LidGuardText.GetResourceString("ManagementLidGuardExecutableMissing", "LidGuard executable or command does not exist: {0}").Replace("{0}", managedExecutableReference, StringComparison.Ordinal));
             return 1;
         }
 
@@ -54,9 +55,9 @@ internal static class ProviderMcpManagementCommand
             return 1;
         }
 
-        Console.WriteLine($"Installed provider MCP server '{managedServerName}' in {configurationFilePath}.");
-        Console.WriteLine($"Provider name: {normalizedProviderName}");
-        Console.WriteLine($"Command: {managedExecutableReference} {ProviderMcpServerCommand.CommandName} --provider-name {normalizedProviderName}");
+        Console.WriteLine(LidGuardText.ManagementProviderMcpInstalled(managedServerName, configurationFilePath));
+        Console.WriteLine(LidGuardText.ManagementProviderName(normalizedProviderName));
+        Console.WriteLine(LidGuardText.ManagementCommand($"{managedExecutableReference} {ProviderMcpServerCommand.CommandName} --provider-name {normalizedProviderName}"));
         return 0;
     }
 
@@ -71,8 +72,8 @@ internal static class ProviderMcpManagementCommand
         var managedServerName = GetManagedServerName(options);
         if (!File.Exists(configurationFilePath))
         {
-            Console.WriteLine($"Configuration file does not exist: {configurationFilePath}");
-            Console.WriteLine($"No provider MCP server named '{managedServerName}' was removed.");
+            Console.WriteLine(LidGuardText.ManagementConfigurationFileDoesNotExist(configurationFilePath));
+            Console.WriteLine(LidGuardText.ManagementNoProviderMcpServerNamedRemoved(managedServerName));
             return 0;
         }
 
@@ -84,14 +85,14 @@ internal static class ProviderMcpManagementCommand
 
         if (!McpConfigurationJsonUtilities.TryGetMcpServersObject(rootObject, out var mcpServersObject))
         {
-            Console.WriteLine($"The mcpServers object was not found in {configurationFilePath}.");
-            Console.WriteLine($"No provider MCP server named '{managedServerName}' was removed.");
+            Console.WriteLine(LidGuardText.GetResourceString("ManagementMcpServersObjectNotFound", "The mcpServers object was not found in {0}.").Replace("{0}", configurationFilePath, StringComparison.Ordinal));
+            Console.WriteLine(LidGuardText.ManagementNoProviderMcpServerNamedRemoved(managedServerName));
             return 0;
         }
 
         if (!mcpServersObject.Remove(managedServerName))
         {
-            Console.WriteLine($"No provider MCP server named '{managedServerName}' was found in {configurationFilePath}.");
+            Console.WriteLine(LidGuardText.ManagementNoProviderMcpServerNamedFound(managedServerName, configurationFilePath));
             return 0;
         }
 
@@ -101,7 +102,7 @@ internal static class ProviderMcpManagementCommand
             return 1;
         }
 
-        Console.WriteLine($"Removed provider MCP server '{managedServerName}' from {configurationFilePath}.");
+        Console.WriteLine(LidGuardText.ManagementProviderMcpRemoved(managedServerName, configurationFilePath));
         return 0;
     }
 
@@ -140,15 +141,15 @@ internal static class ProviderMcpManagementCommand
             }
         }
 
-        Console.WriteLine("Provider MCP installation:");
-        Console.WriteLine($"  Config: {configurationFilePath}");
-        Console.WriteLine($"  Config exists: {configurationFileExists}");
-        Console.WriteLine($"  Server name: {managedServerName}");
-        Console.WriteLine($"  Installed: {installed}");
-        Console.WriteLine($"  Command: {(string.IsNullOrWhiteSpace(serverCommand) ? "<none>" : serverCommand)}");
-        Console.WriteLine($"  Args: {serverArguments}");
-        Console.WriteLine($"  Provider name: {(string.IsNullOrWhiteSpace(configuredProviderName) ? "<none>" : configuredProviderName)}");
-        Console.WriteLine($"  Message: {CreateStatusMessage(configurationFilePath, configurationFileExists, installed, message)}");
+        Console.WriteLine(LidGuardText.ManagementProviderMcpInstallationTitle);
+        WriteField("ManagementLabelConfig", "Config", configurationFilePath);
+        WriteField("ManagementLabelConfigExists", "Config exists", configurationFileExists);
+        WriteField("ManagementLabelServerName", "Server name", managedServerName);
+        WriteField("ManagementLabelInstalled", "Installed", installed);
+        WriteField("ManagementLabelCommand", "Command", serverCommand);
+        WriteField("ManagementLabelArgs", "Args", serverArguments);
+        WriteField("ManagementLabelProviderName", "Provider name", configuredProviderName);
+        WriteField("ManagementLabelMessage", "Message", CreateStatusMessage(configurationFilePath, configurationFileExists, installed, message));
         return 0;
     }
 
@@ -162,10 +163,10 @@ internal static class ProviderMcpManagementCommand
 
     private static string CreateStatusMessage(string configurationFilePath, bool configurationFileExists, bool installed, string message)
     {
-        if (!configurationFileExists) return $"Configuration file does not exist: {configurationFilePath}";
+        if (!configurationFileExists) return LidGuardText.ManagementConfigurationFileDoesNotExist(configurationFilePath);
         if (!string.IsNullOrWhiteSpace(message)) return message;
-        if (!installed) return "No managed provider MCP server entry was found.";
-        return "Managed provider MCP server is registered.";
+        if (!installed) return LidGuardText.ManagementNoProviderMcpServerEntryFound;
+        return LidGuardText.ManagementProviderMcpRegistered;
     }
 
     private static string GetManagedServerName(IReadOnlyDictionary<string, string> options)
@@ -196,5 +197,9 @@ internal static class ProviderMcpManagementCommand
         return false;
     }
 
-
+    private static void WriteField(string labelResourceName, string fallbackLabel, object value)
+    {
+        var displayValue = value is bool booleanValue ? LidGuardText.DisplayBoolean(booleanValue) : LidGuardText.DisplayOptionalValue(value?.ToString() ?? string.Empty);
+        Console.WriteLine(LidGuardText.ManagementField(LidGuardText.GetResourceString(labelResourceName, fallbackLabel), displayValue));
+    }
 }

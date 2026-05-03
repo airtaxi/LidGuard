@@ -15,7 +15,7 @@ internal static class CleanupOrphansHelpContent
             "Remove sessions whose watched processes have already exited.",
             [],
             [
-                "If the runtime is not running, cleanup-orphans reports that nothing needs cleanup."
+                "If LidGuard is not running, cleanup-orphans reports that nothing needs cleanup."
             ]);
     }
 }

@@ -12,7 +12,7 @@ internal static class RemovePostSessionEndWebhookHelpContent
             [],
             LidGuardHelpSectionTitles.SettingsAndSuspend,
             $"{commandDisplayName} remove-post-session-end-webhook",
-            "Clear the persisted post-session-end webhook URL.",
+            "Clear the saved session completion webhook URL.",
             [],
             [
                 "This command does not accept any options."

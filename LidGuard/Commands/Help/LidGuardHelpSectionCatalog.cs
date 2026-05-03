@@ -1,3 +1,5 @@
+using LidGuard.Localization;
+
 namespace LidGuard.Commands.Help;
 
 internal static class LidGuardHelpSectionCatalog
@@ -15,7 +17,7 @@ internal static class LidGuardHelpSectionCatalog
             new LidGuardHelpSectionEntry(
                 LidGuardHelpSectionTitles.ManagedAndInternalCommands,
                 [
-                    "These commands are intended for provider-managed integrations and stdio hosts rather than direct everyday CLI use."
+                    LidGuardHelpTextLocalizer.Localize("These commands are intended for provider-managed integrations and stdio hosts rather than direct everyday CLI use.")
                 ]),
             new LidGuardHelpSectionEntry(
                 LidGuardHelpSectionTitles.PathsAndNotes,
@@ -54,15 +56,15 @@ internal static class LidGuardHelpSectionCatalog
     {
         return
         [
-            $"Settings file: {settingsFilePath}",
-            $"Session log: {sessionLogFilePath}",
-            $"Suspend history log: {suspendHistoryLogFilePath}",
+            LidGuardText.ConsoleSettingsFile(settingsFilePath),
+            LidGuardText.HelpSessionLogFile(sessionLogFilePath),
+            LidGuardText.HelpSuspendHistoryLogFile(suspendHistoryLogFilePath),
 #if LIDGUARD_LINUX
-            "Linux runtime behavior is implemented for systemd/logind systems. macOS runtime behavior is implemented in macOS builds.",
+            "Linux support is implemented for systemd/logind systems. macOS support is implemented in macOS builds.",
 #elif LIDGUARD_MACOS
-            "macOS runtime behavior is implemented with caffeinate and pmset. Windows and Linux runtime behavior is implemented in their platform builds.",
+            "macOS support uses caffeinate and pmset. Windows and Linux support is implemented in their platform builds.",
 #else
-            "This build implements Windows runtime behavior. Linux and macOS runtime behavior is implemented in their platform builds.",
+            "This build includes Windows support. Linux and macOS support is implemented in their platform builds.",
 #endif
             "Provider MCP integrations are best-effort only because correct behavior depends on the model calling the LidGuard MCP tools at the right times."
         ];

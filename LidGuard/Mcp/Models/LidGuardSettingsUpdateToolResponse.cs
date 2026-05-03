@@ -9,7 +9,7 @@ public sealed class LidGuardSettingsUpdateToolResponse
     [Description("Human-readable summary of the applied change set and runtime synchronization result.")]
     public string Summary { get; init; } = string.Empty;
 
-    [Description("Indicates whether the update started from LidGuard's headless runtime defaults before applying individual changes.")]
+    [Description("Indicates whether settings were reset to LidGuard defaults before individual changes were applied.")]
     public bool ResetToDefaults { get; init; }
 
     [Description("Indicates whether the requested update produced any effective value changes.")]

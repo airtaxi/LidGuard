@@ -183,8 +183,17 @@ internal sealed class LidGuardRuntimeCoordinator
             ReconfigureSessionTimeoutMonitorInsideGate();
             AppendTranscriptMonitorRegistration(request, snapshot, transcriptMonitoringRegistrationResult);
 
-            var watchMessage = CreateWatcherStatusMessage(request, snapshot);
-            var successResponse = CreateSuccessResponse($"Started {snapshot.Key}.{watchMessage}");
+            var watcherStatusKind = CreateWatcherStatusKind(request, snapshot);
+            var watchMessage = CreateWatcherStatusMessage(watcherStatusKind, snapshot);
+            var successResponse = CreateSuccessResponse(
+                $"Started {snapshot.Key}.{watchMessage}",
+                LidGuardPipeResponseMessageCodes.SessionStarted,
+                [
+                    snapshot.Key.ToString(),
+                    watcherStatusKind,
+                    snapshot.WatchedProcessIdentifier.ToString(),
+                    GetCodexShellHostDescription()
+                ]);
             LidGuardRuntimeLogWriter.AppendSessionLog("session-started", request, successResponse, snapshot);
             return successResponse;
         }
@@ -214,7 +223,9 @@ internal sealed class LidGuardRuntimeCoordinator
                 return response;
             }
 
-            var successResponse = CreateSuccessResponse("Updated LidGuard runtime settings.");
+            var successResponse = CreateSuccessResponse(
+                "Updated LidGuard runtime settings.",
+                LidGuardPipeResponseMessageCodes.SettingsRuntimeUpdated);
             LidGuardRuntimeLogWriter.AppendSessionLog("settings-updated", request, successResponse);
             return successResponse;
         }
@@ -237,7 +248,12 @@ internal sealed class LidGuardRuntimeCoordinator
                 IsProviderSessionEnd = request.IsProviderSessionEnd,
                 SessionEndReason = request.SessionEndReason
             };
-            return StopInsideGate(stopRequest, $"Stopped {new LidGuardSessionKey(stopRequest.Provider, stopRequest.SessionIdentifier, stopRequest.ProviderName)}.");
+            var sessionKey = new LidGuardSessionKey(stopRequest.Provider, stopRequest.SessionIdentifier, stopRequest.ProviderName);
+            return StopInsideGate(
+                stopRequest,
+                $"Stopped {sessionKey}.",
+                successMessageCode: LidGuardPipeResponseMessageCodes.SessionStopped,
+                successMessageArguments: [sessionKey.ToString()]);
         }
         finally
         {
@@ -343,6 +359,8 @@ internal sealed class LidGuardRuntimeCoordinator
             snapshot,
             eventName,
             successMessage,
+            string.Empty,
+            null,
             _sessionRegistry.ActiveSessionCount,
             out _);
         LidGuardRuntimeLogWriter.AppendSessionLog(eventName, request, successResponseWithSuspendPlan, snapshot);
@@ -354,7 +372,9 @@ internal sealed class LidGuardRuntimeCoordinator
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            return CreateSuccessResponse("LidGuard runtime is running.");
+            return CreateSuccessResponse(
+                "LidGuard runtime is running.",
+                LidGuardPipeResponseMessageCodes.RuntimeIsRunning);
         }
         finally
         {
@@ -377,11 +397,14 @@ internal sealed class LidGuardRuntimeCoordinator
                 Provider = request.Provider,
                 ProviderName = request.ProviderName
             };
+            var sessionKey = new LidGuardSessionKey(stopRequest.Provider, stopRequest.SessionIdentifier, stopRequest.ProviderName);
             return StopInsideGate(
                 stopRequest,
-                $"Removed {new LidGuardSessionKey(stopRequest.Provider, stopRequest.SessionIdentifier, stopRequest.ProviderName)}.",
+                $"Removed {sessionKey}.",
                 "session-removed",
-                LidGuardPipeCommands.RemoveSession);
+                LidGuardPipeCommands.RemoveSession,
+                LidGuardPipeResponseMessageCodes.SessionRemoved,
+                [sessionKey.ToString()]);
         }
         finally
         {
@@ -394,12 +417,19 @@ internal sealed class LidGuardRuntimeCoordinator
         var activeSnapshots = _sessionRegistry.GetSnapshots().ToArray();
         if (activeSnapshots.Length == 0)
         {
-            var alreadyStoppedResponse = CreateSuccessResponse("There are no active sessions to remove.");
+            var alreadyStoppedResponse = CreateSuccessResponse(
+                "There are no active sessions to remove.",
+                LidGuardPipeResponseMessageCodes.SessionRemoveNoActiveSessions);
             LidGuardRuntimeLogWriter.AppendSessionLog("session-remove-already-stopped", request, alreadyStoppedResponse);
             return alreadyStoppedResponse;
         }
 
-        return RemoveSnapshotsInsideGate(request, activeSnapshots, $"Removed all {activeSnapshots.Length} active session(s).");
+        return RemoveSnapshotsInsideGate(
+            request,
+            activeSnapshots,
+            $"Removed all {activeSnapshots.Length} active session(s).",
+            LidGuardPipeResponseMessageCodes.SessionRemovedAll,
+            [activeSnapshots.Length.ToString()]);
     }
 
     private async Task<LidGuardPipeResponse> CleanupOrphansAsync(CancellationToken cancellationToken)
@@ -435,7 +465,10 @@ internal sealed class LidGuardRuntimeCoordinator
                 return response;
             }
 
-            var successResponse = CreateSuccessResponse($"Cleaned {cleanupCount} orphan session(s).");
+            var successResponse = CreateSuccessResponse(
+                $"Cleaned {cleanupCount} orphan session(s).",
+                LidGuardPipeResponseMessageCodes.CleanupOrphansCompleted,
+                [cleanupCount.ToString()]);
             LidGuardRuntimeLogWriter.AppendRuntimeLog("cleanup-orphans-completed", LidGuardPipeCommands.CleanupOrphans, successResponse);
             return successResponse;
         }
@@ -465,17 +498,23 @@ internal sealed class LidGuardRuntimeCoordinator
         return new WatchedProcessResolution(resolvedCandidate.ProcessIdentifier, watchRegistrationKind);
     }
 
-    private string CreateWatcherStatusMessage(LidGuardPipeRequest request, LidGuardSessionSnapshot snapshot)
+    private string CreateWatcherStatusMessage(string watcherStatusKind, LidGuardSessionSnapshot snapshot)
     {
-        if (snapshot.WatchRegistrationKind == LidGuardSessionWatchRegistrationKind.CodexShellHostedWorkingDirectoryFallback) return $" Watching process {snapshot.WatchedProcessIdentifier} through Codex shell-host fallback.";
-        if (snapshot.HasWatchedProcess) return $" Watching process {snapshot.WatchedProcessIdentifier}.";
+        return watcherStatusKind switch
+        {
+            LidGuardPipeResponseMessageCodes.WatcherStatusCodexShellHostFallback => $" Watching process {snapshot.WatchedProcessIdentifier} through Codex shell-host fallback.",
+            LidGuardPipeResponseMessageCodes.WatcherStatusWatchedProcess => $" Watching process {snapshot.WatchedProcessIdentifier}.",
+            LidGuardPipeResponseMessageCodes.WatcherStatusCodexShellHostFallbackSkipped => $" Codex fallback watchdog only attaches when the resolved Codex process or its direct parent is {GetCodexShellHostDescription()}; a stop hook is required.",
+            _ => " No watched process was resolved; a stop hook is required."
+        };
+    }
 
-        var shouldExplainSkippedCodexFallback = request.Provider == AgentProvider.Codex
-            && request.WatchedProcessIdentifier <= 0
-            && _settings.WatchParentProcess;
-        if (shouldExplainSkippedCodexFallback) return $" Codex fallback watchdog only attaches when the resolved Codex process or its direct parent is {GetCodexShellHostDescription()}; a stop hook is required.";
-
-        return " No watched process was resolved; a stop hook is required.";
+    private string CreateWatcherStatusKind(LidGuardPipeRequest request, LidGuardSessionSnapshot snapshot)
+    {
+        if (snapshot.WatchRegistrationKind == LidGuardSessionWatchRegistrationKind.CodexShellHostedWorkingDirectoryFallback) return LidGuardPipeResponseMessageCodes.WatcherStatusCodexShellHostFallback;
+        if (snapshot.HasWatchedProcess) return LidGuardPipeResponseMessageCodes.WatcherStatusWatchedProcess;
+        if (request.Provider == AgentProvider.Codex && request.WatchedProcessIdentifier <= 0 && _settings.WatchParentProcess) return LidGuardPipeResponseMessageCodes.WatcherStatusCodexShellHostFallbackSkipped;
+        return LidGuardPipeResponseMessageCodes.WatcherStatusNone;
     }
 
     private static string GetCodexShellHostDescription()
@@ -838,7 +877,10 @@ internal sealed class LidGuardRuntimeCoordinator
             .ToArray();
         if (matchingSnapshots.Length == 0)
         {
-            var alreadyStoppedResponse = CreateSuccessResponse($"Session id {request.SessionIdentifier} is already stopped.");
+            var alreadyStoppedResponse = CreateSuccessResponse(
+                $"Session id {request.SessionIdentifier} is already stopped.",
+                LidGuardPipeResponseMessageCodes.SessionIdAlreadyStopped,
+                [request.SessionIdentifier]);
             LidGuardRuntimeLogWriter.AppendSessionLog("session-remove-already-stopped", request, alreadyStoppedResponse);
             return alreadyStoppedResponse;
         }
@@ -846,7 +888,9 @@ internal sealed class LidGuardRuntimeCoordinator
         return RemoveSnapshotsInsideGate(
             request,
             matchingSnapshots,
-            $"Removed {matchingSnapshots.Length} session(s) matching session id \"{request.SessionIdentifier}\".");
+            $"Removed {matchingSnapshots.Length} session(s) matching session id \"{request.SessionIdentifier}\".",
+            LidGuardPipeResponseMessageCodes.SessionRemovedMatchingSessionId,
+            [matchingSnapshots.Length.ToString(), request.SessionIdentifier]);
     }
 
     private LidGuardPipeResponse RemoveSessionsMatchingProviderInsideGate(LidGuardPipeRequest request)
@@ -865,26 +909,35 @@ internal sealed class LidGuardRuntimeCoordinator
             .ToArray();
         if (matchingSnapshots.Length == 0)
         {
+            var providerDisplayText = AgentProviderDisplay.CreateProviderDisplayText(request.Provider, request.ProviderName);
             var alreadyStoppedResponse = CreateSuccessResponse(
-                $"Session id {request.SessionIdentifier} is already stopped for {AgentProviderDisplay.CreateProviderDisplayText(request.Provider, request.ProviderName)}.");
+                $"Session id {request.SessionIdentifier} is already stopped for {providerDisplayText}.",
+                LidGuardPipeResponseMessageCodes.SessionIdAlreadyStoppedForProvider,
+                [request.SessionIdentifier, providerDisplayText]);
             LidGuardRuntimeLogWriter.AppendSessionLog("session-remove-already-stopped", request, alreadyStoppedResponse);
             return alreadyStoppedResponse;
         }
 
+        var matchingProviderDisplayText = AgentProviderDisplay.CreateProviderDisplayText(request.Provider, request.ProviderName);
         return RemoveSnapshotsInsideGate(
             request,
             matchingSnapshots,
-            $"Removed {matchingSnapshots.Length} session(s) matching {AgentProviderDisplay.CreateProviderDisplayText(request.Provider, request.ProviderName)} session id \"{request.SessionIdentifier}\".");
+            $"Removed {matchingSnapshots.Length} session(s) matching {matchingProviderDisplayText} session id \"{request.SessionIdentifier}\".",
+            LidGuardPipeResponseMessageCodes.SessionRemovedMatchingProviderSessionId,
+            [matchingSnapshots.Length.ToString(), matchingProviderDisplayText, request.SessionIdentifier]);
     }
 
     private LidGuardPipeResponse RemoveSnapshotsInsideGate(
         LidGuardPipeRequest request,
         LidGuardSessionSnapshot[] matchingSnapshots,
-        string multipleRemovalSuccessMessage)
+        string multipleRemovalSuccessMessage,
+        string multipleRemovalSuccessMessageCode,
+        string[] multipleRemovalSuccessMessageArguments)
     {
         var lastResponse = CreateSuccessResponse(string.Empty);
         foreach (var matchingSnapshot in matchingSnapshots)
         {
+            var sessionKey = matchingSnapshot.Key.ToString();
             var stopRequest = new LidGuardSessionStopRequest
             {
                 SessionIdentifier = matchingSnapshot.SessionIdentifier,
@@ -893,22 +946,35 @@ internal sealed class LidGuardRuntimeCoordinator
             };
             lastResponse = StopInsideGate(
                 stopRequest,
-                $"Removed {matchingSnapshot.Key}.",
+                $"Removed {sessionKey}.",
                 "session-removed",
-                LidGuardPipeCommands.RemoveSession);
+                LidGuardPipeCommands.RemoveSession,
+                LidGuardPipeResponseMessageCodes.SessionRemoved,
+                [sessionKey]);
             if (!lastResponse.Succeeded) return lastResponse;
         }
 
         var successMessage = matchingSnapshots.Length == 1 ? lastResponse.Message : multipleRemovalSuccessMessage;
+        var successMessageCode = matchingSnapshots.Length == 1 ? lastResponse.MessageCode : multipleRemovalSuccessMessageCode;
+        var successMessageArguments = matchingSnapshots.Length == 1 ? lastResponse.MessageArguments : multipleRemovalSuccessMessageArguments;
         if (matchingSnapshots.Length > 1 && TryExtractPostStopScheduleMessage(lastResponse.Message, out var postStopScheduleMessage)) successMessage = $"{successMessage} {postStopScheduleMessage}";
-        return CreateSuccessResponse(successMessage);
+        return CreateSuccessResponse(
+            successMessage,
+            successMessageCode,
+            successMessageArguments,
+            lastResponse.SuspendScheduled,
+            lastResponse.SuspendMode,
+            lastResponse.SuspendDelaySeconds,
+            lastResponse.SuspendReasonCode);
     }
 
     private LidGuardPipeResponse StopInsideGate(
         LidGuardSessionStopRequest request,
         string successMessage,
         string eventName = "session-stopped",
-        string commandName = LidGuardPipeCommands.Stop)
+        string commandName = LidGuardPipeCommands.Stop,
+        string successMessageCode = "",
+        string[] successMessageArguments = null)
     {
         if (string.IsNullOrWhiteSpace(request.SessionIdentifier))
         {
@@ -923,7 +989,10 @@ internal sealed class LidGuardRuntimeCoordinator
 
         if (!_sessionRegistry.Stop(request, out var stoppedSnapshot))
         {
-            var response = CreateSuccessResponse($"Session {key} is already stopped.");
+            var response = CreateSuccessResponse(
+                $"Session {key} is already stopped.",
+                LidGuardPipeResponseMessageCodes.SessionAlreadyStopped,
+                [key.ToString()]);
             LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-already-stopped", request, response, commandName);
             return response;
         }
@@ -931,7 +1000,7 @@ internal sealed class LidGuardRuntimeCoordinator
         if (HasSessionsKeepingProtectionAppliedInsideGate())
         {
             ReconfigureSessionTimeoutMonitorInsideGate();
-            var response = CreateSuccessResponse(successMessage);
+            var response = CreateSuccessResponse(successMessage, successMessageCode, successMessageArguments);
             LidGuardRuntimeLogWriter.AppendSessionLog(eventName, request, response, stoppedSnapshot, commandName);
             QueuePostSessionEndWebhookIfRequired(request, stoppedSnapshot, eventName, commandName, _sessionRegistry.ActiveSessionCount);
             return response;
@@ -952,6 +1021,8 @@ internal sealed class LidGuardRuntimeCoordinator
             stoppedSnapshot,
             eventName,
             successMessage,
+            successMessageCode,
+            successMessageArguments,
             _sessionRegistry.ActiveSessionCount,
             out var suspendScheduled);
         ReconfigureSessionTimeoutMonitorInsideGate();
@@ -966,6 +1037,8 @@ internal sealed class LidGuardRuntimeCoordinator
         LidGuardSessionSnapshot snapshot,
         string eventName,
         string successMessage,
+        string successMessageCode,
+        string[] successMessageArguments,
         int activeSessionCount,
         out bool suspendScheduled)
     {
@@ -995,8 +1068,17 @@ internal sealed class LidGuardRuntimeCoordinator
             activeSessionCount,
             postStopSuspendDelaySeconds,
             pendingSuspendCancellationTokenSource);
+        var suspendReasonCode = activeSessionCount == 0
+            ? LidGuardPipeResponseMessageCodes.SuspendReasonCompleted
+            : LidGuardPipeResponseMessageCodes.SuspendReasonSoftLocked;
         return CreateSuccessResponse(
-            $"{successMessage} Scheduled {suspendMode} {DescribePostStopSuspendDelay(postStopSuspendDelaySeconds)} {DescribeSuspendReason(activeSessionCount)}");
+            $"{successMessage} Scheduled {suspendMode} {DescribePostStopSuspendDelay(postStopSuspendDelaySeconds)} {DescribeSuspendReason(activeSessionCount)}",
+            successMessageCode,
+            successMessageArguments,
+            true,
+            suspendMode,
+            postStopSuspendDelaySeconds,
+            suspendReasonCode);
     }
 
     private async Task SuspendAfterDelayAsync(
@@ -1580,7 +1662,14 @@ internal sealed class LidGuardRuntimeCoordinator
         return true;
     }
 
-    private LidGuardPipeResponse CreateSuccessResponse(string message)
+    private LidGuardPipeResponse CreateSuccessResponse(
+        string message,
+        string messageCode = "",
+        string[] messageArguments = null,
+        bool suspendScheduled = false,
+        SystemSuspendMode suspendMode = SystemSuspendMode.Sleep,
+        int suspendDelaySeconds = 0,
+        string suspendReasonCode = "")
     {
         var snapshots = _sessionRegistry.GetSnapshots();
         var currentLidAndDisplayState = GetCurrentLidAndDisplayState();
@@ -1590,7 +1679,13 @@ internal sealed class LidGuardRuntimeCoordinator
             CreateSessionStatuses(snapshots),
             _settings,
             currentLidAndDisplayState.LidSwitchState,
-            currentLidAndDisplayState.VisibleDisplayMonitorCount);
+            currentLidAndDisplayState.VisibleDisplayMonitorCount,
+            messageCode,
+            messageArguments,
+            suspendScheduled,
+            suspendMode,
+            suspendDelaySeconds,
+            suspendReasonCode);
     }
 
     private LidGuardPipeResponse CreateFailureResponse(LidGuardOperationResult result)
@@ -1711,9 +1806,13 @@ internal sealed class LidGuardRuntimeCoordinator
     {
         if (!LidGuardWatchedProcessCleanup.ShouldCleanCodexWorkingDirectory(snapshot))
         {
+            var sessionKey = snapshot.Key.ToString();
             var successMessage = eventName == "watched-process-exited"
-                ? $"Watched process exited for {snapshot.Key}."
-                : $"Cleaned orphan session {snapshot.Key}.";
+                ? $"Watched process exited for {sessionKey}."
+                : $"Cleaned orphan session {sessionKey}.";
+            var successMessageCode = eventName == "watched-process-exited"
+                ? LidGuardPipeResponseMessageCodes.WatchedProcessExited
+                : LidGuardPipeResponseMessageCodes.WatchedProcessOrphanCleaned;
             var stopResponse = StopInsideGate(
                 new LidGuardSessionStopRequest
                 {
@@ -1723,7 +1822,9 @@ internal sealed class LidGuardRuntimeCoordinator
                 },
                 successMessage,
                 eventName,
-                commandName);
+                commandName,
+                successMessageCode,
+                [sessionKey]);
             var removedSessionCount = stopResponse.Succeeded && !stopResponse.Message.Contains("already stopped", StringComparison.Ordinal) ? 1 : 0;
             return new CleanupResult(stopResponse, removedSessionCount);
         }
@@ -1736,13 +1837,17 @@ internal sealed class LidGuardRuntimeCoordinator
             .ToArray();
         if (matchingSnapshots.Length == 0)
         {
-            var alreadyStoppedResponse = CreateSuccessResponse($"Watched Codex working directory \"{snapshot.WorkingDirectory}\" is already stopped.");
+            var alreadyStoppedResponse = CreateSuccessResponse(
+                $"Watched Codex working directory \"{snapshot.WorkingDirectory}\" is already stopped.",
+                LidGuardPipeResponseMessageCodes.WatchedCodexWorkingDirectoryAlreadyStopped,
+                [snapshot.WorkingDirectory]);
             return new CleanupResult(alreadyStoppedResponse, 0);
         }
 
         var lastResponse = CreateSuccessResponse(string.Empty);
         foreach (var matchingSnapshot in matchingSnapshots)
         {
+            var sessionKey = matchingSnapshot.Key.ToString();
             var stopRequest = new LidGuardSessionStopRequest
             {
                 SessionIdentifier = matchingSnapshot.SessionIdentifier,
@@ -1750,13 +1855,18 @@ internal sealed class LidGuardRuntimeCoordinator
                 ProviderName = matchingSnapshot.ProviderName
             };
             var successMessage = eventName == "watched-process-exited"
-                ? $"Watched process exited for {matchingSnapshot.Key}."
-                : $"Cleaned watched Codex session {matchingSnapshot.Key} for working directory \"{matchingSnapshot.WorkingDirectory}\".";
+                ? $"Watched process exited for {sessionKey}."
+                : $"Cleaned watched Codex session {sessionKey} for working directory \"{matchingSnapshot.WorkingDirectory}\".";
+            var successMessageCode = eventName == "watched-process-exited"
+                ? LidGuardPipeResponseMessageCodes.WatchedProcessExited
+                : LidGuardPipeResponseMessageCodes.WatchedCodexWorkingDirectorySessionCleaned;
             lastResponse = StopInsideGate(
                 stopRequest,
                 successMessage,
                 eventName,
-                commandName);
+                commandName,
+                successMessageCode,
+                [sessionKey, matchingSnapshot.WorkingDirectory]);
             if (!lastResponse.Succeeded) return new CleanupResult(lastResponse, 0);
         }
 
@@ -1764,7 +1874,14 @@ internal sealed class LidGuardRuntimeCoordinator
             $"Cleaned {matchingSnapshots.Length} watched Codex session(s) for working directory \"{snapshot.WorkingDirectory}\" and left process=none Codex sessions untouched.";
         if (TryExtractPostStopScheduleMessage(lastResponse.Message, out var postStopScheduleMessage)) finalSuccessMessage = $"{finalSuccessMessage} {postStopScheduleMessage}";
 
-        var successResponse = CreateSuccessResponse(finalSuccessMessage);
+        var successResponse = CreateSuccessResponse(
+            finalSuccessMessage,
+            LidGuardPipeResponseMessageCodes.WatchedCodexWorkingDirectoryCleaned,
+            [matchingSnapshots.Length.ToString(), snapshot.WorkingDirectory],
+            lastResponse.SuspendScheduled,
+            lastResponse.SuspendMode,
+            lastResponse.SuspendDelaySeconds,
+            lastResponse.SuspendReasonCode);
         return new CleanupResult(successResponse, matchingSnapshots.Length);
     }
 

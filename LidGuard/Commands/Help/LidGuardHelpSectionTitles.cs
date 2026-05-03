@@ -1,13 +1,15 @@
+using LidGuard.Localization;
+
 namespace LidGuard.Commands.Help;
 
 internal static class LidGuardHelpSectionTitles
 {
-    internal const string Usage = "Usage";
-    internal const string SessionControl = "Session Control";
-    internal const string SettingsAndSuspend = "Settings & Suspend";
-    internal const string Diagnostics = "Diagnostics";
-    internal const string HookIntegration = "Hook Integration";
-    internal const string McpIntegration = "MCP Integration";
-    internal const string ManagedAndInternalCommands = "Managed / Internal Commands";
-    internal const string PathsAndNotes = "Paths & Notes";
+    internal static string Usage => LidGuardText.HelpSectionUsage;
+    internal static string SessionControl => LidGuardText.HelpSectionSessionControl;
+    internal static string SettingsAndSuspend => LidGuardText.HelpSectionSettingsAndSuspend;
+    internal static string Diagnostics => LidGuardText.HelpSectionDiagnostics;
+    internal static string HookIntegration => LidGuardText.HelpSectionHookIntegration;
+    internal static string McpIntegration => LidGuardText.HelpSectionMcpIntegration;
+    internal static string ManagedAndInternalCommands => LidGuardText.HelpSectionManagedAndInternalCommands;
+    internal static string PathsAndNotes => LidGuardText.HelpSectionPathsAndNotes;
 }

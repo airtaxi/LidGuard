@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 using LidGuard.Runtime;
 using LidGuard.Settings;
 using LidGuard.Sessions;
@@ -34,15 +35,15 @@ internal static class SuspendHistoryCommand
             return 1;
         }
 
-        Console.WriteLine($"Suspend history file: {SuspendHistoryLogStore.GetDefaultLogFilePath()}");
-        Console.WriteLine($"Suspend history recording: {SuspendHistoryConfiguration.GetDisplayValue(normalizedSettings.SuspendHistoryEntryCount)}");
+        Console.WriteLine(LidGuardText.GetResourceString("SuspendHistoryFile", "Suspend history file: {0}").Replace("{0}", SuspendHistoryLogStore.GetDefaultLogFilePath(), StringComparison.Ordinal));
+        Console.WriteLine(LidGuardText.GetResourceString("SuspendHistoryRecording", "Suspend history recording: {0}").Replace("{0}", LidGuardText.DisplaySuspendHistoryEntryCount(normalizedSettings.SuspendHistoryEntryCount), StringComparison.Ordinal));
         if (historyEntries.Length == 0)
         {
-            Console.WriteLine("No suspend history entries recorded.");
+            Console.WriteLine(LidGuardText.GetResourceString("SuspendHistoryNoEntries", "No suspend history entries recorded."));
             return 0;
         }
 
-        Console.WriteLine($"Recent suspend history entries: {historyEntries.Length}");
+        Console.WriteLine(LidGuardText.GetResourceString("SuspendHistoryRecentEntries", "Recent suspend history entries: {0}").Replace("{0}", historyEntries.Length.ToString(), StringComparison.Ordinal));
         foreach (var historyEntry in historyEntries) WriteHistoryEntry(historyEntry);
         return 0;
     }
@@ -54,7 +55,9 @@ internal static class SuspendHistoryCommand
         {
             if (optionName.Equals("count", StringComparison.OrdinalIgnoreCase)) continue;
 
-            message = $"{LidGuardPipeCommands.SuspendHistory} does not accept --{optionName}.";
+            message = LidGuardText.GetResourceString("SuspendHistoryOptionNotAccepted", "{0} does not accept --{1}.")
+                .Replace("{0}", LidGuardPipeCommands.SuspendHistory, StringComparison.Ordinal)
+                .Replace("{1}", optionName, StringComparison.Ordinal);
             return false;
         }
 
@@ -73,7 +76,8 @@ internal static class SuspendHistoryCommand
 
         if (int.TryParse(historyEntryCountText.Trim(), out historyEntryCount) && historyEntryCount >= LidGuardSettings.MinimumSuspendHistoryEntryCount) return true;
 
-        message = $"The count option must be an integer of at least {LidGuardSettings.MinimumSuspendHistoryEntryCount}.";
+        message = LidGuardText.GetResourceString("SuspendHistoryCountValidation", "The count option must be an integer of at least {0}.")
+            .Replace("{0}", LidGuardSettings.MinimumSuspendHistoryEntryCount.ToString(), StringComparison.Ordinal);
         return false;
     }
 
@@ -81,16 +85,49 @@ internal static class SuspendHistoryCommand
     {
         var recordedAt = LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(historyEntry.RecordedAt);
         Console.WriteLine(
-            $"- {recordedAt} mode={historyEntry.SuspendMode} reason={historyEntry.Reason} succeeded={historyEntry.Succeeded} activeSessions={historyEntry.ActiveSessionCount} triggerSessions={historyEntry.SuspendTriggerSessionCount}");
+            LidGuardText.GetResourceString(
+                "SuspendHistoryEntryLine",
+                "- {0} mode={1} reason={2} succeeded={3} activeSessions={4} triggerSessions={5}")
+                .Replace("{0}", recordedAt, StringComparison.Ordinal)
+                .Replace("{1}", LidGuardText.DisplaySuspendMode(historyEntry.SuspendMode), StringComparison.Ordinal)
+                .Replace("{2}", DisplaySuspendWebhookReason(historyEntry.Reason), StringComparison.Ordinal)
+                .Replace("{3}", LidGuardText.DisplayBoolean(historyEntry.Succeeded), StringComparison.Ordinal)
+                .Replace("{4}", historyEntry.ActiveSessionCount.ToString(), StringComparison.Ordinal)
+                .Replace("{5}", historyEntry.SuspendTriggerSessionCount.ToString(), StringComparison.Ordinal));
 
         if (!string.IsNullOrWhiteSpace(historyEntry.SessionIdentifier))
         {
             var providerDisplayText = AgentProviderDisplay.CreateProviderDisplayText(historyEntry.Provider, historyEntry.ProviderName);
-            Console.WriteLine($"  session={providerDisplayText}:{historyEntry.SessionIdentifier}");
+            Console.WriteLine(LidGuardText.GetResourceString("SuspendHistorySession", "  session={0}:{1}")
+                .Replace("{0}", providerDisplayText, StringComparison.Ordinal)
+                .Replace("{1}", historyEntry.SessionIdentifier, StringComparison.Ordinal));
         }
 
-        if (historyEntry.ObservedTemperatureCelsius is not null) Console.WriteLine($"  temperature={historyEntry.ObservedTemperatureCelsius} Celsius mode={historyEntry.EmergencyHibernationTemperatureMode} threshold={historyEntry.EmergencyHibernationTemperatureCelsius} Celsius");
-        if (!string.IsNullOrWhiteSpace(historyEntry.WorkingDirectory)) Console.WriteLine($"  cwd=\"{historyEntry.WorkingDirectory}\"");
-        if (!string.IsNullOrWhiteSpace(historyEntry.Message)) Console.WriteLine($"  message={historyEntry.Message}");
+        if (historyEntry.ObservedTemperatureCelsius is not null)
+        {
+            var temperatureMode = historyEntry.EmergencyHibernationTemperatureMode is { } emergencyHibernationTemperatureMode
+                ? LidGuardText.DisplayEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode)
+                : LidGuardText.TextDisplayNone;
+            var threshold = historyEntry.EmergencyHibernationTemperatureCelsius?.ToString() ?? LidGuardText.TextDisplayNone;
+            Console.WriteLine(LidGuardText.GetResourceString("SuspendHistoryTemperature", "  temperature={0} Celsius mode={1} threshold={2} Celsius")
+                .Replace("{0}", historyEntry.ObservedTemperatureCelsius.Value.ToString(), StringComparison.Ordinal)
+                .Replace("{1}", temperatureMode, StringComparison.Ordinal)
+                .Replace("{2}", threshold, StringComparison.Ordinal));
+        }
+
+        if (!string.IsNullOrWhiteSpace(historyEntry.WorkingDirectory))
+        {
+            Console.WriteLine(LidGuardText.GetResourceString("SuspendHistoryWorkingDirectory", "  cwd=\"{0}\"")
+                .Replace("{0}", historyEntry.WorkingDirectory, StringComparison.Ordinal));
+        }
+
+        if (!string.IsNullOrWhiteSpace(historyEntry.Message))
+        {
+            Console.WriteLine(LidGuardText.GetResourceString("SuspendHistoryMessage", "  message={0}")
+                .Replace("{0}", historyEntry.Message, StringComparison.Ordinal));
+        }
     }
+
+    private static string DisplaySuspendWebhookReason(SuspendWebhookReason reason)
+        => LidGuardText.GetResourceString($"DisplaySuspendWebhookReason{reason}", reason.ToString());
 }

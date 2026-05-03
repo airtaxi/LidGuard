@@ -12,7 +12,7 @@ internal static class RemovePreSuspendWebhookHelpContent
             [],
             LidGuardHelpSectionTitles.SettingsAndSuspend,
             $"{commandDisplayName} remove-pre-suspend-webhook",
-            "Clear the persisted pre-suspend webhook URL.",
+            "Clear the saved before sleep or hibernate webhook URL.",
             [],
             [
                 "This command does not accept any options."

@@ -12,12 +12,12 @@ internal static class StartHelpContent
             [],
             LidGuardHelpSectionTitles.SessionControl,
             $"{commandDisplayName} start --provider codex|claude|copilot|custom|mcp [--session <id>] [--provider-name <name>] [--parent-pid <pid>] [--working-directory <path>]",
-            "Start or refresh a tracked session and load persisted default settings into the runtime request.",
+            "Start or refresh a tracked session and load the saved default settings.",
             [
                 new LidGuardHelpOption("--provider <provider>", "Required. Allowed values: codex, claude, copilot, custom, or mcp."),
                 new LidGuardHelpOption("--session <id>", "Optional. Session identifier to track. When omitted, LidGuard derives one from the provider display name and normalized working directory."),
                 new LidGuardHelpOption("--provider-name <name>", "Required when --provider mcp is used. Distinguishes one MCP-backed provider from another."),
-                new LidGuardHelpOption("--parent-pid <pid>", "Optional non-negative watched process identifier used by the runtime watchdog."),
+                new LidGuardHelpOption("--parent-pid <pid>", "Optional process ID to monitor so LidGuard can clean up if that process exits."),
                 new LidGuardHelpOption("--working-directory <path>", "Optional working directory used for fallback session identity and process resolution. Defaults to the current directory.")
             ],
             [

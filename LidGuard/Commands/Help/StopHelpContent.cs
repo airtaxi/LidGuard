@@ -17,7 +17,7 @@ internal static class StopHelpContent
                 new LidGuardHelpOption("--provider <provider>", "Required. Allowed values: codex, claude, copilot, custom, or mcp."),
                 new LidGuardHelpOption("--session <id>", "Optional. When omitted, LidGuard uses the same fallback session identifier strategy as start."),
                 new LidGuardHelpOption("--provider-name <name>", "Required when --provider mcp is used."),
-                new LidGuardHelpOption("--parent-pid <pid>", "Optional non-negative watched process identifier."),
+                new LidGuardHelpOption("--parent-pid <pid>", "Optional process ID to match when stopping a tracked session."),
                 new LidGuardHelpOption("--working-directory <path>", "Optional working directory used for fallback session identity. Defaults to the current directory.")
             ],
             []);

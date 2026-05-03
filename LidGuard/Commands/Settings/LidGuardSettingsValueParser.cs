@@ -1,6 +1,7 @@
 using LidGuard.Ipc;
 using LidGuard.Settings;
 using LidGuard.Power;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands;
 
@@ -18,7 +19,7 @@ internal static class LidGuardSettingsValueParser
 
         if (string.IsNullOrWhiteSpace(preSuspendWebhookUrlText) || preSuspendWebhookUrlText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
         {
-            message = $"Use {LidGuardCommandConsole.GetCommandDisplayName()} {LidGuardPipeCommands.RemovePreSuspendWebhook} to remove the pre-suspend webhook URL.";
+            message = LidGuardText.SettingsOptionPreSuspendWebhookRemovalCommand(LidGuardCommandConsole.GetCommandDisplayName(), LidGuardPipeCommands.RemovePreSuspendWebhook);
             return false;
         }
 
@@ -40,7 +41,7 @@ internal static class LidGuardSettingsValueParser
 
         if (string.IsNullOrWhiteSpace(postSessionEndWebhookUrlText) || postSessionEndWebhookUrlText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
         {
-            message = $"Use {LidGuardCommandConsole.GetCommandDisplayName()} {LidGuardPipeCommands.RemovePostSessionEndWebhook} to remove the post-session-end webhook URL.";
+            message = LidGuardText.SettingsOptionPostSessionEndWebhookRemovalCommand(LidGuardCommandConsole.GetCommandDisplayName(), LidGuardPipeCommands.RemovePostSessionEndWebhook);
             return false;
         }
 
@@ -62,6 +63,21 @@ internal static class LidGuardSettingsValueParser
         return TryParseClosedLidPermissionRequestDecision(permissionRequestDecisionText, out closedLidPermissionRequestDecision, out message);
     }
 
+    public static bool TryParseUserInterfaceCultureOption(
+        IReadOnlyDictionary<string, string> options,
+        string defaultValue,
+        out string userInterfaceCulture,
+        out string message)
+    {
+        userInterfaceCulture = defaultValue;
+        message = string.Empty;
+        if (!CommandOptionReader.TryGetOption(options, out var userInterfaceCultureText, "ui-culture", "user-interface-culture")) return true;
+        return UserInterfaceCultureConfiguration.TryNormalizeConfiguredValue(
+            userInterfaceCultureText,
+            out userInterfaceCulture,
+            out message);
+    }
+
     public static bool TryParseClosedLidPermissionRequestDecision(
         string permissionRequestDecisionText,
         out ClosedLidPermissionRequestDecision closedLidPermissionRequestDecision,
@@ -71,7 +87,7 @@ internal static class LidGuardSettingsValueParser
         message = string.Empty;
         if (string.IsNullOrWhiteSpace(permissionRequestDecisionText))
         {
-            message = "Closed lid permission request decision must be deny or allow.";
+            message = LidGuardText.SettingsOptionClosedLidPermissionRequestDecisionValidation;
             return false;
         }
 
@@ -84,7 +100,7 @@ internal static class LidGuardSettingsValueParser
                 closedLidPermissionRequestDecision = ClosedLidPermissionRequestDecision.Deny;
                 return true;
             default:
-                message = "Closed lid permission request decision must be deny or allow.";
+                message = LidGuardText.SettingsOptionClosedLidPermissionRequestDecisionValidation;
                 return false;
         }
     }
@@ -109,7 +125,7 @@ internal static class LidGuardSettingsValueParser
 
         if (suspendMode == defaultValue && !normalizedSuspendModeText.Equals(defaultValue.ToString(), StringComparison.OrdinalIgnoreCase))
         {
-            message = "The suspend-mode option must be sleep or hibernate.";
+            message = LidGuardText.SettingsOptionSuspendModeValidation;
             return false;
         }
 
@@ -127,7 +143,7 @@ internal static class LidGuardSettingsValueParser
         if (!CommandOptionReader.TryGetOption(options, out var postStopSuspendDelaySecondsText, "post-stop-suspend-delay-seconds")) return true;
         if (int.TryParse(postStopSuspendDelaySecondsText.Trim(), out postStopSuspendDelaySeconds) && postStopSuspendDelaySeconds >= 0) return true;
 
-        message = "The post-stop-suspend-delay-seconds option must be a non-negative integer.";
+        message = LidGuardText.SettingsOptionPostStopSuspendDelaySecondsValidation;
         return false;
     }
 
@@ -161,8 +177,9 @@ internal static class LidGuardSettingsValueParser
             return true;
         }
 
-        message =
-            $"The post-stop-suspend-sound-volume-override-percent option must be off or an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.";
+        message = LidGuardText.SettingsOptionPostStopSuspendSoundVolumeOverrideValidation(
+            LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent,
+            LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent);
         return false;
     }
 
@@ -197,7 +214,7 @@ internal static class LidGuardSettingsValueParser
             return true;
         }
 
-        message = $"The suspend-history-count option must be off or an integer of at least {LidGuardSettings.MinimumSuspendHistoryEntryCount}.";
+        message = LidGuardText.SettingsOptionSuspendHistoryCountValidation(LidGuardSettings.MinimumSuspendHistoryEntryCount);
         return false;
     }
 
@@ -225,7 +242,7 @@ internal static class LidGuardSettingsValueParser
             return true;
         }
 
-        message = $"The session-timeout-minutes option must be off or an integer of at least {LidGuardSettings.MinimumSessionTimeoutMinutes}.";
+        message = LidGuardText.SettingsOptionSessionTimeoutValidation(LidGuardSettings.MinimumSessionTimeoutMinutes);
         return false;
     }
 
@@ -259,7 +276,7 @@ internal static class LidGuardSettingsValueParser
             return true;
         }
 
-        message = $"The server-runtime-cleanup-delay-minutes option must be off or an integer of at least {LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes}.";
+        message = LidGuardText.SettingsOptionServerRuntimeCleanupDelayValidation(LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes);
         return false;
     }
 
@@ -277,8 +294,9 @@ internal static class LidGuardSettingsValueParser
             && emergencyHibernationTemperatureCelsius <= LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius)
             return true;
 
-        message =
-            $"The emergency-hibernation-temperature-celsius option must be an integer from {LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius} through {LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius}.";
+        message = LidGuardText.SettingsOptionEmergencyHibernationTemperatureCelsiusValidation(
+            LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius,
+            LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius);
         return false;
     }
 
@@ -293,7 +311,7 @@ internal static class LidGuardSettingsValueParser
         if (!CommandOptionReader.TryGetOption(options, out var emergencyHibernationTemperatureModeText, "emergency-hibernation-temperature-mode")) return true;
         if (TryParseEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureModeText, out emergencyHibernationTemperatureMode)) return true;
 
-        message = "The emergency-hibernation-temperature-mode option must be low, average, or high.";
+        message = LidGuardText.SettingsOptionEmergencyHibernationTemperatureModeValidation;
         return false;
     }
 

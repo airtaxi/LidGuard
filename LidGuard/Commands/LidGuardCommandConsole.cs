@@ -1,5 +1,6 @@
 using LidGuard.Commands.Help;
 using LidGuard.Ipc;
+using LidGuard.Localization;
 using LidGuard.Runtime;
 using LidGuard.Settings;
 using LidGuard.Power;
@@ -13,25 +14,33 @@ internal static class LidGuardCommandConsole
     {
         if (!response.Succeeded)
         {
-            Console.Error.WriteLine(response.Message);
+            Console.Error.WriteLine(LidGuardRuntimeResponseLocalizer.Localize(response));
             return 1;
         }
 
-        if (!string.IsNullOrWhiteSpace(response.Message)) Console.WriteLine(response.Message);
-        Console.WriteLine($"Active sessions: {response.ActiveSessionCount}");
-        Console.WriteLine($"Lid state: {response.LidSwitchState}");
-        Console.WriteLine($"Visible display monitor count: {response.VisibleDisplayMonitorCount}");
+        var responseMessage = LidGuardRuntimeResponseLocalizer.Localize(response);
+        if (!string.IsNullOrWhiteSpace(responseMessage)) Console.WriteLine(responseMessage);
+        Console.WriteLine(LidGuardText.ConsoleActiveSessions(response.ActiveSessionCount));
+        Console.WriteLine(LidGuardText.ConsoleLidState(LidGuardText.DisplayLidSwitchState(response.LidSwitchState)));
+        Console.WriteLine(LidGuardText.ConsoleVisibleDisplayMonitorCount(response.VisibleDisplayMonitorCount));
 
         if (includeSessions)
         {
             foreach (var session in response.Sessions)
             {
-                var processText = session.WatchedProcessIdentifier > 0 ? session.WatchedProcessIdentifier.ToString() : "none";
+                var processText = session.WatchedProcessIdentifier > 0 ? session.WatchedProcessIdentifier.ToString() : LidGuardText.SessionProcessNone;
                 var providerDisplayText = AgentProviderDisplay.CreateProviderDisplayText(session.Provider, session.ProviderName);
                 var startedAt = LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(session.StartedAt);
                 var lastActivityAt = LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(session.LastActivityAt);
                 Console.WriteLine(
-                    $"- {providerDisplayText}:{session.SessionIdentifier} process={processText} softLock={DescribeSoftLockStatus(session)} cwd=\"{session.WorkingDirectory}\" started={startedAt} lastActivity={lastActivityAt}");
+                    LidGuardText.ConsoleSessionLine(
+                        providerDisplayText,
+                        session.SessionIdentifier,
+                        processText,
+                        DescribeSoftLockStatus(session),
+                        session.WorkingDirectory,
+                        startedAt,
+                        lastActivityAt));
             }
         }
 
@@ -44,35 +53,36 @@ internal static class LidGuardCommandConsole
     {
         var normalizedSettings = LidGuardSettings.Normalize(settings);
         var powerRequest = normalizedSettings.PowerRequest ?? PowerRequestOptions.Default;
-        Console.WriteLine("Settings:");
-        Console.WriteLine($"  Prevent system sleep: {powerRequest.PreventSystemSleep}");
+        Console.WriteLine(LidGuardText.SettingsTitle);
+        Console.WriteLine(LidGuardText.SettingsPreventSystemSleep(LidGuardText.DisplayBoolean(powerRequest.PreventSystemSleep)));
 #if !LIDGUARD_LINUX && !LIDGUARD_MACOS
-        Console.WriteLine($"  Prevent away mode sleep: {powerRequest.PreventAwayModeSleep}");
+        Console.WriteLine(LidGuardText.SettingsPreventAwayModeSleep(LidGuardText.DisplayBoolean(powerRequest.PreventAwayModeSleep)));
 #endif
-        Console.WriteLine($"  Prevent display sleep: {powerRequest.PreventDisplaySleep}");
-        Console.WriteLine($"  Change lid action: {normalizedSettings.ChangeLidAction}");
-        Console.WriteLine($"  Watch parent process: {normalizedSettings.WatchParentProcess}");
-        Console.WriteLine($"  Session timeout: {SessionTimeoutConfiguration.GetDisplayValue(normalizedSettings.SessionTimeoutMinutes)}");
-        Console.WriteLine($"  Server runtime cleanup delay: {ServerRuntimeCleanupConfiguration.GetDisplayValue(normalizedSettings.ServerRuntimeCleanupDelayMinutes)}");
-        Console.WriteLine($"  Emergency hibernation on high temperature: {normalizedSettings.EmergencyHibernationOnHighTemperature}");
-        Console.WriteLine($"  Emergency hibernation temperature mode: {normalizedSettings.EmergencyHibernationTemperatureMode}");
-        Console.WriteLine($"  Emergency hibernation temperature Celsius: {normalizedSettings.EmergencyHibernationTemperatureCelsius}");
-        Console.WriteLine($"  Suspend mode: {normalizedSettings.SuspendMode}");
-        Console.WriteLine($"  Post-stop suspend delay seconds: {normalizedSettings.PostStopSuspendDelaySeconds}");
-        Console.WriteLine($"  Post-stop suspend sound: {PostStopSuspendSoundConfiguration.GetDisplayValue(normalizedSettings.PostStopSuspendSound)}");
-        Console.WriteLine($"  Post-stop suspend sound volume override percent: {PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(normalizedSettings.PostStopSuspendSoundVolumeOverridePercent)}");
-        Console.WriteLine($"  Suspend history count: {SuspendHistoryConfiguration.GetDisplayValue(normalizedSettings.SuspendHistoryEntryCount)}");
-        Console.WriteLine($"  Pre-suspend webhook URL: {PreSuspendWebhookConfiguration.GetDisplayValue(normalizedSettings.PreSuspendWebhookUrl)}");
-        Console.WriteLine($"  Post-session-end webhook URL: {PostSessionEndWebhookConfiguration.GetDisplayValue(normalizedSettings.PostSessionEndWebhookUrl)}");
-        Console.WriteLine($"  Closed lid permission request decision: {normalizedSettings.ClosedLidPermissionRequestDecision}");
-        Console.WriteLine($"  Reason: {powerRequest.Reason}");
+        Console.WriteLine(LidGuardText.SettingsPreventDisplaySleep(LidGuardText.DisplayBoolean(powerRequest.PreventDisplaySleep)));
+        Console.WriteLine(LidGuardText.SettingsChangeLidAction(LidGuardText.DisplayBoolean(normalizedSettings.ChangeLidAction)));
+        Console.WriteLine(LidGuardText.SettingsWatchParentProcess(LidGuardText.DisplayBoolean(normalizedSettings.WatchParentProcess)));
+        Console.WriteLine(LidGuardText.SettingsSessionTimeout(LidGuardText.DisplayMinuteCount(normalizedSettings.SessionTimeoutMinutes)));
+        Console.WriteLine(LidGuardText.SettingsServerRuntimeCleanupDelay(LidGuardText.DisplayMinuteCount(normalizedSettings.ServerRuntimeCleanupDelayMinutes)));
+        Console.WriteLine(LidGuardText.SettingsEmergencyHibernationOnHighTemperature(LidGuardText.DisplayBoolean(normalizedSettings.EmergencyHibernationOnHighTemperature)));
+        Console.WriteLine(LidGuardText.SettingsEmergencyHibernationTemperatureMode(LidGuardText.DisplayEmergencyHibernationTemperatureMode(normalizedSettings.EmergencyHibernationTemperatureMode)));
+        Console.WriteLine(LidGuardText.SettingsEmergencyHibernationTemperatureCelsius(normalizedSettings.EmergencyHibernationTemperatureCelsius));
+        Console.WriteLine(LidGuardText.SettingsSuspendMode(LidGuardText.DisplaySuspendMode(normalizedSettings.SuspendMode)));
+        Console.WriteLine(LidGuardText.SettingsPostStopSuspendDelaySeconds(normalizedSettings.PostStopSuspendDelaySeconds));
+        Console.WriteLine(LidGuardText.SettingsPostStopSuspendSound(LidGuardText.DisplayOptionalValue(PostStopSuspendSoundConfiguration.GetDisplayValue(normalizedSettings.PostStopSuspendSound))));
+        Console.WriteLine(LidGuardText.SettingsPostStopSuspendSoundVolumeOverridePercent(LidGuardText.DisplayOptionalValue(PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(normalizedSettings.PostStopSuspendSoundVolumeOverridePercent))));
+        Console.WriteLine(LidGuardText.SettingsSuspendHistoryCount(LidGuardText.DisplaySuspendHistoryEntryCount(normalizedSettings.SuspendHistoryEntryCount)));
+        Console.WriteLine(LidGuardText.SettingsPreSuspendWebhookUrl(LidGuardText.DisplayOptionalValue(PreSuspendWebhookConfiguration.GetDisplayValue(normalizedSettings.PreSuspendWebhookUrl))));
+        Console.WriteLine(LidGuardText.SettingsPostSessionEndWebhookUrl(LidGuardText.DisplayOptionalValue(PostSessionEndWebhookConfiguration.GetDisplayValue(normalizedSettings.PostSessionEndWebhookUrl))));
+        Console.WriteLine(LidGuardText.SettingsClosedLidPermissionRequestDecision(LidGuardText.DisplayClosedLidPermissionRequestDecision(normalizedSettings.ClosedLidPermissionRequestDecision)));
+        Console.WriteLine(LidGuardText.SettingsUserInterfaceCulture(UserInterfaceCultureConfiguration.GetDisplayValue(normalizedSettings.UserInterfaceCulture)));
+        Console.WriteLine(LidGuardText.SettingsReason(powerRequest.Reason));
     }
 
     public static int WriteHelp(int exitCode)
     {
         var helpDocument = CreateHelpDocument();
         foreach (var helpSection in LidGuardHelpContent.CreateSummarySections(helpDocument)) WriteHelpSection(helpSection);
-        Console.WriteLine("Use command-specific help for full options, notes, and examples.");
+        Console.WriteLine(LidGuardText.HelpCommandSpecificHelpHint);
         return exitCode;
     }
 
@@ -108,7 +118,7 @@ internal static class LidGuardCommandConsole
 
     public static int WriteUnknownCommand(string commandName)
     {
-        Console.Error.WriteLine($"Unknown command: {commandName}");
+        Console.Error.WriteLine(LidGuardText.CommandUnknownCommand(commandName));
         return WriteHelp(1);
     }
 
@@ -138,15 +148,15 @@ internal static class LidGuardCommandConsole
     {
         Console.WriteLine($"  {helpCommand.Synopsis}");
         Console.WriteLine($"    {helpCommand.Description}");
-        foreach (var helpOption in helpCommand.Options) Console.WriteLine($"    {helpOption.Label}: {helpOption.Description}");
-        foreach (var note in helpCommand.Notes) Console.WriteLine($"    Note: {note}");
+        foreach (var helpOption in helpCommand.Options) Console.WriteLine($"    {LidGuardText.HelpOptionLabel(helpOption.Label, helpOption.Description)}");
+        foreach (var note in helpCommand.Notes) Console.WriteLine($"    {LidGuardText.HelpNoteLabel}: {note}");
     }
 
     private static string DescribeSoftLockStatus(LidGuardSessionStatus session)
     {
-        if (session.SoftLockState != LidGuardSessionSoftLockState.SoftLocked) return session.SoftLockState.ToString();
+        if (session.SoftLockState != LidGuardSessionSoftLockState.SoftLocked) return LidGuardText.DisplaySessionSoftLockState(session.SoftLockState);
 
-        var details = session.SoftLockState.ToString();
+        var details = LidGuardText.DisplaySessionSoftLockState(session.SoftLockState);
         if (!string.IsNullOrWhiteSpace(session.SoftLockReason)) details = $"{details}:{session.SoftLockReason}";
         if (session.SoftLockedAt is not null) details = $"{details}@{LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(session.SoftLockedAt.Value)}";
         return details;

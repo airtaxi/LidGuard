@@ -61,7 +61,8 @@ internal static class PostStopSuspendSoundConfiguration
             ServerRuntimeCleanupDelayMinutes = normalizedInputSettings.ServerRuntimeCleanupDelayMinutes,
             EmergencyHibernationOnHighTemperature = normalizedInputSettings.EmergencyHibernationOnHighTemperature,
             EmergencyHibernationTemperatureMode = normalizedInputSettings.EmergencyHibernationTemperatureMode,
-            EmergencyHibernationTemperatureCelsius = normalizedInputSettings.EmergencyHibernationTemperatureCelsius
+            EmergencyHibernationTemperatureCelsius = normalizedInputSettings.EmergencyHibernationTemperatureCelsius,
+            UserInterfaceCulture = normalizedInputSettings.UserInterfaceCulture
         };
 
         message = string.Empty;

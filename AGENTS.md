@@ -203,6 +203,10 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - `settings` exposes `--session-timeout-minutes off|<minutes>` for inactive session timeout soft-locking; `off` disables timeout soft-locking and enabled values must be at least 1.
 - `settings` exposes `--server-runtime-cleanup-delay-minutes off|<minutes>` for server runtime cleanup after all active sessions are gone and pending cleanup is finished; `off` exits immediately and enabled values must be at least 1.
 - `settings` exposes `--post-session-end-webhook-url <http-or-https-url>` for normal provider session-end notifications that do not schedule suspend.
+- `settings` exposes `--ui-culture auto|en|ko|<culture-name>` for human CLI UI localization. `auto` uses the process or operating system UI culture, and the `LIDGUARD_UI_CULTURE` environment variable overrides the stored setting for testing, support, and scripted use.
+- UI culture selection affects human CLI presentation and generated managed hook `statusMessage` text. Command names, option names, IPC payloads, hook stdout JSON, MCP tool names, MCP JSON response property names, settings JSON property names, generated provider configuration keys, command paths, protocol values, and persisted JSONL log structure remain stable and non-localized.
+- When `settings` changes UI culture, LidGuard refreshes `statusMessage` text only in already installed default managed provider hooks. This refresh must detect LidGuard hook command entries rather than replacing a whole marked config region, and it must not install missing hooks.
+- On Windows, when the effective UI culture is not English, LidGuard sets console input and output encoding to UTF-8 before writing human CLI text so localized non-ASCII output such as Korean does not degrade to question marks. This must not change hook or MCP JSON protocol text.
 - `preview-system-sound` and `preview-current-sound` apply the saved post-stop suspend sound volume override setting and wait until playback finishes. `preview-current-sound` plays the saved post-stop suspend sound and prints setup guidance when no sound is configured.
 - `hook-install`, `hook-status`, `hook-remove`, and `hook-events` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
 - `mcp-status`, `mcp-install`, and `mcp-remove` prompt for `codex`, `claude`, `copilot`, or `all` when `--provider` is omitted.
@@ -312,6 +316,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Emergency Hibernation temperature mode: Average by default, with Low and High optional.
 - Emergency Hibernation temperature threshold: 93 Celsius by default, clamped to 70 through 110.
 - Closed-lid PermissionRequest decision: Deny by default, Allow optional.
+- User interface culture: `auto` by default, with `en`, `ko`, or any `CultureInfo`-resolvable BCP 47 culture name optional.
 - PermissionRequest hooks only emit a structured allow/deny decision when the runtime reports `LidSwitchState = Closed` and `VisibleDisplayMonitorCount = 0`; otherwise they return empty stdout so the provider's default permission flow continues.
 - Claude and GitHub Copilot CLI closed-lid `PermissionRequest` outputs also set `interrupt: true`. Even if another provider later uses a similar JSON shape, keep hook DTOs separate per provider instead of sharing one output type across providers.
 - Claude `Elicitation` hooks emit a structured `cancel` only when the runtime reports `LidSwitchState = Closed` and `VisibleDisplayMonitorCount = 0`; otherwise they return empty stdout so Claude's default elicitation flow continues.

@@ -1,5 +1,6 @@
 using LidGuard.Platform;
 using LidGuard.Power;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands;
 
@@ -36,13 +37,13 @@ internal static class LinuxPermissionCommand
     {
         if (arguments.Length == 0)
         {
-            Console.Error.WriteLine($"A subcommand is required. Use: {CommandName} status|check|install|remove");
+            Console.Error.WriteLine(Format("PermissionSubcommandRequired", "A subcommand is required. Use: {0} status|check|install|remove", CommandName));
             return 1;
         }
 
         if (arguments.Length > 1)
         {
-            Console.Error.WriteLine($"Unexpected argument: {arguments[1]}");
+            Console.Error.WriteLine(LidGuardText.CommandUnexpectedArgument(arguments[1]));
             return 1;
         }
 
@@ -61,21 +62,21 @@ internal static class LinuxPermissionCommand
         var targetUserName = GetTargetUserName();
         var ruleInspection = InspectRule(targetUserName);
 
-        Console.WriteLine("Linux permission status:");
-        Console.WriteLine($"  User: {targetUserName}");
-        Console.WriteLine($"  Polkit rule path: {RuleFilePath}");
-        Console.WriteLine($"  Polkit rule: {DescribeRuleStatus(ruleInspection)}");
-        Console.WriteLine($"  systemd-inhibit: {DescribeExecutableAvailability("systemd-inhibit")}");
-        Console.WriteLine($"  systemctl: {DescribeExecutableAvailability("systemctl")}");
-        Console.WriteLine($"  logind CanSuspend: {DescribeCapability("CanSuspend")}");
-        Console.WriteLine($"  logind CanHibernate: {DescribeCapability("CanHibernate")}");
+        Console.WriteLine(Get("LinuxPermissionStatusTitle", "Linux permission status:"));
+        WriteField("PermissionLabelUser", "User", targetUserName);
+        WriteField("LinuxPermissionLabelPolkitRulePath", "Polkit rule path", RuleFilePath);
+        WriteField("LinuxPermissionLabelPolkitRule", "Polkit rule", DescribeRuleStatus(ruleInspection));
+        WriteField("LinuxPermissionLabelSystemdInhibit", "systemd-inhibit", DescribeExecutableAvailability("systemd-inhibit"));
+        WriteField("LinuxPermissionLabelSystemctl", "systemctl", DescribeExecutableAvailability("systemctl"));
+        WriteField("LinuxPermissionLabelLogindCanSuspend", "logind CanSuspend", DescribeCapability("CanSuspend"));
+        WriteField("LinuxPermissionLabelLogindCanHibernate", "logind CanHibernate", DescribeCapability("CanHibernate"));
         return 0;
     }
 
     private static int RunCheck()
     {
         var succeeded = true;
-        Console.WriteLine("Linux permission check:");
+        Console.WriteLine(Get("LinuxPermissionCheckTitle", "Linux permission check:"));
 
         var inhibitorResult = SystemdInhibitor.TryAcquire(
             "sleep:idle:handle-lid-switch",
@@ -83,12 +84,12 @@ internal static class LinuxPermissionCommand
         if (inhibitorResult.Succeeded)
         {
             inhibitorResult.Value.Dispose();
-            Console.WriteLine("  inhibitor acquire/release: ok");
+            WriteCheckLine("LinuxPermissionCheckInhibitorAcquireRelease", "inhibitor acquire/release", Get("PermissionResultOk", "ok"));
         }
         else
         {
             succeeded = false;
-            Console.WriteLine($"  inhibitor acquire/release: failed - {inhibitorResult.Message}");
+            WriteCheckLine("LinuxPermissionCheckInhibitorAcquireRelease", "inhibitor acquire/release", Format("PermissionResultFailed", "failed - {0}", inhibitorResult.Message));
         }
 
         if (LinuxCommandPathResolver.TryFindExecutable("systemctl", out var systemctlPath))
@@ -96,18 +97,18 @@ internal static class LinuxPermissionCommand
             var systemctlResult = LinuxCommandRunner.Run(systemctlPath, ["--version"], s_checkCommandTimeout);
             if (systemctlResult.Succeeded)
             {
-                Console.WriteLine("  systemctl --version: ok");
+                WriteCheckLine("LinuxPermissionCheckSystemctlVersion", "systemctl --version", Get("PermissionResultOk", "ok"));
             }
             else
             {
                 succeeded = false;
-                Console.WriteLine($"  systemctl --version: failed - {systemctlResult.CreateFailureMessage("systemctl --version")}");
+                WriteCheckLine("LinuxPermissionCheckSystemctlVersion", "systemctl --version", Format("PermissionResultFailed", "failed - {0}", systemctlResult.CreateFailureMessage("systemctl --version")));
             }
         }
         else
         {
             succeeded = false;
-            Console.WriteLine("  systemctl --version: failed - systemctl was not found on PATH.");
+            WriteCheckLine("LinuxPermissionCheckSystemctlVersion", "systemctl --version", Format("PermissionResultFailed", "failed - {0}", Format("PermissionExecutableNotFound", "{0} was not found on PATH.", "systemctl")));
         }
 
         succeeded &= WriteCapabilityCheck("CanSuspend");
@@ -124,13 +125,13 @@ internal static class LinuxPermissionCommand
             var ruleInspection = InspectRule(targetUserName);
             if (!ruleInspection.InspectionSucceeded)
             {
-                Console.Error.WriteLine($"Failed to inspect existing polkit rule: {ruleInspection.Message}");
+                Console.Error.WriteLine(Format("LinuxPermissionInspectPolkitRuleFailed", "Failed to inspect existing polkit rule: {0}", ruleInspection.Message));
                 return 1;
             }
 
             if (ruleInspection.Exists && !ruleInspection.IsManaged)
             {
-                Console.Error.WriteLine($"Refusing to overwrite unmanaged polkit rule file: {RuleFilePath}");
+                Console.Error.WriteLine(Format("LinuxPermissionRefusingOverwriteUnmanagedPolkitRule", "Refusing to overwrite unmanaged polkit rule file: {0}", RuleFilePath));
                 return 1;
             }
 
@@ -138,19 +139,19 @@ internal static class LinuxPermissionCommand
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(RuleFilePath) ?? "/etc/polkit-1/rules.d");
                 File.WriteAllText(RuleFilePath, ruleContent);
-                Console.WriteLine($"Installed LidGuard polkit rule for user {targetUserName}: {RuleFilePath}");
+                Console.WriteLine(Format("LinuxPermissionPolkitRuleInstalled", "Installed LidGuard polkit rule for user {0}: {1}", targetUserName, RuleFilePath));
                 return 0;
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
-                Console.Error.WriteLine($"Failed to install polkit rule: {exception.Message}");
+                Console.Error.WriteLine(Format("LinuxPermissionInstallPolkitRuleFailed", "Failed to install polkit rule: {0}", exception.Message));
                 return 1;
             }
         }
 
         if (!LinuxCommandPathResolver.TryFindExecutable("sudo", out var sudoExecutablePath))
         {
-            Console.Error.WriteLine("sudo was not found on PATH. Run this command as root or install sudo.");
+            Console.Error.WriteLine(Get("PermissionSudoNotFound", "sudo was not found on PATH. Run this command as root or install sudo."));
             return 1;
         }
 
@@ -177,12 +178,12 @@ internal static class LinuxPermissionCommand
                 return 1;
             }
 
-            Console.WriteLine($"Installed LidGuard polkit rule for user {targetUserName}: {RuleFilePath}");
+            Console.WriteLine(Format("LinuxPermissionPolkitRuleInstalled", "Installed LidGuard polkit rule for user {0}: {1}", targetUserName, RuleFilePath));
             return 0;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            Console.Error.WriteLine($"Failed to prepare polkit rule: {exception.Message}");
+            Console.Error.WriteLine(Format("LinuxPermissionPreparePolkitRuleFailed", "Failed to prepare polkit rule: {0}", exception.Message));
             return 1;
         }
         finally
@@ -199,38 +200,38 @@ internal static class LinuxPermissionCommand
             var ruleInspection = InspectRule(targetUserName);
             if (!ruleInspection.InspectionSucceeded)
             {
-                Console.Error.WriteLine($"Failed to inspect existing polkit rule: {ruleInspection.Message}");
+                Console.Error.WriteLine(Format("LinuxPermissionInspectPolkitRuleFailed", "Failed to inspect existing polkit rule: {0}", ruleInspection.Message));
                 return 1;
             }
 
             if (!ruleInspection.Exists)
             {
-                Console.WriteLine($"LidGuard polkit rule is not installed: {RuleFilePath}");
+                Console.WriteLine(Format("LinuxPermissionPolkitRuleNotInstalled", "LidGuard polkit rule is not installed: {0}", RuleFilePath));
                 return 0;
             }
 
             if (!ruleInspection.IsManaged)
             {
-                Console.Error.WriteLine($"Refusing to remove unmanaged polkit rule file: {RuleFilePath}");
+                Console.Error.WriteLine(Format("LinuxPermissionRefusingRemoveUnmanagedPolkitRule", "Refusing to remove unmanaged polkit rule file: {0}", RuleFilePath));
                 return 1;
             }
 
             try
             {
                 File.Delete(RuleFilePath);
-                Console.WriteLine($"Removed LidGuard polkit rule: {RuleFilePath}");
+                Console.WriteLine(Format("LinuxPermissionPolkitRuleRemoved", "Removed LidGuard polkit rule: {0}", RuleFilePath));
                 return 0;
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
-                Console.Error.WriteLine($"Failed to remove polkit rule: {exception.Message}");
+                Console.Error.WriteLine(Format("LinuxPermissionRemovePolkitRuleFailed", "Failed to remove polkit rule: {0}", exception.Message));
                 return 1;
             }
         }
 
         if (!LinuxCommandPathResolver.TryFindExecutable("sudo", out var sudoExecutablePath))
         {
-            Console.Error.WriteLine("sudo was not found on PATH. Run this command as root or install sudo.");
+            Console.Error.WriteLine(Get("PermissionSudoNotFound", "sudo was not found on PATH. Run this command as root or install sudo."));
             return 1;
         }
 
@@ -248,7 +249,7 @@ internal static class LinuxPermissionCommand
             TimeSpan.FromMinutes(2));
         if (removeResult.Started && removeResult.ExitCode == 2)
         {
-            Console.WriteLine($"LidGuard polkit rule is not installed: {RuleFilePath}");
+            Console.WriteLine(Format("LinuxPermissionPolkitRuleNotInstalled", "LidGuard polkit rule is not installed: {0}", RuleFilePath));
             return 0;
         }
 
@@ -258,7 +259,7 @@ internal static class LinuxPermissionCommand
             return 1;
         }
 
-        Console.WriteLine($"Removed LidGuard polkit rule: {RuleFilePath}");
+        Console.WriteLine(Format("LinuxPermissionPolkitRuleRemoved", "Removed LidGuard polkit rule: {0}", RuleFilePath));
         return 0;
     }
 
@@ -266,19 +267,23 @@ internal static class LinuxPermissionCommand
     {
         if (TryQueryLogindCapability(capabilityName, out var capabilityValue, out var message))
         {
-            Console.WriteLine($"  logind {capabilityName}: {capabilityValue}");
+            Console.WriteLine(Format("ManagementField", "{0}: {1}", $"logind {capabilityName}", capabilityValue));
             return true;
         }
 
-        Console.WriteLine($"  logind {capabilityName}: unavailable - {message}");
+        Console.WriteLine(Format("ManagementField", "{0}: {1}", $"logind {capabilityName}", Format("PermissionResultUnavailable", "unavailable - {0}", message)));
         return false;
     }
 
     private static string DescribeExecutableAvailability(string commandName)
-        => LinuxCommandPathResolver.TryFindExecutable(commandName, out var executablePath) ? $"available ({executablePath})" : "missing";
+        => LinuxCommandPathResolver.TryFindExecutable(commandName, out var executablePath)
+            ? Format("PermissionExecutableAvailable", "available ({0})", executablePath)
+            : Get("PermissionExecutableMissing", "missing");
 
     private static string DescribeCapability(string capabilityName)
-        => TryQueryLogindCapability(capabilityName, out var capabilityValue, out var message) ? capabilityValue : $"unavailable ({message})";
+        => TryQueryLogindCapability(capabilityName, out var capabilityValue, out var message)
+            ? capabilityValue
+            : Format("PermissionResultUnavailableParenthesized", "unavailable ({0})", message);
 
     private static bool TryQueryLogindCapability(string capabilityName, out string capabilityValue, out string message)
     {
@@ -286,7 +291,7 @@ internal static class LinuxPermissionCommand
         message = string.Empty;
         if (!LinuxCommandPathResolver.TryFindExecutable("busctl", out var busctlPath))
         {
-            message = "busctl was not found on PATH.";
+            message = Format("PermissionExecutableNotFound", "{0} was not found on PATH.", "busctl");
             return false;
         }
 
@@ -309,7 +314,7 @@ internal static class LinuxPermissionCommand
         capabilityValue = ParseBusctlStringValue(commandResult.StandardOutput);
         if (!string.IsNullOrWhiteSpace(capabilityValue)) return true;
 
-        message = "busctl returned an unrecognized value.";
+        message = Get("LinuxPermissionBusctlUnrecognizedValue", "busctl returned an unrecognized value.");
         return false;
     }
 
@@ -346,10 +351,12 @@ internal static class LinuxPermissionCommand
 
     private static string DescribeRuleStatus(RuleInspection ruleInspection)
     {
-        if (!ruleInspection.InspectionSucceeded) return $"unable to inspect ({ruleInspection.Message})";
-        if (!ruleInspection.Exists) return "not installed";
-        if (!ruleInspection.IsManaged) return "present but not managed by LidGuard";
-        return ruleInspection.IsForCurrentUser ? "installed for current user" : "installed for another user";
+        if (!ruleInspection.InspectionSucceeded) return Format("LinuxPermissionRuleUnableToInspect", "unable to inspect ({0})", ruleInspection.Message);
+        if (!ruleInspection.Exists) return Get("PermissionRuleNotInstalled", "not installed");
+        if (!ruleInspection.IsManaged) return Get("PermissionRulePresentUnmanaged", "present but not managed by LidGuard");
+        return ruleInspection.IsForCurrentUser
+            ? Get("PermissionRuleInstalledForCurrentUser", "installed for current user")
+            : Get("PermissionRuleInstalledForAnotherUser", "installed for another user");
     }
 
     private static RuleContentReadResult ReadRuleContentDirect()
@@ -362,7 +369,7 @@ internal static class LinuxPermissionCommand
 
     private static RuleContentReadResult ReadRuleContentWithNonInteractiveSudo()
     {
-        if (!LinuxCommandPathResolver.TryFindExecutable("sudo", out var sudoExecutablePath)) return RuleContentReadResult.Inconclusive("sudo was not found on PATH.");
+        if (!LinuxCommandPathResolver.TryFindExecutable("sudo", out var sudoExecutablePath)) return RuleContentReadResult.Inconclusive(Get("PermissionSudoNotFoundShort", "sudo was not found on PATH."));
 
         var commandResult = LinuxCommandRunner.Run(sudoExecutablePath, ["-n", "cat", RuleFilePath], s_checkCommandTimeout);
         if (commandResult.Succeeded) return RuleContentReadResult.Success(commandResult.StandardOutput);
@@ -412,7 +419,7 @@ polkit.addRule(function(action, subject) {
             : LinuxCommandResult.Failure("whoami was not found.");
         return userResult.Succeeded && !string.IsNullOrWhiteSpace(userResult.StandardOutput)
             ? userResult.StandardOutput.Trim()
-            : "unknown";
+            : Get("PermissionUnknownUser", "unknown");
     }
 
     private static bool IsRootUser()
@@ -425,10 +432,22 @@ polkit.addRule(function(action, subject) {
 
     private static int WriteUnknownSubcommand(string subcommand)
     {
-        Console.Error.WriteLine($"Unknown {CommandName} subcommand: {subcommand}");
-        Console.Error.WriteLine($"Use: {CommandName} status|check|install|remove");
+        Console.Error.WriteLine(Format("PermissionUnknownSubcommand", "Unknown {0} subcommand: {1}", CommandName, subcommand));
+        Console.Error.WriteLine(Format("PermissionSubcommandUsage", "Use: {0} status|check|install|remove", CommandName));
         return 1;
     }
+
+    private static void WriteField(string labelResourceName, string fallbackLabel, string value)
+        => Console.WriteLine(Format("ManagementField", "{0}: {1}", Get(labelResourceName, fallbackLabel), value));
+
+    private static void WriteCheckLine(string labelResourceName, string fallbackLabel, string value)
+        => Console.WriteLine(Format("ManagementField", "{0}: {1}", Get(labelResourceName, fallbackLabel), value));
+
+    private static string Get(string resourceName, string fallbackValue)
+        => LidGuardText.GetResourceString(resourceName, fallbackValue);
+
+    private static string Format(string resourceName, string fallbackValue, params object[] arguments)
+        => string.Format(System.Globalization.CultureInfo.CurrentCulture, Get(resourceName, fallbackValue), arguments);
 
     private static void TryDeleteTemporaryFile(string temporaryRuleFilePath)
     {

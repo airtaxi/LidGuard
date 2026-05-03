@@ -1,5 +1,6 @@
 using LidGuard.Power;
 using LidGuard.Settings;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands;
 
@@ -14,84 +15,91 @@ internal static class LidGuardSettingsInteractiveFactory
         settings = normalizedStoredSettings;
         message = string.Empty;
 
-        if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting("Prevent system sleep", storedPowerRequest.PreventSystemSleep, defaultPowerRequest.PreventSystemSleep, out var preventSystemSleep, out message)) return false;
+        if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting(LidGuardText.SettingsNamePreventSystemSleep, storedPowerRequest.PreventSystemSleep, defaultPowerRequest.PreventSystemSleep, out var preventSystemSleep, out message)) return false;
 #if LIDGUARD_LINUX || LIDGUARD_MACOS
         var preventAwayModeSleep = false;
 #else
-        if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting("Prevent away mode sleep", storedPowerRequest.PreventAwayModeSleep, defaultPowerRequest.PreventAwayModeSleep, out var preventAwayModeSleep, out message)) return false;
+        if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting(LidGuardText.SettingsNamePreventAwayModeSleep, storedPowerRequest.PreventAwayModeSleep, defaultPowerRequest.PreventAwayModeSleep, out var preventAwayModeSleep, out message)) return false;
 #endif
-        if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting("Prevent display sleep", storedPowerRequest.PreventDisplaySleep, defaultPowerRequest.PreventDisplaySleep, out var preventDisplaySleep, out message)) return false;
-        if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting("Change lid action", normalizedStoredSettings.ChangeLidAction, defaultSettings.ChangeLidAction, out var changeLidAction, out message)) return false;
-        if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting("Watch parent process", normalizedStoredSettings.WatchParentProcess, defaultSettings.WatchParentProcess, out var watchParentProcess, out message)) return false;
+        if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting(LidGuardText.SettingsNamePreventDisplaySleep, storedPowerRequest.PreventDisplaySleep, defaultPowerRequest.PreventDisplaySleep, out var preventDisplaySleep, out message)) return false;
+        if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting(LidGuardText.SettingsNameChangeLidAction, normalizedStoredSettings.ChangeLidAction, defaultSettings.ChangeLidAction, out var changeLidAction, out message)) return false;
+        if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting(LidGuardText.SettingsNameWatchParentProcess, normalizedStoredSettings.WatchParentProcess, defaultSettings.WatchParentProcess, out var watchParentProcess, out message)) return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadSessionTimeoutMinutesSetting(
-            "Session timeout minutes",
+            LidGuardText.SettingsNameSessionTimeoutMinutes,
             normalizedStoredSettings.SessionTimeoutMinutes,
             defaultSettings.SessionTimeoutMinutes,
             out var sessionTimeoutMinutes,
             out message))
             return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadServerRuntimeCleanupDelayMinutesSetting(
-            "Server runtime cleanup delay minutes",
+            LidGuardText.SettingsNameServerRuntimeCleanupDelayMinutes,
             normalizedStoredSettings.ServerRuntimeCleanupDelayMinutes,
             defaultSettings.ServerRuntimeCleanupDelayMinutes,
             out var serverRuntimeCleanupDelayMinutes,
             out message))
             return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting(
-            "Emergency hibernation on high temperature",
+            LidGuardText.SettingsNameEmergencyHibernationOnHighTemperature,
             normalizedStoredSettings.EmergencyHibernationOnHighTemperature,
             defaultSettings.EmergencyHibernationOnHighTemperature,
             out var emergencyHibernationOnHighTemperature,
             out message))
             return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadEmergencyHibernationTemperatureModeSetting(
-            "Emergency hibernation temperature mode",
+            LidGuardText.SettingsNameEmergencyHibernationTemperatureMode,
             normalizedStoredSettings.EmergencyHibernationTemperatureMode,
             defaultSettings.EmergencyHibernationTemperatureMode,
             out var emergencyHibernationTemperatureMode,
             out message))
             return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadEmergencyHibernationTemperatureCelsiusSetting(
-            "Emergency hibernation temperature Celsius",
+            LidGuardText.SettingsNameEmergencyHibernationTemperatureCelsius,
             normalizedStoredSettings.EmergencyHibernationTemperatureCelsius,
             defaultSettings.EmergencyHibernationTemperatureCelsius,
             out var emergencyHibernationTemperatureCelsius,
             out message))
             return false;
-        if (!LidGuardSettingsInteractivePromptReader.TryReadSuspendModeSetting("Suspend mode", normalizedStoredSettings.SuspendMode, defaultSettings.SuspendMode, out var suspendMode, out message)) return false;
+        if (!LidGuardSettingsInteractivePromptReader.TryReadSuspendModeSetting(LidGuardText.SettingsNameSuspendMode, normalizedStoredSettings.SuspendMode, defaultSettings.SuspendMode, out var suspendMode, out message)) return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadNonNegativeIntegerSetting(
-            "Post-stop suspend delay seconds",
+            LidGuardText.SettingsNamePostStopSuspendDelaySeconds,
             normalizedStoredSettings.PostStopSuspendDelaySeconds,
             defaultSettings.PostStopSuspendDelaySeconds,
             out var postStopSuspendDelaySeconds,
             out message))
             return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadPostStopSuspendSoundSetting(
-            "Post-stop suspend sound",
+            LidGuardText.SettingsNamePostStopSuspendSound,
             normalizedStoredSettings.PostStopSuspendSound,
             defaultSettings.PostStopSuspendSound,
             out var postStopSuspendSound,
             out message))
             return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadPostStopSuspendSoundVolumeOverridePercentSetting(
-            "Post-stop suspend sound volume override percent",
+            LidGuardText.SettingsNamePostStopSuspendSoundVolumeOverridePercent,
             normalizedStoredSettings.PostStopSuspendSoundVolumeOverridePercent,
             defaultSettings.PostStopSuspendSoundVolumeOverridePercent,
             out var postStopSuspendSoundVolumeOverridePercent,
             out message))
             return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadSuspendHistoryEntryCountSetting(
-            "Suspend history entry count",
+            LidGuardText.SettingsNameSuspendHistoryEntryCount,
             normalizedStoredSettings.SuspendHistoryEntryCount,
             defaultSettings.SuspendHistoryEntryCount,
             out var suspendHistoryEntryCount,
             out message))
             return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadClosedLidPermissionRequestDecisionSetting(
-            "Closed lid permission request decision",
+            LidGuardText.SettingsNameClosedLidPermissionRequestDecision,
             normalizedStoredSettings.ClosedLidPermissionRequestDecision,
             defaultSettings.ClosedLidPermissionRequestDecision,
             out var closedLidPermissionRequestDecision,
+            out message))
+            return false;
+        if (!LidGuardSettingsInteractivePromptReader.TryReadUserInterfaceCultureSetting(
+            LidGuardText.SettingsNameUserInterfaceCulture,
+            normalizedStoredSettings.UserInterfaceCulture,
+            defaultSettings.UserInterfaceCulture,
+            out var userInterfaceCulture,
             out message))
             return false;
 
@@ -118,7 +126,8 @@ internal static class LidGuardSettingsInteractiveFactory
             ServerRuntimeCleanupDelayMinutes = serverRuntimeCleanupDelayMinutes,
             EmergencyHibernationOnHighTemperature = emergencyHibernationOnHighTemperature,
             EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode,
-            EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius
+            EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius,
+            UserInterfaceCulture = userInterfaceCulture
         };
 
         return true;

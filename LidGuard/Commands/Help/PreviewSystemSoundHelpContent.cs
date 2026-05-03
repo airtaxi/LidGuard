@@ -12,7 +12,7 @@ internal static class PreviewSystemSoundHelpContent
             [],
             LidGuardHelpSectionTitles.SettingsAndSuspend,
             $"{commandDisplayName} preview-system-sound --name Asterisk|Beep|Exclamation|Hand|Question",
-            "Play one supported SystemSound name immediately using the saved post-stop suspend sound volume override setting.",
+            "Play one supported SystemSound name now, using the saved temporary volume setting.",
             [
                 new LidGuardHelpOption("--name <sound>", "Required. Allowed values: Asterisk, Beep, Exclamation, Hand, or Question.")
             ],

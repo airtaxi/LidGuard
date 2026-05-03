@@ -144,7 +144,7 @@ public sealed class CodexHookInstaller
         return CodexHookInstallationResult.Success(inspection, true, "Codex hook removed.", backupFilePath);
     }
 
-    public CodexHookInstallationRequest CreateDefaultRequest(string configurationFilePath = "")
+    public CodexHookInstallationRequest CreateDefaultRequest(string configurationFilePath = "", bool createBackup = true)
     {
         return new CodexHookInstallationRequest
         {
@@ -152,7 +152,8 @@ public sealed class CodexHookInstaller
             Format = CodexHookConfigurationFormat.ConfigToml,
             ConfigurationFilePath = string.IsNullOrWhiteSpace(configurationFilePath) ? GetDefaultCodexConfigurationFilePath() : Path.GetFullPath(configurationFilePath),
             HookExecutablePath = HookCommandUtilities.GetDefaultHookExecutableReference(),
-            HookCommandName = "codex-hook"
+            HookCommandName = "codex-hook",
+            CreateBackup = createBackup
         };
     }
 

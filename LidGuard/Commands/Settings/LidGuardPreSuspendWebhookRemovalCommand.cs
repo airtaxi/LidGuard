@@ -1,5 +1,6 @@
 using LidGuard.Control;
 using LidGuard.Ipc;
+using LidGuard.Localization;
 using LidGuard.Settings;
 using LidGuard.Platform;
 
@@ -13,7 +14,7 @@ internal static class LidGuardPreSuspendWebhookRemovalCommand
     {
         if (options.Count > 0)
         {
-            Console.Error.WriteLine($"{LidGuardPipeCommands.RemovePreSuspendWebhook} does not accept options.");
+            Console.Error.WriteLine(LidGuardText.CommandDoesNotAcceptOptions(LidGuardPipeCommands.RemovePreSuspendWebhook));
             return 1;
         }
 
@@ -26,7 +27,7 @@ internal static class LidGuardPreSuspendWebhookRemovalCommand
         var normalizedCurrentSettings = LidGuardSettings.Normalize(currentSettings);
         if (string.IsNullOrWhiteSpace(normalizedCurrentSettings.PreSuspendWebhookUrl))
         {
-            Console.WriteLine("No pre-suspend webhook URL is configured.");
+            Console.WriteLine(LidGuardText.SettingsNoPreSuspendWebhookConfigured);
             return 0;
         }
 
@@ -47,23 +48,26 @@ internal static class LidGuardPreSuspendWebhookRemovalCommand
         }
 
         var outcome = updateResult.Value;
-        Console.WriteLine($"Settings file: {LidGuardSettingsStore.GetDefaultSettingsFilePath()}");
+        Console.WriteLine(LidGuardText.ConsoleSettingsFile(LidGuardSettingsStore.GetDefaultSettingsFilePath()));
         LidGuardCommandConsole.WriteSettings(outcome.UpdatedStoredSettings);
-        Console.WriteLine("Pre-suspend webhook URL removed.");
+        Console.WriteLine(LidGuardText.SettingsPreSuspendWebhookUrlRemoved);
 
         if (outcome.Snapshot.RuntimeReachable)
         {
-            Console.WriteLine("Runtime settings updated.");
+            Console.WriteLine(LidGuardText.SettingsRuntimeUpdated);
             return 0;
         }
 
         if (outcome.Snapshot.RuntimeUnavailable)
         {
-            Console.WriteLine("Runtime is not running; saved settings will be used on the next start.");
+            Console.WriteLine(LidGuardText.SettingsRuntimeNotRunningSaved);
             return 0;
         }
 
-        Console.Error.WriteLine(outcome.Snapshot.RuntimeMessage);
+        Console.Error.WriteLine(LidGuardRuntimeResponseLocalizer.Localize(
+            outcome.Snapshot.RuntimeMessageCode,
+            outcome.Snapshot.RuntimeMessageArguments,
+            outcome.Snapshot.RuntimeMessage));
         return 1;
     }
 }

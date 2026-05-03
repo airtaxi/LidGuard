@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 using LidGuard.Settings;
 using LidGuard.Platform;
 
@@ -50,6 +51,12 @@ internal static class LidGuardSettingsUpdateCommand
             return 1;
         }
 
+        var shouldRefreshManagedHookStatusMessages = ShouldRefreshManagedHookStatusMessages(options, currentSettings, settings);
+        LidGuardCulture.ApplyEffectiveCulture(settings);
+        var managedHookStatusMessageRefreshResult = shouldRefreshManagedHookStatusMessages
+            ? ManagedHookStatusMessageRefresh.RefreshInstalledManagedHooks()
+            : null;
+
         var request = new LidGuardPipeRequest
         {
             Command = LidGuardPipeCommands.Settings,
@@ -58,30 +65,54 @@ internal static class LidGuardSettingsUpdateCommand
         };
 
         var response = await new LidGuardRuntimeClient().SendAsync(request, false);
-        Console.WriteLine($"Settings file: {LidGuardSettingsStore.GetDefaultSettingsFilePath()}");
+        Console.WriteLine(LidGuardText.ConsoleSettingsFile(LidGuardSettingsStore.GetDefaultSettingsFilePath()));
         LidGuardCommandConsole.WriteSettings(settings);
+        if (managedHookStatusMessageRefreshResult is not null) WriteManagedHookStatusMessageRefreshResult(managedHookStatusMessageRefreshResult);
         if (isInteractiveSettings)
         {
-            Console.WriteLine($"To change Reason, run: {LidGuardCommandConsole.GetCommandDisplayName()} settings --power-request-reason <text>");
-            Console.WriteLine($"To change Pre-suspend webhook URL, run: {LidGuardCommandConsole.GetCommandDisplayName()} settings --pre-suspend-webhook-url <http-or-https-url>");
-            Console.WriteLine($"To remove Pre-suspend webhook URL, run: {LidGuardCommandConsole.GetCommandDisplayName()} {LidGuardPipeCommands.RemovePreSuspendWebhook}");
-            Console.WriteLine($"To change Post-session-end webhook URL, run: {LidGuardCommandConsole.GetCommandDisplayName()} settings --post-session-end-webhook-url <http-or-https-url>");
-            Console.WriteLine($"To remove Post-session-end webhook URL, run: {LidGuardCommandConsole.GetCommandDisplayName()} {LidGuardPipeCommands.RemovePostSessionEndWebhook}");
+            var commandDisplayName = LidGuardCommandConsole.GetCommandDisplayName();
+            Console.WriteLine(LidGuardText.SettingsInteractiveGuidanceChangeReason(commandDisplayName));
+            Console.WriteLine(LidGuardText.SettingsInteractiveGuidanceChangePreSuspendWebhook(commandDisplayName));
+            Console.WriteLine(LidGuardText.SettingsInteractiveGuidanceRemovePreSuspendWebhook(commandDisplayName, LidGuardPipeCommands.RemovePreSuspendWebhook));
+            Console.WriteLine(LidGuardText.SettingsInteractiveGuidanceChangePostSessionEndWebhook(commandDisplayName));
+            Console.WriteLine(LidGuardText.SettingsInteractiveGuidanceRemovePostSessionEndWebhook(commandDisplayName, LidGuardPipeCommands.RemovePostSessionEndWebhook));
         }
 
         if (response.Succeeded)
         {
-            Console.WriteLine("Runtime settings updated.");
+            Console.WriteLine(LidGuardText.SettingsRuntimeUpdated);
             return 0;
         }
 
         if (response.RuntimeUnavailable)
         {
-            Console.WriteLine("Runtime is not running; saved settings will be used on the next start.");
+            Console.WriteLine(LidGuardText.SettingsRuntimeNotRunningSaved);
             return 0;
         }
 
-        Console.Error.WriteLine(response.Message);
+        Console.Error.WriteLine(LidGuardRuntimeResponseLocalizer.Localize(response));
         return 1;
+    }
+
+    private static bool ShouldRefreshManagedHookStatusMessages(
+        IReadOnlyDictionary<string, string> options,
+        LidGuardSettings currentSettings,
+        LidGuardSettings settings)
+    {
+        if (CommandOptionReader.TryGetOption(options, out _, "ui-culture", "user-interface-culture")) return true;
+
+        var normalizedCurrentSettings = LidGuardSettings.Normalize(currentSettings);
+        var normalizedSettings = LidGuardSettings.Normalize(settings);
+        return !normalizedCurrentSettings.UserInterfaceCulture.Equals(normalizedSettings.UserInterfaceCulture, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void WriteManagedHookStatusMessageRefreshResult(ManagedHookStatusMessageRefreshResult result)
+    {
+        var message = result.ChangedProviderNames.Count > 0
+            ? LidGuardText.SettingsManagedHookStatusMessageRefreshChanged(string.Join(", ", result.ChangedProviderNames))
+            : LidGuardText.SettingsManagedHookStatusMessageRefreshUnchanged;
+
+        Console.WriteLine(message);
+        foreach (var warningMessage in result.WarningMessages) Console.WriteLine(LidGuardText.TextWarning(LidGuardText.SettingsManagedHookStatusMessageRefreshFailed(warningMessage)));
     }
 }

@@ -12,10 +12,10 @@ internal static class PreviewCurrentSoundHelpContent
             [],
             LidGuardHelpSectionTitles.SettingsAndSuspend,
             $"{commandDisplayName} preview-current-sound",
-            "Play the saved post-stop suspend sound immediately using the saved volume override setting.",
+            "Play the saved sleep or hibernate warning sound now, using the saved temporary volume setting.",
             [],
             [
-                "If no post-stop suspend sound is configured, this command prints settings guidance instead of failing.",
+                "If no warning sound is configured, this command prints settings guidance instead of failing.",
                 "This command waits until playback finishes."
             ]);
     }

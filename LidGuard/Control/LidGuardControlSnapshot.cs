@@ -16,6 +16,10 @@ public sealed class LidGuardControlSnapshot
 
     public string RuntimeMessage { get; init; } = string.Empty;
 
+    public string RuntimeMessageCode { get; init; } = string.Empty;
+
+    public string[] RuntimeMessageArguments { get; init; } = [];
+
     public bool HasRuntimeSettings { get; init; }
 
     public LidGuardSettings RuntimeSettings { get; init; } = LidGuardSettings.Default;

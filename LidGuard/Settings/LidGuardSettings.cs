@@ -15,6 +15,7 @@ public sealed class LidGuardSettings
     public const int DefaultSessionTimeoutMinutes = 12;
     public const int MinimumServerRuntimeCleanupDelayMinutes = 1;
     public const int DefaultServerRuntimeCleanupDelayMinutes = 10;
+    public const string DefaultUserInterfaceCulture = "auto";
 
     public static LidGuardSettings Default { get; } = new();
 
@@ -56,6 +57,8 @@ public sealed class LidGuardSettings
 
     public int EmergencyHibernationTemperatureCelsius { get; init; } = DefaultEmergencyHibernationTemperatureCelsius;
 
+    public string UserInterfaceCulture { get; init; } = DefaultUserInterfaceCulture;
+
     public static int ClampEmergencyHibernationTemperatureCelsius(int emergencyHibernationTemperatureCelsius)
         => Math.Clamp(
             emergencyHibernationTemperatureCelsius,
@@ -91,6 +94,7 @@ public sealed class LidGuardSettings
         var serverRuntimeCleanupDelayMinutes = settings.ServerRuntimeCleanupDelayMinutes is null
             ? (int?)null
             : Math.Max(MinimumServerRuntimeCleanupDelayMinutes, settings.ServerRuntimeCleanupDelayMinutes.Value);
+        var userInterfaceCulture = UserInterfaceCultureConfiguration.NormalizeStoredValue(settings.UserInterfaceCulture);
         return new LidGuardSettings
         {
             PowerRequest = new PowerRequestOptions
@@ -118,7 +122,8 @@ public sealed class LidGuardSettings
             ServerRuntimeCleanupDelayMinutes = serverRuntimeCleanupDelayMinutes,
             EmergencyHibernationOnHighTemperature = settings.EmergencyHibernationOnHighTemperature,
             EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode,
-            EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius
+            EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius,
+            UserInterfaceCulture = userInterfaceCulture
         };
     }
 

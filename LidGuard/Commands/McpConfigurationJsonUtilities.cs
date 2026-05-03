@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands;
 
@@ -7,7 +8,7 @@ internal static class McpConfigurationJsonUtilities
 {
     public static string DescribeJsonArray(JsonObject jsonObject, string propertyName)
     {
-        if (jsonObject[propertyName] is not JsonArray jsonArray || jsonArray.Count == 0) return "<none>";
+        if (jsonObject[propertyName] is not JsonArray jsonArray || jsonArray.Count == 0) return LidGuardText.TextDisplayNone;
 
         var values = new List<string>();
         foreach (var item in jsonArray)
@@ -72,7 +73,7 @@ internal static class McpConfigurationJsonUtilities
 
             if (rootNode is not JsonObject existingRootObject)
             {
-                message = "Configuration root is not a JSON object.";
+                message = LidGuardText.GetResourceString("McpConfigurationRootNotObject", "Configuration root is not a JSON object.");
                 return false;
             }
 
@@ -80,19 +81,21 @@ internal static class McpConfigurationJsonUtilities
         }
         catch (JsonException exception)
         {
-            message = $"Configuration JSON is invalid: {exception.Message}";
+            message = LidGuardText.GetResourceString("McpConfigurationJsonInvalid", "Configuration JSON is invalid: {0}")
+                .Replace("{0}", exception.Message, StringComparison.Ordinal);
             return false;
         }
 
         if (rootObject["mcpServers"] is not JsonObject mcpServersObject)
         {
-            message = "The mcpServers object was not found.";
+            message = LidGuardText.GetResourceString("McpConfigurationServersObjectNotFound", "The mcpServers object was not found.");
             return false;
         }
 
         if (mcpServersObject[managedServerName] is not JsonObject existingServerObject)
         {
-            message = $"No MCP server named '{managedServerName}' was found.";
+            message = LidGuardText.GetResourceString("McpConfigurationNamedServerNotFound", "No MCP server named '{0}' was found.")
+                .Replace("{0}", managedServerName, StringComparison.Ordinal);
             return false;
         }
 
@@ -113,7 +116,8 @@ internal static class McpConfigurationJsonUtilities
         {
             if (createIfMissing) return true;
 
-            message = $"Configuration file does not exist: {configurationFilePath}";
+            message = LidGuardText.GetResourceString("McpConfigurationFileDoesNotExist", "Configuration file does not exist: {0}")
+                .Replace("{0}", configurationFilePath, StringComparison.Ordinal);
             return false;
         }
 
@@ -139,12 +143,13 @@ internal static class McpConfigurationJsonUtilities
                 return true;
             }
 
-            message = "Configuration root is not a JSON object.";
+            message = LidGuardText.GetResourceString("McpConfigurationRootNotObject", "Configuration root is not a JSON object.");
             return false;
         }
         catch (JsonException exception)
         {
-            message = $"Configuration JSON is invalid: {exception.Message}";
+            message = LidGuardText.GetResourceString("McpConfigurationJsonInvalid", "Configuration JSON is invalid: {0}")
+                .Replace("{0}", exception.Message, StringComparison.Ordinal);
             return false;
         }
         catch (IOException exception)

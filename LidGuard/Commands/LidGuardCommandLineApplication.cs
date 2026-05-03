@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using LidGuard.Hooks;
 using LidGuard.Ipc;
+using LidGuard.Localization;
 using LidGuard.Mcp;
 using LidGuard.Runtime;
 using LidGuard.Settings;
@@ -90,7 +91,7 @@ internal static class LidGuardCommandLineApplication
         if (commandLineArguments.Length == 1) return LidGuardCommandConsole.WriteHelp(0);
         if (commandLineArguments.Length == 2) return LidGuardCommandConsole.WriteHelpForCommand(commandLineArguments[1]);
 
-        Console.Error.WriteLine($"Unexpected argument: {commandLineArguments[2]}");
+        Console.Error.WriteLine(LidGuardText.CommandUnexpectedArgument(commandLineArguments[2]));
         LidGuardCommandConsole.TryWriteHelpForCommand(LidGuardPipeCommands.Help, out _);
         return 1;
     }
@@ -309,7 +310,7 @@ internal static class LidGuardCommandLineApplication
         var response = await new LidGuardRuntimeClient().SendAsync(request, false);
         if (!response.Succeeded && response.RuntimeUnavailable)
         {
-            Console.WriteLine("LidGuard runtime is not running. No active session was removed.");
+            Console.WriteLine(LidGuardText.ConsoleRuntimeNotRunningNoSessionRemoved);
             return 0;
         }
 
@@ -322,11 +323,11 @@ internal static class LidGuardCommandLineApplication
         var response = await new LidGuardRuntimeClient().SendAsync(request, false);
         if (!response.Succeeded && response.RuntimeUnavailable)
         {
-            Console.WriteLine("LidGuard runtime is not running.");
-            Console.WriteLine("Active sessions: 0");
+            Console.WriteLine(LidGuardText.ConsoleRuntimeNotRunning);
+            Console.WriteLine(LidGuardText.ConsoleActiveSessions(0));
             if (LidGuardSettingsStore.TryLoadOrCreate(out var settings, out var settingsMessage))
             {
-                Console.WriteLine($"Settings file: {LidGuardSettingsStore.GetDefaultSettingsFilePath()}");
+                Console.WriteLine(LidGuardText.ConsoleSettingsFile(LidGuardSettingsStore.GetDefaultSettingsFilePath()));
                 LidGuardCommandConsole.WriteSettings(settings);
             }
             else
@@ -346,7 +347,7 @@ internal static class LidGuardCommandLineApplication
         var response = await new LidGuardRuntimeClient().SendAsync(request, false);
         if (!response.Succeeded && response.RuntimeUnavailable)
         {
-            Console.WriteLine("LidGuard runtime is not running. Nothing to clean up.");
+            Console.WriteLine(LidGuardText.ConsoleRuntimeNotRunningNoCleanup);
             return 0;
         }
 
@@ -365,12 +366,19 @@ internal static class LidGuardCommandLineApplication
         if (!currentTemperatureCelsius.HasValue)
         {
             Console.WriteLine(
-                $"Current recognized system temperature is unavailable from this platform's thermal-zone information using {emergencyHibernationTemperatureMode} mode.");
+                LidGuardText.GetResourceString(
+                    "ConsoleCurrentTemperatureUnavailable",
+                    "Current recognized system temperature is unavailable from this platform's thermal-zone information using {0} mode.")
+                    .Replace("{0}", LidGuardText.DisplayEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode), StringComparison.Ordinal));
             return 0;
         }
 
         Console.WriteLine(
-            $"Current recognized system temperature using {emergencyHibernationTemperatureMode} mode: {currentTemperatureCelsius.Value} Celsius");
+            LidGuardText.GetResourceString(
+                "ConsoleCurrentTemperature",
+                "Current recognized system temperature using {0} mode: {1} Celsius")
+                .Replace("{0}", LidGuardText.DisplayEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode), StringComparison.Ordinal)
+                .Replace("{1}", currentTemperatureCelsius.Value.ToString(), StringComparison.Ordinal));
         return 0;
     }
 
@@ -385,7 +393,7 @@ internal static class LidGuardCommandLineApplication
 
         using var serviceSet = serviceSetResult.Value;
         var visibleDisplayMonitorCount = serviceSet.VisibleDisplayMonitorCountProvider.GetVisibleDisplayMonitorCount();
-        Console.WriteLine($"Current visible display monitor count: {visibleDisplayMonitorCount}");
+        Console.WriteLine(LidGuardText.ConsoleCurrentMonitorCount(visibleDisplayMonitorCount));
         return 0;
     }
 
@@ -400,7 +408,7 @@ internal static class LidGuardCommandLineApplication
 
         using var serviceSet = serviceSetResult.Value;
         var lidSwitchState = ReadCurrentLidSwitchState(serviceSet.LidStateSource);
-        Console.WriteLine($"Current lid state: {lidSwitchState}");
+        Console.WriteLine(LidGuardText.ConsoleCurrentLidState(LidGuardText.DisplayLidSwitchState(lidSwitchState)));
         return 0;
     }
 
@@ -434,7 +442,9 @@ internal static class LidGuardCommandLineApplication
         if (string.IsNullOrWhiteSpace(temperatureModeText) || temperatureModeText.Trim().Equals("default", StringComparison.OrdinalIgnoreCase)) return TryLoadCurrentTemperatureModeFromSettings(out emergencyHibernationTemperatureMode, out message);
         if (LidGuardSettingsCommand.TryParseEmergencyHibernationTemperatureMode(temperatureModeText, out emergencyHibernationTemperatureMode)) return true;
 
-        message = "The temperature-mode option must be default, low, average, or high.";
+        message = LidGuardText.GetResourceString(
+            "ConsoleCurrentTemperatureModeValidation",
+            "The temperature-mode option must be default, low, average, or high.");
         return false;
     }
 

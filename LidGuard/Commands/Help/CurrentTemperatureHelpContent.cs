@@ -12,13 +12,13 @@ internal static class CurrentTemperatureHelpContent
             [],
             LidGuardHelpSectionTitles.Diagnostics,
             $"{commandDisplayName} {LidGuardPipeCommands.CurrentTemperature} [--temperature-mode default|low|average|high]",
-            "Report the current recognized system thermal-zone temperature in Celsius using the selected aggregation mode.",
+            "Report the current system temperature in Celsius using the selected temperature mode.",
             [
-                new LidGuardHelpOption("--temperature-mode default|low|average|high", "Optional. Use the saved LidGuard setting with default, or override it with low, average, or high for this command only.")
+                new LidGuardHelpOption("--temperature-mode default|low|average|high", "Optional. Use default to follow the saved setting, or choose low, average, or high for this command only.")
             ],
             [
-                "If this platform does not currently expose thermal-zone temperature data, the command reports that the value is unavailable.",
-                "When the settings file does not exist yet, default uses LidGuard's headless runtime default mode: Average."
+                "If no supported temperature sensor data is available on this platform, the command reports that the value is unavailable.",
+                "When the settings file does not exist yet, default uses Average."
             ]);
     }
 }

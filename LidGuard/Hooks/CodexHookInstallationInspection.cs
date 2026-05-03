@@ -22,6 +22,8 @@ public sealed class CodexHookInstallationInspection
 
     public bool HasManagedBlock { get; init; }
 
+    public bool HasManagedHookEntries { get; init; }
+
     public bool HasUserPromptSubmitHook { get; init; }
 
     public bool HasPermissionRequestHook { get; init; }

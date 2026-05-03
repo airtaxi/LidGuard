@@ -15,7 +15,7 @@ internal static class StatusHelpContent
             "Show runtime state, active sessions, and effective stored settings.",
             [],
             [
-                "If the runtime is not running, status still prints the stored settings file contents."
+                "If LidGuard is not running, status still prints the stored settings file contents."
             ]);
     }
 }

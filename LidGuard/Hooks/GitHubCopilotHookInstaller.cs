@@ -159,13 +159,14 @@ public sealed class GitHubCopilotHookInstaller
         return GitHubCopilotHookInstallationResult.Success(inspection, true, "GitHub Copilot hook removed.", backupFilePath);
     }
 
-    public GitHubCopilotHookInstallationRequest CreateDefaultRequest(string configurationFilePath = "")
+    public GitHubCopilotHookInstallationRequest CreateDefaultRequest(string configurationFilePath = "", bool createBackup = true)
     {
         return new GitHubCopilotHookInstallationRequest
         {
             ConfigurationFilePath = string.IsNullOrWhiteSpace(configurationFilePath)
                 ? GetDefaultGitHubCopilotHooksConfigurationFilePath()
                 : Path.GetFullPath(configurationFilePath),
+            CreateBackup = createBackup,
             HookExecutablePath = HookCommandUtilities.GetDefaultHookExecutableReference(),
             HookCommandName = "copilot-hook",
             Provider = AgentProvider.GitHubCopilot

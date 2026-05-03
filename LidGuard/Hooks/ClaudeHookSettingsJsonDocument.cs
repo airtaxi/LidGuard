@@ -1,5 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
+using LidGuard.Localization;
 using LidGuard.Sessions;
 
 namespace LidGuard.Hooks;
@@ -10,27 +13,19 @@ public static class ClaudeHookSettingsJsonDocument
 
     private const string HooksPropertyName = "hooks";
     private const string PowerShellShellName = "powershell";
-    private const string ElicitationStatusMessage = "Canceling closed-lid elicitation request";
-    private const string NotificationStatusMessage = "Recording Claude soft-lock telemetry";
-    private const string PostToolUseFailureStatusMessage = "Recording Claude failed tool activity";
-    private const string PostToolUseStatusMessage = "Recording Claude tool completion activity";
-    private const string PreToolUseStatusMessage = "Recording Claude tool activity";
-    private const string StartStatusMessage = "Starting LidGuard turn protection";
-    private const string PermissionRequestStatusMessage = "Responding to closed-lid permission request";
-    private const string StopStatusMessage = "Stopping LidGuard session protection";
-    private static readonly JsonSerializerOptions s_jsonSerializerOptions = new() { WriteIndented = true };
-    private static readonly (string HookEventName, string StatusMessage, string Matcher)[] s_requiredHookDefinitions =
+    private static readonly JsonSerializerOptions s_jsonSerializerOptions = new() { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All), WriteIndented = true };
+    private static readonly (string HookEventName, Func<string> GetStatusMessage, string Matcher)[] s_requiredHookDefinitions =
     [
-        (ClaudeHookEventNames.UserPromptSubmit, StartStatusMessage, string.Empty),
-        (ClaudeHookEventNames.PreToolUse, PreToolUseStatusMessage, string.Empty),
-        (ClaudeHookEventNames.PostToolUse, PostToolUseStatusMessage, string.Empty),
-        (ClaudeHookEventNames.PostToolUseFailure, PostToolUseFailureStatusMessage, string.Empty),
-        (ClaudeHookEventNames.Stop, StopStatusMessage, string.Empty),
-        (ClaudeHookEventNames.StopFailure, StopStatusMessage, string.Empty),
-        (ClaudeHookEventNames.Elicitation, ElicitationStatusMessage, string.Empty),
-        (ClaudeHookEventNames.PermissionRequest, PermissionRequestStatusMessage, string.Empty),
-        (ClaudeHookEventNames.Notification, NotificationStatusMessage, ClaudeSoftLockSignalSource.NotificationMatcher),
-        (ClaudeHookEventNames.SessionEnd, StopStatusMessage, string.Empty)
+        (ClaudeHookEventNames.UserPromptSubmit, () => LidGuardText.HookStatusMessageStartingTurnProtection, string.Empty),
+        (ClaudeHookEventNames.PreToolUse, () => LidGuardText.HookStatusMessageRecordingClaudeToolActivity, string.Empty),
+        (ClaudeHookEventNames.PostToolUse, () => LidGuardText.HookStatusMessageRecordingClaudeToolCompletionActivity, string.Empty),
+        (ClaudeHookEventNames.PostToolUseFailure, () => LidGuardText.HookStatusMessageRecordingClaudeFailedToolActivity, string.Empty),
+        (ClaudeHookEventNames.Stop, () => LidGuardText.HookStatusMessageStoppingSessionProtection, string.Empty),
+        (ClaudeHookEventNames.StopFailure, () => LidGuardText.HookStatusMessageStoppingSessionProtection, string.Empty),
+        (ClaudeHookEventNames.Elicitation, () => LidGuardText.HookStatusMessageCancelingClosedLidElicitationRequest, string.Empty),
+        (ClaudeHookEventNames.PermissionRequest, () => LidGuardText.HookStatusMessageRespondingToClosedLidPermissionRequest, string.Empty),
+        (ClaudeHookEventNames.Notification, () => LidGuardText.HookStatusMessageRecordingClaudeSoftLockTelemetry, ClaudeSoftLockSignalSource.NotificationMatcher),
+        (ClaudeHookEventNames.SessionEnd, () => LidGuardText.HookStatusMessageStoppingSessionProtection, string.Empty)
     ];
 
     public static string CreateSettingsJsonSnippet(string hookCommand)
@@ -218,7 +213,7 @@ public static class ClaudeHookSettingsJsonDocument
                 hooksObject,
                 hookDefinition.HookEventName,
                 hookCommand,
-                hookDefinition.StatusMessage,
+                hookDefinition.GetStatusMessage(),
                 hookDefinition.Matcher,
                 out message))
                 return false;
@@ -252,13 +247,37 @@ public static class ClaudeHookSettingsJsonDocument
         return true;
     }
 
+    public static bool TryRefreshManagedHookStatusMessages(string content, out string updatedContent, out bool changed, out string message)
+    {
+        updatedContent = content;
+        changed = false;
+        if (!TryParseSettingsRoot(content, out var settingsObject, out message)) return false;
+        if (!settingsObject.TryGetPropertyValue(HooksPropertyName, out var hooksNode) || hooksNode is null) return true;
+        if (hooksNode is not JsonObject hooksObject)
+        {
+            message = "Claude hooks setting must be a JSON object.";
+            return false;
+        }
+
+        foreach (var hookDefinition in s_requiredHookDefinitions)
+        {
+            if (!TryRefreshManagedHookStatusMessage(hooksObject, hookDefinition.HookEventName, hookDefinition.GetStatusMessage(), out var hookChanged, out message)) return false;
+            changed |= hookChanged;
+        }
+
+        if (!changed) return true;
+
+        updatedContent = settingsObject.ToJsonString(s_jsonSerializerOptions) + Environment.NewLine;
+        return true;
+    }
+
     private static JsonObject CreateHooksObject(string hookCommand)
     {
         var hooksObject = new JsonObject();
         foreach (var hookDefinition in s_requiredHookDefinitions)
         {
             hooksObject[hookDefinition.HookEventName] = CreateJsonArrayWithSingleNode(
-                CreateManagedHookMatcher(hookCommand, hookDefinition.StatusMessage, hookDefinition.Matcher));
+                CreateManagedHookMatcher(hookCommand, hookDefinition.GetStatusMessage(), hookDefinition.Matcher));
         }
 
         return hooksObject;
@@ -456,6 +475,50 @@ public static class ClaudeHookSettingsJsonDocument
         if (hookMatchers.Count > 0) return changed;
 
         hooksObject.Remove(hookEventName);
+        return true;
+    }
+
+    private static bool TryRefreshManagedHookStatusMessage(JsonObject hooksObject, string hookEventName, string statusMessage, out bool changed, out string message)
+    {
+        changed = false;
+        message = string.Empty;
+        if (!hooksObject.TryGetPropertyValue(hookEventName, out var hookEventNode) || hookEventNode is null) return true;
+        if (hookEventNode is not JsonArray hookMatchers)
+        {
+            message = $"Claude hook event '{hookEventName}' must be a JSON array.";
+            return false;
+        }
+
+        foreach (var hookMatcherNode in hookMatchers)
+        {
+            if (hookMatcherNode is not JsonObject hookMatcherObject)
+            {
+                message = $"Claude hook matcher for '{hookEventName}' must be a JSON object.";
+                return false;
+            }
+
+            if (hookMatcherObject["hooks"] is not JsonArray hookDefinitions)
+            {
+                message = $"Claude hook matcher for '{hookEventName}' must contain a hooks array.";
+                return false;
+            }
+
+            foreach (var hookDefinitionNode in hookDefinitions)
+            {
+                if (hookDefinitionNode is not JsonObject hookDefinitionObject)
+                {
+                    message = $"Claude hook definition for '{hookEventName}' must be a JSON object.";
+                    return false;
+                }
+
+                if (!IsLidGuardClaudeHookCommand(GetStringProperty(hookDefinitionObject, "command"))) continue;
+                if (GetStringProperty(hookDefinitionObject, "statusMessage").Equals(statusMessage, StringComparison.Ordinal)) continue;
+
+                hookDefinitionObject["statusMessage"] = statusMessage;
+                changed = true;
+            }
+        }
+
         return true;
     }
 

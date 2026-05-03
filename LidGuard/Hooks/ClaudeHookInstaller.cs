@@ -140,14 +140,15 @@ public sealed class ClaudeHookInstaller
         return ClaudeHookInstallationResult.Success(inspection, true, "Claude hook removed.", backupFilePath);
     }
 
-    public ClaudeHookInstallationRequest CreateDefaultRequest(string configurationFilePath = "")
+    public ClaudeHookInstallationRequest CreateDefaultRequest(string configurationFilePath = "", bool createBackup = true)
     {
         return new ClaudeHookInstallationRequest
         {
             Provider = AgentProvider.Claude,
             ConfigurationFilePath = string.IsNullOrWhiteSpace(configurationFilePath) ? GetDefaultClaudeConfigurationFilePath() : Path.GetFullPath(configurationFilePath),
             HookExecutablePath = HookCommandUtilities.GetDefaultHookExecutableReference(),
-            HookCommandName = "claude-hook"
+            HookCommandName = "claude-hook",
+            CreateBackup = createBackup
         };
     }
 

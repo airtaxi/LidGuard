@@ -1,3 +1,5 @@
+using LidGuard.Localization;
+
 namespace LidGuard.Commands.Help;
 
 internal static class LidGuardHelpContent
@@ -70,7 +72,7 @@ internal static class LidGuardHelpContent
         foreach (var sectionEntry in document.SectionEntries)
         {
             var helpCommands = CreateHelpCommandsForSection(document, sectionEntry.Title);
-            helpSections.Add(new LidGuardHelpSection(sectionEntry.Title, sectionEntry.Details, helpCommands));
+            helpSections.Add(LidGuardHelpTextLocalizer.LocalizeSection(new LidGuardHelpSection(sectionEntry.Title, sectionEntry.Details, helpCommands)));
         }
 
         return helpSections;
@@ -94,7 +96,7 @@ internal static class LidGuardHelpContent
             var helpCommands = CreateSummaryCommandsForSection(document, sectionEntry.Title);
             if (helpCommands.Count == 0) continue;
 
-            helpSections.Add(new LidGuardHelpSection(sectionEntry.Title, sectionEntry.Details, helpCommands));
+            helpSections.Add(LidGuardHelpTextLocalizer.LocalizeSection(new LidGuardHelpSection(sectionEntry.Title, sectionEntry.Details, helpCommands)));
         }
 
         return helpSections;
@@ -106,11 +108,11 @@ internal static class LidGuardHelpContent
     {
         return
         [
-            new LidGuardHelpSection(LidGuardHelpSectionTitles.Usage, CreateCommandUsageDetails(commandEntry), []),
-            new LidGuardHelpSection(
+            LidGuardHelpTextLocalizer.LocalizeSection(new LidGuardHelpSection(LidGuardHelpSectionTitles.Usage, CreateCommandUsageDetails(commandEntry), [])),
+            LidGuardHelpTextLocalizer.LocalizeSection(new LidGuardHelpSection(
                 commandEntry.SectionTitle,
                 CreateSectionDetails(document, commandEntry.SectionTitle),
-                commandEntry.HelpCommands)
+                commandEntry.HelpCommands))
         ];
     }
 
@@ -152,7 +154,7 @@ internal static class LidGuardHelpContent
 
             helpCommands.Add(new LidGuardHelpCommand(
                 CreateSummaryCommandLabel(commandEntry),
-                commandEntry.SummaryDescription,
+                LidGuardHelpTextLocalizer.Localize(commandEntry.SummaryDescription),
                 [],
                 []));
         }
@@ -164,6 +166,6 @@ internal static class LidGuardHelpContent
     {
         if (commandEntry.Aliases.Count == 0) return commandEntry.CanonicalName;
 
-        return $"{commandEntry.CanonicalName} (alias: {string.Join(", ", commandEntry.Aliases)})";
+        return $"{commandEntry.CanonicalName} ({LidGuardText.HelpAliasLabel}: {string.Join(", ", commandEntry.Aliases)})";
     }
 }

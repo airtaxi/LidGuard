@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text;
 using System.Text.Json;
+using LidGuard.Localization;
 
 namespace LidGuard.Ipc;
 
@@ -22,11 +23,24 @@ internal sealed class LidGuardRuntimeClient
         var pipeClientStream = await WaitForRuntimeAsync(s_runtimeConnectionTimeout, cancellationToken);
         if (pipeClientStream is null && startRuntimeIfUnavailable)
         {
-            if (!TryStartRuntime()) return LidGuardPipeResponse.Failure("Failed to start the LidGuard runtime.", runtimeUnavailable: true);
+            if (!TryStartRuntime())
+            {
+                return LidGuardPipeResponse.Failure(
+                    "Failed to start the LidGuard runtime.",
+                    runtimeUnavailable: true,
+                    messageCode: LidGuardPipeResponseMessageCodes.FailedToStartRuntime);
+            }
+
             pipeClientStream = await WaitForRuntimeAsync(s_runtimeStartupTimeout, cancellationToken);
         }
 
-        if (pipeClientStream is null) return LidGuardPipeResponse.Failure("LidGuard runtime is not running.", runtimeUnavailable: true);
+        if (pipeClientStream is null)
+        {
+            return LidGuardPipeResponse.Failure(
+                "LidGuard runtime is not running.",
+                runtimeUnavailable: true,
+                messageCode: LidGuardPipeResponseMessageCodes.RuntimeNotRunning);
+        }
 
         using (pipeClientStream)
         {
@@ -137,6 +151,7 @@ internal sealed class LidGuardRuntimeClient
             processStartInfo.CreateNoWindow = true;
         }
 
+        LidGuardCulture.ConfigureChildProcessCulture(processStartInfo);
         return true;
     }
 
@@ -177,6 +192,7 @@ internal sealed class LidGuardRuntimeClient
         processStartInfo.ArgumentList.Add(runtimeProcessStartInfo.FileName);
         foreach (var argument in runtimeProcessStartInfo.ArgumentList) processStartInfo.ArgumentList.Add(argument);
 
+        LidGuardCulture.ConfigureChildProcessCulture(processStartInfo);
         using var process = Process.Start(processStartInfo);
         if (process is null) return false;
         if (!process.WaitForExit((int)TimeSpan.FromSeconds(2).TotalMilliseconds)) return true;

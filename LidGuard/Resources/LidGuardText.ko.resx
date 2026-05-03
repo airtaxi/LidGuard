@@ -1,0 +1,1656 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="CommandUnexpectedArgument" xml:space="preserve">
+    <value>예상하지 않은 인수입니다: {0}</value>
+  </data>
+  <data name="CommandDoesNotAcceptOptions" xml:space="preserve">
+    <value>{0} 명령은 옵션을 받지 않습니다.</value>
+  </data>
+  <data name="CommandUnknownCommand" xml:space="preserve">
+    <value>알 수 없는 명령입니다: {0}</value>
+  </data>
+  <data name="ConsoleActiveSessions" xml:space="preserve">
+    <value>활성 세션: {0}</value>
+  </data>
+  <data name="ConsoleCurrentLidState" xml:space="preserve">
+    <value>현재 덮개 상태: {0}</value>
+  </data>
+  <data name="ConsoleCurrentMonitorCount" xml:space="preserve">
+    <value>현재 보이는 디스플레이 모니터 수: {0}</value>
+  </data>
+  <data name="ConsoleLidState" xml:space="preserve">
+    <value>덮개 상태: {0}</value>
+  </data>
+  <data name="ConsoleRuntimeNotRunning" xml:space="preserve">
+    <value>LidGuard가 실행 중이 아닙니다.</value>
+  </data>
+  <data name="ConsoleRuntimeNotRunningNoCleanup" xml:space="preserve">
+    <value>LidGuard가 실행 중이 아닙니다. 정리할 항목이 없습니다.</value>
+  </data>
+  <data name="ConsoleRuntimeNotRunningNoSessionRemoved" xml:space="preserve">
+    <value>LidGuard가 실행 중이 아닙니다. 제거된 활성 세션이 없습니다.</value>
+  </data>
+  <data name="ConsoleSettingsFile" xml:space="preserve">
+    <value>설정 파일: {0}</value>
+  </data>
+  <data name="ConsoleVisibleDisplayMonitorCount" xml:space="preserve">
+    <value>보이는 디스플레이 모니터 수: {0}</value>
+  </data>
+  <data name="CultureInvalidUserInterfaceCulture" xml:space="preserve">
+    <value>올바르지 않은 사용자 인터페이스 문화권 '{0}': {1}</value>
+  </data>
+  <data name="CultureInvalidUserInterfaceCultureWarning" xml:space="preserve">
+    <value>경고: 올바르지 않은 사용자 인터페이스 문화권 '{0}'을 무시합니다: {1}</value>
+  </data>
+  <data name="CultureSettingsLoadWarning" xml:space="preserve">
+    <value>경고: UI 문화권을 확인하는 동안 LidGuard 설정을 읽지 못했습니다: {0}</value>
+  </data>
+  <data name="HelpAliasLabel" xml:space="preserve">
+    <value>별칭</value>
+  </data>
+  <data name="HelpCommandSpecificHelpHint" xml:space="preserve">
+    <value>전체 옵션, 참고 사항, 예시는 명령별 도움말을 사용하세요.</value>
+  </data>
+  <data name="HelpNoteLabel" xml:space="preserve">
+    <value>참고</value>
+  </data>
+  <data name="HelpOptionLabel" xml:space="preserve">
+    <value>{0}: {1}</value>
+  </data>
+  <data name="HelpSectionDiagnostics" xml:space="preserve">
+    <value>진단</value>
+  </data>
+  <data name="HelpSectionHookIntegration" xml:space="preserve">
+    <value>Hook 연동</value>
+  </data>
+  <data name="HelpSectionManagedAndInternalCommands" xml:space="preserve">
+    <value>관리 및 내부 명령</value>
+  </data>
+  <data name="HelpSectionMcpIntegration" xml:space="preserve">
+    <value>MCP 연동</value>
+  </data>
+  <data name="HelpSectionPathsAndNotes" xml:space="preserve">
+    <value>경로 및 참고</value>
+  </data>
+  <data name="HelpSectionSessionControl" xml:space="preserve">
+    <value>세션 제어</value>
+  </data>
+  <data name="HelpSectionSettingsAndSuspend" xml:space="preserve">
+    <value>설정 및 절전</value>
+  </data>
+  <data name="HelpSectionUsage" xml:space="preserve">
+    <value>사용법</value>
+  </data>
+  <data name="SessionProcessNone" xml:space="preserve">
+    <value>없음</value>
+  </data>
+  <data name="SettingsChangeLidAction" xml:space="preserve">
+    <value>  덮개 닫기 동작 덮어쓰기: {0}</value>
+  </data>
+  <data name="SettingsClosedLidPermissionRequestDecision" xml:space="preserve">
+    <value>  덮개 닫힘 권한 요청 결정: {0}</value>
+  </data>
+  <data name="SettingsEmergencyHibernationOnHighTemperature" xml:space="preserve">
+    <value>  고온 Emergency Hibernation: {0}</value>
+  </data>
+  <data name="SettingsEmergencyHibernationTemperatureCelsius" xml:space="preserve">
+    <value>  Emergency Hibernation 온도 섭씨: {0}</value>
+  </data>
+  <data name="SettingsEmergencyHibernationTemperatureMode" xml:space="preserve">
+    <value>  Emergency Hibernation 온도 모드: {0}</value>
+  </data>
+  <data name="SettingsNoPostSessionEndWebhookConfigured" xml:space="preserve">
+    <value>설정된 세션 완료 웹훅 URL이 없습니다.</value>
+  </data>
+  <data name="SettingsNoPreSuspendWebhookConfigured" xml:space="preserve">
+    <value>설정된 절전(또는 최대 절전) 진입 전 웹훅 URL이 없습니다.</value>
+  </data>
+  <data name="SettingsPostSessionEndWebhookUrl" xml:space="preserve">
+    <value>  세션 완료 웹훅 URL: {0}</value>
+  </data>
+  <data name="SettingsPostSessionEndWebhookUrlRemoved" xml:space="preserve">
+    <value>세션 완료 웹훅 URL을 제거했습니다.</value>
+  </data>
+  <data name="SettingsPostStopSuspendDelaySeconds" xml:space="preserve">
+    <value>  세션 종료 후 절전/최대 절전 대기 시간(초): {0}</value>
+  </data>
+  <data name="SettingsPostStopSuspendSound" xml:space="preserve">
+    <value>  절전/최대 절전 전 알림 소리: {0}</value>
+  </data>
+  <data name="SettingsPostStopSuspendSoundVolumeOverridePercent" xml:space="preserve">
+    <value>  알림 소리 임시 볼륨 비율: {0}</value>
+  </data>
+  <data name="SettingsPreSuspendWebhookUrl" xml:space="preserve">
+    <value>  절전(또는 최대 절전) 진입 전 웹훅 URL: {0}</value>
+  </data>
+  <data name="SettingsPreSuspendWebhookUrlRemoved" xml:space="preserve">
+    <value>절전(또는 최대 절전) 진입 전 웹훅 URL을 제거했습니다.</value>
+  </data>
+  <data name="SettingsPreventAwayModeSleep" xml:space="preserve">
+    <value>  Away mode 절전 방지: {0}</value>
+  </data>
+  <data name="SettingsPreventDisplaySleep" xml:space="preserve">
+    <value>  디스플레이 절전 방지: {0}</value>
+  </data>
+  <data name="SettingsPreventSystemSleep" xml:space="preserve">
+    <value>  시스템 절전 방지: {0}</value>
+  </data>
+  <data name="SettingsReason" xml:space="preserve">
+    <value>  사유: {0}</value>
+  </data>
+  <data name="SettingsRuntimeNotRunningSaved" xml:space="preserve">
+    <value>LidGuard가 실행 중이 아닙니다. 저장된 설정은 다음 시작 시 사용됩니다.</value>
+  </data>
+  <data name="SettingsRuntimeUpdated" xml:space="preserve">
+    <value>LidGuard 설정을 업데이트했습니다.</value>
+  </data>
+  <data name="SettingsServerRuntimeCleanupDelay" xml:space="preserve">
+    <value>  LidGuard 자동 종료 대기 시간: {0}</value>
+  </data>
+  <data name="SettingsSessionTimeout" xml:space="preserve">
+    <value>  비활동 세션 시간 제한: {0}</value>
+  </data>
+  <data name="SettingsSuspendHistoryCount" xml:space="preserve">
+    <value>  절전 기록 수: {0}</value>
+  </data>
+  <data name="SettingsSuspendMode" xml:space="preserve">
+    <value>  절전 동작: {0}</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>설정:</value>
+  </data>
+  <data name="SettingsUserInterfaceCulture" xml:space="preserve">
+    <value>  CLI 표시 언어/문화권: {0}</value>
+  </data>
+  <data name="SettingsWatchParentProcess" xml:space="preserve">
+    <value>  프로세스 감시: {0}</value>
+  </data>
+  <data name="SettingsOptionSessionTimeoutValidation" xml:space="preserve">
+    <value>session-timeout-minutes 옵션은 off 또는 최소 {0} 이상의 정수여야 합니다.</value>
+  </data>
+  <data name="SettingsInteractiveClosedLidPermissionRequestDecisionValidation" xml:space="preserve">
+    <value>덮개 닫힘 권한 요청 결정은 deny 또는 allow여야 합니다.</value>
+  </data>
+  <data name="ManagementLabelStatus" xml:space="preserve">
+    <value>상태</value>
+  </data>
+  <data name="ManagementLabelExpectedShell" xml:space="preserve">
+    <value>예상 shell</value>
+  </data>
+  <data name="ManagementHookStatusTitle" xml:space="preserve">
+    <value>{0} hook 상태:</value>
+  </data>
+  <data name="ManagementMcpInstallationTitle" xml:space="preserve">
+    <value>MCP 설치:</value>
+  </data>
+  <data name="HelpSessionLogFile" xml:space="preserve">
+    <value>세션 로그: {0}</value>
+  </data>
+  <data name="SettingsPreviewVolumeOverrideSetting" xml:space="preserve">
+    <value>임시 볼륨 설정: {0}</value>
+  </data>
+  <data name="ManagementLabelExecutable" xml:space="preserve">
+    <value>실행 파일</value>
+  </data>
+  <data name="SettingsInteractiveEmergencyHibernationTemperatureModeValidation" xml:space="preserve">
+    <value>{0} 값은 low, average, high 중 하나여야 합니다.</value>
+  </data>
+  <data name="TextDisplayNone" xml:space="preserve">
+    <value>&lt;없음&gt;</value>
+  </data>
+  <data name="SettingsInteractiveRangeValidation" xml:space="preserve">
+    <value>{0} 값은 {1}부터 {2}까지의 정수여야 합니다.</value>
+  </data>
+  <data name="SettingsInteractiveValueOffOrMinimumValidation" xml:space="preserve">
+    <value>{0} 값은 off 또는 최소 {1} 이상의 정수여야 합니다.</value>
+  </data>
+  <data name="SettingsOptionPostStopSuspendDelaySecondsValidation" xml:space="preserve">
+    <value>post-stop-suspend-delay-seconds 옵션은 음수가 아닌 정수여야 합니다.</value>
+  </data>
+  <data name="ManagementContainsMcpServerCommand" xml:space="preserve">
+    <value>  mcp-server 명령 포함: {0}</value>
+  </data>
+  <data name="ManagementLabelFeatureFlag" xml:space="preserve">
+    <value>Feature flag</value>
+  </data>
+  <data name="SettingsNameSuspendMode" xml:space="preserve">
+    <value>절전 동작</value>
+  </data>
+  <data name="SettingsOptionEmergencyHibernationTemperatureModeValidation" xml:space="preserve">
+    <value>emergency-hibernation-temperature-mode 옵션은 low, average, high 중 하나여야 합니다.</value>
+  </data>
+  <data name="ManagementMcpServerDoesNotPointAtManagedCommand" xml:space="preserve">
+    <value>MCP 서버 '{0}'이 있지만 '{1}'을 가리키지 않습니다.</value>
+  </data>
+  <data name="ManagementProvider" xml:space="preserve">
+    <value>  제공자: {0}</value>
+  </data>
+  <data name="SettingsInteractiveServerRuntimeCleanupDelayDetails" xml:space="preserve">
+    <value>최소: {0}, off로 즉시 종료</value>
+  </data>
+  <data name="SettingsInteractiveInputEnded" xml:space="preserve">
+    <value>{0} 입력 전에 입력이 끝났습니다.</value>
+  </data>
+  <data name="SettingsNameSessionTimeoutMinutes" xml:space="preserve">
+    <value>세션 시간 제한(분)</value>
+  </data>
+  <data name="ManagementPromptHookRemove" xml:space="preserve">
+    <value>Hook을 제거할 제공자</value>
+  </data>
+  <data name="SettingsInteractiveSuspendModeValidation" xml:space="preserve">
+    <value>{0} 값은 sleep 또는 hibernate여야 합니다.</value>
+  </data>
+  <data name="SettingsPreviewPlayedCurrentPostStopSuspendSound" xml:space="preserve">
+    <value>현재 절전/최대 절전 전 알림 소리를 재생했습니다: {0}</value>
+  </data>
+  <data name="ManagementRequiredStopHooks" xml:space="preserve">
+    <value>  필수 stop hook: {0}</value>
+  </data>
+  <data name="ManagementHookInstallationTitle" xml:space="preserve">
+    <value>Hook 설치:</value>
+  </data>
+  <data name="ManagementPromptMcpRemove" xml:space="preserve">
+    <value>MCP 서버를 제거할 제공자</value>
+  </data>
+  <data name="ManagementMcpStatusTitle" xml:space="preserve">
+    <value>{0} MCP 상태:</value>
+  </data>
+  <data name="TextDisplayBooleanTrue" xml:space="preserve">
+    <value>켜짐</value>
+  </data>
+  <data name="ManagementLabelExpectedNotificationMatcher" xml:space="preserve">
+    <value>예상 알림 조건</value>
+  </data>
+  <data name="ManagementPromptHookStatus" xml:space="preserve">
+    <value>Hook 상태를 볼 제공자</value>
+  </data>
+  <data name="ManagementLabelPostToolUseFailureHook" xml:space="preserve">
+    <value>PostToolUseFailure hook</value>
+  </data>
+  <data name="ManagementConfigurationFileDoesNotExist" xml:space="preserve">
+    <value>구성 파일이 없습니다: {0}</value>
+  </data>
+  <data name="SettingsInteractiveRangeDetails" xml:space="preserve">
+    <value>범위: {0}-{1}</value>
+  </data>
+  <data name="ManagementSkippedAbsentProvider" xml:space="preserve">
+    <value>없는 제공자 건너뜀: {0} (기존 구성 루트를 찾지 못한 경로: {1})</value>
+  </data>
+  <data name="ManagementNoMcpServerNamedFound" xml:space="preserve">
+    <value>'{0}' 이름의 MCP 서버를 찾지 못했습니다.</value>
+  </data>
+  <data name="ManagementProviderMcpInstallationTitle" xml:space="preserve">
+    <value>Provider MCP 설치:</value>
+  </data>
+  <data name="ManagementLabelValidCommand" xml:space="preserve">
+    <value>유효한 명령</value>
+  </data>
+  <data name="SettingsOptionPreSuspendWebhookRemovalCommand" xml:space="preserve">
+    <value>절전(또는 최대 절전) 진입 전 웹훅 URL을 제거하려면 {0} {1} 명령을 사용하세요.</value>
+  </data>
+  <data name="ManagementLabelManagedBlock" xml:space="preserve">
+    <value>관리 블록</value>
+  </data>
+  <data name="ManagementUnsupportedMcpManagement" xml:space="preserve">
+    <value>Codex, Claude, GitHub Copilot MCP 관리만 구현되어 있습니다.</value>
+  </data>
+  <data name="ManagementLabelStopFailureHook" xml:space="preserve">
+    <value>StopFailure hook</value>
+  </data>
+  <data name="HelpSettingsPostStopSuspendSoundOption" xml:space="preserve">
+    <value>절전/최대 절전 전 알림 소리를 끄거나, 지원되는 SystemSound 이름({0})을 사용하거나, 재생 가능한 기존 .wav 경로를 지정합니다.</value>
+  </data>
+  <data name="SettingsNameChangeLidAction" xml:space="preserve">
+    <value>덮개 닫기 동작 덮어쓰기</value>
+  </data>
+  <data name="SettingsPreviewVolumeOverrideGuidance" xml:space="preserve">
+    <value>선택 사항인 임시 볼륨: {0} settings --post-stop-suspend-sound-volume-override-percent 75</value>
+  </data>
+  <data name="SettingsInteractiveEmergencyHibernationTemperatureModeDetails" xml:space="preserve">
+    <value>후보: Low, Average, High</value>
+  </data>
+  <data name="ManagementPromptHookEvents" xml:space="preserve">
+    <value>Hook 이벤트를 볼 제공자</value>
+  </data>
+  <data name="SettingsInteractiveNonNegativeIntegerValidation" xml:space="preserve">
+    <value>{0} 값은 음수가 아닌 정수여야 합니다.</value>
+  </data>
+  <data name="ManagementLabelUserPromptSubmittedHook" xml:space="preserve">
+    <value>UserPromptSubmitted hook</value>
+  </data>
+  <data name="SettingsOptionEmergencyHibernationTemperatureCelsiusValidation" xml:space="preserve">
+    <value>emergency-hibernation-temperature-celsius 옵션은 {0}부터 {1}까지의 정수여야 합니다.</value>
+  </data>
+  <data name="ManagementLabelRequiredStopHooks" xml:space="preserve">
+    <value>필수 stop hook</value>
+  </data>
+  <data name="SettingsInteractiveUserInterfaceCultureDetails" xml:space="preserve">
+    <value>auto, en, ko 또는 ko-KR 같은 문화권 이름</value>
+  </data>
+  <data name="ManagementProviderMcpRegistered" xml:space="preserve">
+    <value>관리되는 Provider MCP 서버가 등록되어 있습니다.</value>
+  </data>
+  <data name="SettingsPreviewSupportedSystemSounds" xml:space="preserve">
+    <value>지원 시스템 소리: {0}</value>
+  </data>
+  <data name="TextWarning" xml:space="preserve">
+    <value>경고: {0}</value>
+  </data>
+  <data name="SettingsPreviewPlayedSystemSound" xml:space="preserve">
+    <value>시스템 소리를 재생했습니다: {0}</value>
+  </data>
+  <data name="ManagementLabelContainsMcpServerCommand" xml:space="preserve">
+    <value>mcp-server 명령 포함</value>
+  </data>
+  <data name="ManagementConfigExists" xml:space="preserve">
+    <value>  구성 존재: {0}</value>
+  </data>
+  <data name="SettingsPreviewSystemSoundNameRequired" xml:space="preserve">
+    <value>시스템 소리 이름이 필요합니다. 지원 값: {0}</value>
+  </data>
+  <data name="ConsoleSessionLine" xml:space="preserve">
+    <value>- {0}:{1} 프로세스={2} 소프트락={3} 작업폴더="{4}" 시작={5} 마지막활동={6}</value>
+  </data>
+  <data name="ManagementLabelArgs" xml:space="preserve">
+    <value>인수</value>
+  </data>
+  <data name="ManagementLabelMessage" xml:space="preserve">
+    <value>메시지</value>
+  </data>
+  <data name="CommandOptionNameRequired" xml:space="preserve">
+    <value>-- 뒤에 옵션 이름이 필요합니다.</value>
+  </data>
+  <data name="ManagementProviderName" xml:space="preserve">
+    <value>제공자 이름: {0}</value>
+  </data>
+  <data name="SettingsPreviewUnsupportedSystemSoundName" xml:space="preserve">
+    <value>지원하지 않는 시스템 소리 이름입니다: {0}</value>
+  </data>
+  <data name="ManagementLabelSessionStartHook" xml:space="preserve">
+    <value>SessionStart hook</value>
+  </data>
+  <data name="SettingsOptionPostSessionEndWebhookRemovalCommand" xml:space="preserve">
+    <value>세션 완료 웹훅 URL을 제거하려면 {0} {1} 명령을 사용하세요.</value>
+  </data>
+  <data name="SettingsOptionSuspendHistoryCountValidation" xml:space="preserve">
+    <value>suspend-history-count 옵션은 off 또는 최소 {0} 이상의 정수여야 합니다.</value>
+  </data>
+  <data name="ManagementLabelStopHook" xml:space="preserve">
+    <value>Stop hook</value>
+  </data>
+  <data name="ManagementProviderMcpInstalled" xml:space="preserve">
+    <value>'{0}' Provider MCP 서버를 {1}에 설치했습니다.</value>
+  </data>
+  <data name="SettingsOptionPostStopSuspendSoundVolumeOverrideValidation" xml:space="preserve">
+    <value>post-stop-suspend-sound-volume-override-percent 옵션은 off 또는 {0}부터 {1}까지의 정수여야 합니다.</value>
+  </data>
+  <data name="SettingsInteractivePromptWithDetails" xml:space="preserve">
+    <value>{0} (저장값: {1}, 기본값: {2}, {3}, Enter로 저장값 유지): </value>
+  </data>
+  <data name="TextDisplayEmpty" xml:space="preserve">
+    <value>&lt;비어 있음&gt;</value>
+  </data>
+  <data name="ManagementPromptMcpInstall" xml:space="preserve">
+    <value>MCP 서버를 설치할 제공자</value>
+  </data>
+  <data name="ManagementRemovingHook" xml:space="preserve">
+    <value>{0} hook을 제거하는 중...</value>
+  </data>
+  <data name="ManagementInstalled" xml:space="preserve">
+    <value>  설치됨: {0}</value>
+  </data>
+  <data name="ManagementLabelErrorOccurredHook" xml:space="preserve">
+    <value>ErrorOccurred hook</value>
+  </data>
+  <data name="SettingsInteractiveGuidanceRemovePostSessionEndWebhook" xml:space="preserve">
+    <value>세션 완료 웹훅 URL을 제거하려면 실행: {0} {1}</value>
+  </data>
+  <data name="SettingsOptionServerRuntimeCleanupDelayValidation" xml:space="preserve">
+    <value>server-runtime-cleanup-delay-minutes 옵션은 off 또는 최소 {0} 이상의 정수여야 합니다.</value>
+  </data>
+  <data name="ManagementLidGuardMcpServerRegistered" xml:space="preserve">
+    <value>LidGuard MCP 서버가 등록되어 있습니다.</value>
+  </data>
+  <data name="SettingsInteractiveVolumeOverrideValidation" xml:space="preserve">
+    <value>{0} 값은 off 또는 {1}부터 {2}까지의 정수여야 합니다.</value>
+  </data>
+  <data name="SettingsInteractiveImmediateDetails" xml:space="preserve">
+    <value>0 = 즉시</value>
+  </data>
+  <data name="ManagementProviderCliAvailable" xml:space="preserve">
+    <value>  CLI 사용 가능: {0}</value>
+  </data>
+  <data name="SettingsPreviewPlayableWavSupported" xml:space="preserve">
+    <value>재생 가능한 .wav 파일 경로도 지원합니다.</value>
+  </data>
+  <data name="SettingsPreviewCurrentSoundNotConfigured" xml:space="preserve">
+    <value>설정된 절전/최대 절전 전 알림 소리가 없습니다.</value>
+  </data>
+  <data name="ManagementLabelManagedServerEntry" xml:space="preserve">
+    <value>관리 서버 항목</value>
+  </data>
+  <data name="ManagementLabelExpectedCommands" xml:space="preserve">
+    <value>예상 명령들</value>
+  </data>
+  <data name="ManagementLabelServerName" xml:space="preserve">
+    <value>서버 이름</value>
+  </data>
+  <data name="ManagementLabelProvider" xml:space="preserve">
+    <value>제공자</value>
+  </data>
+  <data name="ManagementHookEventCountValidation" xml:space="preserve">
+    <value>hook 이벤트 개수는 양의 정수여야 합니다.</value>
+  </data>
+  <data name="ManagementLabelAllStopHooks" xml:space="preserve">
+    <value>전체 stop hook</value>
+  </data>
+  <data name="ManagementNoProviderMcpServerNamedRemoved" xml:space="preserve">
+    <value>'{0}' 이름의 Provider MCP 서버가 제거되지 않았습니다.</value>
+  </data>
+  <data name="ManagementLidGuardExecutableMissing" xml:space="preserve">
+    <value>LidGuard 실행 파일 또는 명령이 없습니다: {0}</value>
+  </data>
+  <data name="SettingsNameServerRuntimeCleanupDelayMinutes" xml:space="preserve">
+    <value>LidGuard 자동 종료 대기 시간(분)</value>
+  </data>
+  <data name="ManagementRemovingMcpServer" xml:space="preserve">
+    <value>{0} MCP 서버를 제거하는 중...</value>
+  </data>
+  <data name="ManagementProviderSelectionInputEnded" xml:space="preserve">
+    <value>제공자를 선택하기 전에 입력이 끝났습니다.</value>
+  </data>
+  <data name="SettingsNameEmergencyHibernationTemperatureMode" xml:space="preserve">
+    <value>Emergency Hibernation 온도 모드</value>
+  </data>
+  <data name="ManagementProviderSelectionPrompt" xml:space="preserve">
+    <value>{0} (codex, claude, copilot, all; 기본값: all): </value>
+  </data>
+  <data name="SettingsInteractiveSuspendModeDetails" xml:space="preserve">
+    <value>후보: Sleep, Hibernate</value>
+  </data>
+  <data name="SettingsNameWatchParentProcess" xml:space="preserve">
+    <value>프로세스 감시</value>
+  </data>
+  <data name="SettingsNameSuspendHistoryEntryCount" xml:space="preserve">
+    <value>절전 기록 항목 수</value>
+  </data>
+  <data name="ManagementNoProviderMcpServerNamedFound" xml:space="preserve">
+    <value>{1}에서 '{0}' 이름의 Provider MCP 서버를 찾지 못했습니다.</value>
+  </data>
+  <data name="ManagementMcpServersObjectNotFound" xml:space="preserve">
+    <value>{0}에서 mcpServers object를 찾지 못했습니다.</value>
+  </data>
+  <data name="SettingsOptionSuspendModeValidation" xml:space="preserve">
+    <value>suspend-mode 옵션은 sleep 또는 hibernate여야 합니다.</value>
+  </data>
+  <data name="SettingsInteractiveBooleanValidation" xml:space="preserve">
+    <value>{0} 값은 true 또는 false여야 합니다.</value>
+  </data>
+  <data name="ManagementLabelTransport" xml:space="preserve">
+    <value>전송 방식</value>
+  </data>
+  <data name="SettingsInteractiveClosedLidPermissionRequestDecisionDetails" xml:space="preserve">
+    <value>후보: Deny, Allow</value>
+  </data>
+  <data name="ManagementCommandEmpty" xml:space="preserve">
+    <value>명령: &lt;없음&gt;</value>
+  </data>
+  <data name="ManagementLabelPermissionRequestHook" xml:space="preserve">
+    <value>권한 요청 hook</value>
+  </data>
+  <data name="SettingsNamePreventAwayModeSleep" xml:space="preserve">
+    <value>Away mode 절전 방지</value>
+  </data>
+  <data name="ManagementStatus" xml:space="preserve">
+    <value>  상태: {0}</value>
+  </data>
+  <data name="ManagementCommand" xml:space="preserve">
+    <value>명령: {0}</value>
+  </data>
+  <data name="ManagementProviderCli" xml:space="preserve">
+    <value>  CLI: {0}</value>
+  </data>
+  <data name="ManagementChanged" xml:space="preserve">
+    <value>변경됨: {0}</value>
+  </data>
+  <data name="ManagementUnsupportedHookEventLogs" xml:space="preserve">
+    <value>Codex, Claude, GitHub Copilot hook 이벤트 로그만 구현되어 있습니다.</value>
+  </data>
+  <data name="ManagementTransport" xml:space="preserve">
+    <value>  전송 방식: {0}</value>
+  </data>
+  <data name="SettingsNameEmergencyHibernationOnHighTemperature" xml:space="preserve">
+    <value>고온 Emergency Hibernation</value>
+  </data>
+  <data name="ManagementBackup" xml:space="preserve">
+    <value>백업: {0}</value>
+  </data>
+  <data name="ManagementConfigCannotBeUsedWithAllProviders" xml:space="preserve">
+    <value>각 제공자의 구성 파일이 다르므로 config 옵션은 all 제공자와 함께 사용할 수 없습니다.</value>
+  </data>
+  <data name="SettingsInteractiveGuidanceRemovePreSuspendWebhook" xml:space="preserve">
+    <value>절전(또는 최대 절전) 진입 전 웹훅 URL을 제거하려면 실행: {0} {1}</value>
+  </data>
+  <data name="ManagementConfig" xml:space="preserve">
+    <value>  구성: {0}</value>
+  </data>
+  <data name="ManagementLabelConflictingAgentStopHooks" xml:space="preserve">
+    <value>충돌하는 agentStop hook</value>
+  </data>
+  <data name="ManagementLabelUrl" xml:space="preserve">
+    <value>URL</value>
+  </data>
+  <data name="HelpSuspendHistoryLogFile" xml:space="preserve">
+    <value>절전 기록 로그: {0}</value>
+  </data>
+  <data name="HookManagementAlreadyInstalled" xml:space="preserve">
+    <value>{0} hook이 이미 설치되어 있습니다.</value>
+  </data>
+  <data name="HookManagementAlreadyInstalledOutsideManagedBlock" xml:space="preserve">
+    <value>{0} hook이 LidGuard 관리 블록 밖에 이미 설치되어 있습니다.</value>
+  </data>
+  <data name="HookManagementConfigurationFileDoesNotExist" xml:space="preserve">
+    <value>{0} 구성 파일이 없습니다.</value>
+  </data>
+  <data name="HookManagementHookExecutableDoesNotExist" xml:space="preserve">
+    <value>Hook 실행 파일 또는 명령이 없습니다: {0}</value>
+  </data>
+  <data name="HookManagementInstalled" xml:space="preserve">
+    <value>{0} hook을 설치했습니다.</value>
+  </data>
+  <data name="HookManagementIsInstalled" xml:space="preserve">
+    <value>{0} hook이 설치되어 있습니다.</value>
+  </data>
+  <data name="HookManagementInstalledNeedsUpdate" xml:space="preserve">
+    <value>{0} hook이 설치되어 있지만 업데이트가 필요합니다.</value>
+  </data>
+  <data name="HookManagementNoManagedHookFound" xml:space="preserve">
+    <value>LidGuard가 관리하는 {0} hook을 찾지 못했습니다.</value>
+  </data>
+  <data name="HookManagementNotInstalled" xml:space="preserve">
+    <value>{0} hook이 설치되어 있지 않습니다.</value>
+  </data>
+  <data name="HookManagementRemoved" xml:space="preserve">
+    <value>{0} hook을 제거했습니다.</value>
+  </data>
+  <data name="HookManagementUnsupportedInstallation" xml:space="preserve">
+    <value>{0} hook 설치만 구현되어 있습니다.</value>
+  </data>
+  <data name="HookManagementUnsupportedRemoval" xml:space="preserve">
+    <value>{0} hook 제거만 구현되어 있습니다.</value>
+  </data>
+  <data name="HookManagementWrittenNeedsAttention" xml:space="preserve">
+    <value>{0} hook 구성을 썼지만 아직 확인이 필요합니다.</value>
+  </data>
+  <data name="HookStatusMessageBlockingClosedLidAskUserPrompt" xml:space="preserve">
+    <value>덮개가 닫힌 상태의 ask_user 요청 차단 중</value>
+  </data>
+  <data name="HookStatusMessageCancelingClosedLidElicitationRequest" xml:space="preserve">
+    <value>덮개가 닫힌 상태의 elicitation 요청 취소 중</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeFailedToolActivity" xml:space="preserve">
+    <value>Claude 실패한 도구 활동 기록 중</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeSoftLockTelemetry" xml:space="preserve">
+    <value>Claude soft-lock 상태 기록 중</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeToolActivity" xml:space="preserve">
+    <value>Claude 도구 활동 기록 중</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeToolCompletionActivity" xml:space="preserve">
+    <value>Claude 도구 완료 활동 기록 중</value>
+  </data>
+  <data name="HookStatusMessageRecordingGitHubCopilotErrorTelemetry" xml:space="preserve">
+    <value>GitHub Copilot 오류 상태 기록 중</value>
+  </data>
+  <data name="HookStatusMessageRecordingGitHubCopilotPromptTelemetry" xml:space="preserve">
+    <value>GitHub Copilot 프롬프트 상태 기록 중</value>
+  </data>
+  <data name="HookStatusMessageRecordingGitHubCopilotSessionEnd" xml:space="preserve">
+    <value>GitHub Copilot 세션 종료 기록 중</value>
+  </data>
+  <data name="HookStatusMessageRecordingGitHubCopilotSessionStart" xml:space="preserve">
+    <value>GitHub Copilot 세션 시작 기록 중</value>
+  </data>
+  <data name="HookStatusMessageRecordingGitHubCopilotToolCompletionActivity" xml:space="preserve">
+    <value>GitHub Copilot 도구 완료 활동 기록 중</value>
+  </data>
+  <data name="HookStatusMessageRespondingToClosedLidPermissionRequest" xml:space="preserve">
+    <value>덮개 닫힘 권한 요청에 응답 중</value>
+  </data>
+  <data name="HookStatusMessageStartingTurnProtection" xml:space="preserve">
+    <value>LidGuard 턴 보호 시작 중</value>
+  </data>
+  <data name="HookStatusMessageStoppingSessionProtection" xml:space="preserve">
+    <value>LidGuard 세션 보호 중지 중</value>
+  </data>
+  <data name="HookStatusMessageStoppingTurnProtection" xml:space="preserve">
+    <value>LidGuard 턴 보호 중지 중</value>
+  </data>
+  <data name="ManagementLabelConfigExists" xml:space="preserve">
+    <value>구성 존재</value>
+  </data>
+  <data name="SettingsNamePostStopSuspendSoundVolumeOverridePercent" xml:space="preserve">
+    <value>알림 소리 임시 볼륨 비율</value>
+  </data>
+  <data name="ManagementLabelAgentStopHook" xml:space="preserve">
+    <value>AgentStop hook</value>
+  </data>
+  <data name="ManagementLabelElicitationHook" xml:space="preserve">
+    <value>Elicitation hook</value>
+  </data>
+  <data name="ManagementLabelExpectedCommand" xml:space="preserve">
+    <value>예상 명령</value>
+  </data>
+  <data name="ManagementLabelManagedHooks" xml:space="preserve">
+    <value>관리 hook</value>
+  </data>
+  <data name="ManagementLabelCliAvailable" xml:space="preserve">
+    <value>CLI 사용 가능</value>
+  </data>
+  <data name="SettingsInteractiveVolumeOverrideDetails" xml:space="preserve">
+    <value>범위: {0}-{1}, off로 비활성화</value>
+  </data>
+  <data name="ManagementField" xml:space="preserve">
+    <value>  {0}: {1}</value>
+  </data>
+  <data name="SettingsNamePreventSystemSleep" xml:space="preserve">
+    <value>시스템 절전 방지</value>
+  </data>
+  <data name="ManagementLabelSessionEndHook" xml:space="preserve">
+    <value>SessionEnd hook</value>
+  </data>
+  <data name="SettingsNamePostStopSuspendSound" xml:space="preserve">
+    <value>절전/최대 절전 전 알림 소리</value>
+  </data>
+  <data name="SettingsNamePostStopSuspendDelaySeconds" xml:space="preserve">
+    <value>세션 종료 후 절전/최대 절전 대기 시간(초)</value>
+  </data>
+  <data name="SettingsInteractiveGuidanceChangeReason" xml:space="preserve">
+    <value>사유를 변경하려면 실행: {0} settings --power-request-reason &lt;text&gt;</value>
+  </data>
+  <data name="SettingsManagedHookStatusMessageRefreshChanged" xml:space="preserve">
+    <value>관리 hook 상태 메시지를 갱신했습니다: {0}</value>
+  </data>
+  <data name="SettingsManagedHookStatusMessageRefreshFailed" xml:space="preserve">
+    <value>관리 hook 상태 메시지를 갱신하지 못했습니다: {0}</value>
+  </data>
+  <data name="SettingsManagedHookStatusMessageRefreshUnchanged" xml:space="preserve">
+    <value>관리 hook 상태 메시지가 이미 현재 UI culture와 일치하거나 관리 hook을 찾지 못했습니다.</value>
+  </data>
+  <data name="ManagementNoAvailableProviders" xml:space="preserve">
+    <value>all 제공자 실행에 사용할 수 있는 제공자가 없습니다.</value>
+  </data>
+  <data name="ManagementMessage" xml:space="preserve">
+    <value>메시지: {0}</value>
+  </data>
+  <data name="SettingsNamePreventDisplaySleep" xml:space="preserve">
+    <value>디스플레이 절전 방지</value>
+  </data>
+  <data name="ManagementLabelConflictSources" xml:space="preserve">
+    <value>충돌 원본</value>
+  </data>
+  <data name="ManagementNoProviderMcpServerEntryFound" xml:space="preserve">
+    <value>관리되는 Provider MCP 서버 항목을 찾지 못했습니다.</value>
+  </data>
+  <data name="ManagementServerName" xml:space="preserve">
+    <value>  서버 이름: {0}</value>
+  </data>
+  <data name="SettingsNameEmergencyHibernationTemperatureCelsius" xml:space="preserve">
+    <value>Emergency Hibernation 온도 섭씨</value>
+  </data>
+  <data name="SettingsInteractiveSuspendHistoryEntryCountDetails" xml:space="preserve">
+    <value>최소: {0}, off로 비활성화</value>
+  </data>
+  <data name="SettingsInteractivePrompt" xml:space="preserve">
+    <value>{0} (저장값: {1}, 기본값: {2}, Enter로 저장값 유지): </value>
+  </data>
+  <data name="ManagementLabelOptionalSessionEndHook" xml:space="preserve">
+    <value>선택 SessionEnd hook</value>
+  </data>
+  <data name="SettingsOptionClosedLidPermissionRequestDecisionValidation" xml:space="preserve">
+    <value>덮개 닫힘 권한 요청 결정은 deny 또는 allow여야 합니다.</value>
+  </data>
+  <data name="ManagementLabelProviderName" xml:space="preserve">
+    <value>제공자 이름</value>
+  </data>
+  <data name="ManagementProviderMcpRemoved" xml:space="preserve">
+    <value>'{0}' Provider MCP 서버를 {1}에서 제거했습니다.</value>
+  </data>
+  <data name="SettingsInteractiveSessionTimeoutDetails" xml:space="preserve">
+    <value>최소: {0}, off로 비활성화</value>
+  </data>
+  <data name="ManagementExistingMcpServerRefreshing" xml:space="preserve">
+    <value>{0}에 기존 관리 LidGuard MCP 서버가 있습니다. 등록을 갱신합니다.</value>
+  </data>
+  <data name="TextDisplayBooleanFalse" xml:space="preserve">
+    <value>꺼짐</value>
+  </data>
+  <data name="ManagementLabelHookLog" xml:space="preserve">
+    <value>Hook 로그</value>
+  </data>
+  <data name="ManagementLabelHooksObject" xml:space="preserve">
+    <value>Hooks object</value>
+  </data>
+  <data name="SettingsInteractivePostStopSuspendSoundDetails" xml:space="preserve">
+    <value>off로 비활성화, SystemSounds: {0}, 또는 .wav 경로</value>
+  </data>
+  <data name="SettingsInteractiveGuidanceChangePostSessionEndWebhook" xml:space="preserve">
+    <value>세션 완료 웹훅 URL을 변경하려면 실행: {0} settings --post-session-end-webhook-url &lt;http-or-https-url&gt;</value>
+  </data>
+  <data name="ManagementInstallingMcpServer" xml:space="preserve">
+    <value>{0} MCP 서버를 설치하는 중...</value>
+  </data>
+  <data name="ManagementLabelCli" xml:space="preserve">
+    <value>CLI</value>
+  </data>
+  <data name="ManagementSkippingMcpInstallAfterRemoveFailure" xml:space="preserve">
+    <value>기존 관리 등록 제거에 실패하여 {0} MCP 설치를 건너뜁니다.</value>
+  </data>
+  <data name="ManagementUnsupportedProviderSelection" xml:space="preserve">
+    <value>지원하지 않는 제공자입니다. codex, claude, copilot, all 중 하나를 사용하세요.</value>
+  </data>
+  <data name="ManagementServerArguments" xml:space="preserve">
+    <value>  인수: {0}</value>
+  </data>
+  <data name="ManagementLabelCommand" xml:space="preserve">
+    <value>명령</value>
+  </data>
+  <data name="ManagementLabelUserPromptSubmitHook" xml:space="preserve">
+    <value>UserPromptSubmit hook</value>
+  </data>
+  <data name="SettingsNameClosedLidPermissionRequestDecision" xml:space="preserve">
+    <value>덮개 닫힘 권한 요청 결정</value>
+  </data>
+  <data name="TextDisplayOff" xml:space="preserve">
+    <value>꺼짐</value>
+  </data>
+  <data name="ManagementFailedToStartProcess" xml:space="preserve">
+    <value>프로세스를 시작하지 못했습니다: {0}</value>
+  </data>
+  <data name="ManagementLabelPostToolUseHook" xml:space="preserve">
+    <value>PostToolUse hook</value>
+  </data>
+  <data name="ManagementLabelPreToolUseHook" xml:space="preserve">
+    <value>PreToolUse hook</value>
+  </data>
+  <data name="ManagementLabelNotificationHook" xml:space="preserve">
+    <value>Notification hook</value>
+  </data>
+  <data name="CommandBooleanOptionValidation" xml:space="preserve">
+    <value>{0} 옵션은 true 또는 false여야 합니다.</value>
+  </data>
+  <data name="SettingsPreviewConfigureCurrentSound" xml:space="preserve">
+    <value>설정 명령: {0} settings --post-stop-suspend-sound Asterisk</value>
+  </data>
+  <data name="ManagementLabelInstalled" xml:space="preserve">
+    <value>설치됨</value>
+  </data>
+  <data name="ManagementLabelConfig" xml:space="preserve">
+    <value>구성</value>
+  </data>
+  <data name="ManagementPromptHookInstall" xml:space="preserve">
+    <value>Hook을 설치할 제공자</value>
+  </data>
+  <data name="ManagementHookEventsTitle" xml:space="preserve">
+    <value>{0} hook 이벤트:</value>
+  </data>
+  <data name="SettingsNameUserInterfaceCulture" xml:space="preserve">
+    <value>CLI 표시 언어/문화권</value>
+  </data>
+  <data name="ManagementUnsupportedHookManagement" xml:space="preserve">
+    <value>Codex, Claude, GitHub Copilot hook 관리만 구현되어 있습니다.</value>
+  </data>
+  <data name="ManagementProviderCliNotFound" xml:space="preserve">
+    <value>Provider CLI를 찾지 못했습니다: {0} (확인 경로: {1})</value>
+  </data>
+  <data name="ManagementPromptMcpStatus" xml:space="preserve">
+    <value>MCP 서버 상태를 볼 제공자</value>
+  </data>
+  <data name="ManagementUrl" xml:space="preserve">
+    <value>  URL: {0}</value>
+  </data>
+  <data name="SettingsInteractiveGuidanceChangePreSuspendWebhook" xml:space="preserve">
+    <value>절전(또는 최대 절전) 진입 전 웹훅 URL을 변경하려면 실행: {0} settings --pre-suspend-webhook-url &lt;http-or-https-url&gt;</value>
+  </data>
+  <data name="ManagementInstallingHook" xml:space="preserve">
+    <value>{0} hook을 설치하는 중...</value>
+  </data>
+  <data name="CommandRequiredOption" xml:space="preserve">
+    <value>--{0} 옵션이 필요합니다.</value>
+  </data>
+  <data name="Help_ManagedProvider_ProviderOption" xml:space="preserve">
+    <value>선택 사항입니다. 허용 값: codex, claude, copilot, all. 생략하면 LidGuard가 제공자를 묻습니다.</value>
+  </data>
+  <data name="Help_ProviderMcp_ServerNameOption" xml:space="preserve">
+    <value>선택 사항인 관리 서버 항목 이름입니다. 기본값은 lidguard-provider입니다.</value>
+  </data>
+  <data name="Help_CodexHook_Description" xml:space="preserve">
+    <value>표준 입력에서 Codex hook JSON을 읽고 start, stop 또는 덮개 닫힘 permission 결정을 LidGuard로 전달합니다.</value>
+  </data>
+  <data name="Help_CurrentTemperature_UnavailableNote" xml:space="preserve">
+    <value>이 플랫폼에서 지원되는 온도 센서 데이터를 찾지 못하면 값을 사용할 수 없다고 표시합니다.</value>
+  </data>
+  <data name="Help_ProviderMcpServer_ProviderNameOption" xml:space="preserve">
+    <value>필수 제공자 이름이며 Provider MCP 도구에 노출됩니다.</value>
+  </data>
+  <data name="Help_SuspendHistory_Description" xml:space="preserve">
+    <value>로컬 절전 기록 로그에서 최근 절전 요청 기록을 출력합니다.</value>
+  </data>
+  <data name="Help_Settings_Description" xml:space="preserve">
+    <value>세션을 시작할 때 사용하는 기본 설정을 표시하고 갱신합니다.</value>
+  </data>
+  <data name="Help_MacOSPermission_StatusDescription" xml:space="preserve">
+    <value>변경 없이 현재 macOS 권한 환경을 출력합니다.</value>
+  </data>
+  <data name="Help_Help_Description" xml:space="preserve">
+    <value>분류된 명령 개요 또는 알려진 명령/별칭 하나의 상세 도움말을 표시합니다.</value>
+  </data>
+  <data name="Help_Settings_PreventSystemSleepOption" xml:space="preserve">
+    <value>세션이 활성 상태일 때 시스템 절전을 막을지 변경합니다.</value>
+  </data>
+  <data name="Help_Settings_PreventAwayModeSleepOption" xml:space="preserve">
+    <value>지원되는 Windows PC에서 Away Mode로 백그라운드 작업을 계속 유지할지 변경합니다.</value>
+  </data>
+  <data name="Help_MacOSPermission_InstallNote" xml:space="preserve">
+    <value>이 하위 명령은 /private/etc/sudoers.d/lidguard에 한 번 관리자 쓰기를 하기 위해 sudo를 사용합니다.</value>
+  </data>
+  <data name="Help_CleanupOrphans_RuntimeNotRunningNote" xml:space="preserve">
+    <value>LidGuard가 실행 중이 아니면 cleanup-orphans는 정리할 항목이 없다고 보고합니다.</value>
+  </data>
+  <data name="Help_LinuxPermission_Description" xml:space="preserve">
+    <value>systemd/logind 절전 및 절전 방지 작업을 위한 Linux polkit 권한을 검사하거나 관리합니다.</value>
+  </data>
+  <data name="Help_PreviewCurrentSound_Description" xml:space="preserve">
+    <value>저장된 임시 볼륨 설정을 사용해 절전/최대 절전 전 알림 소리를 바로 재생합니다.</value>
+  </data>
+  <data name="Help_Usage_OptionSyntax" xml:space="preserve">
+    <value>옵션은 --name value 또는 --name=value 형식으로 지정합니다.</value>
+  </data>
+  <data name="Help_ProviderMcpServer_Description" xml:space="preserve">
+    <value>호출자가 지정한 제공자 이름 하나로 전용 Provider MCP stdio 서버를 실행합니다.</value>
+  </data>
+  <data name="Help_Settings_PreSuspendWebhookOption" xml:space="preserve">
+    <value>LidGuard가 절전 또는 최대 절전을 요청하기 전에 호출할 웹훅 URL을 설정합니다.</value>
+  </data>
+  <data name="Help_Settings_SessionTimeoutOption" xml:space="preserve">
+    <value>비활동 세션 시간 제한을 끄거나, 마지막 활동 후 지정한 분이 지나면 해당 세션이 더 이상 절전 방지를 유지하지 않게 합니다. 활성화된 최소값은 1입니다.</value>
+  </data>
+  <data name="Help_Status_Description" xml:space="preserve">
+    <value>LidGuard 상태, 활성 세션, 적용되는 저장 설정을 표시합니다.</value>
+  </data>
+  <data name="Help_CurrentMonitorCount_Description" xml:space="preserve">
+    <value>LidGuard가 덮개 닫힘 정책 판단에 사용하는 같은 기본 플랫폼 모니터 표시 검사로 현재 보이는 디스플레이 모니터 수를 보고합니다.</value>
+  </data>
+  <data name="Help_Settings_PreventDisplaySleepOption" xml:space="preserve">
+    <value>세션이 활성 상태일 때 디스플레이 절전을 막을지 변경합니다.</value>
+  </data>
+  <data name="Help_Settings_SuspendHistoryOption" xml:space="preserve">
+    <value>절전 기록을 끄거나 최근 절전 요청 항목을 유지합니다. 활성화된 최소값은 1입니다.</value>
+  </data>
+  <data name="Help_Usage_BooleanOptions" xml:space="preserve">
+    <value>Boolean 옵션은 true/false, yes/no, on/off, 1/0을 받습니다.</value>
+  </data>
+  <data name="Help_Settings_PostStopSuspendSoundVolumeOption" xml:space="preserve">
+    <value>임시 볼륨 변경을 끄거나, 절전/최대 절전 전 알림 소리가 재생되는 동안 기본 출력 볼륨을 지정합니다. 재생 후 이전 볼륨과 음소거 상태를 복원합니다.</value>
+  </data>
+  <data name="Help_Settings_PostStopSuspendDelayOption" xml:space="preserve">
+    <value>세션 종료 후 절전 또는 최대 절전까지 기다릴 시간을 초 단위로 설정합니다. 0은 즉시 실행입니다.</value>
+  </data>
+  <data name="Help_SuspendHistory_CountOption" xml:space="preserve">
+    <value>선택 사항인 양의 표시 항목 수입니다. 기본값은 저장된 절전 기록 보존 개수이며, 기록이 꺼져 있으면 10입니다.</value>
+  </data>
+  <data name="Help_ClaudeHooks_Description" xml:space="preserve">
+    <value>관리되는 Claude Code hook 구성 조각을 출력합니다.</value>
+  </data>
+  <data name="Help_RemoveSession_ProviderNameOption" xml:space="preserve">
+    <value>선택 사항입니다. --provider mcp 사용 시 MCP 제공자 이름 하나로 제거 대상을 좁힙니다.</value>
+  </data>
+  <data name="Help_ProviderMcpStatus_Description" xml:space="preserve">
+    <value>호출자가 제공한 JSON 구성 파일에서 관리 Provider MCP 서버 항목을 검사합니다.</value>
+  </data>
+  <data name="Help_MacOSPermission_RemoveNote" xml:space="preserve">
+    <value>sudoers 파일에 LidGuard 관리 marker가 없으면 제거하지 않습니다.</value>
+  </data>
+  <data name="Help_CurrentTemperature_TemperatureModeOption" xml:space="preserve">
+    <value>선택 사항입니다. default는 저장된 설정을 따르고, low, average, high는 이 명령에서만 적용됩니다.</value>
+  </data>
+  <data name="Help_RemoveSession_ProviderOption" xml:space="preserve">
+    <value>선택 사항입니다. 제거 대상을 제공자 하나로 좁힙니다. 허용 값: codex, claude, copilot, custom, mcp, unknown.</value>
+  </data>
+  <data name="Help_Settings_ResetOption" xml:space="preserve">
+    <value>true이면 이 명령에 지정한 값을 적용하기 전에 LidGuard 기본 설정으로 먼저 초기화합니다.</value>
+  </data>
+  <data name="Help_CurrentTemperature_Description" xml:space="preserve">
+    <value>선택한 온도 모드로 현재 시스템 온도를 섭씨로 표시합니다.</value>
+  </data>
+  <data name="Help_RemoveSession_ByIdentifierDescription" xml:space="preserve">
+    <value>제공자의 stop hook을 기다리지 않고 세션 식별자로 활성 세션을 제거합니다.</value>
+  </data>
+  <data name="Help_Status_RuntimeNotRunningNote" xml:space="preserve">
+    <value>LidGuard가 실행 중이 아니어도 status는 저장된 설정 파일 내용을 출력합니다.</value>
+  </data>
+  <data name="Help_Stop_WorkingDirectoryOption" xml:space="preserve">
+    <value>선택 사항인 작업 폴더입니다. 세션 식별 정보가 없을 때 사용합니다. 기본값은 현재 폴더입니다.</value>
+  </data>
+  <data name="Help_ManagedCommands_Detail" xml:space="preserve">
+    <value>이 명령들은 일반적인 직접 CLI 사용보다 제공자 관리 연동과 stdio 호스트 용도입니다.</value>
+  </data>
+  <data name="Help_SoundPreview_WaitsForPlaybackNote" xml:space="preserve">
+    <value>이 명령은 재생이 끝날 때까지 기다립니다.</value>
+  </data>
+  <data name="Help_Usage_QuoteValues" xml:space="preserve">
+    <value>경로나 텍스트 값에 공백이 있으면 따옴표로 감싸세요.</value>
+  </data>
+  <data name="Help_MacOSPermission_ManagedRuleNote" xml:space="preserve">
+    <value>관리 rule은 LidGuard의 pmset disablesleep, pmset hibernatemode, powermetrics SMC sample 명령만 허용합니다.</value>
+  </data>
+  <data name="Help_CleanupOrphans_Description" xml:space="preserve">
+    <value>감시 프로세스가 이미 종료된 세션을 제거합니다.</value>
+  </data>
+  <data name="Help_LinuxPermission_InstallNote" xml:space="preserve">
+    <value>이 하위 명령은 /etc/polkit-1/rules.d/49-lidguard.rules에 한 번 관리자 쓰기를 하기 위해 sudo를 사용합니다.</value>
+  </data>
+  <data name="Help_CurrentLidState_Description" xml:space="preserve">
+    <value>LidGuard가 덮개 닫힘 정책 판단에 사용하는 같은 플랫폼 덮개 상태 소스로 현재 덮개 스위치 상태를 보고합니다.</value>
+  </data>
+  <data name="Help_MacOSPermission_CheckDescription" xml:space="preserve">
+    <value>실제 절전 또는 최대 절전을 요청하지 않고 필요한 macOS 작업을 검증합니다.</value>
+  </data>
+  <data name="Help_Settings_EmergencyHibernationTemperatureCelsiusOption" xml:space="preserve">
+    <value>Emergency Hibernation threshold를 섭씨로 설정합니다. 허용 범위: 70부터 110까지.</value>
+  </data>
+  <data name="Help_RemoveSession_NoProviderNote" xml:space="preserve">
+    <value>--provider를 생략하면 LidGuard가 세션 식별자가 일치하는 모든 활성 세션을 제거합니다.</value>
+  </data>
+  <data name="Help_McpInstall_Description" xml:space="preserve">
+    <value>선택한 제공자 CLI에 lidguard 이름의 관리 stdio MCP 서버를 등록하거나 갱신합니다.</value>
+  </data>
+  <data name="Help_MacOSPermission_RemoveDescription" xml:space="preserve">
+    <value>정확한 LidGuard 관리 sudoers rule 파일이 있을 때 해당 rule을 제거합니다.</value>
+  </data>
+  <data name="Help_Stop_ParentProcessOption" xml:space="preserve">
+    <value>선택 사항인 프로세스 ID입니다. 추적 세션을 중지할 때 일치 여부를 확인합니다.</value>
+  </data>
+  <data name="Help_Settings_EmergencyHibernationTemperatureModeOption" xml:space="preserve">
+    <value>LidGuard가 사용 가능한 온도 센서 값 중 최저값, 평균값, 최고값 중 무엇을 기준으로 볼지 선택합니다.</value>
+  </data>
+  <data name="Help_CurrentMonitorCount_InternalPanelNote" xml:space="preserve">
+    <value>내장 노트북 패널 연결은 최종 절전 가능 여부 검사에서만 제외됩니다.</value>
+  </data>
+  <data name="Help_LinuxPermission_RemoveNote" xml:space="preserve">
+    <value>rule 파일에 LidGuard 관리 marker가 없으면 제거하지 않습니다.</value>
+  </data>
+  <data name="Help_Stop_SessionOption" xml:space="preserve">
+    <value>선택 사항입니다. 생략하면 LidGuard가 start와 같은 대체 세션 식별자 방식을 사용합니다.</value>
+  </data>
+  <data name="Help_CodexHooks_Description" xml:space="preserve">
+    <value>관리되는 Codex hook 구성 조각을 출력합니다.</value>
+  </data>
+  <data name="Help_ProviderMcpInstall_ProviderNameOption" xml:space="preserve">
+    <value>필수 제공자 이름이며 provider-mcp-server로 전달됩니다.</value>
+  </data>
+  <data name="Help_ProviderMcpRemove_Description" xml:space="preserve">
+    <value>호출자가 제공한 JSON 구성 파일에서 관리 Provider MCP 서버 항목을 제거합니다.</value>
+  </data>
+  <data name="Help_Command_NoOptionsNote" xml:space="preserve">
+    <value>이 명령은 옵션을 받지 않습니다.</value>
+  </data>
+  <data name="Help_HookInstall_Description" xml:space="preserve">
+    <value>선택한 구성 파일에 관리 제공자 hook 항목을 설치합니다.</value>
+  </data>
+  <data name="Help_McpRemove_Description" xml:space="preserve">
+    <value>선택한 제공자 CLI에서 lidguard 이름의 관리 stdio MCP 서버를 제거합니다.</value>
+  </data>
+  <data name="Help_Settings_PostSessionEndWebhookOption" xml:space="preserve">
+    <value>세션이 정상 완료되었고 LidGuard가 곧 절전 또는 최대 절전을 요청하지 않을 때 호출할 웹훅 URL을 설정합니다.</value>
+  </data>
+  <data name="Help_Paths_MacOSRuntimeBehavior" xml:space="preserve">
+    <value>macOS 동작은 caffeinate와 pmset으로 구현되어 있습니다. Windows와 Linux 동작은 각 플랫폼 빌드에 구현되어 있습니다.</value>
+  </data>
+  <data name="Help_ManagedProvider_ConfigAllNote" xml:space="preserve">
+    <value>각 제공자가 서로 다른 구성 파일을 사용하므로 --config와 --provider all을 함께 사용하지 마세요.</value>
+  </data>
+  <data name="Help_Settings_SuspendModeOption" xml:space="preserve">
+    <value>마지막 활성 세션이 끝나거나 더 이상 절전 방지를 유지하지 않을 때 절전과 최대 절전 중 무엇을 요청할지 선택합니다.</value>
+  </data>
+  <data name="Help_ProviderMcpInstall_DirectEditNote" xml:space="preserve">
+    <value>이 경로는 제공된 JSON 파일을 직접 편집하며 제공자별 mcp add/remove 명령을 호출하지 않습니다.</value>
+  </data>
+  <data name="Help_PreviewCurrentSound_NoSoundNote" xml:space="preserve">
+    <value>알림 소리가 설정되어 있지 않으면 실패하지 않고 설정 안내를 출력합니다.</value>
+  </data>
+  <data name="Help_LinuxPermission_StatusDescription" xml:space="preserve">
+    <value>변경 없이 현재 Linux 권한 환경을 출력합니다.</value>
+  </data>
+  <data name="Help_Start_WorkingDirectoryOption" xml:space="preserve">
+    <value>선택 사항인 작업 폴더입니다. 세션 식별 정보가 없을 때와 프로세스를 찾을 때 사용합니다. 기본값은 현재 폴더입니다.</value>
+  </data>
+  <data name="Help_Settings_ServerRuntimeCleanupDelayOption" xml:space="preserve">
+    <value>모든 세션이 사라지고 보류 중인 정리가 끝난 뒤 LidGuard가 계속 실행될 시간을 설정합니다. off는 즉시 종료입니다. 활성화된 최소값은 1입니다.</value>
+  </data>
+  <data name="Help_Stop_Description" xml:space="preserve">
+    <value>세션을 시작할 때 사용한 제공자와 세션 식별 정보로 추적 중인 세션을 중지합니다.</value>
+  </data>
+  <data name="Help_ManagedProvider_AllProvidersNote" xml:space="preserve">
+    <value>--provider all에서는 기본 구성 루트가 이미 존재하는 제공자만 처리합니다. 없는 제공자는 보고 후 건너뜁니다.</value>
+  </data>
+  <data name="Help_Paths_WindowsRuntimeBehavior" xml:space="preserve">
+    <value>이 빌드는 Windows 동작을 구현합니다. Linux와 macOS 동작은 각 플랫폼 빌드에 구현되어 있습니다.</value>
+  </data>
+  <data name="Help_RemovePreSuspendWebhook_Description" xml:space="preserve">
+    <value>저장된 절전(또는 최대 절전) 진입 전 웹훅 URL을 지웁니다.</value>
+  </data>
+  <data name="Help_HookEvents_Description" xml:space="preserve">
+    <value>선택한 제공자의 최근 hook 이벤트 로그 줄을 출력합니다.</value>
+  </data>
+  <data name="Help_ClaudeHook_Description" xml:space="preserve">
+    <value>표준 입력에서 Claude Code hook JSON을 읽고 start, stop, activity, soft-lock, elicitation 또는 permission 결정을 LidGuard로 전달합니다.</value>
+  </data>
+  <data name="Help_SuspendHistory_CountNote" xml:space="preserve">
+    <value>저장된 절전 기록 보존 개수 설정은 유지할 항목 수를 제어합니다. --count 옵션은 유지된 항목 중 표시할 개수만 제한합니다.</value>
+  </data>
+  <data name="Help_Settings_ClosedLidPermissionRequestDecisionOption" xml:space="preserve">
+    <value>LidGuard가 덮개 닫힘을 보고할 때 덮개 닫힘 권한 요청 hook이 어떻게 응답할지 선택합니다.</value>
+  </data>
+  <data name="Help_ProviderMcpRemove_ConfigOption" xml:space="preserve">
+    <value>필수입니다. 갱신할 JSON 구성 파일입니다.</value>
+  </data>
+  <data name="Help_Paths_LinuxRuntimeBehavior" xml:space="preserve">
+    <value>Linux 동작은 systemd/logind 시스템용으로 구현되어 있습니다. macOS 동작은 macOS 빌드에 구현되어 있습니다.</value>
+  </data>
+  <data name="Help_RemoveSession_AllDescription" xml:space="preserve">
+    <value>LidGuard가 현재 추적 중인 모든 활성 세션을 제거합니다.</value>
+  </data>
+  <data name="Help_McpStatus_Description" xml:space="preserve">
+    <value>제공자 하나 또는 감지된 모든 제공자의 관리 user/global LidGuard MCP 서버 등록을 검사합니다.</value>
+  </data>
+  <data name="Help_CurrentLidState_StateNote" xml:space="preserve">
+    <value>현재 플랫폼 덮개 상태 소스를 기준으로 Open, Closed 또는 Unknown을 보고합니다.</value>
+  </data>
+  <data name="Help_Start_ParentProcessOption" xml:space="preserve">
+    <value>선택 사항인 프로세스 ID입니다. 해당 프로세스가 종료되면 LidGuard가 세션을 정리할 수 있게 감시합니다.</value>
+  </data>
+  <data name="Help_Session_ProviderOption" xml:space="preserve">
+    <value>필수입니다. 허용 값: codex, claude, copilot, custom, mcp.</value>
+  </data>
+  <data name="Help_LinuxPermission_InstallDescription" xml:space="preserve">
+    <value>현재 사용자를 위한 LidGuard 관리 polkit rule을 설치합니다.</value>
+  </data>
+  <data name="Help_ProviderMcpStatus_ConfigOption" xml:space="preserve">
+    <value>필수입니다. 검사할 JSON 구성 파일입니다.</value>
+  </data>
+  <data name="Help_RemoveSession_Description" xml:space="preserve">
+    <value>LidGuard가 현재 추적 중인 활성 세션을 제거합니다.</value>
+  </data>
+  <data name="Help_RemovePostSessionEndWebhook_Description" xml:space="preserve">
+    <value>저장된 세션 완료 웹훅 URL을 지웁니다.</value>
+  </data>
+  <data name="Help_PreviewSystemSound_Description" xml:space="preserve">
+    <value>저장된 임시 볼륨 설정을 사용해 지원되는 SystemSound 이름 하나를 바로 재생합니다.</value>
+  </data>
+  <data name="Help_MacOSPermission_InstallDescription" xml:space="preserve">
+    <value>현재 사용자를 위한 LidGuard 관리 sudoers rule을 설치합니다.</value>
+  </data>
+  <data name="Help_LinuxPermission_RemoveDescription" xml:space="preserve">
+    <value>정확한 LidGuard 관리 rule 파일이 있을 때 해당 polkit rule을 제거합니다.</value>
+  </data>
+  <data name="Help_MacOSPermission_Description" xml:space="preserve">
+    <value>pmset 및 powermetrics 작업을 위한 macOS sudoers 권한을 검사하거나 관리합니다.</value>
+  </data>
+  <data name="Help_Settings_EmergencyHibernationOption" xml:space="preserve">
+    <value>덮개가 닫힌 상태에서 보호 중인 시스템 온도가 설정한 온도에 도달하면 Emergency Hibernation을 요청할지 변경합니다.</value>
+  </data>
+  <data name="Help_HookStatus_Description" xml:space="preserve">
+    <value>제공자 하나 또는 감지된 모든 제공자의 관리 hook 구성을 검사합니다.</value>
+  </data>
+  <data name="Help_McpInstall_RefreshNote" xml:space="preserve">
+    <value>기존 관리 LidGuard MCP 서버가 있으면 mcp-install은 먼저 제거한 뒤 현재 명령을 설치합니다.</value>
+  </data>
+  <data name="Help_CurrentTemperature_DefaultModeNote" xml:space="preserve">
+    <value>설정 파일이 아직 없으면 default는 Average를 사용합니다.</value>
+  </data>
+  <data name="Help_ProviderMcpInstall_Description" xml:space="preserve">
+    <value>호출자가 제공한 JSON 구성 파일에 관리 Provider MCP stdio 서버 항목을 쓰거나 갱신합니다.</value>
+  </data>
+  <data name="Help_HookEvents_CountOption" xml:space="preserve">
+    <value>선택 사항인 양의 줄 수입니다. 기본값은 50입니다.</value>
+  </data>
+  <data name="Help_Stop_ProviderNameOption" xml:space="preserve">
+    <value>--provider mcp 사용 시 필수입니다.</value>
+  </data>
+  <data name="Help_ManagedProvider_ConfigOption" xml:space="preserve">
+    <value>선택 사항인 제공자별 구성 파일 덮어쓰기 경로입니다.</value>
+  </data>
+  <data name="Help_Settings_PowerRequestReasonOption" xml:space="preserve">
+    <value>Windows에 표시되는 LidGuard 절전 방지 사유 문구를 설정합니다.</value>
+  </data>
+  <data name="Help_Settings_InteractiveModeNote" xml:space="preserve">
+    <value>옵션 없이 settings를 실행하면 interactive 편집 모드로 들어갑니다.</value>
+  </data>
+  <data name="Help_LinuxPermission_CheckDescription" xml:space="preserve">
+    <value>실제 절전 또는 최대 절전을 요청하지 않고 필요한 Linux 작업을 검증합니다.</value>
+  </data>
+  <data name="Help_Settings_RemoveWebhookNote" xml:space="preserve">
+    <value>웹훅 URL을 지우려면 off 또는 빈 값을 전달하지 말고 remove-pre-suspend-webhook 또는 remove-post-session-end-webhook 명령을 사용하세요.</value>
+  </data>
+  <data name="Help_McpServer_Description" xml:space="preserve">
+    <value>설정 및 세션 관리 도구를 제공하는 일반 LidGuard stdio MCP 서버를 실행합니다.</value>
+  </data>
+  <data name="Help_HookRemove_Description" xml:space="preserve">
+    <value>선택한 구성 파일에서 관리 제공자 hook 항목을 제거합니다.</value>
+  </data>
+  <data name="Help_Settings_UserInterfaceCultureOption" xml:space="preserve">
+    <value>CLI 표시 언어/문화권을 설정합니다. auto는 현재 프로세스 또는 운영체제 설정을 따르고, LIDGUARD_UI_CULTURE가 저장 값보다 우선합니다.</value>
+  </data>
+  <data name="Help_Paths_ProviderMcpBestEffort" xml:space="preserve">
+    <value>Provider MCP 연동은 모델이 적절한 시점에 LidGuard MCP 도구를 호출해야만 동작하므로 항상 보장되지는 않습니다.</value>
+  </data>
+  <data name="Help_Settings_WatchParentProcessOption" xml:space="preserve">
+    <value>추적 세션의 프로세스 감시 정책을 변경합니다.</value>
+  </data>
+  <data name="Help_ProviderMcpInstall_ConfigOption" xml:space="preserve">
+    <value>필수입니다. 만들거나 갱신할 JSON 구성 파일입니다.</value>
+  </data>
+  <data name="Help_Start_Description" xml:space="preserve">
+    <value>추적 세션을 시작하거나 갱신하고 저장된 기본 설정을 적용합니다.</value>
+  </data>
+  <data name="Help_RemoveSession_SessionOption" xml:space="preserve">
+    <value>필수입니다. 제거할 세션 식별자입니다.</value>
+  </data>
+  <data name="Help_RemoveSession_AllCannotCombineNote" xml:space="preserve">
+    <value>--all은 --session, --provider, --provider-name과 함께 사용할 수 없습니다.</value>
+  </data>
+  <data name="Help_CopilotHooks_Description" xml:space="preserve">
+    <value>관리되는 GitHub Copilot CLI hook 구성 조각을 출력합니다.</value>
+  </data>
+  <data name="Help_Help_CommandOptionNote" xml:space="preserve">
+    <value>&lt;command&gt; --help 형식도 같은 명령 metadata를 사용합니다.</value>
+  </data>
+  <data name="Help_RemoveSession_McpWithoutProviderNameNote" xml:space="preserve">
+    <value>--provider mcp를 --provider-name 없이 사용하면 LidGuard가 같은 세션 식별자의 모든 MCP 기반 세션을 제거합니다.</value>
+  </data>
+  <data name="Help_Start_ProviderNameOption" xml:space="preserve">
+    <value>--provider mcp 사용 시 필수입니다. MCP 기반 제공자를 서로 구분합니다.</value>
+  </data>
+  <data name="Help_Settings_PostStopSuspendSoundOption" xml:space="preserve">
+    <value>절전/최대 절전 전 알림 소리를 끄거나, 지원되는 SystemSound 이름({supportedPostStopSuspendSystemSounds})을 사용하거나, 재생 가능한 기존 .wav 경로를 지정합니다.</value>
+  </data>
+  <data name="Help_CopilotHook_Description" xml:space="preserve">
+    <value>구성된 이벤트 이름 하나에 대해 표준 입력에서 GitHub Copilot CLI hook JSON을 읽습니다.</value>
+  </data>
+  <data name="Help_Start_RuntimeLaunchNote" xml:space="preserve">
+    <value>실행 중인 LidGuard가 없으면 start가 백그라운드 서버를 자동으로 시작합니다.</value>
+  </data>
+  <data name="Help_PreviewSystemSound_NameOption" xml:space="preserve">
+    <value>필수입니다. 허용 값: Asterisk, Beep, Exclamation, Hand, Question.</value>
+  </data>
+  <data name="Help_Settings_ChangeLidActionOption" xml:space="preserve">
+    <value>활성 전원 플랜의 덮개 닫기 동작 임시 덮어쓰기 동작을 변경합니다.</value>
+  </data>
+  <data name="Help_Start_SessionOption" xml:space="preserve">
+    <value>선택 사항입니다. 추적할 세션 식별자입니다. 생략하면 LidGuard가 제공자 표시 이름과 정규화된 작업 폴더에서 파생합니다.</value>
+  </data>
+  <data name="Help_CodexHooks_FormatOption" xml:space="preserve">
+    <value>선택 사항입니다. 기본값은 config-toml입니다. toml 또는 hooks-json도 받습니다.</value>
+  </data>
+  <data name="Help_ClaudeHooks_FormatOption" xml:space="preserve">
+    <value>선택 사항입니다. 기본값은 settings-json입니다. json 또는 hooks-json도 받습니다.</value>
+  </data>
+  <data name="Help_CopilotHook_EventOption" xml:space="preserve">
+    <value>필수입니다. 일반적인 값은 sessionStart, sessionEnd, userPromptSubmitted, preToolUse, postToolUse, permissionRequest, agentStop, errorOccurred, notification입니다.</value>
+  </data>
+  <data name="Help_CopilotHooks_FormatOption" xml:space="preserve">
+    <value>선택 사항입니다. 기본값은 config-json입니다. json 또는 hooks-json도 받습니다.</value>
+  </data>
+  <data name="DisplayClosedLidPermissionRequestDecisionDeny" xml:space="preserve">
+    <value>거부</value>
+  </data>
+  <data name="DisplayClosedLidPermissionRequestDecisionAllow" xml:space="preserve">
+    <value>허용</value>
+  </data>
+  <data name="DisplayEmergencyHibernationTemperatureModeAverage" xml:space="preserve">
+    <value>평균</value>
+  </data>
+  <data name="DisplayEmergencyHibernationTemperatureModeLow" xml:space="preserve">
+    <value>낮음</value>
+  </data>
+  <data name="DisplayEmergencyHibernationTemperatureModeHigh" xml:space="preserve">
+    <value>높음</value>
+  </data>
+  <data name="DisplayLidSwitchStateUnknown" xml:space="preserve">
+    <value>알 수 없음</value>
+  </data>
+  <data name="DisplayLidSwitchStateOpen" xml:space="preserve">
+    <value>열림</value>
+  </data>
+  <data name="DisplayLidSwitchStateClosed" xml:space="preserve">
+    <value>닫힘</value>
+  </data>
+  <data name="DisplaySessionSoftLockStateNone" xml:space="preserve">
+    <value>없음</value>
+  </data>
+  <data name="DisplaySessionSoftLockStateSoftLocked" xml:space="preserve">
+    <value>Soft-lock됨</value>
+  </data>
+  <data name="DisplaySuspendModeSleep" xml:space="preserve">
+    <value>Sleep</value>
+  </data>
+  <data name="DisplaySuspendModeHibernate" xml:space="preserve">
+    <value>Hibernate</value>
+  </data>
+  <data name="DisplaySuspendWebhookReasonCompleted" xml:space="preserve">
+    <value>완료됨</value>
+  </data>
+  <data name="DisplaySuspendWebhookReasonSoftLocked" xml:space="preserve">
+    <value>Soft-lock됨</value>
+  </data>
+  <data name="DisplaySuspendWebhookReasonEmergencyHibernation" xml:space="preserve">
+    <value>Emergency Hibernation</value>
+  </data>
+  <data name="RuntimeResponseCleanupOrphansCompleted" xml:space="preserve">
+    <value>고아 세션 {0}개를 정리했습니다.</value>
+  </data>
+  <data name="RuntimeResponseFailedToStartRuntime" xml:space="preserve">
+    <value>LidGuard를 시작하지 못했습니다.</value>
+  </data>
+  <data name="RuntimeResponseRuntimeIsRunning" xml:space="preserve">
+    <value>LidGuard가 실행 중입니다.</value>
+  </data>
+  <data name="RuntimeResponseSessionAlreadyStopped" xml:space="preserve">
+    <value>{0} 세션은 이미 중지되어 있습니다.</value>
+  </data>
+  <data name="RuntimeResponseSessionIdAlreadyStopped" xml:space="preserve">
+    <value>세션 ID {0}은 이미 중지되어 있습니다.</value>
+  </data>
+  <data name="RuntimeResponseSessionIdAlreadyStoppedForProvider" xml:space="preserve">
+    <value>세션 ID {0}은 {1}에서 이미 중지되어 있습니다.</value>
+  </data>
+  <data name="RuntimeResponseSessionRemoved" xml:space="preserve">
+    <value>{0}을 제거했습니다.</value>
+  </data>
+  <data name="RuntimeResponseSessionRemovedAll" xml:space="preserve">
+    <value>활성 세션 {0}개를 모두 제거했습니다.</value>
+  </data>
+  <data name="RuntimeResponseSessionRemovedMatchingProviderSessionId" xml:space="preserve">
+    <value>{1} 세션 ID "{2}"와 일치하는 세션 {0}개를 제거했습니다.</value>
+  </data>
+  <data name="RuntimeResponseSessionRemovedMatchingSessionId" xml:space="preserve">
+    <value>세션 ID "{1}"와 일치하는 세션 {0}개를 제거했습니다.</value>
+  </data>
+  <data name="RuntimeResponseSessionRemoveNoActiveSessions" xml:space="preserve">
+    <value>제거할 활성 세션이 없습니다.</value>
+  </data>
+  <data name="RuntimeResponseSessionStartedCodexShellHostFallback" xml:space="preserve">
+    <value>{0}을 시작했습니다. Codex 셸 호스트 대체 방식으로 프로세스 {1}을 감시합니다.</value>
+  </data>
+  <data name="RuntimeResponseSessionStartedWatchedProcess" xml:space="preserve">
+    <value>{0}을 시작했습니다. 프로세스 {1}을 감시합니다.</value>
+  </data>
+  <data name="RuntimeResponseSessionStartedCodexShellHostFallbackSkipped" xml:space="preserve">
+    <value>{0}을 시작했습니다. Codex 대체 감시는 확인된 Codex 프로세스 또는 직접 부모가 {1}일 때만 연결됩니다. stop hook이 필요합니다.</value>
+  </data>
+  <data name="RuntimeResponseSessionStartedNoWatchedProcess" xml:space="preserve">
+    <value>{0}을 시작했습니다. 감시할 프로세스를 확인하지 못했습니다. stop hook이 필요합니다.</value>
+  </data>
+  <data name="RuntimeResponseSessionStopped" xml:space="preserve">
+    <value>{0}을 중지했습니다.</value>
+  </data>
+  <data name="RuntimeResponseSuspendDelayImmediate" xml:space="preserve">
+    <value>즉시</value>
+  </data>
+  <data name="RuntimeResponseSuspendDelaySeconds" xml:space="preserve">
+    <value>{0}초 후</value>
+  </data>
+  <data name="RuntimeResponseSuspendReasonCompleted" xml:space="preserve">
+    <value>덮개가 닫혀 있고 절전을 막는 보이는 디스플레이 모니터가 없으며 마지막 세션이 중지되었기 때문입니다.</value>
+  </data>
+  <data name="RuntimeResponseSuspendReasonSoftLocked" xml:space="preserve">
+    <value>덮개가 닫혀 있고 절전을 막는 보이는 디스플레이 모니터가 없으며 절전 방지를 유지해야 하는 세션이 남아 있지 않기 때문입니다.</value>
+  </data>
+  <data name="RuntimeResponseSuspendScheduled" xml:space="preserve">
+    <value>{1} {0}을 예약했습니다. {2}</value>
+  </data>
+  <data name="RuntimeResponseWatchedCodexWorkingDirectoryAlreadyStopped" xml:space="preserve">
+    <value>감시 중인 Codex 작업 디렉터리 "{0}"은 이미 중지되어 있습니다.</value>
+  </data>
+  <data name="RuntimeResponseWatchedCodexWorkingDirectoryCleaned" xml:space="preserve">
+    <value>작업 디렉터리 "{1}"의 감시 중인 Codex 세션 {0}개를 정리했고 process=none Codex 세션은 그대로 두었습니다.</value>
+  </data>
+  <data name="RuntimeResponseWatchedCodexWorkingDirectorySessionCleaned" xml:space="preserve">
+    <value>작업 디렉터리 "{1}"의 감시 중인 Codex 세션 {0}을 정리했습니다.</value>
+  </data>
+  <data name="RuntimeResponseWatchedProcessExited" xml:space="preserve">
+    <value>{0}의 감시 프로세스가 종료되었습니다.</value>
+  </data>
+  <data name="RuntimeResponseWatchedProcessOrphanCleaned" xml:space="preserve">
+    <value>고아 세션 {0}을 정리했습니다.</value>
+  </data>
+  <data name="ConsoleCurrentTemperatureUnavailable" xml:space="preserve">
+    <value>{0} 모드로 이 플랫폼의 지원 온도 센서에서 현재 시스템 온도를 확인할 수 없습니다.</value>
+  </data>
+  <data name="ConsoleCurrentTemperature" xml:space="preserve">
+    <value>{0} 모드의 현재 시스템 온도: 섭씨 {1}도</value>
+  </data>
+  <data name="ConsoleCurrentTemperatureModeValidation" xml:space="preserve">
+    <value>temperature-mode 옵션은 default, low, average, high 중 하나여야 합니다.</value>
+  </data>
+  <data name="SuspendHistoryFile" xml:space="preserve">
+    <value>절전 기록 파일: {0}</value>
+  </data>
+  <data name="SuspendHistoryRecording" xml:space="preserve">
+    <value>절전 기록 저장: {0}</value>
+  </data>
+  <data name="SuspendHistoryNoEntries" xml:space="preserve">
+    <value>기록된 절전 항목이 없습니다.</value>
+  </data>
+  <data name="SuspendHistoryRecentEntries" xml:space="preserve">
+    <value>최근 절전 기록 항목: {0}</value>
+  </data>
+  <data name="SuspendHistoryOptionNotAccepted" xml:space="preserve">
+    <value>{0} 명령은 --{1} 옵션을 받지 않습니다.</value>
+  </data>
+  <data name="SuspendHistoryCountValidation" xml:space="preserve">
+    <value>count 옵션은 {0} 이상의 정수여야 합니다.</value>
+  </data>
+  <data name="SuspendHistoryEntryLine" xml:space="preserve">
+    <value>- {0} mode={1} reason={2} succeeded={3} activeSessions={4} triggerSessions={5}</value>
+  </data>
+  <data name="SuspendHistorySession" xml:space="preserve">
+    <value>  session={0}:{1}</value>
+  </data>
+  <data name="SuspendHistoryTemperature" xml:space="preserve">
+    <value>  temperature=섭씨 {0}도 mode={1} threshold=섭씨 {2}도</value>
+  </data>
+  <data name="SuspendHistoryWorkingDirectory" xml:space="preserve">
+    <value>  cwd="{0}"</value>
+  </data>
+  <data name="SuspendHistoryMessage" xml:space="preserve">
+    <value>  message={0}</value>
+  </data>
+  <data name="SessionRequestProviderRequired" xml:space="preserve">
+    <value>제공자가 필요합니다. codex, claude, copilot, custom, mcp, unknown 중 하나를 사용하세요.</value>
+  </data>
+  <data name="SessionRequestProviderNameRequiredForMcp" xml:space="preserve">
+    <value>--provider mcp를 사용할 때는 --provider-name 옵션이 필요합니다.</value>
+  </data>
+  <data name="SessionRequestAllCannotCombineWithSession" xml:space="preserve">
+    <value>--all 옵션은 --session과 함께 사용할 수 없습니다.</value>
+  </data>
+  <data name="SessionRequestAllCannotCombineWithProvider" xml:space="preserve">
+    <value>--all 옵션은 --provider와 함께 사용할 수 없습니다.</value>
+  </data>
+  <data name="SessionRequestAllCannotCombineWithProviderName" xml:space="preserve">
+    <value>--all 옵션은 --provider-name과 함께 사용할 수 없습니다.</value>
+  </data>
+  <data name="SessionRequestSessionIdentifierRequired" xml:space="preserve">
+    <value>세션 식별자가 필요합니다.</value>
+  </data>
+  <data name="SessionRequestUnsupportedProvider" xml:space="preserve">
+    <value>지원하지 않는 제공자입니다. codex, claude, copilot, custom, mcp, unknown 중 하나를 사용하세요.</value>
+  </data>
+  <data name="SessionRequestWatchedProcessIdentifierValidation" xml:space="preserve">
+    <value>감시할 프로세스 ID는 음수가 아닌 정수여야 합니다.</value>
+  </data>
+  <data name="SettingsOptionPreventAwayModeSleepUnsupported" xml:space="preserve">
+    <value>prevent-away-mode-sleep 옵션은 Windows에서만 지원됩니다. 이 플랫폼에서는 prevent-system-sleep을 사용하세요.</value>
+  </data>
+  <data name="McpConfigurationRootNotObject" xml:space="preserve">
+    <value>구성 루트가 JSON 개체가 아닙니다.</value>
+  </data>
+  <data name="McpConfigurationJsonInvalid" xml:space="preserve">
+    <value>구성 JSON이 올바르지 않습니다: {0}</value>
+  </data>
+  <data name="McpConfigurationServersObjectNotFound" xml:space="preserve">
+    <value>mcpServers 개체를 찾을 수 없습니다.</value>
+  </data>
+  <data name="McpConfigurationNamedServerNotFound" xml:space="preserve">
+    <value>'{0}' 이름의 MCP 서버를 찾을 수 없습니다.</value>
+  </data>
+  <data name="McpConfigurationFileDoesNotExist" xml:space="preserve">
+    <value>구성 파일이 없습니다: {0}</value>
+  </data>
+  <data name="PermissionSubcommandRequired" xml:space="preserve">
+    <value>하위 명령이 필요합니다. 사용법: {0} status|check|install|remove</value>
+  </data>
+  <data name="PermissionUnknownSubcommand" xml:space="preserve">
+    <value>알 수 없는 {0} 하위 명령입니다: {1}</value>
+  </data>
+  <data name="PermissionSubcommandUsage" xml:space="preserve">
+    <value>사용법: {0} status|check|install|remove</value>
+  </data>
+  <data name="PermissionLabelUser" xml:space="preserve">
+    <value>사용자</value>
+  </data>
+  <data name="PermissionResultOk" xml:space="preserve">
+    <value>정상</value>
+  </data>
+  <data name="PermissionResultFailed" xml:space="preserve">
+    <value>실패 - {0}</value>
+  </data>
+  <data name="PermissionResultFailedParenthesized" xml:space="preserve">
+    <value>실패({0})</value>
+  </data>
+  <data name="PermissionResultUnavailable" xml:space="preserve">
+    <value>사용할 수 없음 - {0}</value>
+  </data>
+  <data name="PermissionResultUnavailableParenthesized" xml:space="preserve">
+    <value>사용할 수 없음({0})</value>
+  </data>
+  <data name="PermissionExecutableAvailable" xml:space="preserve">
+    <value>사용 가능({0})</value>
+  </data>
+  <data name="PermissionExecutableMissing" xml:space="preserve">
+    <value>없음</value>
+  </data>
+  <data name="PermissionExecutableNotFound" xml:space="preserve">
+    <value>{0}을 PATH에서 찾을 수 없습니다.</value>
+  </data>
+  <data name="PermissionSudoNotFound" xml:space="preserve">
+    <value>sudo를 PATH에서 찾을 수 없습니다. root로 이 명령을 실행하거나 sudo를 설치하세요.</value>
+  </data>
+  <data name="PermissionSudoNotFoundShort" xml:space="preserve">
+    <value>sudo를 PATH에서 찾을 수 없습니다.</value>
+  </data>
+  <data name="PermissionUnknownUser" xml:space="preserve">
+    <value>알 수 없음</value>
+  </data>
+  <data name="PermissionRuleNotInstalled" xml:space="preserve">
+    <value>설치되지 않음</value>
+  </data>
+  <data name="PermissionRulePresentUnmanaged" xml:space="preserve">
+    <value>있지만 LidGuard가 관리하지 않음</value>
+  </data>
+  <data name="PermissionRuleInstalledForCurrentUser" xml:space="preserve">
+    <value>현재 사용자용으로 설치됨</value>
+  </data>
+  <data name="PermissionRuleInstalledForAnotherUser" xml:space="preserve">
+    <value>다른 사용자용으로 설치됨</value>
+  </data>
+  <data name="LinuxPermissionStatusTitle" xml:space="preserve">
+    <value>Linux 권한 상태:</value>
+  </data>
+  <data name="LinuxPermissionCheckTitle" xml:space="preserve">
+    <value>Linux 권한 검사:</value>
+  </data>
+  <data name="LinuxPermissionLabelPolkitRulePath" xml:space="preserve">
+    <value>Polkit 규칙 경로</value>
+  </data>
+  <data name="LinuxPermissionLabelPolkitRule" xml:space="preserve">
+    <value>Polkit 규칙</value>
+  </data>
+  <data name="LinuxPermissionLabelSystemdInhibit" xml:space="preserve">
+    <value>systemd-inhibit</value>
+  </data>
+  <data name="LinuxPermissionLabelSystemctl" xml:space="preserve">
+    <value>systemctl</value>
+  </data>
+  <data name="LinuxPermissionLabelLogindCanSuspend" xml:space="preserve">
+    <value>logind CanSuspend</value>
+  </data>
+  <data name="LinuxPermissionLabelLogindCanHibernate" xml:space="preserve">
+    <value>logind CanHibernate</value>
+  </data>
+  <data name="LinuxPermissionCheckInhibitorAcquireRelease" xml:space="preserve">
+    <value>inhibitor 획득/해제</value>
+  </data>
+  <data name="LinuxPermissionCheckSystemctlVersion" xml:space="preserve">
+    <value>systemctl --version</value>
+  </data>
+  <data name="LinuxPermissionCheckLogindCapability" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="LinuxPermissionInspectPolkitRuleFailed" xml:space="preserve">
+    <value>기존 polkit 규칙을 검사하지 못했습니다: {0}</value>
+  </data>
+  <data name="LinuxPermissionRefusingOverwriteUnmanagedPolkitRule" xml:space="preserve">
+    <value>관리되지 않는 polkit 규칙 파일 덮어쓰기를 거부합니다: {0}</value>
+  </data>
+  <data name="LinuxPermissionPolkitRuleInstalled" xml:space="preserve">
+    <value>사용자 {0}용 LidGuard polkit 규칙을 설치했습니다: {1}</value>
+  </data>
+  <data name="LinuxPermissionInstallPolkitRuleFailed" xml:space="preserve">
+    <value>polkit 규칙을 설치하지 못했습니다: {0}</value>
+  </data>
+  <data name="LinuxPermissionPreparePolkitRuleFailed" xml:space="preserve">
+    <value>polkit 규칙을 준비하지 못했습니다: {0}</value>
+  </data>
+  <data name="LinuxPermissionPolkitRuleNotInstalled" xml:space="preserve">
+    <value>LidGuard polkit 규칙이 설치되어 있지 않습니다: {0}</value>
+  </data>
+  <data name="LinuxPermissionRefusingRemoveUnmanagedPolkitRule" xml:space="preserve">
+    <value>관리되지 않는 polkit 규칙 파일 제거를 거부합니다: {0}</value>
+  </data>
+  <data name="LinuxPermissionPolkitRuleRemoved" xml:space="preserve">
+    <value>LidGuard polkit 규칙을 제거했습니다: {0}</value>
+  </data>
+  <data name="LinuxPermissionRemovePolkitRuleFailed" xml:space="preserve">
+    <value>polkit 규칙을 제거하지 못했습니다: {0}</value>
+  </data>
+  <data name="LinuxPermissionBusctlUnrecognizedValue" xml:space="preserve">
+    <value>busctl이 인식할 수 없는 값을 반환했습니다.</value>
+  </data>
+  <data name="LinuxPermissionRuleUnableToInspect" xml:space="preserve">
+    <value>검사할 수 없음({0})</value>
+  </data>
+  <data name="MacOSPermissionStatusTitle" xml:space="preserve">
+    <value>macOS 권한 상태:</value>
+  </data>
+  <data name="MacOSPermissionCheckTitle" xml:space="preserve">
+    <value>macOS 권한 검사:</value>
+  </data>
+  <data name="MacOSPermissionLabelSudoersPath" xml:space="preserve">
+    <value>Sudoers 경로</value>
+  </data>
+  <data name="MacOSPermissionLabelSudoersRule" xml:space="preserve">
+    <value>Sudoers 규칙</value>
+  </data>
+  <data name="MacOSPermissionLabelPrivilegedPmsetUsability" xml:space="preserve">
+    <value>권한 있는 pmset 사용 가능 여부</value>
+  </data>
+  <data name="MacOSPermissionLabelCaffeinate" xml:space="preserve">
+    <value>caffeinate</value>
+  </data>
+  <data name="MacOSPermissionLabelPmset" xml:space="preserve">
+    <value>pmset</value>
+  </data>
+  <data name="MacOSPermissionLabelPowermetrics" xml:space="preserve">
+    <value>powermetrics</value>
+  </data>
+  <data name="MacOSPermissionLabelIoreg" xml:space="preserve">
+    <value>ioreg</value>
+  </data>
+  <data name="MacOSPermissionLabelSystemProfiler" xml:space="preserve">
+    <value>system_profiler</value>
+  </data>
+  <data name="MacOSPermissionLabelSleepDisabled" xml:space="preserve">
+    <value>SleepDisabled</value>
+  </data>
+  <data name="MacOSPermissionLabelHibernateMode" xml:space="preserve">
+    <value>hibernatemode</value>
+  </data>
+  <data name="MacOSPermissionCheckCaffeinateAcquireRelease" xml:space="preserve">
+    <value>caffeinate 획득/해제</value>
+  </data>
+  <data name="MacOSPermissionCheckPmsetRead" xml:space="preserve">
+    <value>pmset -g</value>
+  </data>
+  <data name="MacOSPermissionCheckPrivilegedPmsetDisableSleep" xml:space="preserve">
+    <value>권한 있는 pmset disablesleep</value>
+  </data>
+  <data name="MacOSPermissionCheckPrivilegedPmsetHibernateMode" xml:space="preserve">
+    <value>권한 있는 pmset hibernatemode</value>
+  </data>
+  <data name="MacOSPermissionCheckPrivilegedPowermetricsSmcSample" xml:space="preserve">
+    <value>권한 있는 powermetrics SMC 샘플</value>
+  </data>
+  <data name="MacOSPermissionInspectSudoersRuleFailed" xml:space="preserve">
+    <value>기존 sudoers 규칙을 검사하지 못했습니다: {0}</value>
+  </data>
+  <data name="MacOSPermissionRefusingOverwriteUnmanagedSudoersRule" xml:space="preserve">
+    <value>관리되지 않는 sudoers 파일 덮어쓰기를 거부합니다: {0}</value>
+  </data>
+  <data name="MacOSPermissionSudoersRuleInstalled" xml:space="preserve">
+    <value>사용자 {0}용 LidGuard sudoers 규칙을 설치했습니다: {1}</value>
+  </data>
+  <data name="MacOSPermissionInstallSudoersRuleFailed" xml:space="preserve">
+    <value>sudoers 규칙을 설치하지 못했습니다: {0}</value>
+  </data>
+  <data name="MacOSPermissionPrepareSudoersRuleFailed" xml:space="preserve">
+    <value>sudoers 규칙을 준비하지 못했습니다: {0}</value>
+  </data>
+  <data name="MacOSPermissionSudoersRuleNotInstalled" xml:space="preserve">
+    <value>LidGuard sudoers 규칙이 설치되어 있지 않습니다: {0}</value>
+  </data>
+  <data name="MacOSPermissionRefusingRemoveUnmanagedSudoersRule" xml:space="preserve">
+    <value>관리되지 않는 sudoers 파일 제거를 거부합니다: {0}</value>
+  </data>
+  <data name="MacOSPermissionSudoersRuleRemoved" xml:space="preserve">
+    <value>LidGuard sudoers 규칙을 제거했습니다: {0}</value>
+  </data>
+  <data name="MacOSPermissionRemoveSudoersRuleFailed" xml:space="preserve">
+    <value>sudoers 규칙을 제거하지 못했습니다: {0}</value>
+  </data>
+  <data name="MacOSPermissionUnsupportedHibernateModeValue" xml:space="preserve">
+    <value>사용할 수 없음 - 지원하지 않는 현재 값 {0}</value>
+  </data>
+  <data name="MacOSPermissionRuleContentInspectionUnavailable" xml:space="preserve">
+    <value>내용 검사 불가({0})</value>
+  </data>
+  <data name="MacOSPermissionVisudoNotFound" xml:space="preserve">
+    <value>visudo를 PATH에서 찾을 수 없습니다. 검증되지 않은 sudoers 규칙 설치를 거부합니다.</value>
+  </data>
+  <data name="MacOSPermissionPrepareSudoersValidationFileFailed" xml:space="preserve">
+    <value>sudoers 검증 파일을 준비하지 못했습니다: {0}</value>
+  </data>
+  <data name="DisplayHookInstallationStatusUnknown" xml:space="preserve">
+    <value>알 수 없음</value>
+  </data>
+  <data name="DisplayHookInstallationStatusNotInstalled" xml:space="preserve">
+    <value>설치되지 않음</value>
+  </data>
+  <data name="DisplayHookInstallationStatusInstalled" xml:space="preserve">
+    <value>설치됨</value>
+  </data>
+  <data name="DisplayHookInstallationStatusNeedsUpdate" xml:space="preserve">
+    <value>업데이트 필요</value>
+  </data>
+  <data name="DisplayMinuteCount" xml:space="preserve">
+    <value>{0}분</value>
+  </data>
+  <data name="DisplaySuspendHistoryEntryCount" xml:space="preserve">
+    <value>{0}개 항목</value>
+  </data>
+</root>

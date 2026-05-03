@@ -1,5 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
+using LidGuard.Localization;
 using LidGuard.Sessions;
 
 namespace LidGuard.Hooks;
@@ -12,18 +15,18 @@ public static class GitHubCopilotHookConfigurationJsonDocument
     private const int SupportedSchemaVersion = 1;
     private const int TimeoutSeconds = 30;
     private const string VersionPropertyName = "version";
-    private static readonly JsonSerializerOptions s_jsonSerializerOptions = new() { WriteIndented = true };
-    private static readonly (string HookEventName, string StatusMessage, string Matcher)[] s_requiredHookDefinitions =
+    private static readonly JsonSerializerOptions s_jsonSerializerOptions = new() { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All), WriteIndented = true };
+    private static readonly (string HookEventName, Func<string> GetStatusMessage, string Matcher)[] s_requiredHookDefinitions =
     [
-        (GitHubCopilotHookEventNames.SessionStart, "Recording GitHub Copilot session start", string.Empty),
-        (GitHubCopilotHookEventNames.SessionEnd, "Recording GitHub Copilot session end", string.Empty),
-        (GitHubCopilotHookEventNames.UserPromptSubmitted, "Starting LidGuard turn protection", string.Empty),
-        (GitHubCopilotHookEventNames.PreToolUse, "Blocking closed-lid ask_user prompt", string.Empty),
-        (GitHubCopilotHookEventNames.PostToolUse, "Recording GitHub Copilot tool completion activity", string.Empty),
-        (GitHubCopilotHookEventNames.PermissionRequest, "Responding to closed-lid permission request", string.Empty),
-        (GitHubCopilotHookEventNames.AgentStop, "Stopping LidGuard turn protection", string.Empty),
-        (GitHubCopilotHookEventNames.ErrorOccurred, "Recording GitHub Copilot error telemetry", string.Empty),
-        (GitHubCopilotHookEventNames.Notification, "Recording GitHub Copilot prompt telemetry", NotificationMatcher)
+        (GitHubCopilotHookEventNames.SessionStart, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotSessionStart, string.Empty),
+        (GitHubCopilotHookEventNames.SessionEnd, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotSessionEnd, string.Empty),
+        (GitHubCopilotHookEventNames.UserPromptSubmitted, () => LidGuardText.HookStatusMessageStartingTurnProtection, string.Empty),
+        (GitHubCopilotHookEventNames.PreToolUse, () => LidGuardText.HookStatusMessageBlockingClosedLidAskUserPrompt, string.Empty),
+        (GitHubCopilotHookEventNames.PostToolUse, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotToolCompletionActivity, string.Empty),
+        (GitHubCopilotHookEventNames.PermissionRequest, () => LidGuardText.HookStatusMessageRespondingToClosedLidPermissionRequest, string.Empty),
+        (GitHubCopilotHookEventNames.AgentStop, () => LidGuardText.HookStatusMessageStoppingTurnProtection, string.Empty),
+        (GitHubCopilotHookEventNames.ErrorOccurred, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotErrorTelemetry, string.Empty),
+        (GitHubCopilotHookEventNames.Notification, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotPromptTelemetry, NotificationMatcher)
     ];
 
     public static IReadOnlyDictionary<string, string> CreateManagedHookCommands(string hookCommand)
@@ -243,7 +246,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
                 return false;
             }
 
-            if (!TryUpsertManagedHook(hooksObject, hookDefinition.HookEventName, hookCommand, hookDefinition.StatusMessage, hookDefinition.Matcher, out message)) return false;
+            if (!TryUpsertManagedHook(hooksObject, hookDefinition.HookEventName, hookCommand, hookDefinition.GetStatusMessage(), hookDefinition.Matcher, out message)) return false;
         }
 
         updatedContent = configurationRootObject.ToJsonString(s_jsonSerializerOptions) + Environment.NewLine;
@@ -274,6 +277,30 @@ public static class GitHubCopilotHookConfigurationJsonDocument
         return true;
     }
 
+    public static bool TryRefreshManagedHookStatusMessages(string content, out string updatedContent, out bool changed, out string message)
+    {
+        updatedContent = content;
+        changed = false;
+        if (!TryParseConfigurationRoot(content, out var configurationRootObject, out message)) return false;
+        if (!configurationRootObject.TryGetPropertyValue(HooksPropertyName, out var hooksNode) || hooksNode is null) return true;
+        if (hooksNode is not JsonObject hooksObject)
+        {
+            message = "GitHub Copilot hooks setting must be a JSON object.";
+            return false;
+        }
+
+        foreach (var hookDefinition in s_requiredHookDefinitions)
+        {
+            if (!TryRefreshManagedHookStatusMessage(hooksObject, hookDefinition.HookEventName, hookDefinition.GetStatusMessage(), out var hookChanged, out message)) return false;
+            changed |= hookChanged;
+        }
+
+        if (!changed) return true;
+
+        updatedContent = configurationRootObject.ToJsonString(s_jsonSerializerOptions) + Environment.NewLine;
+        return true;
+    }
+
     private static JsonObject CreateHooksObject(IReadOnlyDictionary<string, string> hookCommandsByEvent)
     {
         var hooksObject = new JsonObject();
@@ -284,7 +311,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
                 throw new InvalidOperationException($"Missing hook command for '{hookDefinition.HookEventName}'.");
             }
 
-            hooksObject[hookDefinition.HookEventName] = CreateJsonArrayWithSingleNode(CreateManagedHookDefinition(hookCommand, hookDefinition.StatusMessage, hookDefinition.Matcher));
+            hooksObject[hookDefinition.HookEventName] = CreateJsonArrayWithSingleNode(CreateManagedHookDefinition(hookCommand, hookDefinition.GetStatusMessage(), hookDefinition.Matcher));
         }
 
         return hooksObject;
@@ -365,6 +392,38 @@ public static class GitHubCopilotHookConfigurationJsonDocument
         }
 
         return changed;
+    }
+
+    private static bool TryRefreshManagedHookStatusMessage(JsonObject hooksObject, string hookEventName, string statusMessage, out bool changed, out string message)
+    {
+        changed = false;
+        message = string.Empty;
+        foreach (var compatibleHookEventName in GetSupportedEventNames(hookEventName))
+        {
+            if (!hooksObject.TryGetPropertyValue(compatibleHookEventName, out var hookEventNode) || hookEventNode is null) continue;
+            if (hookEventNode is not JsonArray hookDefinitions)
+            {
+                message = $"GitHub Copilot hook event '{compatibleHookEventName}' must be a JSON array.";
+                return false;
+            }
+
+            foreach (var hookDefinitionNode in hookDefinitions)
+            {
+                if (hookDefinitionNode is not JsonObject hookDefinitionObject)
+                {
+                    message = $"GitHub Copilot hook definition for '{compatibleHookEventName}' must be a JSON object.";
+                    return false;
+                }
+
+                if (!IsLidGuardGitHubCopilotHookCommand(GetCommandString(hookDefinitionObject), hookEventName)) continue;
+                if (GetStringProperty(hookDefinitionObject, "statusMessage").Equals(statusMessage, StringComparison.Ordinal)) continue;
+
+                hookDefinitionObject["statusMessage"] = statusMessage;
+                changed = true;
+            }
+        }
+
+        return true;
     }
 
     private static void ReplaceManagedHookDefinition(JsonObject hookDefinitionObject, string hookCommand, string statusMessage, string matcher)

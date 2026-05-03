@@ -204,6 +204,10 @@ Hook stop 이벤트가 누락될 수 있으므로 LidGuard는 에이전트 프�
 - `settings`는 비활동 세션 soft-lock 전환을 위한 `--session-timeout-minutes off|<minutes>`도 제공하며, `off`는 timeout soft-lock을 끄고 활성화된 값은 최소 1이어야 한다.
 - `settings`는 모든 활성 세션이 사라지고 pending cleanup이 끝난 뒤 server runtime cleanup을 위한 `--server-runtime-cleanup-delay-minutes off|<minutes>`도 제공하며, `off`는 즉시 종료이고 활성화된 값은 최소 1이어야 한다.
 - `settings`는 suspend를 예약하지 않는 provider 정상 session-end 알림을 위한 `--post-session-end-webhook-url <http-or-https-url>`도 제공한다.
+- `settings`는 사람이 읽는 CLI UI 현지화를 위한 `--ui-culture auto|en|ko|<culture-name>`도 제공한다. `auto`는 process 또는 운영체제 UI culture를 사용하며, `LIDGUARD_UI_CULTURE` environment variable은 testing, support, scripted use를 위해 저장된 설정보다 우선한다.
+- UI culture 선택은 사람이 읽는 CLI 표시와 생성되는 관리 hook `statusMessage` text를 바꾼다. command name, option name, IPC payload, hook stdout JSON, MCP tool name, MCP JSON response property name, settings JSON property name, 생성된 provider configuration key, command path, protocol value, 저장된 JSONL log 구조는 안정적이고 non-localized 상태로 유지한다.
+- `settings`가 UI culture를 변경하면 LidGuard는 이미 설치된 기본 관리 provider hook의 `statusMessage` text만 갱신한다. 이 갱신은 표시된 config region 전체를 교체하지 말고 LidGuard hook command entry를 감지해서 처리해야 하며, 없는 hook을 새로 설치하면 안 된다.
+- Windows에서 effective UI culture가 영어가 아니면, LidGuard는 사람이 읽는 CLI text를 쓰기 전에 console input/output encoding을 UTF-8로 설정해 한국어 같은 localized non-ASCII 출력이 물음표로 깨지지 않게 한다. 이 동작이 hook 또는 MCP JSON protocol text를 바꾸면 안 된다.
 - `preview-system-sound`와 `preview-current-sound`는 저장된 post-stop suspend sound volume override 설정을 적용하고 재생이 끝날 때까지 기다린다. `preview-current-sound`는 저장된 post-stop suspend sound를 재생하며, 설정된 sound가 없으면 설정 안내를 출력한다.
 - `hook-install`, `hook-status`, `hook-remove`, `hook-events`는 `--provider`가 생략되면 `codex`, `claude`, `copilot`, `all` 중 선택을 요청한다.
 - `mcp-status`, `mcp-install`, `mcp-remove`도 `--provider`가 생략되면 `codex`, `claude`, `copilot`, `all` 중 선택을 요청한다.
@@ -310,6 +314,7 @@ Hook stop 이벤트가 누락될 수 있으므로 LidGuard는 에이전트 프�
 - Emergency Hibernation 온도 기준: 기본 Average, 선택값 Low 및 High.
 - Emergency Hibernation 온도 임계값: 기본 93도, runtime에서는 70도에서 110도로 clamp.
 - 덮개 닫힘 상태의 PermissionRequest 결정: 기본 Deny, Allow 선택 가능.
+- 사용자 인터페이스 culture: 기본 `auto`, 선택값은 `en`, `ko`, 또는 `CultureInfo`가 해석할 수 있는 BCP 47 culture name.
 - PermissionRequest hook은 runtime이 `LidSwitchState = Closed`와 `VisibleDisplayMonitorCount = 0`을 함께 보고할 때만 구조화된 allow/deny 결정을 반환하고, 그 외에는 빈 stdout으로 provider의 기본 권한 흐름을 유지한다.
 - 현재 Claude와 GitHub Copilot CLI의 closed-lid `PermissionRequest` 출력은 `interrupt: true`도 함께 넣는다. 앞으로 다른 provider hook이 비슷한 JSON 모양을 쓰더라도 provider가 다르면 공용 DTO로 합치지 말고 provider별 hook 출력 타입을 유지한다.
 - Claude `Elicitation` hook은 runtime이 `LidSwitchState = Closed`와 `VisibleDisplayMonitorCount = 0`을 함께 보고할 때만 구조화된 `cancel`을 반환하고, 그 외에는 빈 stdout으로 Claude의 기본 elicitation 흐름을 유지한다.

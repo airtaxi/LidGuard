@@ -12,7 +12,7 @@ internal static class ClaudeHookHelpContent
             [],
             LidGuardHelpSectionTitles.ManagedAndInternalCommands,
             $"{commandDisplayName} claude-hook",
-            "Read Claude Code hook JSON from standard input and forward start, stop, activity, soft-lock, elicitation, or permission decisions to the runtime.",
+            "Read Claude Code hook JSON from standard input and forward start, stop, activity, soft-lock, elicitation, or permission decisions to LidGuard.",
             [],
             []);
     }

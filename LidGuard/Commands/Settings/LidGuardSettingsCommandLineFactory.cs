@@ -1,4 +1,5 @@
 using LidGuard.Power;
+using LidGuard.Localization;
 using LidGuard.Settings;
 
 namespace LidGuard.Commands;
@@ -23,7 +24,9 @@ internal static class LidGuardSettingsCommandLineFactory
 #if LIDGUARD_LINUX || LIDGUARD_MACOS
         if (CommandOptionReader.TryGetOption(options, out _, "prevent-away-mode-sleep", "away-mode-required"))
         {
-            message = "The prevent-away-mode-sleep option is only supported on Windows. Use prevent-system-sleep on this platform.";
+            message = LidGuardText.GetResourceString(
+                "SettingsOptionPreventAwayModeSleepUnsupported",
+                "The prevent-away-mode-sleep option is only supported on Windows. Use prevent-system-sleep on this platform.");
             return false;
         }
 
@@ -84,6 +87,7 @@ internal static class LidGuardSettingsCommandLineFactory
         if (!LidGuardSettingsValueParser.TryParsePreSuspendWebhookUrlOption(options, baseSettings.PreSuspendWebhookUrl, out var preSuspendWebhookUrl, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParsePostSessionEndWebhookUrlOption(options, baseSettings.PostSessionEndWebhookUrl, out var postSessionEndWebhookUrl, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParseClosedLidPermissionRequestDecisionOption(options, baseSettings.ClosedLidPermissionRequestDecision, out var closedLidPermissionRequestDecision, out message)) return false;
+        if (!LidGuardSettingsValueParser.TryParseUserInterfaceCultureOption(options, baseSettings.UserInterfaceCulture, out var userInterfaceCulture, out message)) return false;
 
         var reason = CommandOptionReader.GetOption(options, "power-request-reason", "reason");
         if (string.IsNullOrWhiteSpace(reason)) reason = basePowerRequest.Reason;
@@ -111,7 +115,8 @@ internal static class LidGuardSettingsCommandLineFactory
             ServerRuntimeCleanupDelayMinutes = serverRuntimeCleanupDelayMinutes,
             EmergencyHibernationOnHighTemperature = emergencyHibernationOnHighTemperature,
             EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode,
-            EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius
+            EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius,
+            UserInterfaceCulture = userInterfaceCulture
         };
 
         return true;

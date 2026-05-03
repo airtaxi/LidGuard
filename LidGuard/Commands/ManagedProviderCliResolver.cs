@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using LidGuard.Sessions;
 using LidGuard.Hooks;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands;
 
@@ -33,8 +34,9 @@ internal static class ManagedProviderCliResolver
             return true;
         }
 
-        message =
-            $"Provider CLI not found: {ManagedProviderSelection.GetProviderDisplayName(provider)} (checked: {string.Join(" | ", GetProviderCliCandidatePaths(provider))})";
+        message = LidGuardText.ManagementProviderCliNotFound(
+            ManagedProviderSelection.GetProviderDisplayName(provider),
+            string.Join(" | ", GetProviderCliCandidatePaths(provider)));
         return false;
     }
 
@@ -54,7 +56,7 @@ internal static class ManagedProviderCliResolver
             using var process = new Process { StartInfo = processStartInfo };
             if (!process.Start())
             {
-                Console.Error.WriteLine($"Failed to start process: {fileName}");
+                Console.Error.WriteLine(LidGuardText.ManagementFailedToStartProcess(fileName));
                 return 1;
             }
 

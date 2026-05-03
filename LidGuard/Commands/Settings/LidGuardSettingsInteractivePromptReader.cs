@@ -1,5 +1,6 @@
 using LidGuard.Settings;
 using LidGuard.Power;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands;
 
@@ -14,14 +15,14 @@ internal static class LidGuardSettingsInteractivePromptReader
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = $"Input ended before {settingName} was entered.";
+            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(valueText)) return true;
         if (LidGuardSettingsValueParser.TryParseInteractiveBoolean(valueText.Trim(), out value)) return true;
 
-        message = $"{settingName} must be true or false.";
+        message = LidGuardText.SettingsInteractiveBooleanValidation(settingName);
         return false;
     }
 
@@ -34,12 +35,16 @@ internal static class LidGuardSettingsInteractivePromptReader
     {
         value = storedValue;
         message = string.Empty;
-        WriteInteractiveSettingPrompt(settingName, storedValue.ToString(), defaultValue.ToString(), "candidates: Sleep, Hibernate");
+        WriteInteractiveSettingPrompt(
+            settingName,
+            LidGuardText.DisplaySuspendMode(storedValue),
+            LidGuardText.DisplaySuspendMode(defaultValue),
+            LidGuardText.GetResourceString("SettingsInteractiveSuspendModeDetails", "candidates: Sleep, Hibernate"));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = $"Input ended before {settingName} was entered.";
+            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
             return false;
         }
 
@@ -56,7 +61,7 @@ internal static class LidGuardSettingsInteractivePromptReader
         if (normalizedValueText.Equals("sleep", StringComparison.OrdinalIgnoreCase)) return true;
         if (normalizedValueText.Equals("hibernate", StringComparison.OrdinalIgnoreCase)) return true;
 
-        message = $"{settingName} must be sleep or hibernate.";
+        message = LidGuardText.SettingsInteractiveSuspendModeValidation(settingName);
         return false;
     }
 
@@ -69,19 +74,19 @@ internal static class LidGuardSettingsInteractivePromptReader
     {
         value = storedValue;
         message = string.Empty;
-        WriteInteractiveSettingPrompt(settingName, storedValue.ToString(), defaultValue.ToString(), "0 = immediate");
+        WriteInteractiveSettingPrompt(settingName, storedValue.ToString(), defaultValue.ToString(), LidGuardText.GetResourceString("SettingsInteractiveImmediateDetails", "0 = immediate"));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = $"Input ended before {settingName} was entered.";
+            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(valueText)) return true;
         if (int.TryParse(valueText.Trim(), out value) && value >= 0) return true;
 
-        message = $"{settingName} must be a non-negative integer.";
+        message = LidGuardText.SettingsInteractiveNonNegativeIntegerValidation(settingName);
         return false;
     }
 
@@ -96,14 +101,14 @@ internal static class LidGuardSettingsInteractivePromptReader
         message = string.Empty;
         WriteInteractiveSettingPrompt(
             settingName,
-            SessionTimeoutConfiguration.GetDisplayValue(storedValue),
-            SessionTimeoutConfiguration.GetDisplayValue(defaultValue),
-            $"minimum: {LidGuardSettings.MinimumSessionTimeoutMinutes}, off to disable");
+            LidGuardText.DisplayMinuteCount(storedValue),
+            LidGuardText.DisplayMinuteCount(defaultValue),
+            LidGuardText.SettingsInteractiveSessionTimeoutDetails(LidGuardSettings.MinimumSessionTimeoutMinutes));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = $"Input ended before {settingName} was entered.";
+            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
             return false;
         }
 
@@ -121,7 +126,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             return true;
         }
 
-        message = $"{settingName} must be off or an integer of at least {LidGuardSettings.MinimumSessionTimeoutMinutes}.";
+        message = LidGuardText.SettingsInteractiveValueOffOrMinimumValidation(settingName, LidGuardSettings.MinimumSessionTimeoutMinutes);
         return false;
     }
 
@@ -136,14 +141,14 @@ internal static class LidGuardSettingsInteractivePromptReader
         message = string.Empty;
         WriteInteractiveSettingPrompt(
             settingName,
-            ServerRuntimeCleanupConfiguration.GetDisplayValue(storedValue),
-            ServerRuntimeCleanupConfiguration.GetDisplayValue(defaultValue),
-            $"minimum: {LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes}, off to exit immediately");
+            LidGuardText.DisplayMinuteCount(storedValue),
+            LidGuardText.DisplayMinuteCount(defaultValue),
+            LidGuardText.SettingsInteractiveServerRuntimeCleanupDelayDetails(LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = $"Input ended before {settingName} was entered.";
+            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
             return false;
         }
 
@@ -161,7 +166,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             return true;
         }
 
-        message = $"{settingName} must be off or an integer of at least {LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes}.";
+        message = LidGuardText.SettingsInteractiveValueOffOrMinimumValidation(settingName, LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes);
         return false;
     }
 
@@ -176,14 +181,16 @@ internal static class LidGuardSettingsInteractivePromptReader
         message = string.Empty;
         WriteInteractiveSettingPrompt(
             settingName,
-            PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(storedValue),
-            PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(defaultValue),
-            $"range: {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent}-{LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}, off to disable");
+            LidGuardText.DisplayOptionalValue(PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(storedValue)),
+            LidGuardText.DisplayOptionalValue(PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(defaultValue)),
+            LidGuardText.SettingsInteractiveVolumeOverrideDetails(
+                LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent,
+                LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = $"Input ended before {settingName} was entered.";
+            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
             return false;
         }
 
@@ -201,8 +208,10 @@ internal static class LidGuardSettingsInteractivePromptReader
             return true;
         }
 
-        message =
-            $"{settingName} must be off or an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.";
+        message = LidGuardText.SettingsInteractiveVolumeOverrideValidation(
+            settingName,
+            LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent,
+            LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent);
         return false;
     }
 
@@ -217,14 +226,14 @@ internal static class LidGuardSettingsInteractivePromptReader
         message = string.Empty;
         WriteInteractiveSettingPrompt(
             settingName,
-            SuspendHistoryConfiguration.GetDisplayValue(storedValue),
-            SuspendHistoryConfiguration.GetDisplayValue(defaultValue),
-            $"minimum: {LidGuardSettings.MinimumSuspendHistoryEntryCount}, off to disable");
+            LidGuardText.DisplaySuspendHistoryEntryCount(storedValue),
+            LidGuardText.DisplaySuspendHistoryEntryCount(defaultValue),
+            LidGuardText.SettingsInteractiveSuspendHistoryEntryCountDetails(LidGuardSettings.MinimumSuspendHistoryEntryCount));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = $"Input ended before {settingName} was entered.";
+            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
             return false;
         }
 
@@ -242,7 +251,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             return true;
         }
 
-        message = $"{settingName} must be off or an integer of at least {LidGuardSettings.MinimumSuspendHistoryEntryCount}.";
+        message = LidGuardText.SettingsInteractiveValueOffOrMinimumValidation(settingName, LidGuardSettings.MinimumSuspendHistoryEntryCount);
         return false;
     }
 
@@ -259,12 +268,14 @@ internal static class LidGuardSettingsInteractivePromptReader
             settingName,
             storedValue.ToString(),
             defaultValue.ToString(),
-            $"range: {LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius}-{LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius}");
+            LidGuardText.SettingsInteractiveRangeDetails(
+                LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius,
+                LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = $"Input ended before {settingName} was entered.";
+            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
             return false;
         }
 
@@ -274,8 +285,10 @@ internal static class LidGuardSettingsInteractivePromptReader
             && value <= LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius)
             return true;
 
-        message =
-            $"{settingName} must be an integer from {LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius} through {LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius}.";
+        message = LidGuardText.SettingsInteractiveRangeValidation(
+            settingName,
+            LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius,
+            LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius);
         return false;
     }
 
@@ -288,19 +301,23 @@ internal static class LidGuardSettingsInteractivePromptReader
     {
         value = storedValue;
         message = string.Empty;
-        WriteInteractiveSettingPrompt(settingName, storedValue.ToString(), defaultValue.ToString(), "candidates: Low, Average, High");
+        WriteInteractiveSettingPrompt(
+            settingName,
+            LidGuardText.DisplayEmergencyHibernationTemperatureMode(storedValue),
+            LidGuardText.DisplayEmergencyHibernationTemperatureMode(defaultValue),
+            LidGuardText.GetResourceString("SettingsInteractiveEmergencyHibernationTemperatureModeDetails", "candidates: Low, Average, High"));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = $"Input ended before {settingName} was entered.";
+            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(valueText)) return true;
         if (LidGuardSettingsValueParser.TryParseEmergencyHibernationTemperatureMode(valueText, out value)) return true;
 
-        message = $"{settingName} must be low, average, or high.";
+        message = LidGuardText.SettingsInteractiveEmergencyHibernationTemperatureModeValidation(settingName);
         return false;
     }
 
@@ -317,14 +334,14 @@ internal static class LidGuardSettingsInteractivePromptReader
         var defaultDisplayValue = PostStopSuspendSoundConfiguration.GetDisplayValue(defaultValue);
         WriteInteractiveSettingPrompt(
             settingName,
-            storedDisplayValue,
-            defaultDisplayValue,
-            $"use off to disable, SystemSounds: {LidGuardSupportedSystemSounds.Describe()}, or a .wav path");
+            LidGuardText.DisplayOptionalValue(storedDisplayValue),
+            LidGuardText.DisplayOptionalValue(defaultDisplayValue),
+            LidGuardText.SettingsInteractivePostStopSuspendSoundDetails(LidGuardSupportedSystemSounds.Describe()));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = $"Input ended before {settingName} was entered.";
+            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
             return false;
         }
 
@@ -342,17 +359,47 @@ internal static class LidGuardSettingsInteractivePromptReader
     {
         value = storedValue;
         message = string.Empty;
-        WriteInteractiveSettingPrompt(settingName, storedValue.ToString(), defaultValue.ToString(), "candidates: Deny, Allow");
+        WriteInteractiveSettingPrompt(
+            settingName,
+            LidGuardText.DisplayClosedLidPermissionRequestDecision(storedValue),
+            LidGuardText.DisplayClosedLidPermissionRequestDecision(defaultValue),
+            LidGuardText.GetResourceString("SettingsInteractiveClosedLidPermissionRequestDecisionDetails", "candidates: Deny, Allow"));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = $"Input ended before {settingName} was entered.";
+            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(valueText)) return true;
         return LidGuardSettingsValueParser.TryParseClosedLidPermissionRequestDecision(valueText, out value, out message);
+    }
+
+    public static bool TryReadUserInterfaceCultureSetting(
+        string settingName,
+        string storedValue,
+        string defaultValue,
+        out string value,
+        out string message)
+    {
+        value = storedValue;
+        message = string.Empty;
+        WriteInteractiveSettingPrompt(
+            settingName,
+            storedValue,
+            defaultValue,
+            LidGuardText.GetResourceString("SettingsInteractiveUserInterfaceCultureDetails", "auto, en, ko, or a culture name such as ko-KR"));
+
+        var valueText = Console.ReadLine();
+        if (valueText is null)
+        {
+            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(valueText)) return true;
+        return UserInterfaceCultureConfiguration.TryNormalizeConfiguredValue(valueText, out value, out message);
     }
 
     private static void WriteInteractiveSettingPrompt(
@@ -361,9 +408,9 @@ internal static class LidGuardSettingsInteractivePromptReader
         string defaultValueText,
         string additionalDetails = "")
     {
-        var prompt = $"{settingName} (stored: {storedValueText}, default: {defaultValueText}";
-        if (!string.IsNullOrWhiteSpace(additionalDetails)) prompt = $"{prompt}, {additionalDetails}";
-        prompt = $"{prompt}, press Enter to keep stored): ";
+        var prompt = string.IsNullOrWhiteSpace(additionalDetails)
+            ? LidGuardText.SettingsInteractivePrompt(settingName, storedValueText, defaultValueText)
+            : LidGuardText.SettingsInteractivePromptWithDetails(settingName, storedValueText, defaultValueText, additionalDetails);
         Console.Write(prompt);
     }
 }

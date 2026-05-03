@@ -1,4 +1,5 @@
 using LidGuard.Sessions;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands;
 
@@ -68,7 +69,7 @@ internal static class ManagedProviderSelection
 
     public static int WriteNoAvailableProvidersFound()
     {
-        Console.WriteLine("No available providers were found for all-provider execution.");
+        Console.WriteLine(LidGuardText.ManagementNoAvailableProviders);
         return 0;
     }
 
@@ -99,8 +100,7 @@ internal static class ManagedProviderSelection
         skippedProviderMessage = string.Empty;
         if (HasExistingProviderConfigurationRoot(candidatePaths)) return true;
 
-        skippedProviderMessage =
-            $"Skipping absent provider: {GetProviderDisplayName(provider)} (no existing configuration root was found at: {string.Join(" | ", candidatePaths)})";
+        skippedProviderMessage = LidGuardText.ManagementSkippedAbsentProvider(GetProviderDisplayName(provider), string.Join(" | ", candidatePaths));
         return false;
     }
 
@@ -120,18 +120,18 @@ internal static class ManagedProviderSelection
 
         if (providers.Count > 0) return true;
 
-        message = "Unsupported provider. Use codex, claude, copilot, or all.";
+        message = LidGuardText.ManagementUnsupportedProviderSelection;
         return false;
     }
 
     private static bool TryReadProviders(string prompt, out IReadOnlyList<AgentProvider> providers, out string message)
     {
-        Console.Write($"{prompt} (codex, claude, copilot, all; default: all): ");
+        Console.Write(LidGuardText.ManagementProviderSelectionPrompt(prompt));
         var providerText = Console.ReadLine();
         if (providerText is null)
         {
             providers = [];
-            message = "Input ended before a provider was selected.";
+            message = LidGuardText.GetResourceString("ManagementProviderSelectionInputEnded", "Input ended before a provider was selected.");
             return false;
         }
 

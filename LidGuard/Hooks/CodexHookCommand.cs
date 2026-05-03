@@ -1,5 +1,6 @@
 using System.Text.Json;
 using LidGuard.Ipc;
+using LidGuard.Localization;
 using LidGuard.Settings;
 using LidGuard.Hooks;
 using LidGuard.Sessions;
@@ -159,9 +160,9 @@ internal static class CodexHookCommand
         var jsonCommandLiteral = CodexHookConfigTomlDocument.ToJsonStringLiteral(hookCommand);
         var hookBlockDefinitions = new (string HookEventName, string StatusMessage)[]
         {
-            (CodexHookEventNames.UserPromptSubmit, "Starting LidGuard turn protection"),
-            (CodexHookEventNames.PermissionRequest, "Responding to closed-lid permission request"),
-            (CodexHookEventNames.Stop, "Stopping LidGuard session protection")
+            (CodexHookEventNames.UserPromptSubmit, LidGuardText.HookStatusMessageStartingTurnProtection),
+            (CodexHookEventNames.PermissionRequest, LidGuardText.HookStatusMessageRespondingToClosedLidPermissionRequest),
+            (CodexHookEventNames.Stop, LidGuardText.HookStatusMessageStoppingSessionProtection)
         };
 
         Console.WriteLine("{");
@@ -185,7 +186,7 @@ internal static class CodexHookCommand
         Console.WriteLine("            \"type\": \"command\",");
         Console.WriteLine($"            \"command\": {jsonCommandLiteral},");
         Console.WriteLine("            \"timeout\": 30,");
-        Console.WriteLine($"            \"statusMessage\": \"{statusMessage}\"");
+        Console.WriteLine($"            \"statusMessage\": {CodexHookConfigTomlDocument.ToJsonStringLiteral(statusMessage)}");
         Console.WriteLine("          }");
         Console.WriteLine("        ]");
         Console.WriteLine("      }");

@@ -4,6 +4,7 @@ using LidGuard.Services;
 using LidGuard.Sessions;
 using LidGuard.Settings;
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Control;
 
@@ -273,6 +274,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         var normalizedStoredSettings = LidGuardSettings.Normalize(storedSettings);
         if (!response.Succeeded)
         {
+            LidGuardCulture.ApplyEffectiveCulture(normalizedStoredSettings);
             return new LidGuardControlSnapshot
             {
                 SettingsFilePath = LidGuardSettingsStore.GetDefaultSettingsFilePath(),
@@ -280,6 +282,8 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
                 RuntimeReachable = false,
                 RuntimeUnavailable = response.RuntimeUnavailable,
                 RuntimeMessage = response.Message,
+                RuntimeMessageCode = response.MessageCode,
+                RuntimeMessageArguments = response.MessageArguments,
                 ActiveSessionCount = response.ActiveSessionCount,
                 LidSwitchState = LidSwitchState.Unknown,
                 VisibleDisplayMonitorCount = response.VisibleDisplayMonitorCount,
@@ -287,6 +291,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             };
         }
 
+        LidGuardCulture.ApplyEffectiveCulture(response.Settings);
         return new LidGuardControlSnapshot
         {
             SettingsFilePath = LidGuardSettingsStore.GetDefaultSettingsFilePath(),
@@ -294,6 +299,8 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             RuntimeReachable = true,
             RuntimeUnavailable = false,
             RuntimeMessage = response.Message,
+            RuntimeMessageCode = response.MessageCode,
+            RuntimeMessageArguments = response.MessageArguments,
             HasRuntimeSettings = true,
             RuntimeSettings = LidGuardSettings.Normalize(response.Settings),
             ActiveSessionCount = response.ActiveSessionCount,
@@ -346,7 +353,8 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
                 : normalizedBaseSettings.ServerRuntimeCleanupDelayMinutes,
             EmergencyHibernationOnHighTemperature = settingsPatch.EmergencyHibernationOnHighTemperature ?? normalizedBaseSettings.EmergencyHibernationOnHighTemperature,
             EmergencyHibernationTemperatureMode = settingsPatch.EmergencyHibernationTemperatureMode ?? normalizedBaseSettings.EmergencyHibernationTemperatureMode,
-            EmergencyHibernationTemperatureCelsius = settingsPatch.EmergencyHibernationTemperatureCelsius ?? normalizedBaseSettings.EmergencyHibernationTemperatureCelsius
+            EmergencyHibernationTemperatureCelsius = settingsPatch.EmergencyHibernationTemperatureCelsius ?? normalizedBaseSettings.EmergencyHibernationTemperatureCelsius,
+            UserInterfaceCulture = normalizedBaseSettings.UserInterfaceCulture
         };
     }
 
@@ -474,6 +482,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         AppendChange(changes, previousStoredSettings.EmergencyHibernationOnHighTemperature, updatedStoredSettings.EmergencyHibernationOnHighTemperature, "emergencyHibernationOnHighTemperature");
         AppendChange(changes, previousStoredSettings.EmergencyHibernationTemperatureMode, updatedStoredSettings.EmergencyHibernationTemperatureMode, "emergencyHibernationTemperatureMode");
         AppendChange(changes, previousStoredSettings.EmergencyHibernationTemperatureCelsius, updatedStoredSettings.EmergencyHibernationTemperatureCelsius, "emergencyHibernationTemperatureCelsius");
+        AppendChange(changes, previousStoredSettings.UserInterfaceCulture, updatedStoredSettings.UserInterfaceCulture, "userInterfaceCulture");
 
         return [.. changes];
     }

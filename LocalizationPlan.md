@@ -121,7 +121,7 @@ Recommended policy:
 - Use `auto` to mean "use the process/OS default UI culture."
 - Keep `auto` in `settings.json` when the user has not selected a concrete language.
 - Add `LIDGUARD_UI_CULTURE` as an environment override for testing, support, and scripted use.
-- Language settings affect human CLI presentation only. They do not change IPC, hook JSON, MCP JSON, settings JSON schema, persisted log text, or generated configuration file content.
+- Language settings affect human CLI presentation and generated managed hook `statusMessage` text. They do not change IPC, hook stdout JSON, MCP JSON, settings JSON schema, persisted log text, generated configuration keys, command paths, or protocol values.
 
 Precedence should be explicit and stable:
 
@@ -144,6 +144,7 @@ Scope rules:
 - Machine-readable outputs must remain stable regardless of language.
 - IPC and JSON `message` fields remain English because agents, provider clients, or scripts may read them.
 - Command names, option names, JSON property names, MCP tool names, hook event names, and stored settings keys must never change by language.
+- Generated provider hook configuration may localize only the human-facing `statusMessage` values in managed hook snippets/files; JSON/TOML keys, event names, commands, matchers, and other protocol/configuration values must remain stable.
 - Any human-facing CLI presentation should be localized, even when the backing data originated from protocol-facing or persisted English fields.
 - This includes localized rendering of runtime or inspection result messages, session list summaries, hook/MCP/provider management status text, interactive prompts, placeholder text such as `none` or `<none>`, and display labels for enum-like values.
 - If a raw value must stay stable for IPC, logs, settings, or generated files, localize the presentation layer instead of the stored or serialized value.
@@ -152,6 +153,7 @@ Runtime and IPC considerations:
 
 - Do not rely on the detached `run-server` process culture to match the culture requested by a subsequent CLI invocation.
 - The `settings` command must persist the UI culture setting and send the updated setting to a running runtime, just like other runtime settings updates.
+- When the `settings` command changes UI culture, refresh `statusMessage` text in already installed default managed provider hook entries. This refresh must detect LidGuard hook command entries, not replace an entire marked config region, and must not install hooks that are not already present.
 - The runtime must remember the latest UI culture setting in memory and include it in settings/status snapshots so helper processes can observe the current setting.
 - MCP server and Provider MCP server processes must apply the effective UI culture on startup by reading persisted settings, then refresh their local effective culture when a runtime/settings response reports a newer value.
 - When LidGuard starts a child or detached LidGuard process, pass the effective UI culture through `LIDGUARD_UI_CULTURE` so the child process does not depend on stale OS culture.
@@ -165,6 +167,7 @@ Hook and MCP considerations:
 - Provider hook stdout must remain valid JSON and keep the same schema in every language.
 - MCP tool names, argument names, descriptions used as protocol schema, and response property names must stay stable.
 - Hook, MCP, and provider JSON `message`, `error`, and denial text should stay English. These payloads are primarily read by agents, provider clients, and automation, not by end users.
+- Managed provider hook configuration `statusMessage` text is a user-facing progress description and should follow the effective UI culture when snippets are printed, hooks are installed/refreshed, or UI culture is changed through `settings`.
 - MCP process culture is synchronized from persisted settings on startup and from runtime/settings responses while running. Do not add protocol-visible language parameters in v1.
 
 Implementation notes:
@@ -188,6 +191,7 @@ Localize human-facing CLI output:
 - Session list lines, soft-lock summaries, lid/monitor/suspend status text, and other user-facing runtime/session presentation.
 - Interactive prompts in settings and provider selection flows, plus interactive validation and follow-up guidance text.
 - Hook, MCP, and provider-MCP install/status/remove sections and inspection summaries printed as normal CLI text.
+- Managed hook `statusMessage` values written into generated Codex TOML, Claude JSON, and GitHub Copilot JSON hook configurations.
 - CLI-owned failure messages printed directly to the terminal.
 - Human-facing CLI presentation derived from runtime results, inspection results, or other structured response fields, even when the raw backing field remains English in IPC, settings, or logs.
 - Placeholder text such as `none` and `<none>`, and display labels for enum-like values such as lid state, suspend mode, soft-lock state, emergency hibernation temperature mode, and permission-request decisions.
@@ -202,7 +206,7 @@ Keep these stable and not localized:
 - MCP tool names, argument names, and response property names.
 - Hook event names and generated provider configuration keys.
 - `settings.json` property names and stored enum values.
-- Text written into generated provider configuration snippets or other files.
+- Text written into generated provider configuration snippets or other files, except managed hook `statusMessage` values.
 - Session identifiers, provider identifiers, process identifiers, paths, and timestamps.
 - JSONL log field names and structured event names.
 - Machine-readable stdout produced for provider hooks, including all text fields inside that protocol payload.
@@ -217,7 +221,7 @@ Localize in this order so each step is small and testable:
 4. Localize [LidGuardCommandConsole.cs](LidGuard/Commands/LidGuardCommandConsole.cs) labels and unknown-command/help rendering.
 5. Localize the help content files under [LidGuard/Commands/Help](LidGuard/Commands/Help), keeping command syntax and option names literal.
 6. Localize [LidGuardSettingsCommand.cs](LidGuard/Commands/LidGuardSettingsCommand.cs) prompts and settings update messages.
-7. Localize [HookManagementCommand.cs](LidGuard/Commands/HookManagementCommand.cs), [McpManagementCommand.cs](LidGuard/Commands/McpManagementCommand.cs), and [ProviderMcpManagementCommand.cs](LidGuard/Commands/ProviderMcpManagementCommand.cs) only for human-facing CLI text and inspection presentation, not generated config content or protocol payloads.
+7. Localize [HookManagementCommand.cs](LidGuard/Commands/HookManagementCommand.cs), [McpManagementCommand.cs](LidGuard/Commands/McpManagementCommand.cs), and [ProviderMcpManagementCommand.cs](LidGuard/Commands/ProviderMcpManagementCommand.cs) for human-facing CLI text and inspection presentation; generated hook `statusMessage` text follows UI culture, while other generated config content and protocol payloads stay stable.
 8. Replace direct terminal printing of raw runtime or inspection `Message` strings with localized CLI presentation derived from structured fields or message codes while keeping raw protocol/log text stable where required.
 9. Audit hook output DTOs and MCP tool responses to ensure protocol JSON text remains English.
 10. Add new entries to `LidGuardText` only when localizing additional human CLI presentation messages produced in the single `LidGuard` assembly.
@@ -256,7 +260,7 @@ Minimum validation:
 
 - Unit-level checks for selected keys in English and Korean by temporarily setting `CultureInfo.CurrentUICulture`.
 - CLI smoke checks for `help`, `status`, `settings`, `hook-status`, `mcp-status`, and provider MCP commands under English and Korean UI cultures.
-- Hook smoke checks to confirm stdout JSON remains valid and English, including denial message text.
+- Hook smoke checks to confirm stdout JSON remains valid and English where it is protocol output, including denial message text. Generated hook configuration `statusMessage` values should be checked under English and Korean UI cultures.
 - MCP smoke checks to confirm tool names, JSON response property names, and protocol message values remain English.
 - Publish artifact inspection for at least one Windows RID and one Unix RID before expanding to every RID.
 
@@ -269,7 +273,7 @@ Suggested test cases:
 - Environment overrides do not rewrite `settings.json`.
 - `settings --ui-culture` updates persisted settings and updates a running runtime.
 - MCP server processes use the persisted or runtime-reported UI culture for human-facing presentation.
-- IPC and hook/MCP JSON output remains unchanged except for fields that are explicitly not part of protocol payloads.
+- IPC and hook/MCP JSON output remains unchanged except for fields that are explicitly not part of protocol payloads, such as generated managed hook configuration `statusMessage` values.
 - Human-facing CLI output no longer leaks raw English runtime or inspection `Message` text when a localized rendering is available.
 - Runtime-decision messages, session summaries, enum display values, placeholders, and management status text displayed by the CLI are localized even when the raw backing values remain stable in protocol or persisted data.
 - JSONL logs remain structurally stable.
@@ -289,7 +293,7 @@ Translation rules:
 
 ## Documentation Maintenance
 
-When `LocalizationPlan.md` changes meaningfully, update `LocalizationPlan.ko.md` in the same turn.
+This strategy document no longer has a Korean mirror. Keep product-facing localization behavior documented in `AGENTS.md` and `AGENTS.ko.md` when public behavior changes.
 
 When localization changes public behavior, update `AGENTS.md` and `AGENTS.ko.md` as the source of truth. This includes:
 
