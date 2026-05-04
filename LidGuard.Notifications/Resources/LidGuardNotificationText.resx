@@ -261,6 +261,9 @@
   <data name="UnsubscribeFailed" xml:space="preserve">
     <value>Unsubscribe failed.</value>
   </data>
+  <data name="UserInterfaceCultureLabel" xml:space="preserve">
+    <value>LidGuard language</value>
+  </data>
   <data name="VapidPublicKeyLoadFailed" xml:space="preserve">
     <value>Failed to load the VAPID public key.</value>
   </data>

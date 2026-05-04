@@ -100,6 +100,10 @@
                                 <strong>@(webhookEvent.ActiveSessionCount?.ToString(CultureInfo.CurrentCulture) ?? "-")</strong>
                             </div>
                             <div class="detail-item">
+                                <span>@LidGuardNotificationText.UserInterfaceCultureLabel</span>
+                                <strong>@(webhookEvent.UserInterfaceCulture ?? "-")</strong>
+                            </div>
+                            <div class="detail-item">
                                 <span>@LidGuardNotificationText.EndReasonLabel</span>
                                 <strong>@(webhookEvent.EndReason ?? "-")</strong>
                             </div>

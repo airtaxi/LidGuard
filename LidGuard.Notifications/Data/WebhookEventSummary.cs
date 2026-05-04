@@ -4,6 +4,7 @@ public sealed record WebhookEventSummary(
     long WebhookEventIdentifier,
     string EventType,
     string Reason,
+    string? UserInterfaceCulture,
     int? SoftLockedSessionCount,
     string? Provider,
     string? ProviderName,

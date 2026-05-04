@@ -1,3 +1,4 @@
+using System.Globalization;
 using LidGuard.Notifications.Data;
 using LidGuard.Notifications.Localization;
 
@@ -7,6 +8,25 @@ internal static class PushNotificationMessageFactory
 {
     public static PushNotificationMessage Create(PendingWebhookEvent webhookEvent, string publicBaseUrl)
     {
+        if (!TryCreateWebhookCultureInfo(webhookEvent.UserInterfaceCulture, out var cultureInfo)) return CreateCore(webhookEvent, publicBaseUrl);
+
+        var previousCultureInfo = CultureInfo.CurrentCulture;
+        var previousUserInterfaceCultureInfo = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentCulture = cultureInfo;
+            CultureInfo.CurrentUICulture = cultureInfo;
+            return CreateCore(webhookEvent, publicBaseUrl);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCultureInfo;
+            CultureInfo.CurrentUICulture = previousUserInterfaceCultureInfo;
+        }
+    }
+
+    private static PushNotificationMessage CreateCore(PendingWebhookEvent webhookEvent, string publicBaseUrl)
+    {
         var notificationUrl = string.IsNullOrWhiteSpace(publicBaseUrl) ? "/events" : $"{publicBaseUrl.TrimEnd('/')}/events";
         return new PushNotificationMessage
         {
@@ -15,6 +35,17 @@ internal static class PushNotificationMessageFactory
             Url = notificationUrl,
             Tag = $"lidguard-{webhookEvent.EventType.ToLowerInvariant()}-{webhookEvent.Reason.ToLowerInvariant()}"
         };
+    }
+
+    private static bool TryCreateWebhookCultureInfo(string? userInterfaceCulture, out CultureInfo cultureInfo)
+    {
+        cultureInfo = CultureInfo.InvariantCulture;
+        if (string.IsNullOrWhiteSpace(userInterfaceCulture)) return false;
+        if (!NotificationUserInterfaceCultureConfiguration.TryCreateCultureInfo(userInterfaceCulture, out var resolvedCultureInfo, out _)) return false;
+        if (string.IsNullOrWhiteSpace(resolvedCultureInfo.Name)) return false;
+
+        cultureInfo = resolvedCultureInfo;
+        return true;
     }
 
     private static string CreateTitle(PendingWebhookEvent webhookEvent)

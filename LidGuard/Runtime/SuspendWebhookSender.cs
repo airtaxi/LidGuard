@@ -13,6 +13,7 @@ internal static class SuspendWebhookSender
         string preSuspendWebhookUrl,
         SuspendWebhookReason reason,
         int softLockedSessionCount,
+        string userInterfaceCulture,
         CancellationToken cancellationToken,
         TimeSpan? timeout = null)
     {
@@ -24,6 +25,7 @@ internal static class SuspendWebhookSender
         {
             EventType = LidGuardWebhookEventTypes.PreSuspend,
             Reason = reason.ToString(),
+            UserInterfaceCulture = userInterfaceCulture,
             SoftLockedSessionCount = reason == SuspendWebhookReason.SoftLocked ? softLockedSessionCount : null
         };
         return await SendCoreAsync(

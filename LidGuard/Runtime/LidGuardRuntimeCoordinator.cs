@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using LidGuard.Ipc;
+using LidGuard.Localization;
 using LidGuard.Power;
 using LidGuard.Results;
 using LidGuard.Services;
@@ -1459,17 +1460,19 @@ internal sealed class LidGuardRuntimeCoordinator
         if (pendingSuspendContext.SuppressWebhooks) return;
 
         string preSuspendWebhookUrl;
+        string userInterfaceCulture;
         await _gate.WaitAsync(cancellationToken);
         try
         {
             preSuspendWebhookUrl = _settings.PreSuspendWebhookUrl;
+            userInterfaceCulture = LidGuardCulture.ResolveEffectiveCultureName(_settings);
         }
         finally
         {
             _gate.Release();
         }
 
-        var webhookRequest = CreatePreSuspendWebhookRequest(pendingSuspendContext, snapshot, suspendWebhookReason, suspendTriggerSessionCount);
+        var webhookRequest = CreatePreSuspendWebhookRequest(pendingSuspendContext, snapshot, suspendWebhookReason, suspendTriggerSessionCount, userInterfaceCulture);
         var sendResult = await SuspendWebhookSender.SendAsync(
             preSuspendWebhookUrl,
             webhookRequest,
@@ -1510,12 +1513,14 @@ internal sealed class LidGuardRuntimeCoordinator
         PendingSuspendContext pendingSuspendContext,
         LidGuardSessionSnapshot snapshot,
         SuspendWebhookReason suspendWebhookReason,
-        int suspendTriggerSessionCount)
+        int suspendTriggerSessionCount,
+        string userInterfaceCulture)
     {
         var webhookRequest = new LidGuardWebhookRequest
         {
             EventType = LidGuardWebhookEventTypes.PreSuspend,
             Reason = suspendWebhookReason.ToString(),
+            UserInterfaceCulture = userInterfaceCulture,
             SoftLockedSessionCount = suspendWebhookReason == SuspendWebhookReason.SoftLocked ? suspendTriggerSessionCount : null
         };
 
@@ -1528,6 +1533,7 @@ internal sealed class LidGuardRuntimeCoordinator
             string.IsNullOrWhiteSpace(pendingSuspendContext.SessionEndReason) ? pendingSuspendContext.CommandName : pendingSuspendContext.SessionEndReason,
             suspendTriggerSessionCount,
             pendingSuspendContext.ProviderSessionEndedAt ?? DateTimeOffset.UtcNow,
+            userInterfaceCulture,
             suspendWebhookReason == SuspendWebhookReason.SoftLocked ? suspendTriggerSessionCount : null);
     }
 
@@ -1538,11 +1544,13 @@ internal sealed class LidGuardRuntimeCoordinator
         string endReason,
         int activeSessionCount,
         DateTimeOffset endedAtUtc,
+        string userInterfaceCulture,
         int? softLockedSessionCount = null)
         => new()
         {
             EventType = eventType,
             Reason = reason,
+            UserInterfaceCulture = userInterfaceCulture,
             SoftLockedSessionCount = softLockedSessionCount,
             Provider = snapshot.Provider.ToString(),
             ProviderName = string.IsNullOrWhiteSpace(snapshot.ProviderName) ? null : snapshot.ProviderName,
@@ -1623,13 +1631,15 @@ internal sealed class LidGuardRuntimeCoordinator
         if (string.IsNullOrWhiteSpace(_settings.PostSessionEndWebhookUrl)) return;
 
         var postSessionEndWebhookUrl = _settings.PostSessionEndWebhookUrl;
+        var userInterfaceCulture = LidGuardCulture.ResolveEffectiveCultureName(_settings);
         var webhookRequest = CreateSessionEndWebhookRequest(
             LidGuardWebhookEventTypes.PostSessionEnd,
             LidGuardWebhookReasons.SessionEnded,
             snapshot,
             string.IsNullOrWhiteSpace(request.SessionEndReason) ? commandName : request.SessionEndReason,
             activeSessionCount,
-            endedAtUtc);
+            endedAtUtc,
+            userInterfaceCulture);
 
         _pendingPostSessionEndWebhookCount++;
         _ = SendPostSessionEndWebhookAsync(
@@ -1755,11 +1765,13 @@ internal sealed class LidGuardRuntimeCoordinator
         EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
     {
         string preSuspendWebhookUrl;
+        string userInterfaceCulture;
 
         await _gate.WaitAsync(CancellationToken.None);
         try
         {
             preSuspendWebhookUrl = _settings.PreSuspendWebhookUrl;
+            userInterfaceCulture = LidGuardCulture.ResolveEffectiveCultureName(_settings);
         }
         finally
         {
@@ -1770,6 +1782,7 @@ internal sealed class LidGuardRuntimeCoordinator
             preSuspendWebhookUrl,
             SuspendWebhookReason.EmergencyHibernation,
             0,
+            userInterfaceCulture,
             CancellationToken.None,
             s_emergencyHibernationWebhookTimeout);
         if (sendResult.Succeeded)

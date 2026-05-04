@@ -1,3 +1,5 @@
+using Microsoft.Data.Sqlite;
+
 namespace LidGuard.Notifications.Data;
 
 internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory connectionFactory)
@@ -11,6 +13,23 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
             command.CommandText = commandText;
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
+
+        await EnsureWebhookEventsUserInterfaceCultureColumnAsync(connection, cancellationToken);
+    }
+
+    private static async Task EnsureWebhookEventsUserInterfaceCultureColumnAsync(SqliteConnection connection, CancellationToken cancellationToken)
+    {
+        using var inspectCommand = connection.CreateCommand();
+        inspectCommand.CommandText = "PRAGMA table_info(WebhookEvents);";
+        using var reader = await inspectCommand.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            if (reader.GetString(1).Equals("UserInterfaceCulture", StringComparison.OrdinalIgnoreCase)) return;
+        }
+
+        using var alterCommand = connection.CreateCommand();
+        alterCommand.CommandText = "ALTER TABLE WebhookEvents ADD COLUMN UserInterfaceCulture TEXT NULL;";
+        await alterCommand.ExecuteNonQueryAsync(cancellationToken);
     }
 
     private static IReadOnlyList<string> CreateSchemaCommands()
@@ -37,6 +56,7 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
                 EventType TEXT NOT NULL,
                 Reason TEXT NOT NULL,
+                UserInterfaceCulture TEXT NULL,
                 SoftLockedSessionCount INTEGER NULL,
                 Provider TEXT NULL,
                 ProviderName TEXT NULL,

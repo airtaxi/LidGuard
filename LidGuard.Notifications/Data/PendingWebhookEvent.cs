@@ -4,6 +4,7 @@ internal sealed record PendingWebhookEvent(
     long WebhookEventIdentifier,
     string EventType,
     string Reason,
+    string? UserInterfaceCulture,
     int? SoftLockedSessionCount,
     string? Provider,
     string? ProviderName,

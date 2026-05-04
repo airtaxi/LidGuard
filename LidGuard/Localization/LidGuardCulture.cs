@@ -87,12 +87,45 @@ internal static class LidGuardCulture
         processStartInfo.Environment[UserInterfaceCultureEnvironmentVariableName] = cultureName;
     }
 
+    public static string ResolveEffectiveCultureName(LidGuardSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+
+        var environmentCultureName = Environment.GetEnvironmentVariable(UserInterfaceCultureEnvironmentVariableName);
+        if (TryResolveConcreteCultureName(environmentCultureName, out var environmentEffectiveCultureName)) return environmentEffectiveCultureName;
+
+        var normalizedSettings = LidGuardSettings.Normalize(settings);
+        if (!UserInterfaceCultureConfiguration.IsAutomatic(normalizedSettings.UserInterfaceCulture)
+            && TryResolveConcreteCultureName(normalizedSettings.UserInterfaceCulture, out var settingsEffectiveCultureName))
+        {
+            return settingsEffectiveCultureName;
+        }
+
+        return ResolveConcreteCultureNameOrEnglish(s_processDefaultUserInterfaceCulture);
+    }
+
     private static bool TryApplyConfiguredCulture(string cultureName, out string message)
     {
         if (!UserInterfaceCultureConfiguration.TryCreateCultureInfo(cultureName, out var cultureInfo, out message)) return false;
 
         ApplyCultureInfo(cultureInfo);
         return true;
+    }
+
+    private static bool TryResolveConcreteCultureName(string cultureName, out string concreteCultureName)
+    {
+        concreteCultureName = string.Empty;
+        if (string.IsNullOrWhiteSpace(cultureName)) return false;
+        if (!UserInterfaceCultureConfiguration.TryCreateCultureInfo(cultureName, out var cultureInfo, out _)) return false;
+
+        concreteCultureName = ResolveConcreteCultureNameOrEnglish(cultureInfo);
+        return true;
+    }
+
+    private static string ResolveConcreteCultureNameOrEnglish(CultureInfo cultureInfo)
+    {
+        if (cultureInfo is null) return "en";
+        return string.IsNullOrWhiteSpace(cultureInfo.Name) ? "en" : cultureInfo.Name;
     }
 
     private static void ApplyCultureInfo(CultureInfo cultureInfo)

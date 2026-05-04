@@ -261,6 +261,9 @@
   <data name="UnsubscribeFailed" xml:space="preserve">
     <value>구독 해제에 실패했습니다.</value>
   </data>
+  <data name="UserInterfaceCultureLabel" xml:space="preserve">
+    <value>LidGuard 언어</value>
+  </data>
   <data name="VapidPublicKeyLoadFailed" xml:space="preserve">
     <value>VAPID 공개 키를 불러오지 못했습니다.</value>
   </data>

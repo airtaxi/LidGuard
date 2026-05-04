@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using LidGuard.Notifications.Configuration;
 using LidGuard.Notifications.Data;
+using LidGuard.Notifications.Localization;
 using LidGuard.Notifications.Models;
 using LidGuard.Notifications.Security;
 using Microsoft.Extensions.Options;
@@ -82,6 +83,7 @@ internal static class LidGuardNotificationApiEndpoints
             await webhookEventStore.InsertAsync(
                 eventType,
                 reason,
+                NormalizeWebhookUserInterfaceCulture(webhookRequest?.UserInterfaceCulture),
                 softLockedSessionCount,
                 webhookRequest?.Provider?.Trim(),
                 webhookRequest?.ProviderName?.Trim(),
@@ -211,6 +213,16 @@ internal static class LidGuardNotificationApiEndpoints
 
         errorMessage = string.Empty;
         return true;
+    }
+
+    private static string? NormalizeWebhookUserInterfaceCulture(string? userInterfaceCulture)
+    {
+        if (string.IsNullOrWhiteSpace(userInterfaceCulture)) return null;
+
+        var trimmedUserInterfaceCulture = userInterfaceCulture.Trim();
+        if (!NotificationUserInterfaceCultureConfiguration.TryCreateCultureInfo(trimmedUserInterfaceCulture, out var cultureInfo, out _)) return trimmedUserInterfaceCulture;
+
+        return string.IsNullOrWhiteSpace(cultureInfo.Name) ? "en" : cultureInfo.Name;
     }
 
     private static async Task WriteJsonAsync<TValue>(

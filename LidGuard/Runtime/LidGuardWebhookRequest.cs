@@ -10,6 +10,10 @@ internal sealed class LidGuardWebhookRequest
     [JsonPropertyName("reason")]
     public string Reason { get; init; } = string.Empty;
 
+    [JsonPropertyName("userInterfaceCulture")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string UserInterfaceCulture { get; init; }
+
     [JsonPropertyName("softLockedSessionCount")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? SoftLockedSessionCount { get; init; }

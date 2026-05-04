@@ -70,6 +70,7 @@ internal static class LidGuardNotificationText
     public static string TranscriptLabel => Get(nameof(TranscriptLabel));
     public static string UnsubscribeButton => Get(nameof(UnsubscribeButton));
     public static string UnsubscribeFailed => Get(nameof(UnsubscribeFailed));
+    public static string UserInterfaceCultureLabel => Get(nameof(UserInterfaceCultureLabel));
     public static string VapidPublicKeyLoadFailed => Get(nameof(VapidPublicKeyLoadFailed));
     public static string WebPushUnavailable => Get(nameof(WebPushUnavailable));
     public static string WebhookEventsHeading => Get(nameof(WebhookEventsHeading));
