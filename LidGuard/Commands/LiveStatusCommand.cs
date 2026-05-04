@@ -142,7 +142,7 @@ internal static class LiveStatusCommand
         var screenLines = new List<string>
         {
             FitLine(StyleStrong(Text("LiveStatusTitle", "LidGuard live-status"), enableStyles), screenWidth),
-            FitLine(Text("LiveStatusExitHint", "Updates on runtime events and reconnects while unavailable. Press q, Escape, or Ctrl+C to exit."), screenWidth)
+            FitLine(Text("LiveStatusExitHint", "Updates every second and reconnects while unavailable. Press q, Escape, or Ctrl+C to exit."), screenWidth)
         };
 
         var remainingHeight = screenHeight - screenLines.Count;

@@ -1678,7 +1678,7 @@
     <value>LidGuard live-status</value>
   </data>
   <data name="LiveStatusExitHint" xml:space="preserve">
-    <value>런타임 이벤트가 도착하면 갱신하고, 사용할 수 없으면 재연결을 기다립니다. 종료하려면 q, Escape 또는 Ctrl+C를 누르세요.</value>
+    <value>1초마다 갱신하고, 사용할 수 없으면 재연결을 기다립니다. 종료하려면 q, Escape 또는 Ctrl+C를 누르세요.</value>
   </data>
   <data name="LiveStatusRuntimePanelTitle" xml:space="preserve">
     <value>런타임</value>

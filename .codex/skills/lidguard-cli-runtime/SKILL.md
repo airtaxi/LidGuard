@@ -25,7 +25,7 @@ description: "LidGuard CLI, settings, permission commands, examples, and failure
 - `remove-session --provider <provider>` narrows manual removal to a provider.
 - Provider MCP removal may also narrow by MCP provider name where supported.
 - `status` should report active sessions, runtime lid state, visible display monitor count, settings summary, soft-lock state, and runtime cleanup state.
-- `live-status` should keep refreshing status until interrupted.
+- `live-status` should keep refreshing status every second until interrupted. Runtime events may refresh the dashboard sooner, but lid state display must not depend on a dedicated live-status lid-state event.
 - `cleanup-orphans` should remove sessions whose watched processes have exited or whose safe provider-specific cleanup criteria match.
 
 ## Linux Permission Command

@@ -1678,7 +1678,7 @@
     <value>LidGuard live-status</value>
   </data>
   <data name="LiveStatusExitHint" xml:space="preserve">
-    <value>Updates on runtime events and reconnects while unavailable. Press q, Escape, or Ctrl+C to exit.</value>
+    <value>Updates every second and reconnects while unavailable. Press q, Escape, or Ctrl+C to exit.</value>
   </data>
   <data name="LiveStatusRuntimePanelTitle" xml:space="preserve">
     <value>Runtime</value>

@@ -9,6 +9,8 @@ internal sealed class LidGuardPipeServer(
     LidGuardRuntimeCoordinator runtimeCoordinator,
     Action requestRuntimeStop)
 {
+    private static readonly TimeSpan s_liveStatusSnapshotRefreshInterval = TimeSpan.FromSeconds(1);
+
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
@@ -75,18 +77,46 @@ internal sealed class LidGuardPipeServer(
             var snapshot = await runtimeCoordinator.CreateLiveStatusSnapshotAsync(cancellationToken);
             var snapshotJson = JsonSerializer.Serialize(snapshot, LidGuardJsonSerializerContext.Default.LiveStatusSnapshot);
             await streamWriter.WriteLineAsync(snapshotJson.AsMemory(), cancellationToken);
-            var changeTask = subscription.WaitForChangeAsync(cancellationToken);
-            var completedTask = await Task.WhenAny(changeTask, clientDisconnectTask);
-            if (ReferenceEquals(completedTask, clientDisconnectTask))
-            {
-                try { await clientDisconnectTask; }
-                catch (IOException) { }
-                catch (ObjectDisposedException) { }
-                break;
-            }
-
-            await changeTask;
+            if (!await WaitForNextLiveStatusSnapshotAsync(subscription, clientDisconnectTask, cancellationToken)) break;
         }
+    }
+
+    private static async Task<bool> WaitForNextLiveStatusSnapshotAsync(
+        LiveStatusEventHub.LiveStatusSubscription subscription,
+        Task<string> clientDisconnectTask,
+        CancellationToken cancellationToken)
+    {
+        using var refreshCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var changeTask = subscription.WaitForChangeAsync(refreshCancellationTokenSource.Token);
+        var refreshTask = Task.Delay(s_liveStatusSnapshotRefreshInterval, refreshCancellationTokenSource.Token);
+        var completedTask = await Task.WhenAny(changeTask, clientDisconnectTask, refreshTask);
+        refreshCancellationTokenSource.Cancel();
+
+        if (ReferenceEquals(completedTask, clientDisconnectTask))
+        {
+            await ConsumeLiveStatusClientDisconnectTaskAsync(clientDisconnectTask);
+            await ConsumeLiveStatusWaitTaskAsync(changeTask);
+            return false;
+        }
+
+        if (ReferenceEquals(completedTask, changeTask)) await changeTask;
+        else await ConsumeLiveStatusWaitTaskAsync(changeTask);
+
+        return true;
+    }
+
+    private static async Task ConsumeLiveStatusClientDisconnectTaskAsync(Task<string> clientDisconnectTask)
+    {
+        try { await clientDisconnectTask; }
+        catch (IOException) { }
+        catch (ObjectDisposedException) { }
+    }
+
+    private static async Task ConsumeLiveStatusWaitTaskAsync(Task changeTask)
+    {
+        try { await changeTask; }
+        catch (OperationCanceledException) { }
+        catch (ObjectDisposedException) { }
     }
 
     private static async Task WriteResponseAsync(StreamWriter streamWriter, LidGuardPipeResponse response, CancellationToken cancellationToken)
