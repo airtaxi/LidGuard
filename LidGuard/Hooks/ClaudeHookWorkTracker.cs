@@ -125,38 +125,6 @@ internal static class ClaudeHookWorkTracker
                 DateTimeOffset.UtcNow));
     }
 
-    public static bool TryConsumeDeferredStopWhenNoPendingWork(
-        ClaudeHookInput hookInput,
-        string sessionIdentifier,
-        out bool isProviderSessionEnd,
-        out string sessionEndReason)
-    {
-        ArgumentNullException.ThrowIfNull(hookInput);
-
-        isProviderSessionEnd = false;
-        sessionEndReason = string.Empty;
-        SynchronizeBackgroundTasksFromTranscript(hookInput.TranscriptPath, sessionIdentifier);
-
-        var consumedDeferredStop = false;
-        var deferredStopIsProviderSessionEnd = false;
-        var deferredSessionEndReason = string.Empty;
-        UpdateSessionState(
-            sessionIdentifier,
-            sessionWorkState =>
-            {
-                if (!sessionWorkState.HasDeferredStop) return;
-                if (sessionWorkState.HasPendingWork) return;
-
-                deferredStopIsProviderSessionEnd = sessionWorkState.DeferredStop.IsProviderSessionEnd;
-                deferredSessionEndReason = sessionWorkState.DeferredStop.SessionEndReason;
-                sessionWorkState.DeferredStop = null;
-                consumedDeferredStop = true;
-            });
-        isProviderSessionEnd = deferredStopIsProviderSessionEnd;
-        sessionEndReason = deferredSessionEndReason;
-        return consumedDeferredStop;
-    }
-
     public static void ClearSessionState(string sessionIdentifier)
     {
         if (string.IsNullOrWhiteSpace(sessionIdentifier)) return;
@@ -704,6 +672,8 @@ internal static class ClaudeHookWorkTracker
         {
             if (element.ValueKind == JsonValueKind.Object)
             {
+                if (IsQueueOperationElement(element)) return;
+
                 InspectTaskNotification(element, transcriptWorkSnapshot);
                 InspectToolUse(element, transcriptWorkSnapshot);
                 foreach (var property in element.EnumerateObject()) InspectElement(property.Value, transcriptWorkSnapshot);
@@ -718,6 +688,12 @@ internal static class ClaudeHookWorkTracker
 
             if (element.ValueKind != JsonValueKind.Array) return;
             foreach (var itemElement in element.EnumerateArray()) InspectElement(itemElement, transcriptWorkSnapshot);
+        }
+
+        private static bool IsQueueOperationElement(JsonElement element)
+        {
+            if (!TryGetStringProperty(element, "type", out var type)) return false;
+            return type.Equals("queue-operation", StringComparison.Ordinal);
         }
 
         private static void InspectTaskNotification(JsonElement element, ClaudeHookTranscriptWorkSnapshot transcriptWorkSnapshot)

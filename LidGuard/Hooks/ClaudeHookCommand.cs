@@ -49,9 +49,6 @@ internal static class ClaudeHookCommand
         if (hookEventName.Equals(ClaudeHookEventNames.SubagentStop, StringComparison.Ordinal))
         {
             ClaudeHookWorkTracker.RecordSubagentStopped(hookInput, GetSessionIdentifier(hookInput));
-            var deferredStopExitCode = await TrySendDeferredStopAsync(hookInput);
-            if (deferredStopExitCode.HasValue) return deferredStopExitCode.Value;
-
             return await ReportActivityAsync(hookInput, hookInput.AgentType);
         }
 
@@ -64,9 +61,6 @@ internal static class ClaudeHookCommand
         if (hookEventName.Equals(ClaudeHookEventNames.TaskCompleted, StringComparison.Ordinal))
         {
             ClaudeHookWorkTracker.RecordTaskCompleted(hookInput, GetSessionIdentifier(hookInput));
-            var deferredStopExitCode = await TrySendDeferredStopAsync(hookInput);
-            if (deferredStopExitCode.HasValue) return deferredStopExitCode.Value;
-
             return await ReportActivityAsync(hookInput, hookInput.TaskIdentifier);
         }
 
@@ -74,9 +68,6 @@ internal static class ClaudeHookCommand
             || hookEventName.Equals(ClaudeHookEventNames.PostToolUse, StringComparison.Ordinal))
         {
             ClaudeHookWorkTracker.RecordToolUseEvent(hookInput, GetSessionIdentifier(hookInput));
-            var deferredStopExitCode = await TrySendDeferredStopAsync(hookInput);
-            if (deferredStopExitCode.HasValue) return deferredStopExitCode.Value;
-
             return await ReportActivityAsync(hookInput);
         }
 
@@ -91,9 +82,6 @@ internal static class ClaudeHookCommand
         {
             if (ClaudeHookWorkTracker.TryRecordTaskNotification(hookInput, GetSessionIdentifier(hookInput)))
             {
-                var deferredStopExitCode = await TrySendDeferredStopAsync(hookInput);
-                if (deferredStopExitCode.HasValue) return deferredStopExitCode.Value;
-
                 return await ReportActivityAsync(hookInput, "task-notification");
             }
 
@@ -266,22 +254,6 @@ internal static class ClaudeHookCommand
             LidGuardPipeCommands.MarkSessionActive,
             hookInput,
             DescribeActivityReason(hookInput.HookEventName, activityDetail));
-
-    private static async Task<int?> TrySendDeferredStopAsync(ClaudeHookInput hookInput)
-    {
-        var shouldSendDeferredStop = ClaudeHookWorkTracker.TryConsumeDeferredStopWhenNoPendingWork(
-            hookInput,
-            GetSessionIdentifier(hookInput),
-            out var isProviderSessionEnd,
-            out var sessionEndReason);
-        if (!shouldSendDeferredStop) return null;
-
-        return await SendRuntimeRequestAsync(
-            LidGuardPipeCommands.Stop,
-            hookInput,
-            isProviderSessionEnd,
-            sessionEndReason);
-    }
 
     private static async Task<int> SendSessionStateRequestAsync(string commandName, ClaudeHookInput hookInput, string sessionStateReason)
     {
