@@ -1,0 +1,3 @@
+interface:
+  display_name: "LidGuard Session Runtime"
+  short_description: "Session lifecycle and soft-lock behavior"

@@ -1,0 +1,3 @@
+interface:
+  display_name: "LidGuard Power Runtime"
+  short_description: "Power, lid, suspend, and thermal behavior"

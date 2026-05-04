@@ -1,0 +1,3 @@
+interface:
+  display_name: "LidGuard MCP Runtime"
+  short_description: "MCP tools and provider session behavior"

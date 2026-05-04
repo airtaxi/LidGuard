@@ -1,0 +1,3 @@
+interface:
+  display_name: "LidGuard CLI Runtime"
+  short_description: "CLI commands, settings, and failures"
