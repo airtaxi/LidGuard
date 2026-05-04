@@ -16,7 +16,6 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
-PACKAGE_VERSION=0.1.0
 MAX_ATTEMPT_COUNT=2
 CURRENT_ATTEMPT=1
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
@@ -24,6 +23,29 @@ REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 PROJECT_FILE=$REPO_ROOT/LidGuard/LidGuard.csproj
 PACKAGE_DIR=$REPO_ROOT/artifacts/packages
 EXIT_CODE=0
+
+read_project_version() {
+    if [ ! -f "$PROJECT_FILE" ]; then
+        echo "LidGuard project file was not found: $PROJECT_FILE" >&2
+        return 1
+    fi
+
+    PROJECT_VERSION=$(sed -n 's/.*<PackageVersion>\(.*\)<\/PackageVersion>.*/\1/p' "$PROJECT_FILE" | sed -n '1p')
+    if [ -z "$PROJECT_VERSION" ]; then
+        PROJECT_VERSION=$(sed -n 's/.*<VersionPrefix>\(.*\)<\/VersionPrefix>.*/\1/p' "$PROJECT_FILE" | sed -n '1p')
+    fi
+    if [ -z "$PROJECT_VERSION" ]; then
+        PROJECT_VERSION=$(sed -n 's/.*<Version>\(.*\)<\/Version>.*/\1/p' "$PROJECT_FILE" | sed -n '1p')
+    fi
+
+    PROJECT_VERSION=$(printf '%s' "$PROJECT_VERSION" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+    if [ -z "$PROJECT_VERSION" ]; then
+        echo "Could not find PackageVersion, VersionPrefix, or Version in the project file." >&2
+        return 1
+    fi
+
+    printf '%s\n' "$PROJECT_VERSION"
+}
 
 detect_target() {
     SYSTEM_NAME=$(uname -s 2>/dev/null || printf unknown)
@@ -75,6 +97,7 @@ run_once() {
     fi
 
     echo "Detected target: $SYSTEM_NAME/$MACHINE_NAME (packing $TOOL_RID package)"
+    echo "Using package version from project: $PACKAGE_VERSION"
     echo "Removing stale $PACKAGE_VERSION package outputs..."
     rm -f \
         "$PACKAGE_DIR/lidguard.$PACKAGE_VERSION.nupkg" \
@@ -101,6 +124,7 @@ run_once() {
     return 0
 }
 
+PACKAGE_VERSION=$(read_project_version) || exit 1
 cd "$REPO_ROOT" || exit 1
 
 while :; do

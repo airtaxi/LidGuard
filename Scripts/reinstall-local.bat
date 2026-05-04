@@ -2,6 +2,7 @@
 setlocal EnableExtensions EnableDelayedExpansion
 
 set "NO_PAUSE=0"
+set "SCRIPT_DIR=%~dp0"
 
 :parse_args
 if "%~1"=="" goto args_done
@@ -16,7 +17,6 @@ set "EXIT_CODE=1"
 goto finalize
 
 :args_done
-set "PACKAGE_VERSION=0.1.0"
 set "MAX_ATTEMPT_COUNT=2"
 set "CURRENT_ATTEMPT=1"
 set "NATIVE_ARCH=%PROCESSOR_ARCHITECTURE%"
@@ -33,7 +33,13 @@ if not defined TOOL_ARCH (
     goto finalize
 )
 
-for %%I in ("%~dp0..") do set "REPO_ROOT=%%~fI"
+for %%I in ("%SCRIPT_DIR%..") do set "REPO_ROOT=%%~fI"
+set "PROJECT_FILE=%REPO_ROOT%\LidGuard\LidGuard.csproj"
+call :read_package_version
+if errorlevel 1 (
+    set "EXIT_CODE=1"
+    goto finalize
+)
 set "PACKAGE_DIR=%REPO_ROOT%\artifacts\packages"
 set "PACKAGE_FILE=%PACKAGE_DIR%\lidguard.%PACKAGE_VERSION%.nupkg"
 set "RID_PACKAGE_FILE=%PACKAGE_DIR%\lidguard.win-%TOOL_ARCH%.%PACKAGE_VERSION%.nupkg"
@@ -101,6 +107,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "$processes = @(Get-Proce
 if errorlevel 1 goto fail
 
 echo Detected system architecture: %NATIVE_ARCH% ^(installing --arch %TOOL_ARCH%^)
+echo Using package version from project: %PACKAGE_VERSION%
 
 echo Creating temporary NuGet config...
 mkdir "%TEMP_CONFIG_DIR%" >nul 2>nul
@@ -155,3 +162,18 @@ exit /b 0
 :fail
 if exist "%TEMP_CONFIG_DIR%" rmdir /s /q "%TEMP_CONFIG_DIR%"
 exit /b 1
+
+:read_package_version
+if not exist "%PROJECT_FILE%" (
+    echo LidGuard project file was not found: "%PROJECT_FILE%"
+    exit /b 1
+)
+
+for /f "usebackq delims=" %%V in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$projectPath = $env:PROJECT_FILE; try { [xml]$project = Get-Content -LiteralPath $projectPath -Raw; foreach ($propertyName in @('PackageVersion', 'VersionPrefix', 'Version')) { foreach ($propertyGroup in @($project.Project.PropertyGroup)) { $propertyNode = $propertyGroup.SelectSingleNode($propertyName); if ($null -ne $propertyNode -and -not [string]::IsNullOrWhiteSpace($propertyNode.InnerText)) { $propertyNode.InnerText.Trim(); exit 0 } } }; Write-Error 'Could not find PackageVersion, VersionPrefix, or Version in the project file.'; exit 1 } catch { Write-Error $_.Exception.Message; exit 1 }"`) do set "PACKAGE_VERSION=%%V"
+
+if not defined PACKAGE_VERSION (
+    echo Could not read package version from "%PROJECT_FILE%".
+    exit /b 1
+)
+
+exit /b 0

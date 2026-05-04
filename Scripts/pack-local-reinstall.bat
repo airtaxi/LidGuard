@@ -2,6 +2,7 @@
 setlocal EnableExtensions
 
 set "NO_PAUSE=0"
+set "SCRIPT_DIR=%~dp0"
 
 :parse_args
 if "%~1"=="" goto args_done
@@ -16,7 +17,6 @@ set "EXIT_CODE=1"
 goto finalize
 
 :args_done
-set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..") do set "REPO_ROOT=%%~fI"
 set "PACK_SCRIPT=%SCRIPT_DIR%pack-local.bat"
 set "REINSTALL_SCRIPT=%SCRIPT_DIR%reinstall-local.bat"

@@ -2,6 +2,10 @@
 set -u
 
 NO_PAUSE=0
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
+PACK_SCRIPT=$SCRIPT_DIR/pack-local.sh
+REINSTALL_SCRIPT=$SCRIPT_DIR/reinstall-local.sh
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -15,11 +19,6 @@ while [ "$#" -gt 0 ]; do
             ;;
     esac
 done
-
-SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
-PACK_SCRIPT=$SCRIPT_DIR/pack-local.sh
-REINSTALL_SCRIPT=$SCRIPT_DIR/reinstall-local.sh
 
 cd "$REPO_ROOT" || exit 1
 
