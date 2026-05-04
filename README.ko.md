@@ -1,4 +1,4 @@
-# 에이전트 작업은 계속, 노트북 덮개는 닫아도 됩니다.
+# 에이전트는 깨어 있게. 노트북은 일이 끝나면 다시 잠들게.
 
 [![NuGet](https://img.shields.io/nuget/v/lidguard.svg)](https://www.nuget.org/packages/lidguard)
 [![NuGet downloads](https://img.shields.io/nuget/dt/lidguard.svg)](https://www.nuget.org/packages/lidguard)
@@ -7,18 +7,25 @@
 
 🌐 [English](README.md) | 한국어
 
-LidGuard는 내 컴퓨터에서 돌아가는 AI 코딩 도구가 작업을 끝낼 때까지 컴퓨터가 잠들지 않게 해 주는 전원 관리 도구입니다. 작업이 끝났거나 사용자 입력을 기다리는 상태가 되면 임시로 바꿨던 전원 설정을 원래대로 돌리고, 조건이 맞으면 절전 모드나 최대 절전 모드로 전환합니다.
+LidGuard는 로컬 AI 코딩 에이전트를 위한 전원 관리 도구입니다. 일반적인 절전 방지 도구처럼 컴퓨터를 계속 깨어 있게 만드는 데서 끝나지 않고, Codex, Claude Code, GitHub Copilot CLI 같은 에이전트 작업의 상태를 기준으로 필요한 동안만 절전을 막습니다.
 
-현재 공식 검증은 Windows에서 Codex를 사용할 때를 중심으로 진행되었습니다. Linux, macOS, Claude Code, GitHub Copilot CLI 지원도 구현되어 있지만 공식 테스트 범위는 아직 제한적입니다.
+대부분의 절전 방지 도구는 프로세스, 타이머, 또는 컴퓨터 전체를 기준으로 동작합니다. LidGuard는 AI 코딩 에이전트 작업을 기준으로 보호하고, 일이 끝나면 보호 상태를 해제하는 데 초점을 둡니다.
+
+보호 중인 작업이 끝나거나 절전 진입 가능 상태가 되면 LidGuard는 임시로 바꾼 전원 정책을 원래대로 복원합니다. 설정에 따라 작업 종료 후 절전 모드나 최대 절전 모드로 전환할 수도 있어, 긴 AI 작업이 끝난 뒤 노트북이 불필요하게 깨어 있어 배터리를 소모하는 시간을 줄이는 데 도움이 됩니다.
 
 ## 주요 기능
 
-- 컴퓨터가 저절로 잠드는 것뿐 아니라 노트북 덮개를 닫을 때의 동작까지 함께 다룹니다.
-- Codex, Claude Code, GitHub Copilot CLI와 연결해 어떤 AI 작업이 아직 진행 중인지 추적합니다.
-- 사용자 입력을 기다리는 상태, 오래 멈춰 있는 세션, 작업 종료 후 절전 또는 최대 절전 전환을 지원합니다.
-- 절전 직전과 작업 완료 시점에 웹훅 알림을 보낼 수 있고, 별도 알림 서버로 휴대폰이나 다른 기기에서 알림을 받을 수 있습니다.
-- Windows, systemd/logind 기반 Linux, macOS에서 동작하며 .NET 전역 도구로 설치합니다.
-- 명령줄 화면 언어를 자동, 영어, 한국어 또는 다른 언어/지역 설정으로 바꿀 수 있습니다.
+- Codex, Claude Code, GitHub Copilot CLI 같은 로컬 AI 코딩 에이전트 작업을 인식해 절전 진입을 막습니다.
+- 보호 중인 작업이 끝난 뒤 설정에 따라 절전 모드 또는 최대 절전 모드로 전환해 불필요한 배터리 소모를 줄이는 데 도움을 줍니다.
+- 덮개를 닫았을 때의 동작을 임시로 바꾸고, 작업 종료 후 원래 OS 전원 정책으로 복원합니다.
+- Windows, systemd/logind 기반 Linux, macOS 전원 제어를 지원합니다.
+- SoftLock, 비활성 시간 제한, 절전 진입 전 Webhook, 진단 기능, 긴급 최대 절전 모드 같은 안전 장치를 제공합니다.
+
+## 왜 LidGuard인가요?
+
+기존 절전 방지 도구는 컴퓨터가 잠들지 않게 만드는 데 초점이 있습니다. LidGuard는 그보다 좁고 구체적인 문제를 다룹니다. 로컬 AI 코딩 에이전트가 일을 시작하면 보호 상태를 켜고, 작업이 끝났거나 절전 진입 가능 상태가 되면 보호 상태를 해제합니다.
+
+덮개 닫기 동작을 임시로 바꿨다면 원래 전원 설정으로 복원하고, 설정에 따라 작업 종료 후 절전 모드 또는 최대 절전 모드로 들어갈 수 있습니다. 목표는 긴 AI 작업을 유지하되, 작업이 끝난 뒤 노트북이 불필요하게 깨어 있는 시간을 줄이는 것입니다. LidGuard는 특정 운영체제 하나에만 맞춘 우회책이 아니라 Windows, systemd/logind 기반 Linux, macOS를 대상으로 합니다.
 
 ## 설치
 
@@ -66,6 +73,10 @@ lidguard provider-mcp-install --config "C:\path\to\mcp.json" --provider-name "Ex
 서버를 등록한 뒤에는 모델이 `provider_start_session`, `provider_set_soft_lock`, `provider_clear_soft_lock`, `provider_stop_session`을 언제 호출해야 하는지 알 수 있도록 [ProviderMcpModelPrompt.md](ProviderMcpModelPrompt.md)를 지시문으로 전달하세요.
 
 이 연결 방식의 동작은 보장되지 않습니다. 올바른 동작은 모델이 적절한 시점에 LidGuard 도구를 호출하는지에 전적으로 달려 있으며, LidGuard의 운영체제 지원 범위를 Windows, systemd/logind 기반 Linux, macOS 밖으로 넓히지는 않습니다.
+
+## 현재 지원 상태
+
+현재 LidGuard는 Windows의 Codex 환경에서 공식적으로 테스트되었습니다. Linux, macOS, Claude Code, GitHub Copilot CLI 지원은 구현되어 있지만, 더 다양한 실제 사용 환경에서의 검증은 아직 진행 중입니다. 사용 사례 공유와 pull request를 환영합니다.
 
 ## 전체 기능
 

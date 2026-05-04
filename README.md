@@ -1,4 +1,4 @@
-# Keep the agent awake, even when the lid closes.
+# Keep your agent awake. Let your laptop sleep when it's done.
 
 [![NuGet](https://img.shields.io/nuget/v/lidguard.svg)](https://www.nuget.org/packages/lidguard)
 [![NuGet downloads](https://img.shields.io/nuget/dt/lidguard.svg)](https://www.nuget.org/packages/lidguard)
@@ -7,18 +7,23 @@
 
 🌐 English | [한국어](README.ko.md)
 
-LidGuard keeps a local AI coding agent session protected while it is still working, then gives power policy back to the operating system when the session ends or becomes suspend-eligible. It handles the practical laptop workflow: start an agent, close the lid, and let LidGuard return the machine to Sleep or Hibernate when the work is done.
+LidGuard is a session-aware power-management helper for local AI coding agents such as Codex, Claude Code, and GitHub Copilot CLI. It temporarily keeps the machine awake while protected agent work is still active, then restores the original operating system power policy when that work finishes or becomes suspend-eligible.
 
-LidGuard is currently officially tested with Codex on Windows. Linux, macOS, Claude Code, and GitHub Copilot CLI support are implemented, but the official test scope is still limited.
+Most keep-awake tools protect a process, a timer, or the whole machine. LidGuard protects an AI coding agent session, and stops protecting it when the work is done. It can optionally enter Sleep or Hibernate after protected sessions finish, helping avoid unnecessary battery drain after long-running local AI agent jobs complete.
 
-## Features
+## Highlights
 
-- Covers laptop lid-close policy as well as ordinary idle sleep prevention.
-- Tracks Codex, Claude Code, and GitHub Copilot CLI sessions through provider hooks.
-- Supports SoftLock, inactive session timeout, and automatic Sleep or Hibernate after session end.
-- Sends `PreSuspend` and `PostSessionEnd` webhooks, with an optional `LidGuard.Notifications` Web Push companion server.
-- Implements Windows, systemd/logind Linux, and macOS power control, packaged as a NativeAOT .NET tool.
-- Supports human CLI UI culture selection with `auto`, `en`, `ko`, or another culture name.
+- Agent-aware sleep prevention for Codex, Claude Code, and GitHub Copilot CLI.
+- Automatic Sleep or Hibernate after protected sessions finish, helping avoid unnecessary battery drain.
+- Optional lid-close protection with automatic restoration of the original OS policy.
+- Cross-platform power control for Windows, systemd/logind Linux, and macOS.
+- Safety controls such as SoftLock, inactive timeout, pre-suspend hooks, diagnostics, and emergency hibernation.
+
+## Why LidGuard?
+
+Generic keep-awake tools are good at preventing sleep. LidGuard is designed for a narrower workflow: start protection when a local AI coding agent begins work, keep it only while the agent still needs the machine awake, and release it when the agent finishes or becomes suspend-eligible.
+
+If LidGuard temporarily changes lid-close behavior, it restores the user's original operating system policy afterward. If configured, it can request Sleep or Hibernate after completion. The goal is to preserve long-running local agent work without leaving the laptop awake longer than necessary. LidGuard targets Windows, systemd/logind Linux, and macOS rather than acting as a single-platform workaround.
 
 ## Install
 
@@ -66,6 +71,10 @@ lidguard provider-mcp-install --config "C:\path\to\mcp.json" --provider-name "Ex
 After registering the server, give the model [ProviderMcpModelPrompt.md](ProviderMcpModelPrompt.md) as its provider/session instruction so it knows when to call `provider_start_session`, `provider_set_soft_lock`, `provider_clear_soft_lock`, and `provider_stop_session`.
 
 Provider MCP behavior is not guaranteed. Correct operation depends entirely on the model choosing to call the LidGuard MCP tools at the right times, and it does not expand LidGuard's operating system support beyond Windows, systemd/logind Linux, and macOS.
+
+## Current Support Status
+
+LidGuard is currently officially tested with Codex on Windows. Linux, macOS, Claude Code, and GitHub Copilot CLI support are implemented, but broader real-world validation is still ongoing. Reports and pull requests are welcome.
 
 ## Full Feature Overview
 
