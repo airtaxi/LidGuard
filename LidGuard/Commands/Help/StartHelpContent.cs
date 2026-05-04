@@ -18,7 +18,7 @@ internal static class StartHelpContent
                 new LidGuardHelpOption("--session <id>", "Optional. Session identifier to track. When omitted, LidGuard derives one from the provider display name and normalized working directory."),
                 new LidGuardHelpOption("--provider-name <name>", "Required when --provider mcp is used. Distinguishes one MCP-backed provider from another."),
                 new LidGuardHelpOption("--parent-pid <pid>", "Optional process ID to monitor so LidGuard can clean up if that process exits."),
-                new LidGuardHelpOption("--working-directory <path>", "Optional working directory used for fallback session identity and process resolution. Defaults to the current directory.")
+                new LidGuardHelpOption("--working-directory <path>", "Optional working directory used for fallback session identity and metadata. Defaults to the current directory.")
             ],
             [
                 "If no runtime is listening, start launches the detached runtime server automatically."

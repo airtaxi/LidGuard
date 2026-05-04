@@ -117,6 +117,7 @@ internal static class GitHubCopilotHookCommand
             SessionIdentifier = GetSessionIdentifier(hookInput),
             IsProviderSessionEnd = isProviderSessionEnd,
             SessionEndReason = isProviderSessionEnd ? CreateSessionEndReason(configuredHookEventName, hookInput) : string.Empty,
+            WatchedProcessIdentifier = HookCommandUtilities.ResolveHookWatchedProcessIdentifier(commandName, AgentProvider.GitHubCopilot, settings),
             InputPrompt = commandName == LidGuardPipeCommands.Start ? hookInput.Prompt : string.Empty,
             Settings = settings,
             TranscriptPath = hookInput.TranscriptPath,

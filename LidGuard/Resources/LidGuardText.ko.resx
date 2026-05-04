@@ -1039,7 +1039,7 @@
     <value>변경 없이 현재 Linux 권한 환경을 출력합니다.</value>
   </data>
   <data name="Help_Start_WorkingDirectoryOption" xml:space="preserve">
-    <value>선택 사항인 작업 폴더입니다. 세션 식별 정보가 없을 때와 프로세스를 찾을 때 사용합니다. 기본값은 현재 폴더입니다.</value>
+    <value>선택 사항인 작업 폴더입니다. 세션 식별 정보가 없을 때와 메타데이터에 사용합니다. 기본값은 현재 폴더입니다.</value>
   </data>
   <data name="Help_Settings_ServerRuntimeCleanupDelayOption" xml:space="preserve">
     <value>모든 세션이 사라지고 보류 중인 정리가 끝난 뒤 LidGuard가 계속 실행될 시간을 설정합니다. off는 런타임을 계속 유지하고, 0은 즉시 종료하며, 양수는 해당 분만큼 기다립니다.</value>
@@ -1331,15 +1331,6 @@
   </data>
   <data name="RuntimeResponseSuspendScheduled" xml:space="preserve">
     <value>{1} {0}을 예약했습니다. {2}</value>
-  </data>
-  <data name="RuntimeResponseWatchedCodexWorkingDirectoryAlreadyStopped" xml:space="preserve">
-    <value>감시 중인 Codex 작업 디렉터리 "{0}"은 이미 중지되어 있습니다.</value>
-  </data>
-  <data name="RuntimeResponseWatchedCodexWorkingDirectoryCleaned" xml:space="preserve">
-    <value>작업 디렉터리 "{1}"의 감시 중인 Codex 세션 {0}개를 정리했고 process=none Codex 세션은 그대로 두었습니다.</value>
-  </data>
-  <data name="RuntimeResponseWatchedCodexWorkingDirectorySessionCleaned" xml:space="preserve">
-    <value>작업 디렉터리 "{1}"의 감시 중인 Codex 세션 {0}을 정리했습니다.</value>
   </data>
   <data name="RuntimeResponseWatchedProcessExited" xml:space="preserve">
     <value>{0}의 감시 프로세스가 종료되었습니다.</value>

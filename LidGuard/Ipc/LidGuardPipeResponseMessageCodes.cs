@@ -3,7 +3,6 @@ namespace LidGuard.Ipc;
 internal static class LidGuardPipeResponseMessageCodes
 {
     public const string CleanupOrphansCompleted = "cleanup-orphans-completed";
-    public const string CodexWatchedProcessLostCanceled = "codex-watched-process-lost-canceled";
     public const string FailedToStartRuntime = "failed-to-start-runtime";
     public const string RuntimeIsRunning = "runtime-is-running";
     public const string RuntimeNotRunning = "runtime-not-running";
@@ -18,14 +17,9 @@ internal static class LidGuardPipeResponseMessageCodes
     public const string SessionRemoveNoActiveSessions = "session-remove-no-active-sessions";
     public const string SessionStarted = "session-started";
     public const string SessionStopped = "session-stopped";
-    public const string WatchedCodexWorkingDirectoryAlreadyStopped = "watched-codex-working-directory-already-stopped";
-    public const string WatchedCodexWorkingDirectoryCleaned = "watched-codex-working-directory-cleaned";
-    public const string WatchedCodexWorkingDirectorySessionCleaned = "watched-codex-working-directory-session-cleaned";
     public const string WatchedProcessExited = "watched-process-exited";
     public const string WatchedProcessOrphanCleaned = "watched-process-orphan-cleaned";
 
-    public const string WatcherStatusCodexCliFallback = "codex-cli-fallback";
-    public const string WatcherStatusCodexCliFallbackSkipped = "codex-cli-fallback-skipped";
     public const string WatcherStatusNone = "none";
     public const string WatcherStatusWatchedProcess = "watched-process";
 

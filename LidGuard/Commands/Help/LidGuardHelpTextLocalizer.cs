@@ -124,7 +124,7 @@ internal static class LidGuardHelpTextLocalizer
         ["Optional. Session identifier to track. When omitted, LidGuard derives one from the provider display name and normalized working directory."] = "Help_Start_SessionOption",
         ["Required when --provider mcp is used. Distinguishes one MCP-backed provider from another."] = "Help_Start_ProviderNameOption",
         ["Optional process ID to monitor so LidGuard can clean up if that process exits."] = "Help_Start_ParentProcessOption",
-        ["Optional working directory used for fallback session identity and process resolution. Defaults to the current directory."] = "Help_Start_WorkingDirectoryOption",
+        ["Optional working directory used for fallback session identity and metadata. Defaults to the current directory."] = "Help_Start_WorkingDirectoryOption",
         ["If no runtime is listening, start launches the detached runtime server automatically."] = "Help_Start_RuntimeLaunchNote",
         ["Show runtime state, active sessions, and effective stored settings."] = "Help_Status_Description",
         ["If LidGuard is not running, status still prints the stored settings file contents."] = "Help_Status_RuntimeNotRunningNote",

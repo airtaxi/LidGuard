@@ -10,5 +10,6 @@ internal readonly record struct PendingSuspendContext(
     string CommandName,
     string SessionStateReason,
     bool IsProviderSessionEnd,
+    bool SuppressWebhooks,
     string SessionEndReason,
     DateTimeOffset? ProviderSessionEndedAt);

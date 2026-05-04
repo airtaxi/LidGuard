@@ -11,4 +11,6 @@ public sealed class LidGuardSessionStopRequest
     public bool IsProviderSessionEnd { get; init; }
 
     public string SessionEndReason { get; init; } = string.Empty;
+
+    public bool SuppressWebhooks { get; init; }
 }

@@ -46,4 +46,5 @@ The goal is to keep the supported local system awake while at least one tracked 
 - Keep runtime state ref-counted by active session, not by provider process alone.
 - Treat soft-locked sessions as suspend-eligible while preserving enough identity to resume or clean them up correctly.
 - Keep runtime cleanup delayed until in-flight suspend, restore, webhook, sound playback, or equivalent cleanup work finishes.
+- Use hook process ancestry, not working-directory process scans, to auto-attach watched processes for managed provider hooks. Working directory remains metadata for status, logs, transcript fallback, and webhook payloads.
 - Store persisted timestamps from UTC sources; convert to system local time only for user-facing CLI or web output.

@@ -1,4 +1,8 @@
 using System.Globalization;
+using LidGuard.Ipc;
+using LidGuard.Processes;
+using LidGuard.Sessions;
+using LidGuard.Settings;
 
 namespace LidGuard.Hooks;
 
@@ -25,6 +29,15 @@ public static class HookCommandUtilities
     {
         var escapedExecutableReference = EscapeHookExecutableReference(executablePath);
         return $"{escapedExecutableReference} {hookCommandName}";
+    }
+
+    internal static int ResolveHookWatchedProcessIdentifier(string commandName, AgentProvider provider, LidGuardSettings settings)
+    {
+        if (commandName != LidGuardPipeCommands.Start) return 0;
+        if (!settings.WatchParentProcess) return 0;
+        return HookParentProcessResolver.TryResolveWatchedProcessIdentifier(provider, out var watchedProcessIdentifier)
+            ? watchedProcessIdentifier
+            : 0;
     }
 
     public static string NormalizeHookExecutableReference(string executableReference)

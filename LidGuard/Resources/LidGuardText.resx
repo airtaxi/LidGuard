@@ -1039,7 +1039,7 @@
     <value>Print the current Linux permission environment without making changes.</value>
   </data>
   <data name="Help_Start_WorkingDirectoryOption" xml:space="preserve">
-    <value>Optional working directory used for fallback session identity and process resolution. Defaults to the current directory.</value>
+    <value>Optional working directory used for fallback session identity and metadata. Defaults to the current directory.</value>
   </data>
   <data name="Help_Settings_ServerRuntimeCleanupDelayOption" xml:space="preserve">
     <value>Set how long LidGuard stays running after all sessions end and cleanup is finished. Pass off to keep the runtime alive, 0 to exit immediately, or a positive minute count to wait.</value>
@@ -1331,15 +1331,6 @@
   </data>
   <data name="RuntimeResponseSuspendScheduled" xml:space="preserve">
     <value>Scheduled {0} {1} {2}</value>
-  </data>
-  <data name="RuntimeResponseWatchedCodexWorkingDirectoryAlreadyStopped" xml:space="preserve">
-    <value>Watched Codex working directory "{0}" is already stopped.</value>
-  </data>
-  <data name="RuntimeResponseWatchedCodexWorkingDirectoryCleaned" xml:space="preserve">
-    <value>Cleaned {0} watched Codex session(s) for working directory "{1}" and left process=none Codex sessions untouched.</value>
-  </data>
-  <data name="RuntimeResponseWatchedCodexWorkingDirectorySessionCleaned" xml:space="preserve">
-    <value>Cleaned watched Codex session {0} for working directory "{1}".</value>
   </data>
   <data name="RuntimeResponseWatchedProcessExited" xml:space="preserve">
     <value>Watched process exited for {0}.</value>

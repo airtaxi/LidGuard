@@ -28,7 +28,6 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
         var lidStateSource = CreateLidStateSource();
         var serviceSet = new LidGuardRuntimeServiceSet(
             new PowerRequestService(),
-            new CommandLineProcessResolver(),
             new ProcessExitWatcher(),
             new LidActionPolicyController(lidActionService),
             new SystemSuspendService(),

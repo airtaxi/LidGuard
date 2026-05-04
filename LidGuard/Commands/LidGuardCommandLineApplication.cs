@@ -217,7 +217,6 @@ internal static class LidGuardCommandLineApplication
             var runtimeCoordinator = new LidGuardRuntimeCoordinator(
                 settings,
                 serviceSet.PowerRequestService,
-                serviceSet.CommandLineProcessResolver,
                 serviceSet.ProcessExitWatcher,
                 serviceSet.LidActionPolicyController,
                 serviceSet.SystemSuspendService,

@@ -105,7 +105,7 @@ Closed-lid permission automation is also a supervision risk. If you configure Li
 
 SoftLock detection, provider hooks, process watchers, operating system behavior, CLI behavior, temperature sensors, permissions, firmware, and power policies can all fail or change in ways that prevent safety features from running as expected. Emergency hibernation and suspend flows are best-effort safeguards, not a substitute for checking the machine yourself.
 
-Codex hook cleanup has a specific limit: Codex App can still leave `process=none` sessions in the same working directory. LidGuard only uses the Codex working-directory watchdog fallback for resolved Codex CLI processes that are not running with the `app-server` argument, and that cleanup path never removes `process=none` Codex sessions.
+Managed hook cleanup uses the hook process ancestry to attach a watched parent process when possible, including Codex App `app-server`, Codex CLI, Claude Code, and GitHub Copilot CLI owners. Working directory is kept for status, logs, transcript fallback, and webhook metadata; it is not used to find a watched process. If the watched parent exits, LidGuard treats that as cancel cleanup rather than a provider-reported normal session end, suppressing `PostSessionEnd` and any new `PreSuspend` webhook that cleanup would otherwise schedule.
 
 You are responsible for monitoring device state and heat risk. Device damage, data loss, property damage, or other loss caused by ignoring those risks is your responsibility.
 

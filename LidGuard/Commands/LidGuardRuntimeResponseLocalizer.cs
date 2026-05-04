@@ -23,7 +23,6 @@ internal static class LidGuardRuntimeResponseLocalizer
         return messageCode switch
         {
             LidGuardPipeResponseMessageCodes.CleanupOrphansCompleted => Format("RuntimeResponseCleanupOrphansCompleted", "Cleaned {0} orphan session(s).", Argument(messageArguments, 0)),
-            LidGuardPipeResponseMessageCodes.CodexWatchedProcessLostCanceled => Format("RuntimeResponseCodexWatchedProcessLostCanceled", "Canceled {0} because a new Codex start no longer had a watched process after the session previously had one.", Argument(messageArguments, 0)),
             LidGuardPipeResponseMessageCodes.FailedToStartRuntime => Get("RuntimeResponseFailedToStartRuntime", "Failed to start the LidGuard runtime."),
             LidGuardPipeResponseMessageCodes.RuntimeIsRunning => Get("RuntimeResponseRuntimeIsRunning", "LidGuard runtime is running."),
             LidGuardPipeResponseMessageCodes.RuntimeNotRunning => LidGuardText.ConsoleRuntimeNotRunning,
@@ -38,9 +37,6 @@ internal static class LidGuardRuntimeResponseLocalizer
             LidGuardPipeResponseMessageCodes.SessionRemoveNoActiveSessions => Get("RuntimeResponseSessionRemoveNoActiveSessions", "There are no active sessions to remove."),
             LidGuardPipeResponseMessageCodes.SessionStarted => LocalizeSessionStarted(messageArguments),
             LidGuardPipeResponseMessageCodes.SessionStopped => Format("RuntimeResponseSessionStopped", "Stopped {0}.", Argument(messageArguments, 0)),
-            LidGuardPipeResponseMessageCodes.WatchedCodexWorkingDirectoryAlreadyStopped => Format("RuntimeResponseWatchedCodexWorkingDirectoryAlreadyStopped", "Watched Codex working directory \"{0}\" is already stopped.", Argument(messageArguments, 0)),
-            LidGuardPipeResponseMessageCodes.WatchedCodexWorkingDirectoryCleaned => Format("RuntimeResponseWatchedCodexWorkingDirectoryCleaned", "Cleaned {0} watched Codex session(s) for working directory \"{1}\" and left process=none Codex sessions untouched.", Argument(messageArguments, 0), Argument(messageArguments, 1)),
-            LidGuardPipeResponseMessageCodes.WatchedCodexWorkingDirectorySessionCleaned => Format("RuntimeResponseWatchedCodexWorkingDirectorySessionCleaned", "Cleaned watched Codex session {0} for working directory \"{1}\".", Argument(messageArguments, 0), Argument(messageArguments, 1)),
             LidGuardPipeResponseMessageCodes.WatchedProcessExited => Format("RuntimeResponseWatchedProcessExited", "Watched process exited for {0}.", Argument(messageArguments, 0)),
             LidGuardPipeResponseMessageCodes.WatchedProcessOrphanCleaned => Format("RuntimeResponseWatchedProcessOrphanCleaned", "Cleaned orphan session {0}.", Argument(messageArguments, 0)),
             _ => fallbackMessage
@@ -52,12 +48,9 @@ internal static class LidGuardRuntimeResponseLocalizer
         var sessionKey = Argument(messageArguments, 0);
         var watcherStatusKind = Argument(messageArguments, 1);
         var processIdentifier = Argument(messageArguments, 2);
-        var codexFallbackRequirementDescription = Argument(messageArguments, 3);
         return watcherStatusKind switch
         {
-            LidGuardPipeResponseMessageCodes.WatcherStatusCodexCliFallback => Format("RuntimeResponseSessionStartedCodexCliFallback", "Started {0}. Watching process {1} through Codex CLI fallback.", sessionKey, processIdentifier),
             LidGuardPipeResponseMessageCodes.WatcherStatusWatchedProcess => Format("RuntimeResponseSessionStartedWatchedProcess", "Started {0}. Watching process {1}.", sessionKey, processIdentifier),
-            LidGuardPipeResponseMessageCodes.WatcherStatusCodexCliFallbackSkipped => Format("RuntimeResponseSessionStartedCodexCliFallbackSkipped", "Started {0}. Codex fallback watchdog only attaches when the resolved process is {1}; a stop hook is required.", sessionKey, codexFallbackRequirementDescription),
             _ => Format("RuntimeResponseSessionStartedNoWatchedProcess", "Started {0}. No watched process was resolved; a stop hook is required.", sessionKey)
         };
     }

@@ -5,7 +5,6 @@ namespace LidGuard.Platform;
 
 public sealed class LidGuardRuntimeServiceSet(
     IPowerRequestService powerRequestService,
-    ICommandLineProcessResolver commandLineProcessResolver,
     IProcessExitWatcher processExitWatcher,
     LidActionPolicyController lidActionPolicyController,
     ISystemSuspendService systemSuspendService,
@@ -15,8 +14,6 @@ public sealed class LidGuardRuntimeServiceSet(
     IVisibleDisplayMonitorCountProvider visibleDisplayMonitorCountProvider) : IDisposable
 {
     public IPowerRequestService PowerRequestService { get; } = powerRequestService;
-
-    public ICommandLineProcessResolver CommandLineProcessResolver { get; } = commandLineProcessResolver;
 
     public IProcessExitWatcher ProcessExitWatcher { get; } = processExitWatcher;
 

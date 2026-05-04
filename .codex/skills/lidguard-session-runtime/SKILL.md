@@ -10,16 +10,17 @@ description: "LidGuard session lifecycle reference. Use when working on active s
 Hook stop events may be missed, so LidGuard also watches the agent process.
 
 - Prefer a provided parent process id when hooks can supply one.
-- When parent process id is missing, use `ICommandLineProcessResolver` with the hook working directory only for providers where that fallback is reliable enough.
-- Treat Codex as the main exception: allow the implicit working-directory fallback only when the resolved Codex candidate process or its direct parent is a platform-approved shell.
-- Treat `process=none` Codex sessions as out of scope for working-directory cleanup.
+- Managed Codex, Claude Code, and GitHub Copilot CLI hooks should resolve a watched process id from the hook process ancestry on `UserPromptSubmit` / `userPromptSubmitted` when `WatchParentProcess` is enabled.
+- Working directory must not be used to auto-resolve watched processes. Keep it only for status, logs, transcript fallback, and webhook payload metadata.
+- If neither an explicit parent process id nor a hook ancestry owner process id is available, start or update the session with `process=none`.
 - On Windows, open the target process with synchronize/query rights and wait with `WaitForSingleObject`.
-- On Linux, use `/proc/<pid>/cwd`, `/proc/<pid>/comm`, `/proc/<pid>/cmdline`, and `/proc/<pid>/stat` for working-directory process resolution, and use `Process.GetProcessById().WaitForExitAsync()` for process exit watching.
-- On Linux, allow Codex shell-host fallback only when the resolved candidate process or its direct parent is `bash`, `zsh`, `fish`, `sh`, `dash`, or `pwsh`.
-- On macOS, use `ps` plus `lsof` current-working-directory inspection for working-directory process resolution, and use `Process.GetProcessById().WaitForExitAsync()` for process exit watching.
-- On macOS, allow Codex shell-host fallback only when the resolved candidate process or its direct parent is `zsh`, `bash`, `fish`, `sh`, or `pwsh`.
+- On Windows, read hook process ancestry with CsWin32/WDK `NtQueryInformationProcess(ProcessBasicInformation)`.
+- On Linux, read hook process ancestry with `/proc/<pid>/stat`, `/proc/<pid>/comm`, and `/proc/<pid>/cmdline`.
+- On macOS, read hook process ancestry from `ps -axo pid=,ppid=,comm=,command=`.
+- On Linux and macOS, use `Process.GetProcessById().WaitForExitAsync()` for process exit watching.
 - Treat the first cleanup signal as authoritative; later stop/watchdog events for the same session should be harmless.
 - If a provider launches a short-lived wrapper that exits before the real agent, prefer provider-specific process selection rather than broadening the generic resolver.
+- Watched parent process exit and orphan cleanup are cancel cleanup paths, not provider-reported normal session ends. They must suppress `PostSessionEnd` and any new `PreSuspend` webhook they would otherwise schedule, while preserving any pending suspend that was already scheduled or running.
 
 ## Active Session Policy
 
@@ -32,11 +33,9 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Clear that session's current soft-lock state on provider activity.
 - Do not refresh last activity when setting a soft-lock; soft-locking represents waiting rather than autonomous work.
 - When a session reaches the configured inactive session timeout, transition it to soft-locked with reason metadata and apply the same suspend-eligibility handling as other soft-locked sessions.
-- Do not auto-resolve a watched process from the working directory for `AgentProvider.Mcp` sessions, because model-managed Provider MCP sessions do not reliably identify one owning CLI process.
-- For `AgentProvider.Codex`, auto-resolve a watched process from the working directory only when no explicit watched process id is supplied and the resolved candidate process is shell-hosted through a platform-approved shell as the process itself or its direct parent.
-- Treat approved Codex shell hosts as `cmd.exe`, `pwsh.exe`, and `powershell.exe` on Windows, and `bash`, `zsh`, `fish`, `sh`, `dash`, and `pwsh` on Linux/macOS.
-- If an active Codex session has ever had a watched process and a later Codex start for the same session can no longer resolve one, treat that as a canceled/lost watched process session and remove it without sending the normal provider session-end webhook.
-- When a shell-hosted Codex watchdog or `cleanup-orphans` removes sessions by working directory, remove only watched Codex sessions in that directory and leave `process=none` Codex sessions untouched.
+- Do not auto-resolve watched processes from the working directory for any provider.
+- Preserve an existing watched process for the same active session when a later start/update does not provide a new watched process id and `WatchParentProcess` is still enabled.
+- Provider hook ancestry owner detection should accept Codex CLI, Codex App `app-server`, Claude Code CLI/wrappers, GitHub Copilot CLI, `gh ... copilot`, and provider-specific node/npm/npx wrappers.
 - Back up optional lid action changes once and restore after the last active session stops.
 - While shared protection remains applied and the lid is closed, keep the Emergency Hibernation thermal monitor polling every 10 seconds and stop it automatically once protection is restored or disabled.
 - Keep multiple stop signals for the same session from causing repeated cleanup side effects.
@@ -71,5 +70,6 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Include `eventType = PostSessionEnd`, `reason = SessionEnded`, provider/session identity, UTC start/activity/end timestamps, end reason metadata, active session count, working directory, transcript path when available, one-line `inputPromptPreview` when available, and full `lastResponse` when available.
 - Normalize prompt previews by converting `\r\n` and `\r` to `\n`, replacing line breaks with spaces, and trimming overlong text to 50 characters with `...` using a word boundary when possible.
 - Derive notification event list and push text previews from `lastResponse`, capped at 50 characters, while exposing the full response in the event details UI.
-- Do not send the post-session-end webhook for abort, interrupt, manual stop/remove, watchdog, or orphan cleanup paths.
+- Do not send the post-session-end webhook for abort, interrupt, manual stop/remove, watched parent process exit, or orphan cleanup paths.
+- Watched parent process exit and orphan cleanup must also suppress any new pre-suspend webhook they would schedule, without canceling a pre-existing pending suspend.
 - Send post-session-end webhooks in the background, keep runtime cleanup pending until the send finishes or times out, and log webhook failures without failing the stop.
