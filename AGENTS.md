@@ -13,8 +13,12 @@ Read `.codex/skills/lidguard-repo-workflow/SKILL.md` before any LidGuard work.
 | Work type | Additional local skills to read |
 | --- | --- |
 | C# code, project files, .NET code review, refactoring, or explanation | `.codex/skills/csharp-code-style/SKILL.md` |
-| Product behavior, runtime lifecycle, settings, CLI, MCP server behavior, power management, lid/suspend policy, or failure modes | `.codex/skills/lidguard-product-runtime/SKILL.md` |
-| Repository structure, implemented components, subsystem ownership, or design constraints | `.codex/skills/lidguard-implementation-map/SKILL.md` |
+| High-level product behavior or choosing the right runtime reference | `.codex/skills/lidguard-product-runtime/SKILL.md` |
+| Power management, lid policy, suspend eligibility, post-stop suspend, or Emergency Hibernation | `.codex/skills/lidguard-power-runtime/SKILL.md` |
+| Runtime session lifecycle, soft-locking, transcript monitoring, watchdogs, webhooks, or cleanup | `.codex/skills/lidguard-session-runtime/SKILL.md` |
+| CLI commands, settings defaults, permission commands, examples, suspend history, or failure modes | `.codex/skills/lidguard-cli-runtime/SKILL.md` |
+| Regular MCP server behavior or Provider MCP runtime semantics | `.codex/skills/lidguard-mcp-runtime/SKILL.md` |
+| Repository structure, subsystem ownership, or design constraints | `.codex/skills/lidguard-implementation-map/SKILL.md` |
 | Provider MCP, Codex hooks, Claude Code hooks, GitHub Copilot CLI hooks, provider installation/status/removal behavior, or provider-specific deployment notes | `.codex/skills/lidguard-provider-integrations/SKILL.md` |
 | Build validation guidance, release validation, missing work, packaging, NuGet publishing, or local install smoke tests | `.codex/skills/lidguard-release-validation/SKILL.md` |
 
