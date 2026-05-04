@@ -11,7 +11,6 @@ public static class GitHubCopilotHookConfigurationJsonDocument
 {
     private const string CommandHookTypeName = "command";
     private const string HooksPropertyName = "hooks";
-    private const string NotificationMatcher = "permission_prompt|elicitation_dialog";
     private const int SupportedSchemaVersion = 1;
     private const int TimeoutSeconds = 30;
     private const string VersionPropertyName = "version";
@@ -25,8 +24,10 @@ public static class GitHubCopilotHookConfigurationJsonDocument
         (GitHubCopilotHookEventNames.PostToolUse, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotToolCompletionActivity, string.Empty),
         (GitHubCopilotHookEventNames.PermissionRequest, () => LidGuardText.HookStatusMessageRespondingToClosedLidPermissionRequest, string.Empty),
         (GitHubCopilotHookEventNames.AgentStop, () => LidGuardText.HookStatusMessageStoppingTurnProtection, string.Empty),
+        (GitHubCopilotHookEventNames.SubagentStart, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotSubagentActivity, string.Empty),
+        (GitHubCopilotHookEventNames.SubagentStop, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotSubagentCompletionActivity, string.Empty),
         (GitHubCopilotHookEventNames.ErrorOccurred, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotErrorTelemetry, string.Empty),
-        (GitHubCopilotHookEventNames.Notification, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotPromptTelemetry, NotificationMatcher)
+        (GitHubCopilotHookEventNames.Notification, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotPromptTelemetry, GitHubCopilotSoftLockSignalSource.NotificationMatcher)
     ];
 
     public static IReadOnlyDictionary<string, string> CreateManagedHookCommands(string hookCommand)
@@ -112,6 +113,8 @@ public static class GitHubCopilotHookConfigurationJsonDocument
         var hasPostToolUseHook = false;
         var hasPermissionRequestHook = false;
         var hasAgentStopHook = false;
+        var hasSubagentStartHook = false;
+        var hasSubagentStopHook = false;
         var hasErrorOccurredHook = false;
         var hasNotificationHook = false;
 
@@ -174,6 +177,12 @@ public static class GitHubCopilotHookConfigurationJsonDocument
                 case GitHubCopilotHookEventNames.AgentStop:
                     hasAgentStopHook = hookEventInspection.HasManagedHook;
                     break;
+                case GitHubCopilotHookEventNames.SubagentStart:
+                    hasSubagentStartHook = hookEventInspection.HasManagedHook;
+                    break;
+                case GitHubCopilotHookEventNames.SubagentStop:
+                    hasSubagentStopHook = hookEventInspection.HasManagedHook;
+                    break;
                 case GitHubCopilotHookEventNames.ErrorOccurred:
                     hasErrorOccurredHook = hookEventInspection.HasManagedHook;
                     break;
@@ -190,6 +199,8 @@ public static class GitHubCopilotHookConfigurationJsonDocument
             && hasPostToolUseHook
             && hasPermissionRequestHook
             && hasAgentStopHook
+            && hasSubagentStartHook
+            && hasSubagentStopHook
             && hasErrorOccurredHook
             && hasNotificationHook
             && hasExpectedHookCommands
@@ -217,6 +228,8 @@ public static class GitHubCopilotHookConfigurationJsonDocument
             HasPreToolUseHook = hasPreToolUseHook,
             HasSessionEndHook = hasSessionEndHook,
             HasSessionStartHook = hasSessionStartHook,
+            HasSubagentStartHook = hasSubagentStartHook,
+            HasSubagentStopHook = hasSubagentStopHook,
             HasUserPromptSubmittedHook = hasUserPromptSubmittedHook,
             HookCommand = hookCommand,
             HookExecutablePath = hookExecutablePath,

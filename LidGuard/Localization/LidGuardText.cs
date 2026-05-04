@@ -134,6 +134,10 @@ internal static class LidGuardText
 
     public static string HookStatusMessageRecordingGitHubCopilotSessionStart => Get(nameof(HookStatusMessageRecordingGitHubCopilotSessionStart));
 
+    public static string HookStatusMessageRecordingGitHubCopilotSubagentActivity => Get(nameof(HookStatusMessageRecordingGitHubCopilotSubagentActivity));
+
+    public static string HookStatusMessageRecordingGitHubCopilotSubagentCompletionActivity => Get(nameof(HookStatusMessageRecordingGitHubCopilotSubagentCompletionActivity));
+
     public static string HookStatusMessageRecordingGitHubCopilotToolCompletionActivity => Get(nameof(HookStatusMessageRecordingGitHubCopilotToolCompletionActivity));
 
     public static string HookStatusMessageRespondingToClosedLidPermissionRequest => Get(nameof(HookStatusMessageRespondingToClosedLidPermissionRequest));

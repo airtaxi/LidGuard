@@ -628,13 +628,19 @@
     <value>GitHub Copilot 오류 상태 기록 중</value>
   </data>
   <data name="HookStatusMessageRecordingGitHubCopilotPromptTelemetry" xml:space="preserve">
-    <value>GitHub Copilot 프롬프트 상태 기록 중</value>
+    <value>GitHub Copilot 알림 상태 기록 중</value>
   </data>
   <data name="HookStatusMessageRecordingGitHubCopilotSessionEnd" xml:space="preserve">
     <value>GitHub Copilot 세션 종료 기록 중</value>
   </data>
   <data name="HookStatusMessageRecordingGitHubCopilotSessionStart" xml:space="preserve">
     <value>GitHub Copilot 세션 시작 기록 중</value>
+  </data>
+  <data name="HookStatusMessageRecordingGitHubCopilotSubagentActivity" xml:space="preserve">
+    <value>GitHub Copilot 서브에이전트 활동 기록 중</value>
+  </data>
+  <data name="HookStatusMessageRecordingGitHubCopilotSubagentCompletionActivity" xml:space="preserve">
+    <value>GitHub Copilot 서브에이전트 완료 활동 기록 중</value>
   </data>
   <data name="HookStatusMessageRecordingGitHubCopilotToolCompletionActivity" xml:space="preserve">
     <value>GitHub Copilot 도구 완료 활동 기록 중</value>
@@ -1228,7 +1234,7 @@
     <value>선택 위치 인자입니다. 기본값은 settings-json입니다. settings-json, json, hooks-json을 받습니다.</value>
   </data>
   <data name="Help_CopilotHook_EventOption" xml:space="preserve">
-    <value>필수입니다. 일반적인 값은 sessionStart, sessionEnd, userPromptSubmitted, preToolUse, postToolUse, permissionRequest, agentStop, errorOccurred, notification입니다.</value>
+    <value>필수입니다. 일반적인 값은 sessionStart, sessionEnd, userPromptSubmitted, preToolUse, postToolUse, permissionRequest, agentStop, subagentStart, subagentStop, errorOccurred, notification입니다.</value>
   </data>
   <data name="Help_CopilotHooks_FormatOption" xml:space="preserve">
     <value>선택 위치 인자입니다. 기본값은 config-json입니다. config-json, json, hooks-json을 받습니다.</value>

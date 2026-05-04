@@ -17,7 +17,8 @@ public static class GitHubCopilotHookEventLog
 
         var details = $"tool={Sanitize(hookInput.ToolName)} source={Sanitize(hookInput.Source)} stopReason={Sanitize(hookInput.StopReason)} "
             + $"sessionEndReason={Sanitize(hookInput.SessionEndReason)} notificationType={Sanitize(hookInput.NotificationType)} "
-            + $"errorContext={Sanitize(hookInput.ErrorContext)} recoverable={Sanitize(hookInput.Recoverable?.ToString() ?? string.Empty)}";
+            + $"agentName={Sanitize(hookInput.AgentName)} agentDisplayName={Sanitize(hookInput.AgentDisplayName)} "
+            + $"transcriptPath={Sanitize(hookInput.TranscriptPath)} errorContext={Sanitize(hookInput.ErrorContext)} recoverable={Sanitize(hookInput.Recoverable?.ToString() ?? string.Empty)}";
         if (IsUserPromptSubmittedEvent(configuredHookEventName)) details = $"{details} prompt={Sanitize(hookInput.Prompt)}";
 
         AppendLine(CreateLogLine("received", configuredHookEventName, hookInput.SessionIdentifier, hookInput.WorkingDirectory, details));

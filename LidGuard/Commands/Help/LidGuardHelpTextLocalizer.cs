@@ -23,7 +23,7 @@ internal static class LidGuardHelpTextLocalizer
         ["Print a managed Codex hook configuration snippet."] = "Help_CodexHooks_Description",
         ["Optional positional value. Defaults to config-toml. Accepts config-toml, toml, hooks-json, or json."] = "Help_CodexHooks_FormatOption",
         ["Read GitHub Copilot CLI hook JSON from standard input for one configured event name."] = "Help_CopilotHook_Description",
-        ["Required. Typical values include sessionStart, sessionEnd, userPromptSubmitted, preToolUse, postToolUse, permissionRequest, agentStop, errorOccurred, and notification."] = "Help_CopilotHook_EventOption",
+        ["Required. Typical values include sessionStart, sessionEnd, userPromptSubmitted, preToolUse, postToolUse, permissionRequest, agentStop, subagentStart, subagentStop, errorOccurred, and notification."] = "Help_CopilotHook_EventOption",
         ["Print a managed GitHub Copilot CLI hook configuration snippet."] = "Help_CopilotHooks_Description",
         ["Optional positional value. Defaults to config-json. Accepts config-json, json, or hooks-json."] = "Help_CopilotHooks_FormatOption",
         ["Report the current lid switch state using the same platform lid-state source LidGuard uses for closed-lid policy decisions."] = "Help_CurrentLidState_Description",

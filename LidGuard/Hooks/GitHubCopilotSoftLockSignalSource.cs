@@ -2,6 +2,8 @@ namespace LidGuard.Hooks;
 
 public static class GitHubCopilotSoftLockSignalSource
 {
+    public const string NotificationMatcher = "permission_prompt|elicitation_dialog|shell_completed|shell_detached_completed|agent_completed|agent_idle";
+
     public static bool IsActivityEvent(string configuredHookEventName, GitHubCopilotHookInput hookInput)
     {
         ArgumentNullException.ThrowIfNull(hookInput);

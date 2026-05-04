@@ -101,8 +101,8 @@ Reference:
 - Stop events: `agentStop`, `sessionEnd`, and session-state JSONL `abort`.
 - Closed-lid permission decision event: `permissionRequest`.
 - Closed-lid ask-user guard event: `preToolUse` when `toolName` is `ask_user`.
-- Activity event: `postToolUse`.
-- Soft-lock notification event: `notification` with `notification_type` / `notificationType` of `permission_prompt` or `elicitation_dialog`.
+- Activity and work tracking events: `postToolUse`, `subagentStart`, and `subagentStop`.
+- Soft-lock and work-completion notification event: `notification` with `notification_type` / `notificationType` of `permission_prompt`, `elicitation_dialog`, `shell_completed`, `shell_detached_completed`, `agent_completed`, or `agent_idle`.
 - Telemetry-only events: `sessionStart` and `errorOccurred`.
 - Command path: `lidguard copilot-hook --event <event-name>` when the global tool is available on PATH, otherwise the current executable path plus `copilot-hook --event <event-name>`.
 - Snippet command: `lidguard copilot-hooks config-json`.
@@ -111,7 +111,7 @@ Reference:
 - Default global config path: `COPILOT_HOME\hooks\lidguard-copilot-cli.json` when `COPILOT_HOME` is set, otherwise `%USERPROFILE%\.copilot\hooks\lidguard-copilot-cli.json`.
 - GitHub Copilot CLI MCP registration delegates to `copilot mcp add/remove` and uses the user config file `%USERPROFILE%\.copilot\mcp-config.json`.
 - GitHub Copilot CLI also supports inline user hooks in `~/.copilot/settings.json`; repository hooks in `.github/hooks/` and repository Copilot settings are loaded alongside user hooks, so `hook-install` and `hook-status` inspect those sources for conflicts.
-- `hook-install` and `hook-status` require `sessionStart`, `sessionEnd`, `userPromptSubmitted`, `preToolUse`, `postToolUse`, `permissionRequest`, `agentStop`, `errorOccurred`, and a filtered `notification` hook.
+- `hook-install` and `hook-status` require `sessionStart`, `sessionEnd`, `userPromptSubmitted`, `preToolUse`, `postToolUse`, `permissionRequest`, `agentStop`, `subagentStart`, `subagentStop`, `errorOccurred`, and a filtered `notification` hook.
 - Because official Copilot CLI docs allow `agentStop` hooks to return `decision: "block"` with a `reason` continuation prompt, `hook-install` and `hook-status` should warn when non-LidGuard `agentStop` hooks are present.
 - Based on the official Copilot CLI hooks documentation, passive hooks such as `sessionStart` may be implemented as logging-only shell commands with no JSON output, so `exit code 0` with empty stdout is a valid no-op pattern for non-decision hooks.
 - Based on the official hooks configuration reference, `preToolUse` output JSON is optional and omitting output allows the tool by default, so structured JSON should only be returned when LidGuard intentionally wants to influence a hook decision.
@@ -121,8 +121,10 @@ Reference:
 - For `permissionRequest`, it does not stop the runtime; it queries the runtime lid state and visible display monitor count and returns a GitHub Copilot CLI allow/deny decision from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed and the visible display monitor count is `0`, and it includes `interrupt: true`.
 - For `preToolUse`, it does not stop the runtime; it denies `ask_user` only when the lid is closed and the visible display monitor count is `0`, so the agent cannot soft-lock waiting for user input that cannot be answered, and it clears the current session soft-lock state for non-`ask_user` tools.
 - For `postToolUse`, it records tool completion activity and clears the current session soft-lock state for non-`ask_user` tools.
-- For `notification`, it marks the session soft-locked when GitHub Copilot CLI reports `permission_prompt` or `elicitation_dialog`.
-- For `agentStop` and `sessionEnd`, it sends internal `stop --provider copilot`.
+- For `postToolUse`, it also tracks GitHub Copilot CLI background work when `task` starts a background agent, when `bash` or `powershell` starts an async/detached shell, when `write_agent` resumes a background agent, and when `read_agent` returns a terminal idle/completed/failed state for a tracked background agent.
+- For `subagentStart` and `subagentStop`, it tracks active GitHub Copilot CLI subagents in hook-local state and records provider activity.
+- For `notification`, it marks the session soft-locked when GitHub Copilot CLI reports `permission_prompt` or `elicitation_dialog`; it treats `shell_completed`, `shell_detached_completed`, `agent_completed`, and `agent_idle` as background-work completion signals.
+- For `agentStop` and `sessionEnd`, it first checks tracked GitHub Copilot CLI subagents and background tasks. If any remain active, it still sends internal `stop --provider copilot`, but marks the request as pending provider work so the runtime keeps the session active, preserves keep-awake behavior, cancels any pending suspend, and skips `PostSessionEnd`/`PreSuspend` behavior. Once `subagentStop`, completion notification, `read_agent`, or session-state JSONL reconciliation clears the last pending work item, `copilot-hook` sends a final internal `stop --provider copilot` with the original session-end reason.
 - GitHub Copilot CLI session-state JSONL changes are monitored through the shared transcript monitor. If `transcriptPath` / `transcript_path` is missing, LidGuard falls back to `COPILOT_HOME\session-state\<sessionId>\events.jsonl` or `%USERPROFILE%\.copilot\session-state\<sessionId>\events.jsonl`; a latest top-level `type` of `abort` stops the tracked Copilot session instead of refreshing activity. Other JSONL appends or `LastWriteTimeUtc` advancements refresh `LastActivityAt` with reason `github_copilot_session_event_activity_detected` and clear the current soft-lock state.
 - For `sessionStart` and `errorOccurred`, it records telemetry only.
 - GitHub Copilot CLI hook input currently does not provide a stable parent process id in the documented payloads. LidGuard resolves the watched process from hook process ancestry when `WatchParentProcess` is enabled, accepting Copilot CLI, `gh ... copilot`, and node/npm/npx Copilot wrappers. Working directory remains metadata only. Watched parent process exit and orphan cleanup are cancel paths that suppress `PostSessionEnd` and any new `PreSuspend` webhook they would schedule.

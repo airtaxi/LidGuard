@@ -628,13 +628,19 @@
     <value>Recording GitHub Copilot error telemetry</value>
   </data>
   <data name="HookStatusMessageRecordingGitHubCopilotPromptTelemetry" xml:space="preserve">
-    <value>Recording GitHub Copilot prompt telemetry</value>
+    <value>Recording GitHub Copilot notification telemetry</value>
   </data>
   <data name="HookStatusMessageRecordingGitHubCopilotSessionEnd" xml:space="preserve">
     <value>Recording GitHub Copilot session end</value>
   </data>
   <data name="HookStatusMessageRecordingGitHubCopilotSessionStart" xml:space="preserve">
     <value>Recording GitHub Copilot session start</value>
+  </data>
+  <data name="HookStatusMessageRecordingGitHubCopilotSubagentActivity" xml:space="preserve">
+    <value>Recording GitHub Copilot subagent activity</value>
+  </data>
+  <data name="HookStatusMessageRecordingGitHubCopilotSubagentCompletionActivity" xml:space="preserve">
+    <value>Recording GitHub Copilot subagent completion activity</value>
   </data>
   <data name="HookStatusMessageRecordingGitHubCopilotToolCompletionActivity" xml:space="preserve">
     <value>Recording GitHub Copilot tool completion activity</value>
@@ -1228,7 +1234,7 @@
     <value>Optional positional value. Defaults to settings-json. Accepts settings-json, json, or hooks-json.</value>
   </data>
   <data name="Help_CopilotHook_EventOption" xml:space="preserve">
-    <value>Required. Typical values include sessionStart, sessionEnd, userPromptSubmitted, preToolUse, postToolUse, permissionRequest, agentStop, errorOccurred, and notification.</value>
+    <value>Required. Typical values include sessionStart, sessionEnd, userPromptSubmitted, preToolUse, postToolUse, permissionRequest, agentStop, subagentStart, subagentStop, errorOccurred, and notification.</value>
   </data>
   <data name="Help_CopilotHooks_FormatOption" xml:space="preserve">
     <value>Optional positional value. Defaults to config-json. Accepts config-json, json, or hooks-json.</value>

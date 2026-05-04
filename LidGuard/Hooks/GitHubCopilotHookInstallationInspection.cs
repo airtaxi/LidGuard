@@ -36,6 +36,10 @@ public sealed class GitHubCopilotHookInstallationInspection
 
     public bool HasSessionStartHook { get; init; }
 
+    public bool HasSubagentStartHook { get; init; }
+
+    public bool HasSubagentStopHook { get; init; }
+
     public bool HasUserPromptSubmittedHook { get; init; }
 
     public string HookCommand { get; init; } = string.Empty;
@@ -70,6 +74,8 @@ public sealed class GitHubCopilotHookInstallationInspection
             HasPreToolUseHook = HasPreToolUseHook,
             HasSessionEndHook = HasSessionEndHook,
             HasSessionStartHook = HasSessionStartHook,
+            HasSubagentStartHook = HasSubagentStartHook,
+            HasSubagentStopHook = HasSubagentStopHook,
             HasUserPromptSubmittedHook = HasUserPromptSubmittedHook,
             HookCommand = HookCommand,
             HookExecutablePath = HookExecutablePath,

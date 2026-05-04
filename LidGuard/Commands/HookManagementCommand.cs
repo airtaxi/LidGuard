@@ -462,6 +462,8 @@ internal static class HookManagementCommand
         WriteField("ManagementLabelPostToolUseHook", "PostToolUse hook", inspection.HasPostToolUseHook);
         WriteField("ManagementLabelPermissionRequestHook", "PermissionRequest hook", inspection.HasPermissionRequestHook);
         WriteField("ManagementLabelAgentStopHook", "AgentStop hook", inspection.HasAgentStopHook);
+        WriteField("ManagementLabelSubagentStartHook", "SubagentStart hook", inspection.HasSubagentStartHook);
+        WriteField("ManagementLabelSubagentStopHook", "SubagentStop hook", inspection.HasSubagentStopHook);
         WriteField("ManagementLabelErrorOccurredHook", "ErrorOccurred hook", inspection.HasErrorOccurredHook);
         WriteField("ManagementLabelNotificationHook", "Notification hook", inspection.HasNotificationHook);
         WriteField("ManagementLabelExpectedCommands", "Expected commands", inspection.HasExpectedHookCommands);
