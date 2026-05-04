@@ -1,4 +1,4 @@
-# Keep your agent awake. Let your laptop sleep when it's done.
+# Keep the agent awake, even when the lid closes.
 
 [![NuGet](https://img.shields.io/nuget/v/lidguard.svg)](https://www.nuget.org/packages/lidguard)
 [![NuGet downloads](https://img.shields.io/nuget/dt/lidguard.svg)](https://www.nuget.org/packages/lidguard)
@@ -7,21 +7,21 @@
 
 🌐 English | [한국어](README.ko.md)
 
-LidGuard is a session-aware power-management helper for local AI coding agents such as Codex, Claude Code, and GitHub Copilot CLI. It temporarily keeps the machine awake while protected agent work is still active, then restores the original operating system power policy when that work finishes or becomes suspend-eligible.
+LidGuard lets long-running local AI coding agents keep working after you close your laptop lid. It tracks Codex, Claude Code, and GitHub Copilot CLI sessions, temporarily prevents idle sleep and lid-close sleep while protected work is active, then restores the original operating system power policy when that work finishes or becomes suspend-eligible.
 
-Most keep-awake tools protect a process, a timer, or the whole machine. LidGuard protects an AI coding agent session, and stops protecting it when the work is done. It can optionally enter Sleep or Hibernate after protected sessions finish, helping avoid unnecessary battery drain after long-running local AI agent jobs complete.
+Most keep-awake tools protect a process, a timer, or the whole machine. LidGuard protects an AI coding agent session, so the workflow is simpler: start the agent, close the lid when the device is safe to leave running, and let LidGuard release protection or enter Sleep/Hibernate when the work is done.
 
 ## Highlights
 
 - Agent-aware sleep prevention for Codex, Claude Code, and GitHub Copilot CLI.
+- Optional lid-close protection so protected agent work can continue after the laptop closes, with automatic restoration of the original OS policy.
 - Automatic Sleep or Hibernate after protected sessions finish, helping avoid unnecessary battery drain.
-- Optional lid-close protection with automatic restoration of the original OS policy.
 - Cross-platform power control for Windows, systemd/logind Linux, and macOS.
 - Safety controls such as SoftLock, inactive timeout, pre-suspend hooks, diagnostics, and emergency hibernation.
 
 ## Why LidGuard?
 
-Generic keep-awake tools are good at preventing sleep. LidGuard is designed for a narrower workflow: start protection when a local AI coding agent begins work, keep it only while the agent still needs the machine awake, and release it when the agent finishes or becomes suspend-eligible.
+Generic keep-awake tools are good at preventing idle sleep, but they are not built around the moment you want to close a laptop and leave an agent running. LidGuard is designed for that narrower workflow: start protection when a local AI coding agent begins work, keep it only while the agent still needs the machine awake, and release it when the agent finishes or becomes suspend-eligible.
 
 If LidGuard temporarily changes lid-close behavior, it restores the user's original operating system policy afterward. If configured, it can request Sleep or Hibernate after completion. The goal is to preserve long-running local agent work without leaving the laptop awake longer than necessary. LidGuard targets Windows, systemd/logind Linux, and macOS rather than acting as a single-platform workaround.
 
