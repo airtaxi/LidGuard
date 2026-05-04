@@ -11,6 +11,10 @@ LidGuard lets long-running local AI coding agents keep working after you close y
 
 Most keep-awake tools protect a process, a timer, or the whole machine. LidGuard protects an AI coding agent session, so the workflow is simpler: start the agent, close the lid when the device is safe to leave running, and let LidGuard release protection or enter Sleep/Hibernate when the work is done.
 
+## Demo
+
+<img src=".github/Assets/Demo.gif" alt="" width="720">
+
 ## Highlights
 
 - Agent-aware sleep prevention for Codex, Claude Code, and GitHub Copilot CLI.
