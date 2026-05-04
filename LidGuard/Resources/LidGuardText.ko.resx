@@ -1656,6 +1656,108 @@
   <data name="DisplayHookInstallationStatusNeedsUpdate" xml:space="preserve">
     <value>업데이트 필요</value>
   </data>
+  <data name="Help_LiveStatus_Description" xml:space="preserve">
+    <value>런타임 상태, 활성 세션, 최근 LidGuard 실행 흐름 로그를 실시간 터미널 대시보드로 표시합니다.</value>
+  </data>
+  <data name="Help_LiveStatus_RuntimeNotStartedNote" xml:space="preserve">
+    <value>이 명령은 런타임을 직접 시작하지 않으며, 런타임을 사용할 수 없으면 대기하다가 재연결합니다.</value>
+  </data>
+  <data name="Help_LiveStatus_ExitNote" xml:space="preserve">
+    <value>종료하려면 q, Escape 또는 Ctrl+C를 누릅니다.</value>
+  </data>
+  <data name="LiveStatusTitle" xml:space="preserve">
+    <value>LidGuard live-status</value>
+  </data>
+  <data name="LiveStatusExitHint" xml:space="preserve">
+    <value>런타임 이벤트가 도착하면 갱신하고, 사용할 수 없으면 재연결을 기다립니다. 종료하려면 q, Escape 또는 Ctrl+C를 누르세요.</value>
+  </data>
+  <data name="LiveStatusRuntimePanelTitle" xml:space="preserve">
+    <value>런타임</value>
+  </data>
+  <data name="LiveStatusSessionsPanelTitle" xml:space="preserve">
+    <value>세션</value>
+  </data>
+  <data name="LiveStatusHookPanelTitle" xml:space="preserve">
+    <value>훅 이벤트</value>
+  </data>
+  <data name="LiveStatusFlowPanelTitle" xml:space="preserve">
+    <value>실행 흐름</value>
+  </data>
+  <data name="LiveStatusRunning" xml:space="preserve">
+    <value>실행 중</value>
+  </data>
+  <data name="LiveStatusNotRunning" xml:space="preserve">
+    <value>실행 중 아님</value>
+  </data>
+  <data name="LiveStatusError" xml:space="preserve">
+    <value>오류</value>
+  </data>
+  <data name="LiveStatusNone" xml:space="preserve">
+    <value>없음</value>
+  </data>
+  <data name="LiveStatusRuntimeStateLine" xml:space="preserve">
+    <value>상태: {0} | 마지막 갱신: {1}</value>
+  </data>
+  <data name="LiveStatusRuntimeCountsLine" xml:space="preserve">
+    <value>활성 세션: {0} | 덮개: {1} | 보이는 모니터: {2}</value>
+  </data>
+  <data name="LiveStatusPendingSuspendLine" xml:space="preserve">
+    <value>대기 중인 절전: {0}</value>
+  </data>
+  <data name="LiveStatusNoRuntimeMessage" xml:space="preserve">
+    <value>런타임 메시지: 없음</value>
+  </data>
+  <data name="LiveStatusRuntimeMessageLine" xml:space="preserve">
+    <value>런타임 메시지: {0}</value>
+  </data>
+  <data name="LiveStatusNoSessions" xml:space="preserve">
+    <value>활성 세션이 없습니다.</value>
+  </data>
+  <data name="LiveStatusSessionLine" xml:space="preserve">
+    <value>{0} 세션={1} 프로세스={2} SoftLock={3} 시작={4} 마지막={5} 작업폴더={6}</value>
+  </data>
+  <data name="LiveStatusNoHookEvents" xml:space="preserve">
+    <value>최근 received/runtime-result 훅 이벤트가 없습니다.</value>
+  </data>
+  <data name="LiveStatusNoFlowEvents" xml:space="preserve">
+    <value>최근 런타임 실행 흐름 이벤트가 없습니다.</value>
+  </data>
+  <data name="LiveStatusRuntimeFlowPrefix" xml:space="preserve">
+    <value>런타임</value>
+  </data>
+  <data name="LiveStatusSuspendHistoryPrefix" xml:space="preserve">
+    <value>기록</value>
+  </data>
+  <data name="LiveStatusSucceededLabel" xml:space="preserve">
+    <value>성공</value>
+  </data>
+  <data name="LiveStatusActiveSessionsShortLabel" xml:space="preserve">
+    <value>활성</value>
+  </data>
+  <data name="LiveStatusSessionShortLabel" xml:space="preserve">
+    <value>세션</value>
+  </data>
+  <data name="LiveStatusMessageShortLabel" xml:space="preserve">
+    <value>메시지</value>
+  </data>
+  <data name="LiveStatusImmediate" xml:space="preserve">
+    <value>즉시</value>
+  </data>
+  <data name="LiveStatusDelaySeconds" xml:space="preserve">
+    <value>{0}초</value>
+  </data>
+  <data name="LiveStatusPendingSuspendDetails" xml:space="preserve">
+    <value>{0}, 지연={1}, 사유={2}</value>
+  </data>
+  <data name="LiveStatusSuspendReasonSoftLocked" xml:space="preserve">
+    <value>soft-lock</value>
+  </data>
+  <data name="LiveStatusSuspendReasonCompleted" xml:space="preserve">
+    <value>완료</value>
+  </data>
+  <data name="LiveStatusMoreEntries" xml:space="preserve">
+    <value>... {0}개 더 있음</value>
+  </data>
   <data name="DisplayMinuteCount" xml:space="preserve">
     <value>{0}분</value>
   </data>

@@ -45,6 +45,8 @@ internal sealed class LidGuardRuntimeCoordinator
     private int _pendingPostSessionEndWebhookCount;
     private bool _serverRuntimeStopRequested;
 
+    public LiveStatusEventHub LiveStatusEvents { get; } = new();
+
     public LidGuardRuntimeCoordinator(
         LidGuardSettings initialSettings,
         IPowerRequestService powerRequestService,
@@ -91,7 +93,7 @@ internal sealed class LidGuardRuntimeCoordinator
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        return request.Command switch
+        var response = request.Command switch
         {
             LidGuardPipeCommands.Start => await StartAsync(request, cancellationToken),
             LidGuardPipeCommands.Stop => await StopAsync(request, cancellationToken),
@@ -103,6 +105,26 @@ internal sealed class LidGuardRuntimeCoordinator
             LidGuardPipeCommands.Settings => await UpdateSettingsAsync(request, cancellationToken),
             _ => LidGuardPipeResponse.Failure($"Unsupported command: {request.Command}", _sessionRegistry.ActiveSessionCount)
         };
+        if (request.Command != LidGuardPipeCommands.Status) LiveStatusEvents.Signal();
+        return response;
+    }
+
+    public async Task<LiveStatusSnapshot> CreateLiveStatusSnapshotAsync(CancellationToken cancellationToken)
+    {
+        LidGuardPipeResponse response;
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            response = CreateSuccessResponse(
+                "LidGuard runtime is running.",
+                LidGuardPipeResponseMessageCodes.RuntimeIsRunning);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+
+        return LiveStatusSnapshotFactory.Create(response);
     }
 
     public async Task<bool> TryConsumeServerRuntimeStopRequestAsync(CancellationToken cancellationToken)
@@ -1253,7 +1275,21 @@ internal sealed class LidGuardRuntimeCoordinator
                 SuspendTriggerSessionCount = suspendTriggerSessionCount
             },
             suspendHistoryEntryCount);
-        if (suspendResult.Succeeded) return;
+        if (suspendResult.Succeeded)
+        {
+            await _gate.WaitAsync(CancellationToken.None);
+            try
+            {
+                var response = CreateSuccessResponse(CreateSuspendHistorySuccessMessage(suspendResult, $"Requested {suspendMode} {DescribeSuspendReason(activeSessionCount)}"));
+                LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-suspend-requested", pendingSuspendContext, response, snapshot);
+            }
+            finally
+            {
+                _gate.Release();
+            }
+
+            return;
+        }
 
         await _gate.WaitAsync(CancellationToken.None);
         try
@@ -1322,7 +1358,21 @@ internal sealed class LidGuardRuntimeCoordinator
                 volumeWarningResult);
         }
 
-        if (playbackResult.PlaybackResult.Succeeded) return;
+        if (playbackResult.PlaybackResult.Succeeded)
+        {
+            await _gate.WaitAsync(CancellationToken.None);
+            try
+            {
+                var response = CreateSuccessResponse($"Played post-stop suspend sound: {postStopSuspendSound}.");
+                LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-suspend-sound-played", pendingSuspendContext, response, snapshot);
+            }
+            finally
+            {
+                _gate.Release();
+            }
+
+            return;
+        }
 
         await _gate.WaitAsync(CancellationToken.None);
         try
@@ -1379,7 +1429,24 @@ internal sealed class LidGuardRuntimeCoordinator
             webhookRequest,
             cancellationToken,
             s_preSuspendWebhookTimeout);
-        if (sendResult.Succeeded) return;
+        if (sendResult.Succeeded)
+        {
+            if (!string.IsNullOrWhiteSpace(preSuspendWebhookUrl))
+            {
+                await _gate.WaitAsync(CancellationToken.None);
+                try
+                {
+                    var response = CreateSuccessResponse("Sent pre-suspend webhook.");
+                    LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-suspend-webhook-sent", pendingSuspendContext, response, snapshot);
+                }
+                finally
+                {
+                    _gate.Release();
+                }
+            }
+
+            return;
+        }
 
         await _gate.WaitAsync(CancellationToken.None);
         try
@@ -1552,7 +1619,16 @@ internal sealed class LidGuardRuntimeCoordinator
                 sendResult = LidGuardOperationResult.Failure($"Failed to send the post-session-end webhook: {exception.Message}");
             }
 
-            if (sendResult.Succeeded) return;
+            if (sendResult.Succeeded)
+            {
+                var successResponse = LidGuardPipeResponse.Success(
+                    "Sent post-session-end webhook.",
+                    activeSessionCount,
+                    [],
+                    _settings);
+                LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-post-session-end-webhook-sent", request, successResponse, snapshot, commandName);
+                return;
+            }
 
             var response = LidGuardPipeResponse.Failure(sendResult.Message, activeSessionCount);
             LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-post-session-end-webhook-failed", request, response, snapshot, commandName);
@@ -1648,7 +1724,28 @@ internal sealed class LidGuardRuntimeCoordinator
             0,
             CancellationToken.None,
             s_emergencyHibernationWebhookTimeout);
-        if (sendResult.Succeeded) return;
+        if (sendResult.Succeeded)
+        {
+            if (!string.IsNullOrWhiteSpace(preSuspendWebhookUrl))
+            {
+                await _gate.WaitAsync(CancellationToken.None);
+                try
+                {
+                    LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
+                        "emergency-hibernation-webhook-sent",
+                        CreateSuccessResponse("Sent Emergency Hibernation webhook."),
+                        observedTemperatureCelsius,
+                        emergencyHibernationTemperatureCelsius,
+                        emergencyHibernationTemperatureMode);
+                }
+                finally
+                {
+                    _gate.Release();
+                }
+            }
+
+            return;
+        }
 
         await _gate.WaitAsync(CancellationToken.None);
         try
@@ -1722,7 +1819,25 @@ internal sealed class LidGuardRuntimeCoordinator
             $"Requested Emergency Hibernation because system temperature reached {emergencyHibernationTemperatureDescription}.",
             "emergency-hibernation-requested",
             "emergency-hibernation-failed");
-        if (hibernationResult.Succeeded) return;
+        if (hibernationResult.Succeeded)
+        {
+            await _gate.WaitAsync(CancellationToken.None);
+            try
+            {
+                LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
+                    "emergency-hibernation-requested",
+                    CreateSuccessResponse(CreateSuspendHistorySuccessMessage(hibernationResult, $"Requested Emergency Hibernation because system temperature reached {emergencyHibernationTemperatureDescription}.")),
+                    observedTemperatureCelsius,
+                    emergencyHibernationTemperatureCelsius,
+                    emergencyHibernationTemperatureMode);
+            }
+            finally
+            {
+                _gate.Release();
+            }
+
+            return;
+        }
 
         await _gate.WaitAsync(CancellationToken.None);
         try
@@ -1767,7 +1882,25 @@ internal sealed class LidGuardRuntimeCoordinator
             $"Requested Sleep fallback after Emergency Hibernation failed because system temperature reached {emergencyHibernationTemperatureDescription}.",
             "emergency-hibernation-sleep-fallback-requested",
             "emergency-hibernation-sleep-fallback-failed");
-        if (sleepFallbackResult.Succeeded) return;
+        if (sleepFallbackResult.Succeeded)
+        {
+            await _gate.WaitAsync(CancellationToken.None);
+            try
+            {
+                LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
+                    "emergency-hibernation-sleep-fallback-requested",
+                    CreateSuccessResponse(CreateSuspendHistorySuccessMessage(sleepFallbackResult, $"Requested Sleep fallback after Emergency Hibernation failed because system temperature reached {emergencyHibernationTemperatureDescription}.")),
+                    observedTemperatureCelsius,
+                    emergencyHibernationTemperatureCelsius,
+                    emergencyHibernationTemperatureMode);
+            }
+            finally
+            {
+                _gate.Release();
+            }
+
+            return;
+        }
 
         await _gate.WaitAsync(CancellationToken.None);
         try

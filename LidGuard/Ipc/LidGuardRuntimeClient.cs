@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO.Pipes;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using LidGuard.Localization;
@@ -46,6 +47,96 @@ internal sealed class LidGuardRuntimeClient
         {
             return await SendConnectedAsync(pipeClientStream, request, cancellationToken);
         }
+    }
+
+    public async IAsyncEnumerable<LiveStatusSnapshot> SubscribeLiveStatusAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var pipeClientStream = await WaitForRuntimeAsync(s_runtimeConnectionTimeout, cancellationToken);
+        if (pipeClientStream is null)
+        {
+            yield return LiveStatusSnapshot.RuntimeUnavailable();
+            yield break;
+        }
+
+        var streamReader = new StreamReader(pipeClientStream, Encoding.UTF8, false, 4096, true);
+        var streamWriter = new StreamWriter(pipeClientStream, new UTF8Encoding(false), 4096, true) { AutoFlush = true };
+        try
+        {
+            var request = new LidGuardPipeRequest { Command = LidGuardPipeCommands.LiveStatus };
+            var requestJson = JsonSerializer.Serialize(request, LidGuardJsonSerializerContext.Default.LidGuardPipeRequest);
+            var connectionFailureSnapshot = await TryWriteLiveStatusRequestAsync(streamWriter, requestJson, cancellationToken);
+            if (connectionFailureSnapshot is not null)
+            {
+                yield return connectionFailureSnapshot;
+                yield break;
+            }
+
+            var receivedSnapshot = false;
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var snapshotJson = string.Empty;
+                connectionFailureSnapshot = null;
+                var readWasCanceled = false;
+                try { snapshotJson = await streamReader.ReadLineAsync(cancellationToken); }
+                catch (IOException exception) { connectionFailureSnapshot = CreateLiveStatusConnectionFailureSnapshot(exception); }
+                catch (ObjectDisposedException exception) { connectionFailureSnapshot = CreateLiveStatusConnectionFailureSnapshot(exception); }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { readWasCanceled = true; }
+                if (readWasCanceled) yield break;
+                if (connectionFailureSnapshot is not null)
+                {
+                    if (!receivedSnapshot) yield return connectionFailureSnapshot;
+                    yield break;
+                }
+
+                if (string.IsNullOrWhiteSpace(snapshotJson)) break;
+
+                LiveStatusSnapshot snapshot;
+                var shouldStop = false;
+                try
+                {
+                    snapshot = JsonSerializer.Deserialize(snapshotJson, LidGuardJsonSerializerContext.Default.LiveStatusSnapshot)
+                        ?? LiveStatusSnapshot.Failure("The LidGuard runtime live-status snapshot could not be parsed.");
+                }
+                catch (JsonException exception)
+                {
+                    snapshot = LiveStatusSnapshot.Failure($"The LidGuard runtime returned an invalid live-status snapshot: {exception.Message}");
+                    shouldStop = true;
+                }
+
+                receivedSnapshot = true;
+                yield return snapshot;
+                if (shouldStop) yield break;
+            }
+
+            if (!receivedSnapshot) yield return LiveStatusSnapshot.Failure("The LidGuard runtime live-status stream ended before sending a snapshot.");
+        }
+        finally
+        {
+            DisposeLiveStatusResource(streamWriter);
+            DisposeLiveStatusResource(streamReader);
+            DisposeLiveStatusResource(pipeClientStream);
+        }
+    }
+
+    private static async Task<LiveStatusSnapshot> TryWriteLiveStatusRequestAsync(
+        StreamWriter streamWriter,
+        string requestJson,
+        CancellationToken cancellationToken)
+    {
+        try { await streamWriter.WriteLineAsync(requestJson.AsMemory(), cancellationToken); return null; }
+        catch (IOException exception) { return CreateLiveStatusConnectionFailureSnapshot(exception); }
+        catch (ObjectDisposedException exception) { return CreateLiveStatusConnectionFailureSnapshot(exception); }
+    }
+
+    private static LiveStatusSnapshot CreateLiveStatusConnectionFailureSnapshot(Exception exception)
+        => LiveStatusSnapshot.RuntimeUnavailable($"Failed to connect to the LidGuard runtime live-status stream: {exception.Message}");
+
+    private static void DisposeLiveStatusResource(IDisposable resource)
+    {
+        try { resource.Dispose(); }
+        catch (IOException) { }
+        catch (ObjectDisposedException) { }
+        catch (NotSupportedException) { }
     }
 
     private static async Task<LidGuardPipeResponse> SendConnectedAsync(Stream stream, LidGuardPipeRequest request, CancellationToken cancellationToken)

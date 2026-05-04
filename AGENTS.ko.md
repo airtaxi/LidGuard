@@ -182,7 +182,7 @@ Hook stop 이벤트가 누락될 수 있으므로 LidGuard는 에이전트 프�
 
 ### 현재 CLI 경로
 
-- `LidGuard`는 `help`, `start`, `stop`, `remove-pre-suspend-webhook`, `remove-post-session-end-webhook`, `remove-session`, `status`, `settings`, `cleanup-orphans`, `current-lid-state`, `current-monitor-count`, `current-temperature`, `suspend-history`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `preview-current-sound`, `mcp-server`, `provider-mcp-server`를 파싱한다.
+- `LidGuard`는 `help`, `start`, `stop`, `remove-pre-suspend-webhook`, `remove-post-session-end-webhook`, `remove-session`, `status`, `live-status`, `settings`, `cleanup-orphans`, `current-lid-state`, `current-monitor-count`, `current-temperature`, `suspend-history`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `preview-current-sound`, `mcp-server`, `provider-mcp-server`를 파싱한다.
 - Linux build는 추가로 `linux-permission status`, `linux-permission check`, `linux-permission install`, `linux-permission remove`를 파싱한다. Windows build는 이 명령을 routing이나 help output에 포함하면 안 된다.
 - macOS build는 추가로 `macos-permission status`, `macos-permission check`, `macos-permission install`, `macos-permission remove`를 파싱한다. Windows와 Linux build는 이 명령을 routing이나 help output에 포함하면 안 된다.
 - `help`는 카테고리별 명령 overview와 약식 설명을 출력하고, `help <command>`는 한 명령 또는 인식된 명령 alias에 대한 focused detailed help를 출력한다.
@@ -196,7 +196,8 @@ Hook stop 이벤트가 누락될 수 있으므로 LidGuard는 에이전트 프�
 - `current-monitor-count`는 closed-lid 정책 판단에 쓰는 것과 같은 기본 플랫폼 monitor visibility check 기준으로 현재 visible display monitor count를 출력하되, 최종 suspend 가능성 확인에서 쓰는 internal-display 제외는 적용하지 않는다.
 - `current-temperature`는 선택된 집계 기준으로 계산한 현재 system thermal-zone 온도를 섭씨로 출력하고, thermal-zone 데이터를 구할 수 없으면 unavailable로 보고한다.
 - `suspend-history`는 `%LOCALAPPDATA%\LidGuard\suspend-history.log`에서 최근 suspend request 기록을 출력하며, 가능한 경우 mode, reason, result, active session count, 관련 session 또는 Emergency Hibernation 온도 정보를 포함한다.
-- `status`, `suspend-history`, `hook-events`는 저장된 timestamp를 현재 시스템 로컬 시간으로 표시하되, 기반 session, history, hook log 저장소는 UTC를 유지한다.
+- `live-status`는 runtime이 없을 때 새로 시작하지 않고 이벤트 기반 runtime IPC 구독을 연다. runtime은 초기 snapshot을 즉시 push하고, 이후 runtime 상태, runtime log, hook log, suspend history가 바뀔 때 갱신 snapshot을 push한다. 고정 terminal dashboard는 활성 세션, 덮개 상태, `status`와 같은 visible display monitor count, pending suspend 정보, 최근 provider hook `received` / `runtime-result` line, runtime flow event, 최근 suspend history 결과를 표시한다. runtime을 사용할 수 없거나 stream 연결이 끊기면 interactive `live-status`는 dashboard를 유지하고 사용자가 종료할 때까지 주기적으로 재연결한다.
+- `status`, `live-status`, `suspend-history`, `hook-events`는 저장된 timestamp를 현재 시스템 로컬 시간으로 표시하되, 기반 session, history, hook log 저장소는 UTC를 유지한다.
 - `settings`는 기본 설정을 출력/수정하고, 실행 중인 runtime이 있으면 즉시 반영한다.
 - `settings`는 `--emergency-hibernation-on-high-temperature`, `--emergency-hibernation-temperature-mode`, `--emergency-hibernation-temperature-celsius`도 제공하며, 임계 온도 옵션은 70부터 110까지만 허용한다.
 - `settings`는 post-stop sound 재생 중 master volume을 임시 override하기 위한 `--post-stop-suspend-sound-volume-override-percent off|<1-100>`도 제공하며, `off`는 기능을 끄고 범위를 벗어난 값은 거부한다.

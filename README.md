@@ -78,7 +78,7 @@ LidGuard is currently officially tested with Codex on Windows. Linux, macOS, Cla
 
 ## Full Feature Overview
 
-- Session tracking and status: active session count, provider/session identity, watched process id, SoftLock state, working directory, local start and last-activity times, current lid state, and visible display monitor count.
+- Session tracking and status: active session count, provider/session identity, watched process id, SoftLock state, working directory, local start and last-activity times, current lid state, visible display monitor count, and a live terminal status dashboard.
 - Provider integration: Codex, Claude Code, and GitHub Copilot CLI hooks; hook install/status/remove/events commands; regular MCP install/status/remove commands; and Provider MCP for other tools that can call a custom stdio MCP server.
 - Keep-awake controls: configurable system sleep prevention, display sleep prevention, Windows away-mode requests, and the Windows power request reason text shown by the operating system.
 - Lid-close handling: temporary Windows lid-action override, Linux `handle-lid-switch` inhibitor, macOS `pmset disablesleep`, and restoration of the user's original policy after protection ends or recovery runs.
@@ -88,7 +88,7 @@ LidGuard is currently officially tested with Codex on Windows. Linux, macOS, Cla
 - SoftLock and closed-lid permissions: provider waiting/input events and inactive timeouts can release keep-awake protection without removing the session. Closed-lid permission automation is safety-sensitive: choosing `allow` can approve permission-required provider work while the user may not be watching, so `deny` is the safer default.
 - Emergency Hibernation: optional closed-lid high-temperature monitor with low, average, or high sensor aggregation, a configurable Celsius threshold, immediate Hibernate, and Sleep fallback if Hibernate fails.
 - Webhooks and notifications: `PreSuspend` webhook before Sleep/Hibernate, `PostSessionEnd` webhook after normal completion when suspend is not pending, and optional `LidGuard.Notifications` Web Push companion server.
-- Diagnostics and logs: current lid state, visible monitor count, current temperature, suspend-history diagnostics, hook event logs, session execution logs, exception logs, and configurable suspend history count.
+- Diagnostics and logs: current lid state, visible monitor count, current temperature, live-status dashboard, suspend-history diagnostics, hook event logs, session execution logs, exception logs, and configurable suspend history count.
 - Platform setup and localization: Linux polkit helper commands, macOS sudoers helper commands, localized CLI output with `auto`, `en`, `ko`, or another culture name, and default settings/log storage under the platform local application data directory.
 - Packaging: .NET 10 NativeAOT global tool distribution for Windows, systemd/logind Linux, and macOS.
 

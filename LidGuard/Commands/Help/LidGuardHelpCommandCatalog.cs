@@ -10,6 +10,7 @@ internal static class LidGuardHelpCommandCatalog
             StopHelpContent.Create(documentContext),
             RemoveSessionHelpContent.Create(documentContext),
             StatusHelpContent.Create(documentContext),
+            LiveStatusHelpContent.Create(documentContext),
             CleanupOrphansHelpContent.Create(documentContext),
             HelpHelpContent.Create(documentContext),
             SettingsHelpContent.Create(documentContext),

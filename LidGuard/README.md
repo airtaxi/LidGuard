@@ -49,10 +49,13 @@ lidguard remove-session --all
 lidguard remove-session --session "<session-id>"
 lidguard remove-session --session "<session-id>" --provider codex
 lidguard status
+lidguard live-status
 lidguard cleanup-orphans
 ```
 
 `start` and `stop` require `--provider`. `--session` is optional; when omitted, LidGuard derives a fallback session identifier from the provider display name and normalized working directory.
+
+`live-status` opens an event-driven runtime subscription and redraws the fixed terminal dashboard when runtime events arrive. It shows the same runtime snapshot values as `status`, recent hook processing lines, runtime flow events, and suspend history results without starting the runtime when it is not already running. If the runtime is unavailable or disconnects, the interactive dashboard stays open and periodically reconnects. Press `q`, `Escape`, or `Ctrl+C` to exit.
 
 ## Settings & Suspend
 
@@ -84,6 +87,7 @@ lidguard current-lid-state
 lidguard current-monitor-count
 lidguard current-temperature
 lidguard current-temperature high
+lidguard suspend-history
 lidguard linux-permission status
 lidguard linux-permission check
 lidguard macos-permission status

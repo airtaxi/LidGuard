@@ -35,6 +35,7 @@ internal static class LidGuardCommandLineApplication
         if (commandName == LidGuardPipeCommands.ClaudeHook) return await ClaudeHookCommand.RunAsync();
         if (commandName == LidGuardPipeCommands.CopilotHook) return await GitHubCopilotHookCommand.RunAsync(commandLineArguments[1..]);
         if (commandName == LidGuardPipeCommands.CodexHook) return await CodexHookCommand.RunAsync();
+        if (commandName == LidGuardPipeCommands.LiveStatus) return await LiveStatusCommand.RunAsync(commandLineArguments[1..]);
         if (commandName == LidGuardMcpServerCommand.CommandName) return await LidGuardMcpServerCommand.RunAsync(commandLineArguments[1..]);
         if (commandName == ProviderMcpServerCommand.CommandName) return await ProviderMcpServerCommand.RunAsync(commandLineArguments[1..]);
         if (commandName == LidGuardPipeCommands.RunServer) return await RunServerAsync(runtimePlatform);

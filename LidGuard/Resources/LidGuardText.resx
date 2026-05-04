@@ -1656,6 +1656,108 @@
   <data name="DisplayHookInstallationStatusNeedsUpdate" xml:space="preserve">
     <value>Needs update</value>
   </data>
+  <data name="Help_LiveStatus_Description" xml:space="preserve">
+    <value>Show a live terminal dashboard for runtime state, active sessions, and recent LidGuard flow logs.</value>
+  </data>
+  <data name="Help_LiveStatus_RuntimeNotStartedNote" xml:space="preserve">
+    <value>This command does not start the runtime; it waits and reconnects when the runtime is unavailable.</value>
+  </data>
+  <data name="Help_LiveStatus_ExitNote" xml:space="preserve">
+    <value>Press q, Escape, or Ctrl+C to exit.</value>
+  </data>
+  <data name="LiveStatusTitle" xml:space="preserve">
+    <value>LidGuard live-status</value>
+  </data>
+  <data name="LiveStatusExitHint" xml:space="preserve">
+    <value>Updates on runtime events and reconnects while unavailable. Press q, Escape, or Ctrl+C to exit.</value>
+  </data>
+  <data name="LiveStatusRuntimePanelTitle" xml:space="preserve">
+    <value>Runtime</value>
+  </data>
+  <data name="LiveStatusSessionsPanelTitle" xml:space="preserve">
+    <value>Sessions</value>
+  </data>
+  <data name="LiveStatusHookPanelTitle" xml:space="preserve">
+    <value>Hook events</value>
+  </data>
+  <data name="LiveStatusFlowPanelTitle" xml:space="preserve">
+    <value>Runtime flow</value>
+  </data>
+  <data name="LiveStatusRunning" xml:space="preserve">
+    <value>running</value>
+  </data>
+  <data name="LiveStatusNotRunning" xml:space="preserve">
+    <value>not running</value>
+  </data>
+  <data name="LiveStatusError" xml:space="preserve">
+    <value>error</value>
+  </data>
+  <data name="LiveStatusNone" xml:space="preserve">
+    <value>none</value>
+  </data>
+  <data name="LiveStatusRuntimeStateLine" xml:space="preserve">
+    <value>State: {0} | Last update: {1}</value>
+  </data>
+  <data name="LiveStatusRuntimeCountsLine" xml:space="preserve">
+    <value>Active sessions: {0} | Lid: {1} | Visible monitors: {2}</value>
+  </data>
+  <data name="LiveStatusPendingSuspendLine" xml:space="preserve">
+    <value>Pending suspend: {0}</value>
+  </data>
+  <data name="LiveStatusNoRuntimeMessage" xml:space="preserve">
+    <value>Runtime message: none</value>
+  </data>
+  <data name="LiveStatusRuntimeMessageLine" xml:space="preserve">
+    <value>Runtime message: {0}</value>
+  </data>
+  <data name="LiveStatusNoSessions" xml:space="preserve">
+    <value>No active sessions.</value>
+  </data>
+  <data name="LiveStatusSessionLine" xml:space="preserve">
+    <value>{0} session={1} process={2} softLock={3} started={4} last={5} workingDirectory={6}</value>
+  </data>
+  <data name="LiveStatusNoHookEvents" xml:space="preserve">
+    <value>No recent received/runtime-result hook events.</value>
+  </data>
+  <data name="LiveStatusNoFlowEvents" xml:space="preserve">
+    <value>No recent runtime flow events.</value>
+  </data>
+  <data name="LiveStatusRuntimeFlowPrefix" xml:space="preserve">
+    <value>runtime</value>
+  </data>
+  <data name="LiveStatusSuspendHistoryPrefix" xml:space="preserve">
+    <value>history</value>
+  </data>
+  <data name="LiveStatusSucceededLabel" xml:space="preserve">
+    <value>succeeded</value>
+  </data>
+  <data name="LiveStatusActiveSessionsShortLabel" xml:space="preserve">
+    <value>active</value>
+  </data>
+  <data name="LiveStatusSessionShortLabel" xml:space="preserve">
+    <value>session</value>
+  </data>
+  <data name="LiveStatusMessageShortLabel" xml:space="preserve">
+    <value>message</value>
+  </data>
+  <data name="LiveStatusImmediate" xml:space="preserve">
+    <value>immediate</value>
+  </data>
+  <data name="LiveStatusDelaySeconds" xml:space="preserve">
+    <value>{0} second(s)</value>
+  </data>
+  <data name="LiveStatusPendingSuspendDetails" xml:space="preserve">
+    <value>{0}, delay={1}, reason={2}</value>
+  </data>
+  <data name="LiveStatusSuspendReasonSoftLocked" xml:space="preserve">
+    <value>soft-locked</value>
+  </data>
+  <data name="LiveStatusSuspendReasonCompleted" xml:space="preserve">
+    <value>completed</value>
+  </data>
+  <data name="LiveStatusMoreEntries" xml:space="preserve">
+    <value>... {0} more</value>
+  </data>
   <data name="DisplayMinuteCount" xml:space="preserve">
     <value>{0} minutes</value>
   </data>

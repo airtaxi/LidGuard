@@ -8,6 +8,8 @@ internal static class SuspendHistoryLogStore
     private const string LogFileName = "suspend-history.log";
     private static readonly object s_gate = new();
 
+    public static event Action Appended;
+
     public static string GetDefaultLogFilePath() => Path.Combine(LidGuardSettingsStore.GetApplicationDataDirectoryPath(), LogFileName);
 
     public static void Append(SuspendHistoryEntry entry, int? maximumEntryCount)
@@ -15,6 +17,7 @@ internal static class SuspendHistoryLogStore
         if (maximumEntryCount is null) return;
 
         var normalizedMaximumEntryCount = Math.Max(LidGuardSettings.MinimumSuspendHistoryEntryCount, maximumEntryCount.Value);
+        var appended = false;
         try
         {
             lock (s_gate)
@@ -32,9 +35,12 @@ internal static class SuspendHistoryLogStore
                 if (logLines.Count > normalizedMaximumEntryCount) logLines = logLines.Skip(logLines.Count - normalizedMaximumEntryCount).ToList();
 
                 File.WriteAllLines(logFilePath, logLines);
+                appended = true;
             }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException) { }
+
+        if (appended) NotifyAppended();
     }
 
     public static bool TryReadRecent(int entryCount, out SuspendHistoryEntry[] entries, out string message)
@@ -75,5 +81,11 @@ internal static class SuspendHistoryLogStore
             message = $"Failed to read suspend history from {GetDefaultLogFilePath()}: {exception.Message}";
             return false;
         }
+    }
+
+    private static void NotifyAppended()
+    {
+        try { Appended?.Invoke(); }
+        catch { }
     }
 }

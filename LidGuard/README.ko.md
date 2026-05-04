@@ -49,10 +49,13 @@ lidguard remove-session --all
 lidguard remove-session --session "<session-id>"
 lidguard remove-session --session "<session-id>" --provider codex
 lidguard status
+lidguard live-status
 lidguard cleanup-orphans
 ```
 
 `start`와 `stop`에는 `--provider`가 필요합니다. `--session`은 선택 사항이며, 생략하면 LidGuard가 provider 표시 이름과 정규화된 작업 디렉터리에서 fallback 세션 식별자를 파생합니다.
+
+`live-status`는 이벤트 기반 runtime 구독을 열고 runtime 이벤트가 도착할 때 고정 터미널 대시보드를 다시 그립니다. runtime이 이미 실행 중이 아닐 때 새로 시작하지 않으며, `status`와 같은 runtime snapshot 값, 최근 hook 처리 line, runtime flow event, suspend history 결과를 표시합니다. runtime을 사용할 수 없거나 연결이 끊기면 interactive dashboard를 유지하고 주기적으로 재연결합니다. 종료하려면 `q`, `Escape` 또는 `Ctrl+C`를 누릅니다.
 
 ## 설정과 절전
 
@@ -84,6 +87,7 @@ lidguard current-lid-state
 lidguard current-monitor-count
 lidguard current-temperature
 lidguard current-temperature high
+lidguard suspend-history
 lidguard linux-permission status
 lidguard linux-permission check
 lidguard macos-permission status
