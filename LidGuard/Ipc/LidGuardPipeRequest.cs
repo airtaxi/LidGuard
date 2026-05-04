@@ -17,6 +17,10 @@ internal sealed class LidGuardPipeRequest
 
     public string SessionEndReason { get; init; } = string.Empty;
 
+    public bool HasPendingProviderWork { get; init; }
+
+    public string PendingProviderWorkReason { get; init; } = string.Empty;
+
     public bool MatchAllSessions { get; init; }
 
     public bool MatchAllProvidersForSessionIdentifier { get; init; }

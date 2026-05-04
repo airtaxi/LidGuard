@@ -266,7 +266,9 @@ internal sealed class LidGuardRuntimeCoordinator
                 Provider = request.Provider,
                 ProviderName = request.ProviderName,
                 IsProviderSessionEnd = request.IsProviderSessionEnd,
-                SessionEndReason = request.SessionEndReason
+                SessionEndReason = request.SessionEndReason,
+                HasPendingProviderWork = request.HasPendingProviderWork,
+                PendingProviderWorkReason = request.PendingProviderWorkReason
             };
             var sessionKey = new LidGuardSessionKey(stopRequest.Provider, stopRequest.SessionIdentifier, stopRequest.ProviderName);
             return StopInsideGate(
@@ -639,6 +641,7 @@ internal sealed class LidGuardRuntimeCoordinator
     {
         foreach (var snapshot in _sessionRegistry.GetSnapshots())
         {
+            if (snapshot.HasPendingProviderWork) return true;
             if (!snapshot.IsSoftLocked) return true;
         }
 
@@ -666,6 +669,7 @@ internal sealed class LidGuardRuntimeCoordinator
         CancelWatcher(snapshot.Key);
         if (!_settings.WatchParentProcess) return;
         if (!snapshot.HasWatchedProcess) return;
+        if (snapshot.HasPendingProviderWork) return;
 
         var cancellationTokenSource = new CancellationTokenSource();
         _watcherCancellationTokenSources[snapshot.Key] = cancellationTokenSource;
@@ -689,6 +693,7 @@ internal sealed class LidGuardRuntimeCoordinator
         var nextExpirationAt = DateTimeOffset.MaxValue;
         foreach (var snapshot in _sessionRegistry.GetSnapshots())
         {
+            if (snapshot.HasPendingProviderWork) continue;
             if (snapshot.IsSoftLocked) continue;
 
             var sessionExpirationAt = AddSessionTimeoutDuration(snapshot.LastActivityAt, sessionTimeoutDuration);
@@ -829,6 +834,7 @@ internal sealed class LidGuardRuntimeCoordinator
         var now = DateTimeOffset.UtcNow;
         var expiredSnapshots = _sessionRegistry
             .GetSnapshots()
+            .Where(snapshot => !snapshot.HasPendingProviderWork)
             .Where(snapshot => !snapshot.IsSoftLocked)
             .Where(snapshot => now >= snapshot.LastActivityAt)
             .Where(snapshot => now - snapshot.LastActivityAt >= sessionTimeoutDuration)
@@ -1017,6 +1023,8 @@ internal sealed class LidGuardRuntimeCoordinator
         }
 
         var key = new LidGuardSessionKey(request.Provider, request.SessionIdentifier, request.ProviderName);
+        if (request.HasPendingProviderWork) return DeferStopForPendingProviderWorkInsideGate(request, key, commandName);
+
         CancelWatcher(key);
         RemoveTranscriptMonitorSession(key);
 
@@ -1072,6 +1080,54 @@ internal sealed class LidGuardRuntimeCoordinator
         ReconfigureServerRuntimeCleanupInsideGate();
         LidGuardRuntimeLogWriter.AppendSessionLog(eventName, request, successResponse, stoppedSnapshot, commandName);
         return successResponse;
+    }
+
+    private LidGuardPipeResponse DeferStopForPendingProviderWorkInsideGate(
+        LidGuardSessionStopRequest request,
+        LidGuardSessionKey key,
+        string commandName)
+    {
+        CancelWatcher(key);
+
+        var syntheticRequest = new LidGuardPipeRequest
+        {
+            Command = commandName,
+            Provider = request.Provider,
+            ProviderName = request.ProviderName,
+            SessionIdentifier = request.SessionIdentifier,
+            SessionStateReason = request.PendingProviderWorkReason
+        };
+
+        if (!_sessionRegistry.TryMarkPendingProviderWork(
+            request.Provider,
+            request.SessionIdentifier,
+            request.ProviderName,
+            request.PendingProviderWorkReason,
+            out var snapshot))
+        {
+            var ignoredResponse = CreateSuccessResponse($"Session {key} is not active; ignored deferred stop for pending provider work.");
+            LidGuardRuntimeLogWriter.AppendSessionLog("session-stop-deferred-ignored", request, ignoredResponse, commandName);
+            return ignoredResponse;
+        }
+
+        ResetTranscriptMonitorSession(key);
+        CancelPendingSuspend();
+        CancelServerRuntimeCleanupInsideGate();
+        ReconfigureSessionTimeoutMonitorInsideGate();
+        var protectionResult = EnsureProtection();
+        if (!protectionResult.Succeeded)
+        {
+            var failedResponse = CreateFailureResponse(protectionResult);
+            LidGuardRuntimeLogWriter.AppendSessionLog("session-stop-deferred-failed", request, failedResponse, snapshot, commandName);
+            return failedResponse;
+        }
+
+        var pendingProviderWorkReason = string.IsNullOrWhiteSpace(request.PendingProviderWorkReason)
+            ? "pending provider work remains"
+            : request.PendingProviderWorkReason.Trim();
+        var response = CreateSuccessResponse($"Deferred stop for {key} because {pendingProviderWorkReason}.");
+        LidGuardRuntimeLogWriter.AppendSessionLog("session-stop-deferred", syntheticRequest, response, snapshot);
+        return response;
     }
 
     private LidGuardPipeResponse HandleSuspendAfterProtectionReleased(

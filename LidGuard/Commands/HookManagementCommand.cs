@@ -425,6 +425,10 @@ internal static class HookManagementCommand
         WriteField("ManagementLabelPreToolUseHook", "PreToolUse hook", inspection.HasPreToolUseHook);
         WriteField("ManagementLabelPostToolUseHook", "PostToolUse hook", inspection.HasPostToolUseHook);
         WriteField("ManagementLabelPostToolUseFailureHook", "PostToolUseFailure hook", inspection.HasPostToolUseFailureHook);
+        WriteField("ManagementLabelSubagentStartHook", "SubagentStart hook", inspection.HasSubagentStartHook);
+        WriteField("ManagementLabelSubagentStopHook", "SubagentStop hook", inspection.HasSubagentStopHook);
+        WriteField("ManagementLabelTaskCreatedHook", "TaskCreated hook", inspection.HasTaskCreatedHook);
+        WriteField("ManagementLabelTaskCompletedHook", "TaskCompleted hook", inspection.HasTaskCompletedHook);
         WriteField("ManagementLabelStopHook", "Stop hook", inspection.HasStopHook);
         WriteField("ManagementLabelStopFailureHook", "StopFailure hook", inspection.HasStopFailureHook);
         WriteField("ManagementLabelElicitationHook", "Elicitation hook", inspection.HasElicitationHook);

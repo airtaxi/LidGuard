@@ -603,8 +603,20 @@
   <data name="HookStatusMessageRecordingClaudeFailedToolActivity" xml:space="preserve">
     <value>Claude 실패한 도구 활동 기록 중</value>
   </data>
+  <data name="HookStatusMessageRecordingClaudeBackgroundTaskActivity" xml:space="preserve">
+    <value>Claude 백그라운드 작업 활동 기록 중</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeBackgroundTaskCompletion" xml:space="preserve">
+    <value>Claude 백그라운드 작업 완료 기록 중</value>
+  </data>
   <data name="HookStatusMessageRecordingClaudeSoftLockTelemetry" xml:space="preserve">
     <value>Claude soft-lock 상태 기록 중</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeSubagentActivity" xml:space="preserve">
+    <value>Claude 서브에이전트 활동 기록 중</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeSubagentCompletionActivity" xml:space="preserve">
+    <value>Claude 서브에이전트 완료 활동 기록 중</value>
   </data>
   <data name="HookStatusMessageRecordingClaudeToolActivity" xml:space="preserve">
     <value>Claude 도구 활동 기록 중</value>

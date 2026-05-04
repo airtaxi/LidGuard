@@ -603,8 +603,20 @@
   <data name="HookStatusMessageRecordingClaudeFailedToolActivity" xml:space="preserve">
     <value>Recording Claude failed tool activity</value>
   </data>
+  <data name="HookStatusMessageRecordingClaudeBackgroundTaskActivity" xml:space="preserve">
+    <value>Recording Claude background task activity</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeBackgroundTaskCompletion" xml:space="preserve">
+    <value>Recording Claude background task completion</value>
+  </data>
   <data name="HookStatusMessageRecordingClaudeSoftLockTelemetry" xml:space="preserve">
     <value>Recording Claude soft-lock telemetry</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeSubagentActivity" xml:space="preserve">
+    <value>Recording Claude subagent activity</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeSubagentCompletionActivity" xml:space="preserve">
+    <value>Recording Claude subagent completion activity</value>
   </data>
   <data name="HookStatusMessageRecordingClaudeToolActivity" xml:space="preserve">
     <value>Recording Claude tool activity</value>

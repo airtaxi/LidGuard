@@ -112,7 +112,15 @@ internal static class LidGuardText
 
     public static string HookStatusMessageRecordingClaudeFailedToolActivity => Get(nameof(HookStatusMessageRecordingClaudeFailedToolActivity));
 
+    public static string HookStatusMessageRecordingClaudeBackgroundTaskActivity => Get(nameof(HookStatusMessageRecordingClaudeBackgroundTaskActivity));
+
+    public static string HookStatusMessageRecordingClaudeBackgroundTaskCompletion => Get(nameof(HookStatusMessageRecordingClaudeBackgroundTaskCompletion));
+
     public static string HookStatusMessageRecordingClaudeSoftLockTelemetry => Get(nameof(HookStatusMessageRecordingClaudeSoftLockTelemetry));
+
+    public static string HookStatusMessageRecordingClaudeSubagentActivity => Get(nameof(HookStatusMessageRecordingClaudeSubagentActivity));
+
+    public static string HookStatusMessageRecordingClaudeSubagentCompletionActivity => Get(nameof(HookStatusMessageRecordingClaudeSubagentCompletionActivity));
 
     public static string HookStatusMessageRecordingClaudeToolActivity => Get(nameof(HookStatusMessageRecordingClaudeToolActivity));
 

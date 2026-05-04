@@ -21,7 +21,10 @@ public static class ClaudeHookEventLog
         ArgumentNullException.ThrowIfNull(hookInput);
 
         var details =
-            $"permissionMode={Sanitize(hookInput.PermissionMode)} tool={Sanitize(hookInput.ToolName)} reason={Sanitize(hookInput.Reason)} notificationType={Sanitize(hookInput.NotificationType)} transcriptPath={Sanitize(hookInput.TranscriptPath)} isInterrupt={hookInput.IsInterrupt}";
+            $"permissionMode={Sanitize(hookInput.PermissionMode)} tool={Sanitize(hookInput.ToolName)} toolUseId={Sanitize(hookInput.ToolUseIdentifier)} "
+            + $"agentId={Sanitize(hookInput.AgentIdentifier)} agentType={Sanitize(hookInput.AgentType)} taskId={Sanitize(hookInput.TaskIdentifier)} "
+            + $"reason={Sanitize(hookInput.Reason)} notificationType={Sanitize(hookInput.NotificationType)} transcriptPath={Sanitize(hookInput.TranscriptPath)} "
+            + $"isInterrupt={hookInput.IsInterrupt} stopHookActive={hookInput.StopHookActive}";
         if (IsUserPromptSubmitEvent(hookInput.HookEventName)) details = $"{details} prompt={Sanitize(hookInput.Prompt)}";
 
         AppendLine(CreateLogLine(

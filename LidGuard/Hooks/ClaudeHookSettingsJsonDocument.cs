@@ -20,6 +20,10 @@ public static class ClaudeHookSettingsJsonDocument
         (ClaudeHookEventNames.PreToolUse, () => LidGuardText.HookStatusMessageRecordingClaudeToolActivity, string.Empty),
         (ClaudeHookEventNames.PostToolUse, () => LidGuardText.HookStatusMessageRecordingClaudeToolCompletionActivity, string.Empty),
         (ClaudeHookEventNames.PostToolUseFailure, () => LidGuardText.HookStatusMessageRecordingClaudeFailedToolActivity, string.Empty),
+        (ClaudeHookEventNames.SubagentStart, () => LidGuardText.HookStatusMessageRecordingClaudeSubagentActivity, string.Empty),
+        (ClaudeHookEventNames.SubagentStop, () => LidGuardText.HookStatusMessageRecordingClaudeSubagentCompletionActivity, string.Empty),
+        (ClaudeHookEventNames.TaskCreated, () => LidGuardText.HookStatusMessageRecordingClaudeBackgroundTaskActivity, string.Empty),
+        (ClaudeHookEventNames.TaskCompleted, () => LidGuardText.HookStatusMessageRecordingClaudeBackgroundTaskCompletion, string.Empty),
         (ClaudeHookEventNames.Stop, () => LidGuardText.HookStatusMessageStoppingSessionProtection, string.Empty),
         (ClaudeHookEventNames.StopFailure, () => LidGuardText.HookStatusMessageStoppingSessionProtection, string.Empty),
         (ClaudeHookEventNames.Elicitation, () => LidGuardText.HookStatusMessageCancelingClosedLidElicitationRequest, string.Empty),
@@ -96,6 +100,10 @@ public static class ClaudeHookSettingsJsonDocument
             || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PreToolUse, hookCommand, string.Empty, out var preToolUseInspection, out parseMessage)
             || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PostToolUse, hookCommand, string.Empty, out var postToolUseInspection, out parseMessage)
             || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PostToolUseFailure, hookCommand, string.Empty, out var postToolUseFailureInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SubagentStart, hookCommand, string.Empty, out var subagentStartInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SubagentStop, hookCommand, string.Empty, out var subagentStopInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.TaskCreated, hookCommand, string.Empty, out var taskCreatedInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.TaskCompleted, hookCommand, string.Empty, out var taskCompletedInspection, out parseMessage)
             || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Stop, hookCommand, string.Empty, out var stopInspection, out parseMessage)
             || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.StopFailure, hookCommand, string.Empty, out var stopFailureInspection, out parseMessage)
             || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Elicitation, hookCommand, string.Empty, out var elicitationInspection, out parseMessage)
@@ -120,6 +128,10 @@ public static class ClaudeHookSettingsJsonDocument
             || preToolUseInspection.HasManagedHook
             || postToolUseInspection.HasManagedHook
             || postToolUseFailureInspection.HasManagedHook
+            || subagentStartInspection.HasManagedHook
+            || subagentStopInspection.HasManagedHook
+            || taskCreatedInspection.HasManagedHook
+            || taskCompletedInspection.HasManagedHook
             || stopInspection.HasManagedHook
             || stopFailureInspection.HasManagedHook
             || elicitationInspection.HasManagedHook
@@ -130,6 +142,10 @@ public static class ClaudeHookSettingsJsonDocument
             && preToolUseInspection.HasExpectedCommand
             && postToolUseInspection.HasExpectedCommand
             && postToolUseFailureInspection.HasExpectedCommand
+            && subagentStartInspection.HasExpectedCommand
+            && subagentStopInspection.HasExpectedCommand
+            && taskCreatedInspection.HasExpectedCommand
+            && taskCompletedInspection.HasExpectedCommand
             && stopInspection.HasExpectedCommand
             && stopFailureInspection.HasExpectedCommand
             && elicitationInspection.HasExpectedCommand
@@ -140,6 +156,10 @@ public static class ClaudeHookSettingsJsonDocument
             && preToolUseInspection.HasExpectedMatcher
             && postToolUseInspection.HasExpectedMatcher
             && postToolUseFailureInspection.HasExpectedMatcher
+            && subagentStartInspection.HasExpectedMatcher
+            && subagentStopInspection.HasExpectedMatcher
+            && taskCreatedInspection.HasExpectedMatcher
+            && taskCompletedInspection.HasExpectedMatcher
             && stopInspection.HasExpectedMatcher
             && stopFailureInspection.HasExpectedMatcher
             && elicitationInspection.HasExpectedMatcher
@@ -150,6 +170,10 @@ public static class ClaudeHookSettingsJsonDocument
             && preToolUseInspection.HasExpectedShell
             && postToolUseInspection.HasExpectedShell
             && postToolUseFailureInspection.HasExpectedShell
+            && subagentStartInspection.HasExpectedShell
+            && subagentStopInspection.HasExpectedShell
+            && taskCreatedInspection.HasExpectedShell
+            && taskCompletedInspection.HasExpectedShell
             && stopInspection.HasExpectedShell
             && stopFailureInspection.HasExpectedShell
             && elicitationInspection.HasExpectedShell
@@ -160,6 +184,10 @@ public static class ClaudeHookSettingsJsonDocument
             && preToolUseInspection.HasManagedHook
             && postToolUseInspection.HasManagedHook
             && postToolUseFailureInspection.HasManagedHook
+            && subagentStartInspection.HasManagedHook
+            && subagentStopInspection.HasManagedHook
+            && taskCreatedInspection.HasManagedHook
+            && taskCompletedInspection.HasManagedHook
             && stopInspection.HasManagedHook
             && stopFailureInspection.HasManagedHook
             && elicitationInspection.HasManagedHook
@@ -192,6 +220,10 @@ public static class ClaudeHookSettingsJsonDocument
             HasUserPromptSubmitHook = userPromptSubmitInspection.HasManagedHook,
             HasStopHook = stopInspection.HasManagedHook,
             HasStopFailureHook = stopFailureInspection.HasManagedHook,
+            HasSubagentStartHook = subagentStartInspection.HasManagedHook,
+            HasSubagentStopHook = subagentStopInspection.HasManagedHook,
+            HasTaskCreatedHook = taskCreatedInspection.HasManagedHook,
+            HasTaskCompletedHook = taskCompletedInspection.HasManagedHook,
             HasElicitationHook = elicitationInspection.HasManagedHook,
             HasPermissionRequestHook = permissionRequestInspection.HasManagedHook,
             HasSessionEndHook = sessionEndInspection.HasManagedHook,

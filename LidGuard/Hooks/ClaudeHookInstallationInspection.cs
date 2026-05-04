@@ -40,6 +40,14 @@ public sealed class ClaudeHookInstallationInspection
 
     public bool HasStopFailureHook { get; init; }
 
+    public bool HasSubagentStartHook { get; init; }
+
+    public bool HasSubagentStopHook { get; init; }
+
+    public bool HasTaskCompletedHook { get; init; }
+
+    public bool HasTaskCreatedHook { get; init; }
+
     public bool HasElicitationHook { get; init; }
 
     public bool HasPermissionRequestHook { get; init; }

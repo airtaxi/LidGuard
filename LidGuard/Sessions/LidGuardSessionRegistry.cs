@@ -42,6 +42,8 @@ public sealed class LidGuardSessionRegistry
                 SoftLockState = LidGuardSessionSoftLockState.None,
                 SoftLockReason = string.Empty,
                 SoftLockedAt = null,
+                HasPendingProviderWork = false,
+                PendingProviderWorkReason = string.Empty,
                 WatchedProcessIdentifier = request.WatchedProcessIdentifier,
                 HasEverHadWatchedProcess = hasEverHadWatchedProcess,
                 WatchRegistrationKind = request.WatchRegistrationKind,
@@ -111,6 +113,34 @@ public sealed class LidGuardSessionRegistry
         }
     }
 
+    public bool TryMarkPendingProviderWork(
+        AgentProvider provider,
+        string sessionIdentifier,
+        string providerName,
+        string pendingProviderWorkReason,
+        out LidGuardSessionSnapshot snapshot)
+    {
+        snapshot = LidGuardSessionSnapshot.Empty;
+        if (string.IsNullOrWhiteSpace(sessionIdentifier)) return false;
+
+        var key = new LidGuardSessionKey(provider, sessionIdentifier, providerName);
+        lock (_gate)
+        {
+            if (!_sessions.TryGetValue(key, out var existingSnapshot)) return false;
+
+            snapshot = CloneSnapshot(
+                existingSnapshot,
+                LidGuardSessionSoftLockState.None,
+                string.Empty,
+                null,
+                DateTimeOffset.UtcNow,
+                true,
+                pendingProviderWorkReason?.Trim() ?? string.Empty);
+            _sessions[key] = snapshot;
+            return true;
+        }
+    }
+
     public bool TryMarkSoftLocked(
         AgentProvider provider,
         string sessionIdentifier,
@@ -163,7 +193,9 @@ public sealed class LidGuardSessionRegistry
         LidGuardSessionSoftLockState softLockState,
         string softLockReason,
         DateTimeOffset? softLockedAt,
-        DateTimeOffset lastActivityAt)
+        DateTimeOffset lastActivityAt,
+        bool? hasPendingProviderWork = null,
+        string pendingProviderWorkReason = null)
     {
         return new LidGuardSessionSnapshot
         {
@@ -175,6 +207,8 @@ public sealed class LidGuardSessionRegistry
             SoftLockState = softLockState,
             SoftLockReason = softLockReason,
             SoftLockedAt = softLockedAt,
+            HasPendingProviderWork = hasPendingProviderWork ?? snapshot.HasPendingProviderWork,
+            PendingProviderWorkReason = pendingProviderWorkReason ?? snapshot.PendingProviderWorkReason,
             WatchedProcessIdentifier = snapshot.WatchedProcessIdentifier,
             HasEverHadWatchedProcess = snapshot.HasEverHadWatchedProcess,
             WatchRegistrationKind = snapshot.WatchRegistrationKind,

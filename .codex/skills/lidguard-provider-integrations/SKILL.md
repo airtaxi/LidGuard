@@ -58,7 +58,7 @@ Reference:
 ### Claude Code
 
 - Start event: `UserPromptSubmit`.
-- Activity telemetry events: `PreToolUse`, `PostToolUse`, `PostToolUseFailure`.
+- Activity telemetry events: `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `SubagentStart`, `SubagentStop`, `TaskCreated`, and `TaskCompleted`.
 - Permission decision event: `PermissionRequest`.
 - MCP elicitation event: `Elicitation`.
 - Soft-lock notification event: `Notification`.
@@ -67,22 +67,26 @@ Reference:
 - Snippet command: `lidguard claude-hooks settings-json`.
 - Install/status/remove commands: `lidguard hook-install --provider claude`, `lidguard hook-status --provider claude`, and `lidguard hook-remove --provider claude`.
 - MCP status/install/remove commands: `lidguard mcp-status claude`, `lidguard mcp-install claude`, and `lidguard mcp-remove claude`.
-- `hook-install` and `hook-status` require `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `Stop`, `StopFailure`, `Elicitation`, `PermissionRequest`, `Notification`, and `SessionEnd`.
+- `hook-install` and `hook-status` require `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `Stop`, `StopFailure`, `Elicitation`, `PermissionRequest`, `Notification`, and `SessionEnd`.
 - Default config path: `CLAUDE_CONFIG_DIR\settings.json` when `CLAUDE_CONFIG_DIR` is set, otherwise `%USERPROFILE%\.claude\settings.json`.
 - Claude MCP registration uses the user-scope global config at `%USERPROFILE%\.claude.json` and delegates to `claude mcp add/remove --scope user`.
 - Windows hook config uses `shell = "powershell"` in Claude `settings.json` command hooks.
 - Based on analysis of a locally retained Claude Code source snapshot, command hooks treat `exit code 0` with empty stdout as a successful no-op, while non-empty stdout may be interpreted as hook JSON or plain-text output depending on the execution path.
 - Based on the same local source snapshot analysis, `PermissionRequest` only becomes a programmatic allow/deny when the hook returns structured JSON with `hookSpecificOutput.decision`; LidGuard also sets `interrupt: true` on those closed-lid decisions so Claude stops the interactive permission path immediately. Empty stdout keeps the normal permission flow.
 - `claude-hook` reads Claude hook JSON from stdin and maps `hook_event_name` to runtime IPC.
-- For `UserPromptSubmit`, it sends internal `start --provider claude` with `transcript_path` when Claude provides one.
+- For `UserPromptSubmit`, it sends internal `start --provider claude` with `transcript_path` when Claude provides one, except when the prompt is a Claude `<task-notification>` payload. Task notifications are provider work completion signals and must not start or refresh a new Claude session.
 - For `PreToolUse`, `PostToolUse`, and non-interrupt `PostToolUseFailure`, it records provider activity and clears the current session soft-lock state for non-`AskUserQuestion` tools.
+- For `PostToolUse`, it also tracks Claude background work when `tool_input.run_in_background = true` for `Bash`, `PowerShell`, `Agent`, or legacy `Task`, and when `Monitor` starts.
+- For `SubagentStart` and `SubagentStop`, it tracks active Claude subagents in hook-local state and records provider activity.
+- For `TaskCreated`, it tracks Claude-created tasks as active provider work. For `TaskCompleted`, it treats matching background task identifiers as completed and records provider activity. Background task completion is also reconciled from Claude transcript `task_notification` records, XML-like `<task-notification>` payloads delivered through `UserPromptSubmit`, and explicit `TaskStop` tool use clears matching tracked work.
 - For `PostToolUseFailure` with `is_interrupt: true`, it sends internal `stop --provider claude` immediately.
 - For `Elicitation`, it does not stop the runtime; it queries the runtime lid state and visible display monitor count and returns a structured `cancel` only when the lid is closed and the visible display monitor count is `0`.
 - For `Notification`, `permission_prompt` and `elicitation_dialog` mark the session soft-locked, while `elicitation_complete` and `elicitation_response` clear the current soft-lock state.
 - Claude transcript JSONL changes are monitored through the same shared transcript monitor used by Codex. If `transcript_path` is missing, LidGuard falls back to a unique `~/.claude/projects` transcript match by session id; a latest user text marker of `[Request interrupted by user]` or `[Request interrupted by user for tool use]` stops the tracked Claude session instead of refreshing activity.
 - For `PermissionRequest`, it does not stop the runtime; it queries the runtime lid state and visible display monitor count and returns a Claude-specific structured allow/deny decision with `interrupt: true` from `LidGuardSettings.ClosedLidPermissionRequestDecision` only when the lid is closed and the visible display monitor count is `0`.
 - When working on Claude Code-related setup, support, or documentation, explicitly and strongly warn the user not to use third-party prompt-style hooks alongside LidGuard. Explain that LidGuard must only answer its own closed-lid `PermissionRequest` and `Elicitation` paths and must not be presented as able to answer or proxy third-party hook prompts.
-- For `Stop`, `StopFailure`, and `SessionEnd`, it sends internal `stop --provider claude`.
+- For `Stop`, it first checks tracked Claude subagents and background tasks. If any remain active, it still sends internal `stop --provider claude`, but marks the request as pending provider work so the runtime keeps the session active, preserves keep-awake behavior, cancels any pending suspend, and skips `PostSessionEnd`/`PreSuspend` behavior. Once `SubagentStop`, `TaskCompleted`, `TaskStop`, transcript `task_notification`, or `UserPromptSubmit` `<task-notification>` signals clear the last pending work item, `claude-hook` sends a final internal `stop --provider claude` with the original session-end reason.
+- For `StopFailure` and `SessionEnd`, it sends internal `stop --provider claude`.
 - The analyzed Claude hook input provides `session_id` and `cwd`, but not a stable parent process id in the payload. LidGuard resolves the watched process from hook process ancestry when `WatchParentProcess` is enabled, and keeps `cwd` only as status/log/transcript/webhook metadata. Watched parent process exit and orphan cleanup are cancel paths that suppress `PostSessionEnd` and any new `PreSuspend` webhook they would schedule.
 - Claude `Elicitation` exits successfully with structured JSON stdout only for effective closed-lid `cancel`; when the lid is open, unknown, any visible display monitor remains active, or runtime status is unavailable, it exits successfully with empty stdout. LidGuard records diagnostics locally and should not block the Claude task when a runtime request fails.
 - Claude `PermissionRequest` exits successfully with structured JSON stdout only for effective closed-lid decisions; when the lid is open, unknown, any visible display monitor remains active, or runtime status is unavailable, it exits successfully with empty stdout. LidGuard records diagnostics locally and should not block the Claude task when a runtime request fails.

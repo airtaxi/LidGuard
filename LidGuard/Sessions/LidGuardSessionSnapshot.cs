@@ -12,6 +12,8 @@ public sealed class LidGuardSessionSnapshot
         SoftLockState = LidGuardSessionSoftLockState.None,
         SoftLockReason = string.Empty,
         SoftLockedAt = null,
+        HasPendingProviderWork = false,
+        PendingProviderWorkReason = string.Empty,
         WatchedProcessIdentifier = 0,
         HasEverHadWatchedProcess = false,
         WatchRegistrationKind = LidGuardSessionWatchRegistrationKind.None,
@@ -35,6 +37,10 @@ public sealed class LidGuardSessionSnapshot
     public string SoftLockReason { get; init; } = string.Empty;
 
     public DateTimeOffset? SoftLockedAt { get; init; }
+
+    public bool HasPendingProviderWork { get; init; }
+
+    public string PendingProviderWorkReason { get; init; } = string.Empty;
 
     public int WatchedProcessIdentifier { get; init; }
 
