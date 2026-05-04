@@ -120,38 +120,6 @@ internal static class GitHubCopilotHookWorkTracker
                 DateTimeOffset.UtcNow));
     }
 
-    public static bool TryConsumeDeferredStopWhenNoPendingWork(
-        GitHubCopilotHookInput hookInput,
-        string sessionIdentifier,
-        out bool isProviderSessionEnd,
-        out string sessionEndReason)
-    {
-        ArgumentNullException.ThrowIfNull(hookInput);
-
-        isProviderSessionEnd = false;
-        sessionEndReason = string.Empty;
-        SynchronizeWorkFromTranscript(hookInput.TranscriptPath, sessionIdentifier);
-
-        var consumedDeferredStop = false;
-        var deferredStopIsProviderSessionEnd = false;
-        var deferredSessionEndReason = string.Empty;
-        UpdateSessionState(
-            sessionIdentifier,
-            sessionWorkState =>
-            {
-                if (!sessionWorkState.HasDeferredStop) return;
-                if (sessionWorkState.HasPendingWork) return;
-
-                deferredStopIsProviderSessionEnd = sessionWorkState.DeferredStop.IsProviderSessionEnd;
-                deferredSessionEndReason = sessionWorkState.DeferredStop.SessionEndReason;
-                sessionWorkState.DeferredStop = null;
-                consumedDeferredStop = true;
-            });
-        isProviderSessionEnd = deferredStopIsProviderSessionEnd;
-        sessionEndReason = deferredSessionEndReason;
-        return consumedDeferredStop;
-    }
-
     public static void ClearSessionState(string sessionIdentifier)
     {
         if (string.IsNullOrWhiteSpace(sessionIdentifier)) return;

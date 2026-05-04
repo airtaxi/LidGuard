@@ -49,9 +49,6 @@ internal static class GitHubCopilotHookCommand
         if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.SubagentStop, StringComparison.Ordinal))
         {
             GitHubCopilotHookWorkTracker.RecordSubagentStopped(hookInput, GetSessionIdentifier(hookInput));
-            var deferredStopExitCode = await TrySendDeferredStopAsync(configuredHookEventName, hookInput);
-            if (deferredStopExitCode.HasValue) return deferredStopExitCode.Value;
-
             return await SendSessionStateRequestAsync(
                 LidGuardPipeCommands.MarkSessionActive,
                 configuredHookEventName,
@@ -63,9 +60,6 @@ internal static class GitHubCopilotHookCommand
         if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.PostToolUse, StringComparison.Ordinal))
         {
             GitHubCopilotHookWorkTracker.RecordToolUseEvent(hookInput, GetSessionIdentifier(hookInput));
-            var deferredStopExitCode = await TrySendDeferredStopAsync(configuredHookEventName, hookInput);
-            if (deferredStopExitCode.HasValue) return deferredStopExitCode.Value;
-
             return await ReportActivityAsync(configuredHookEventName, hookInput, configuredHookEventName);
         }
 
@@ -281,9 +275,6 @@ internal static class GitHubCopilotHookCommand
     {
         if (GitHubCopilotHookWorkTracker.RecordCompletionNotification(hookInput, GetSessionIdentifier(hookInput)))
         {
-            var deferredStopExitCode = await TrySendDeferredStopAsync(configuredHookEventName, hookInput);
-            if (deferredStopExitCode.HasValue) return deferredStopExitCode.Value;
-
             return await SendSessionStateRequestAsync(
                 LidGuardPipeCommands.MarkSessionActive,
                 configuredHookEventName,
@@ -314,23 +305,6 @@ internal static class GitHubCopilotHookCommand
             configuredHookEventName,
             hookInput,
             DescribeActivityReason(sessionStateReason, hookInput.ToolName));
-    }
-
-    private static async Task<int?> TrySendDeferredStopAsync(string configuredHookEventName, GitHubCopilotHookInput hookInput)
-    {
-        var shouldSendDeferredStop = GitHubCopilotHookWorkTracker.TryConsumeDeferredStopWhenNoPendingWork(
-            hookInput,
-            GetSessionIdentifier(hookInput),
-            out var isProviderSessionEnd,
-            out var sessionEndReason);
-        if (!shouldSendDeferredStop) return null;
-
-        return await SendRuntimeRequestAsync(
-            LidGuardPipeCommands.Stop,
-            configuredHookEventName,
-            hookInput,
-            isProviderSessionEnd,
-            sessionEndReason);
     }
 
     private static async Task<int> SendSessionStateRequestAsync(
