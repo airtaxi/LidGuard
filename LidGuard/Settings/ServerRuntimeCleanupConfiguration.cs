@@ -13,7 +13,7 @@ internal static class ServerRuntimeCleanupConfiguration
         if (LidGuardSettings.IsValidServerRuntimeCleanupDelayMinutes(serverRuntimeCleanupDelayMinutes)) return true;
 
         message =
-            $"Server runtime cleanup delay minutes must be off or an integer of at least {LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes}.";
+            $"Server runtime cleanup delay minutes must be off to disable automatic runtime exit or an integer of at least {LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes}.";
         return false;
     }
 }

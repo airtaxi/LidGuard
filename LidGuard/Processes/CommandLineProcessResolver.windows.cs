@@ -26,6 +26,8 @@ public sealed partial class CommandLineProcessResolver : ICommandLineProcessReso
         "dotnet",
         "gh",
         "node",
+        "npm",
+        "npx",
         "powershell",
         "pwsh"
     };
@@ -55,20 +57,26 @@ public sealed partial class CommandLineProcessResolver : ICommandLineProcessReso
                 var processName = GetProcessName(process);
                 if (string.IsNullOrWhiteSpace(processName)) continue;
 
-                var isShellHosted = IsShellHostedCandidate(process.Id, processName);
-                var score = GetProcessScore(provider, processName, isShellHosted);
-                if (score == 0 && !s_commandLineProcessNames.Contains(processName)) continue;
+                TryReadCommandLine(process.Id, out var commandLine);
+                var isCodexAppServer = provider == AgentProvider.Codex && CodexCommandLineProcessClassifier.IsAppServer(commandLine);
+                var isCodexCliProcess = provider == AgentProvider.Codex && CodexCommandLineProcessClassifier.IsCodexCliProcess(processName, commandLine);
+                var score = GetProcessScore(provider, processName, isCodexCliProcess, isCodexAppServer);
+                if (score == 0)
+                {
+                    if (provider == AgentProvider.Codex) continue;
+                    if (!s_commandLineProcessNames.Contains(processName)) continue;
+                }
 
                 if (!TryReadCurrentDirectory(process.Id, out var processWorkingDirectory)) continue;
                 if (!DirectoryMatches(normalizedWorkingDirectory, processWorkingDirectory)) continue;
-                if (IsLidGuardUtilityProcess(process.Id)) continue;
+                if (IsLidGuardUtilityCommandLine(commandLine)) continue;
 
                 var candidate = new CommandLineProcessCandidate
                 {
                     ProcessIdentifier = process.Id,
                     ProcessName = processName,
                     WorkingDirectory = processWorkingDirectory,
-                    IsShellHosted = isShellHosted,
+                    IsAppServer = isCodexAppServer,
                     Provider = provider,
                     StartedAt = GetStartedAt(process)
                 };
@@ -122,65 +130,18 @@ public sealed partial class CommandLineProcessResolver : ICommandLineProcessReso
         catch { return DateTimeOffset.MinValue; }
     }
 
-    private static int GetProcessScore(AgentProvider provider, string processName, bool isShellHosted)
+    private static int GetProcessScore(AgentProvider provider, string processName, bool isCodexCliProcess, bool isCodexAppServer)
     {
         if (provider == AgentProvider.Codex)
         {
-            if (processName.Equals("codex", StringComparison.OrdinalIgnoreCase)) return isShellHosted ? 200 : 100;
-            if (isShellHosted) return 150;
+            if (isCodexAppServer) return 0;
+            return isCodexCliProcess ? 200 : 0;
         }
 
         if (provider == AgentProvider.Claude && processName.Equals("claude", StringComparison.OrdinalIgnoreCase)) return 100;
         if (provider == AgentProvider.GitHubCopilot && processName.Contains("copilot", StringComparison.OrdinalIgnoreCase)) return 100;
         if (s_commandLineProcessNames.Contains(processName)) return 50;
         return 0;
-    }
-
-    private static bool IsShellHostedCandidate(int processIdentifier, string processName)
-    {
-        if (IsShellHostProcessName(processName)) return true;
-        if (!TryReadParentProcessIdentifier(processIdentifier, out var parentProcessIdentifier) || parentProcessIdentifier <= 0) return false;
-
-        return TryGetProcessName(parentProcessIdentifier, out var parentProcessName) && IsShellHostProcessName(parentProcessName);
-    }
-
-    private static bool IsShellHostProcessName(string processName)
-        => processName.Equals("cmd", StringComparison.OrdinalIgnoreCase)
-            || processName.Equals("powershell", StringComparison.OrdinalIgnoreCase)
-            || processName.Equals("pwsh", StringComparison.OrdinalIgnoreCase);
-
-    private static bool TryReadParentProcessIdentifier(int processIdentifier, out int parentProcessIdentifier)
-    {
-        parentProcessIdentifier = 0;
-
-        var accessRights = PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_LIMITED_INFORMATION;
-        using var processHandle = PInvoke.OpenProcess_SafeHandle(accessRights, false, (uint)processIdentifier);
-        if (processHandle.IsInvalid) return false;
-
-        return RemoteProcessParametersReader.TryReadParentProcessIdentifier(processHandle, out parentProcessIdentifier);
-    }
-
-    private static bool TryGetProcessName(int processIdentifier, out string processName)
-    {
-        processName = string.Empty;
-
-        try
-        {
-            using var process = Process.GetProcessById(processIdentifier);
-            processName = GetProcessName(process);
-            return !string.IsNullOrWhiteSpace(processName);
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static bool IsLidGuardUtilityProcess(int processIdentifier)
-    {
-        if (!TryReadCommandLine(processIdentifier, out var commandLine)) return false;
-
-        return IsLidGuardUtilityCommandLine(commandLine);
     }
 
     private static bool IsLidGuardUtilityCommandLine(string commandLine)
@@ -252,27 +213,6 @@ public sealed partial class CommandLineProcessResolver : ICommandLineProcessReso
 
             if (!TryReadStructure(processHandle, processParametersAddress + s_commandLineOffset, out RemoteUnicodeString commandLineString)) return false;
             return TryReadUnicodeString(processHandle, commandLineString, out commandLine);
-        }
-
-        public static bool TryReadParentProcessIdentifier(SafeFileHandle processHandle, out int parentProcessIdentifier)
-        {
-            parentProcessIdentifier = 0;
-
-            var processBasicInformation = default(PROCESS_BASIC_INFORMATION);
-            var returnLength = 0u;
-            var status = WdkPInvoke.NtQueryInformationProcess(
-                (HANDLE)processHandle.DangerousGetHandle(),
-                WdkProcessInformationClass.ProcessBasicInformation,
-                &processBasicInformation,
-                (uint)sizeof(PROCESS_BASIC_INFORMATION),
-                ref returnLength);
-            if ((int)status != 0) return false;
-
-            var parentProcessIdentifierNative = processBasicInformation.InheritedFromUniqueProcessId;
-            if (parentProcessIdentifierNative == 0 || parentProcessIdentifierNative > (nuint)int.MaxValue) return false;
-
-            parentProcessIdentifier = (int)parentProcessIdentifierNative;
-            return true;
         }
 
         private static IntPtr ReadPointer(SafeFileHandle processHandle, IntPtr address)

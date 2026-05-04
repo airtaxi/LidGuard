@@ -105,7 +105,7 @@ Closed-lid permission automation is also a supervision risk. If you configure Li
 
 SoftLock detection, provider hooks, process watchers, operating system behavior, CLI behavior, temperature sensors, permissions, firmware, and power policies can all fail or change in ways that prevent safety features from running as expected. Emergency hibernation and suspend flows are best-effort safeguards, not a substitute for checking the machine yourself.
 
-Codex hook cleanup has a specific limit: Codex App can still leave `process=none` sessions in the same working directory. LidGuard only uses the Codex working-directory watchdog fallback for shell-hosted CLI sessions whose resolved process or direct parent is a platform-approved shell, and that cleanup path never removes `process=none` Codex sessions.
+Codex hook cleanup has a specific limit: Codex App can still leave `process=none` sessions in the same working directory. LidGuard only uses the Codex working-directory watchdog fallback for resolved Codex CLI processes that are not running with the `app-server` argument, and that cleanup path never removes `process=none` Codex sessions.
 
 You are responsible for monitoring device state and heat risk. Device damage, data loss, property damage, or other loss caused by ignoring those risks is your responsibility.
 

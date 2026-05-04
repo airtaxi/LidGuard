@@ -52,12 +52,12 @@ internal static class LidGuardRuntimeResponseLocalizer
         var sessionKey = Argument(messageArguments, 0);
         var watcherStatusKind = Argument(messageArguments, 1);
         var processIdentifier = Argument(messageArguments, 2);
-        var codexShellHostDescription = Argument(messageArguments, 3);
+        var codexFallbackRequirementDescription = Argument(messageArguments, 3);
         return watcherStatusKind switch
         {
-            LidGuardPipeResponseMessageCodes.WatcherStatusCodexShellHostFallback => Format("RuntimeResponseSessionStartedCodexShellHostFallback", "Started {0}. Watching process {1} through Codex shell-host fallback.", sessionKey, processIdentifier),
+            LidGuardPipeResponseMessageCodes.WatcherStatusCodexCliFallback => Format("RuntimeResponseSessionStartedCodexCliFallback", "Started {0}. Watching process {1} through Codex CLI fallback.", sessionKey, processIdentifier),
             LidGuardPipeResponseMessageCodes.WatcherStatusWatchedProcess => Format("RuntimeResponseSessionStartedWatchedProcess", "Started {0}. Watching process {1}.", sessionKey, processIdentifier),
-            LidGuardPipeResponseMessageCodes.WatcherStatusCodexShellHostFallbackSkipped => Format("RuntimeResponseSessionStartedCodexShellHostFallbackSkipped", "Started {0}. Codex fallback watchdog only attaches when the resolved Codex process or its direct parent is {1}; a stop hook is required.", sessionKey, codexShellHostDescription),
+            LidGuardPipeResponseMessageCodes.WatcherStatusCodexCliFallbackSkipped => Format("RuntimeResponseSessionStartedCodexCliFallbackSkipped", "Started {0}. Codex fallback watchdog only attaches when the resolved process is {1}; a stop hook is required.", sessionKey, codexFallbackRequirementDescription),
             _ => Format("RuntimeResponseSessionStartedNoWatchedProcess", "Started {0}. No watched process was resolved; a stop hook is required.", sessionKey)
         };
     }

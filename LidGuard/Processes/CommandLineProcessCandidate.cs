@@ -10,7 +10,7 @@ public sealed class CommandLineProcessCandidate
 
     public required string WorkingDirectory { get; init; }
 
-    public bool IsShellHosted { get; init; }
+    public bool IsAppServer { get; init; }
 
     public AgentProvider Provider { get; init; } = AgentProvider.Unknown;
 

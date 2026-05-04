@@ -24,8 +24,8 @@ internal static class LidGuardPipeResponseMessageCodes
     public const string WatchedProcessExited = "watched-process-exited";
     public const string WatchedProcessOrphanCleaned = "watched-process-orphan-cleaned";
 
-    public const string WatcherStatusCodexShellHostFallback = "codex-shell-host-fallback";
-    public const string WatcherStatusCodexShellHostFallbackSkipped = "codex-shell-host-fallback-skipped";
+    public const string WatcherStatusCodexCliFallback = "codex-cli-fallback";
+    public const string WatcherStatusCodexCliFallbackSkipped = "codex-cli-fallback-skipped";
     public const string WatcherStatusNone = "none";
     public const string WatcherStatusWatchedProcess = "watched-process";
 

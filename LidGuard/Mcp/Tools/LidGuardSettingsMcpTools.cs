@@ -82,7 +82,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         bool? watchParentProcess = null,
         [Description("Set the inactive session timeout in minutes. Pass off or an empty string to disable it, pass an integer of at least 1 to enable it, or omit to keep the current value.")]
         string sessionTimeoutMinutes = null,
-        [Description("Set how long LidGuard stays running after all sessions end and cleanup is finished. Pass off or an empty string to exit immediately, pass an integer of at least 1 to wait that many minutes, or omit to keep the current value.")]
+        [Description("Set how long LidGuard stays running after all sessions end and cleanup is finished. Pass off or an empty string to keep the runtime alive, pass 0 to exit immediately, pass a positive integer to wait that many minutes, or omit to keep the current value.")]
         string serverRuntimeCleanupDelayMinutes = null,
         [Description("Set whether LidGuard should request Emergency Hibernation when the guarded system temperature reaches the configured high-temperature threshold while the lid is closed. Omit to keep the current value.")]
         bool? emergencyHibernationOnHighTemperature = null,
@@ -284,7 +284,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
             return true;
         }
 
-        message = $"serverRuntimeCleanupDelayMinutes must be off or an integer of at least {LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes}.";
+        message = $"serverRuntimeCleanupDelayMinutes must be off to disable automatic runtime exit or an integer of at least {LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes}.";
         return false;
     }
 

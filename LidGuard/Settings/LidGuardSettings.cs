@@ -13,7 +13,7 @@ public sealed class LidGuardSettings
     public const int DefaultSuspendHistoryEntryCount = 10;
     public const int MinimumSessionTimeoutMinutes = 1;
     public const int DefaultSessionTimeoutMinutes = 12;
-    public const int MinimumServerRuntimeCleanupDelayMinutes = 1;
+    public const int MinimumServerRuntimeCleanupDelayMinutes = 0;
     public const int DefaultServerRuntimeCleanupDelayMinutes = 10;
     public const string DefaultUserInterfaceCulture = "auto";
 

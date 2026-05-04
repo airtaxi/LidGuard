@@ -6,7 +6,7 @@ internal static class LidGuardWatchedProcessCleanup
 {
     public static bool ShouldCleanCodexWorkingDirectory(LidGuardSessionSnapshot snapshot)
         => snapshot.Provider == AgentProvider.Codex
-            && snapshot.WatchRegistrationKind == LidGuardSessionWatchRegistrationKind.CodexShellHostedWorkingDirectoryFallback
+            && snapshot.WatchRegistrationKind == LidGuardSessionWatchRegistrationKind.CodexCliWorkingDirectoryFallback
             && !string.IsNullOrWhiteSpace(snapshot.WorkingDirectory);
 
     public static bool WorkingDirectoriesMatch(string leftWorkingDirectory, string rightWorkingDirectory)

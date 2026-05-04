@@ -105,7 +105,7 @@ internal static class LidGuardHelpTextLocalizer
         ["Change whether LidGuard prevents the display from sleeping while sessions are active."] = "Help_Settings_PreventDisplaySleepOption",
         ["Change the process monitoring policy for tracked sessions."] = "Help_Settings_WatchParentProcessOption",
         ["Turn off the inactive-session timeout, or let idle sessions stop keeping the system awake after this many minutes without activity. Minimum enabled value is 1."] = "Help_Settings_SessionTimeoutOption",
-        ["Set how long LidGuard stays running after all sessions end and cleanup is finished. Pass off to exit immediately. Minimum enabled value is 1."] = "Help_Settings_ServerRuntimeCleanupDelayOption",
+        ["Set how long LidGuard stays running after all sessions end and cleanup is finished. Pass off to keep the runtime alive, 0 to exit immediately, or a positive minute count to wait."] = "Help_Settings_ServerRuntimeCleanupDelayOption",
         ["Change whether LidGuard requests Emergency Hibernation when the guarded system temperature reaches the configured threshold while the lid is closed."] = "Help_Settings_EmergencyHibernationOption",
         ["Choose whether LidGuard uses the lowest, average, or highest available temperature sensor value."] = "Help_Settings_EmergencyHibernationTemperatureModeOption",
         ["Set the Emergency Hibernation threshold in Celsius. Allowed range: 70 through 110."] = "Help_Settings_EmergencyHibernationTemperatureCelsiusOption",

@@ -238,7 +238,7 @@
     <value>  Provider: {0}</value>
   </data>
   <data name="SettingsInteractiveServerRuntimeCleanupDelayDetails" xml:space="preserve">
-    <value>minimum: {0}, off to exit immediately</value>
+    <value>minimum: {0}, off to keep the runtime alive</value>
   </data>
   <data name="SettingsInteractiveInputEnded" xml:space="preserve">
     <value>Input ended before {0} was entered.</value>
@@ -418,7 +418,7 @@
     <value>To remove the session completion webhook URL, run: {0} {1}</value>
   </data>
   <data name="SettingsOptionServerRuntimeCleanupDelayValidation" xml:space="preserve">
-    <value>The server-runtime-cleanup-delay-minutes option must be off or an integer of at least {0}.</value>
+    <value>The server-runtime-cleanup-delay-minutes option must be off to disable automatic runtime exit or an integer of at least {0}.</value>
   </data>
   <data name="ManagementLidGuardMcpServerRegistered" xml:space="preserve">
     <value>LidGuard MCP server is registered.</value>
@@ -1042,7 +1042,7 @@
     <value>Optional working directory used for fallback session identity and process resolution. Defaults to the current directory.</value>
   </data>
   <data name="Help_Settings_ServerRuntimeCleanupDelayOption" xml:space="preserve">
-    <value>Set how long LidGuard stays running after all sessions end and cleanup is finished. Pass off to exit immediately. Minimum enabled value is 1.</value>
+    <value>Set how long LidGuard stays running after all sessions end and cleanup is finished. Pass off to keep the runtime alive, 0 to exit immediately, or a positive minute count to wait.</value>
   </data>
   <data name="Help_Stop_Description" xml:space="preserve">
     <value>Stop a tracked session by matching the same provider and session identity used when the session started.</value>
@@ -1302,14 +1302,14 @@
   <data name="RuntimeResponseSessionRemoveNoActiveSessions" xml:space="preserve">
     <value>There are no active sessions to remove.</value>
   </data>
-  <data name="RuntimeResponseSessionStartedCodexShellHostFallback" xml:space="preserve">
-    <value>Started {0}. Watching process {1} through Codex shell-host fallback.</value>
+  <data name="RuntimeResponseSessionStartedCodexCliFallback" xml:space="preserve">
+    <value>Started {0}. Watching process {1} through Codex CLI fallback.</value>
   </data>
   <data name="RuntimeResponseSessionStartedWatchedProcess" xml:space="preserve">
     <value>Started {0}. Watching process {1}.</value>
   </data>
-  <data name="RuntimeResponseSessionStartedCodexShellHostFallbackSkipped" xml:space="preserve">
-    <value>Started {0}. Codex fallback watchdog only attaches when the resolved Codex process or its direct parent is {1}; a stop hook is required.</value>
+  <data name="RuntimeResponseSessionStartedCodexCliFallbackSkipped" xml:space="preserve">
+    <value>Started {0}. Codex fallback watchdog only attaches when the resolved process is {1}; a stop hook is required.</value>
   </data>
   <data name="RuntimeResponseSessionStartedNoWatchedProcess" xml:space="preserve">
     <value>Started {0}. No watched process was resolved; a stop hook is required.</value>

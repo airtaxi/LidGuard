@@ -20,16 +20,8 @@ public sealed class CommandLineProcessResolver : ICommandLineProcessResolver
         "fish",
         "gh",
         "node",
-        "pwsh",
-        "sh",
-        "zsh"
-    };
-
-    private static readonly HashSet<string> s_shellHostProcessNames = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "bash",
-        "dash",
-        "fish",
+        "npm",
+        "npx",
         "pwsh",
         "sh",
         "zsh"
@@ -69,20 +61,26 @@ public sealed class CommandLineProcessResolver : ICommandLineProcessResolver
             var processName = ReadProcessName(processIdentifier);
             if (string.IsNullOrWhiteSpace(processName)) continue;
 
-            var isShellHosted = IsShellHostedCandidate(processIdentifier, processName);
-            var score = GetProcessScore(provider, processName, isShellHosted);
-            if (score == 0 && !s_commandLineProcessNames.Contains(processName)) continue;
+            TryReadCommandLine(processIdentifier, out var commandLine);
+            var isCodexAppServer = provider == AgentProvider.Codex && CodexCommandLineProcessClassifier.IsAppServer(commandLine);
+            var isCodexCliProcess = provider == AgentProvider.Codex && CodexCommandLineProcessClassifier.IsCodexCliProcess(processName, commandLine);
+            var score = GetProcessScore(provider, processName, isCodexCliProcess, isCodexAppServer);
+            if (score == 0)
+            {
+                if (provider == AgentProvider.Codex) continue;
+                if (!s_commandLineProcessNames.Contains(processName)) continue;
+            }
 
             if (!TryReadCurrentDirectory(processIdentifier, out var processWorkingDirectory)) continue;
             if (!DirectoryMatches(normalizedWorkingDirectory, processWorkingDirectory)) continue;
-            if (IsLidGuardUtilityProcess(processIdentifier)) continue;
+            if (IsLidGuardUtilityCommandLine(commandLine)) continue;
 
             var candidate = new CommandLineProcessCandidate
             {
                 ProcessIdentifier = processIdentifier,
                 ProcessName = processName,
                 WorkingDirectory = processWorkingDirectory,
-                IsShellHosted = isShellHosted,
+                IsAppServer = isCodexAppServer,
                 Provider = provider,
                 StartedAt = GetStartedAt(processIdentifier)
             };
@@ -150,52 +148,18 @@ public sealed class CommandLineProcessResolver : ICommandLineProcessResolver
         catch { return DateTimeOffset.MinValue; }
     }
 
-    private static int GetProcessScore(AgentProvider provider, string processName, bool isShellHosted)
+    private static int GetProcessScore(AgentProvider provider, string processName, bool isCodexCliProcess, bool isCodexAppServer)
     {
         if (provider == AgentProvider.Codex)
         {
-            if (processName.Equals("codex", StringComparison.OrdinalIgnoreCase)) return isShellHosted ? 200 : 100;
-            if (isShellHosted) return 150;
+            if (isCodexAppServer) return 0;
+            return isCodexCliProcess ? 200 : 0;
         }
 
         if (provider == AgentProvider.Claude && processName.Equals("claude", StringComparison.OrdinalIgnoreCase)) return 100;
         if (provider == AgentProvider.GitHubCopilot && processName.Contains("copilot", StringComparison.OrdinalIgnoreCase)) return 100;
         if (s_commandLineProcessNames.Contains(processName)) return 50;
         return 0;
-    }
-
-    private static bool IsShellHostedCandidate(int processIdentifier, string processName)
-    {
-        if (s_shellHostProcessNames.Contains(processName)) return true;
-        if (!TryReadParentProcessIdentifier(processIdentifier, out var parentProcessIdentifier) || parentProcessIdentifier <= 0) return false;
-
-        var parentProcessName = ReadProcessName(parentProcessIdentifier);
-        return !string.IsNullOrWhiteSpace(parentProcessName) && s_shellHostProcessNames.Contains(parentProcessName);
-    }
-
-    private static bool TryReadParentProcessIdentifier(int processIdentifier, out int parentProcessIdentifier)
-    {
-        parentProcessIdentifier = 0;
-
-        try
-        {
-            var statText = File.ReadAllText(Path.Combine(ProcessRootPath, processIdentifier.ToString(), "stat"));
-            var processNameEndIndex = statText.LastIndexOf(')');
-            if (processNameEndIndex < 0 || processNameEndIndex + 2 >= statText.Length) return false;
-
-            var statFields = statText[(processNameEndIndex + 2)..].Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (statFields.Length < 2) return false;
-
-            return int.TryParse(statFields[1], out parentProcessIdentifier);
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { return false; }
-    }
-
-    private static bool IsLidGuardUtilityProcess(int processIdentifier)
-    {
-        if (!TryReadCommandLine(processIdentifier, out var commandLine)) return false;
-
-        return IsLidGuardUtilityCommandLine(commandLine);
     }
 
     private static bool IsLidGuardUtilityCommandLine(string commandLine)

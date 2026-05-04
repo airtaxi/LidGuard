@@ -218,7 +218,7 @@ internal sealed class LidGuardRuntimeCoordinator
                     snapshot.Key.ToString(),
                     watcherStatusKind,
                     snapshot.WatchedProcessIdentifier.ToString(),
-                    GetCodexShellHostDescription()
+                    GetCodexFallbackRequirementDescription()
                 ]);
             LidGuardRuntimeLogWriter.AppendSessionLog("session-started", request, successResponse, snapshot);
             return successResponse;
@@ -516,10 +516,10 @@ internal sealed class LidGuardRuntimeCoordinator
         if (!resolveResult.Succeeded) return WatchedProcessResolution.None;
 
         var resolvedCandidate = resolveResult.Value;
-        if (request.Provider == AgentProvider.Codex && !resolvedCandidate.IsShellHosted) return WatchedProcessResolution.None;
+        if (request.Provider == AgentProvider.Codex && resolvedCandidate.IsAppServer) return WatchedProcessResolution.None;
 
         var watchRegistrationKind = request.Provider == AgentProvider.Codex
-            ? LidGuardSessionWatchRegistrationKind.CodexShellHostedWorkingDirectoryFallback
+            ? LidGuardSessionWatchRegistrationKind.CodexCliWorkingDirectoryFallback
             : LidGuardSessionWatchRegistrationKind.WorkingDirectoryFallback;
         return new WatchedProcessResolution(resolvedCandidate.ProcessIdentifier, watchRegistrationKind);
     }
@@ -556,31 +556,23 @@ internal sealed class LidGuardRuntimeCoordinator
     {
         return watcherStatusKind switch
         {
-            LidGuardPipeResponseMessageCodes.WatcherStatusCodexShellHostFallback => $" Watching process {snapshot.WatchedProcessIdentifier} through Codex shell-host fallback.",
+            LidGuardPipeResponseMessageCodes.WatcherStatusCodexCliFallback => $" Watching process {snapshot.WatchedProcessIdentifier} through Codex CLI fallback.",
             LidGuardPipeResponseMessageCodes.WatcherStatusWatchedProcess => $" Watching process {snapshot.WatchedProcessIdentifier}.",
-            LidGuardPipeResponseMessageCodes.WatcherStatusCodexShellHostFallbackSkipped => $" Codex fallback watchdog only attaches when the resolved Codex process or its direct parent is {GetCodexShellHostDescription()}; a stop hook is required.",
+            LidGuardPipeResponseMessageCodes.WatcherStatusCodexCliFallbackSkipped => $" Codex fallback watchdog only attaches when the resolved process is {GetCodexFallbackRequirementDescription()}; a stop hook is required.",
             _ => " No watched process was resolved; a stop hook is required."
         };
     }
 
     private string CreateWatcherStatusKind(LidGuardPipeRequest request, LidGuardSessionSnapshot snapshot)
     {
-        if (snapshot.WatchRegistrationKind == LidGuardSessionWatchRegistrationKind.CodexShellHostedWorkingDirectoryFallback) return LidGuardPipeResponseMessageCodes.WatcherStatusCodexShellHostFallback;
+        if (snapshot.WatchRegistrationKind == LidGuardSessionWatchRegistrationKind.CodexCliWorkingDirectoryFallback) return LidGuardPipeResponseMessageCodes.WatcherStatusCodexCliFallback;
         if (snapshot.HasWatchedProcess) return LidGuardPipeResponseMessageCodes.WatcherStatusWatchedProcess;
-        if (request.Provider == AgentProvider.Codex && request.WatchedProcessIdentifier <= 0 && _settings.WatchParentProcess) return LidGuardPipeResponseMessageCodes.WatcherStatusCodexShellHostFallbackSkipped;
+        if (request.Provider == AgentProvider.Codex && request.WatchedProcessIdentifier <= 0 && _settings.WatchParentProcess) return LidGuardPipeResponseMessageCodes.WatcherStatusCodexCliFallbackSkipped;
         return LidGuardPipeResponseMessageCodes.WatcherStatusNone;
     }
 
-    private static string GetCodexShellHostDescription()
-    {
-#if LIDGUARD_LINUX
-        return "bash, zsh, fish, sh, dash, or pwsh";
-#elif LIDGUARD_MACOS
-        return "zsh, bash, fish, sh, or pwsh";
-#else
-        return "cmd.exe, pwsh.exe, or powershell.exe";
-#endif
-    }
+    private static string GetCodexFallbackRequirementDescription()
+        => "a Codex CLI process without the app-server argument";
 
     private LidGuardOperationResult UpdateSettingsInsideGate(LidGuardSettings settings)
     {
@@ -606,7 +598,7 @@ internal sealed class LidGuardRuntimeCoordinator
         if (!LidGuardSettings.IsValidServerRuntimeCleanupDelayMinutes(settings.ServerRuntimeCleanupDelayMinutes))
         {
             var message =
-                $"Server runtime cleanup delay minutes must be off or an integer of at least {LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes}.";
+                $"Server runtime cleanup delay minutes must be off to disable automatic runtime exit or an integer of at least {LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes}.";
             return LidGuardOperationResult.Failure(message);
         }
 
@@ -742,8 +734,10 @@ internal sealed class LidGuardRuntimeCoordinator
         if (_sessionRegistry.HasActiveSessions) return;
         if (_pendingSuspendCancellationTokenSource is not null) return;
         if (_pendingPostSessionEndWebhookCount > 0) return;
+        if (_settings.ServerRuntimeCleanupDelayMinutes is null) return;
 
-        if (_settings.ServerRuntimeCleanupDelayMinutes is not { } serverRuntimeCleanupDelayMinutes)
+        var serverRuntimeCleanupDelayMinutes = _settings.ServerRuntimeCleanupDelayMinutes.Value;
+        if (serverRuntimeCleanupDelayMinutes == 0)
         {
             RequestServerRuntimeStopInsideGate(deferImmediateStopUntilCurrentResponse);
             return;
