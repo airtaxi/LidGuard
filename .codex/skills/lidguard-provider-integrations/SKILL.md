@@ -37,7 +37,7 @@ description: "LidGuard provider integration reference. Use when working on Provi
 - Snippet command: `lidguard codex-hooks config-toml`.
 - Install/status/remove commands: `lidguard hook-install --provider codex`, `lidguard hook-status --provider codex`, and `lidguard hook-remove --provider codex`.
 - MCP status/install/remove commands: `lidguard mcp-status codex`, `lidguard mcp-install codex`, and `lidguard mcp-remove codex`.
-- Codex may require `features.codex_hooks = true`.
+- Codex may require `features.hooks = true`.
 - Codex MCP registration delegates to `codex mcp add/remove` and writes a global stdio server entry named `lidguard`.
 - `hook-install` and `hook-status` require `UserPromptSubmit`, `PermissionRequest`, and `Stop`; `SessionEnd` is optional and shown separately when present.
 - `codex-hook` reads Codex hook JSON from stdin and maps `hook_event_name` to runtime IPC.

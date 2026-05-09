@@ -18,7 +18,7 @@ public sealed class CodexHookInstallationInspection
 
     public bool ConfigurationFileExists { get; init; }
 
-    public bool HasCodexHooksFeatureFlag { get; init; }
+    public bool HasHooksFeatureFlag { get; init; }
 
     public bool HasManagedBlock { get; init; }
 

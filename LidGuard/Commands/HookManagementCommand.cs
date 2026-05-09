@@ -396,7 +396,7 @@ internal static class HookManagementCommand
         WriteField("ManagementLabelExecutable", "Executable", inspection.HookExecutablePath);
         WriteField("ManagementLabelCommand", "Command", inspection.HookCommand);
         WriteField("ManagementLabelHookLog", "Hook log", GetHookLogFilePath(inspection.Provider));
-        WriteField("ManagementLabelFeatureFlag", "Feature flag", inspection.HasCodexHooksFeatureFlag);
+        WriteField("ManagementLabelFeatureFlag", "Feature flag", inspection.HasHooksFeatureFlag);
         WriteField("ManagementLabelManagedBlock", "Managed block", inspection.HasManagedBlock);
         WriteField("ManagementLabelUserPromptSubmitHook", "UserPromptSubmit hook", inspection.HasUserPromptSubmitHook);
         WriteField("ManagementLabelStopHook", "Stop hook", inspection.HasStopHook);

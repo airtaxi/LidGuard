@@ -13,7 +13,8 @@ public static class CodexHookConfigTomlDocument
     public const string ManagedBlockEndMarker = "# <LidGuard Codex hook end>";
 
     private const string FeaturesSectionHeader = "[features]";
-    private const string CodexHooksFeatureKey = "codex_hooks";
+    private const string HooksFeatureKey = "hooks";
+    private const string DeprecatedCodexHooksFeatureKey = "codex_hooks";
     private static readonly string[] s_requiredHookEventNames =
     [
         CodexHookEventNames.UserPromptSubmit,
@@ -57,7 +58,8 @@ public static class CodexHookConfigTomlDocument
         string content,
         bool configurationFileExists)
     {
-        var hasFeatureFlag = HasCodexHooksFeatureFlag(content);
+        var hasHooksFeatureFlag = HasHooksFeatureFlag(content);
+        var hasDeprecatedCodexHooksFeatureFlag = HasDeprecatedCodexHooksFeatureFlag(content);
         var hasManagedBlock = HasManagedHookBlock(content);
         var hasManagedHookEntries = HasAnyLidGuardCodexHookCommand(content);
         var contentUsedForRequiredHookInspection = content;
@@ -67,7 +69,7 @@ public static class CodexHookConfigTomlDocument
         var hasSessionEndHook = ContainsHookBlock(content, CodexHookEventNames.SessionEnd);
         var hasExpectedHookCommand = HasAllRequiredHookCommands(contentUsedForRequiredHookInspection, command => command.Equals(hookCommand, StringComparison.Ordinal));
         var hasValidHookCommand = HasAllRequiredHookCommands(contentUsedForRequiredHookInspection, IsLidGuardCodexHookCommand);
-        var isInstalled = hasFeatureFlag && hasValidHookCommand;
+        var isInstalled = hasHooksFeatureFlag && !hasDeprecatedCodexHooksFeatureFlag && hasValidHookCommand;
         var status = isInstalled ? CodexHookInstallationStatus.Installed : hasManagedHookEntries ? CodexHookInstallationStatus.NeedsUpdate : CodexHookInstallationStatus.NotInstalled;
         var message = isInstalled ? "Codex hook is installed." : hasManagedHookEntries ? "Codex hook is installed but needs update." : "Codex hook is not installed.";
 
@@ -80,7 +82,7 @@ public static class CodexHookConfigTomlDocument
             HookExecutablePath = hookExecutablePath,
             HookCommand = hookCommand,
             ConfigurationFileExists = configurationFileExists,
-            HasCodexHooksFeatureFlag = hasFeatureFlag,
+            HasHooksFeatureFlag = hasHooksFeatureFlag,
             HasManagedBlock = hasManagedBlock,
             HasManagedHookEntries = hasManagedHookEntries,
             HasPermissionRequestHook = hasPermissionRequestHook,
@@ -95,7 +97,7 @@ public static class CodexHookConfigTomlDocument
 
     public static string InstallManagedHookBlock(string content, string hookCommand)
     {
-        var updatedContent = EnsureCodexHooksFeatureFlag(content);
+        var updatedContent = EnsureHooksFeatureFlag(content);
         if (HasAnyLidGuardCodexHookCommand(updatedContent))
         {
             updatedContent = UpsertManagedHookCommand(updatedContent, CodexHookEventNames.UserPromptSubmit, hookCommand, LidGuardText.HookStatusMessageStartingTurnProtection);
@@ -149,7 +151,11 @@ public static class CodexHookConfigTomlDocument
         return content.Contains(ManagedBlockStartMarker, StringComparison.Ordinal) && content.Contains(ManagedBlockEndMarker, StringComparison.Ordinal);
     }
 
-    public static bool HasCodexHooksFeatureFlag(string content)
+    public static bool HasHooksFeatureFlag(string content) => HasFeatureFlag(content, HooksFeatureKey);
+
+    private static bool HasDeprecatedCodexHooksFeatureFlag(string content) => HasFeatureFlagKey(content, DeprecatedCodexHooksFeatureKey);
+
+    private static bool HasFeatureFlag(string content, string featureKey)
     {
         if (string.IsNullOrWhiteSpace(content)) return false;
 
@@ -166,10 +172,28 @@ public static class CodexHookConfigTomlDocument
             if (separatorIndex < 0) continue;
 
             var key = trimmedLine[..separatorIndex].Trim();
-            if (!key.Equals(CodexHooksFeatureKey, StringComparison.Ordinal)) continue;
+            if (!key.Equals(featureKey, StringComparison.Ordinal)) continue;
 
             var value = trimmedLine[(separatorIndex + 1)..].Trim();
             return value.Equals("true", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return false;
+    }
+
+    private static bool HasFeatureFlagKey(string content, string featureKey)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return false;
+
+        var lines = SplitLines(content);
+        var featuresSectionIndex = FindSectionIndex(lines, FeaturesSectionHeader);
+        if (featuresSectionIndex < 0) return false;
+
+        var nextSectionIndex = FindNextSectionIndex(lines, featuresSectionIndex + 1);
+        var lastLineIndex = nextSectionIndex < 0 ? lines.Length : nextSectionIndex;
+        for (var lineIndex = featuresSectionIndex + 1; lineIndex < lastLineIndex; lineIndex++)
+        {
+            if (TryReadTomlKey(lines[lineIndex], out var key) && key.Equals(featureKey, StringComparison.Ordinal)) return true;
         }
 
         return false;
@@ -532,34 +556,43 @@ public static class CodexHookConfigTomlDocument
         return command.Contains("lidguard", StringComparison.OrdinalIgnoreCase) && command.Contains("codex-hook", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string EnsureCodexHooksFeatureFlag(string content)
+    private static string EnsureHooksFeatureFlag(string content)
     {
         var lines = SplitLines(content);
         var featuresSectionIndex = FindSectionIndex(lines, FeaturesSectionHeader);
         if (featuresSectionIndex < 0)
         {
-            var prefix = $"{FeaturesSectionHeader}{Environment.NewLine}{CodexHooksFeatureKey} = true{Environment.NewLine}";
+            var prefix = $"{FeaturesSectionHeader}{Environment.NewLine}{HooksFeatureKey} = true{Environment.NewLine}";
             if (string.IsNullOrWhiteSpace(content)) return prefix;
             return prefix + Environment.NewLine + content.TrimStart();
         }
 
         var nextSectionIndex = FindNextSectionIndex(lines, featuresSectionIndex + 1);
         var lastLineIndex = nextSectionIndex < 0 ? lines.Length : nextSectionIndex;
+        var updatedLines = new List<string>(lines);
+        var currentLastLineIndex = lastLineIndex;
+        var hasHooksFeatureFlag = false;
         for (var lineIndex = featuresSectionIndex + 1; lineIndex < lastLineIndex; lineIndex++)
         {
-            var trimmedLine = lines[lineIndex].Trim();
-            var separatorIndex = trimmedLine.IndexOf('=');
-            if (separatorIndex < 0) continue;
+            if (!TryReadTomlKey(lines[lineIndex], out var key)) continue;
+            if (!key.Equals(HooksFeatureKey, StringComparison.Ordinal)) continue;
 
-            var key = trimmedLine[..separatorIndex].Trim();
-            if (!key.Equals(CodexHooksFeatureKey, StringComparison.Ordinal)) continue;
-
-            lines[lineIndex] = $"{CodexHooksFeatureKey} = true";
-            return JoinLines(lines);
+            updatedLines[lineIndex] = $"{HooksFeatureKey} = true";
+            hasHooksFeatureFlag = true;
+            break;
         }
 
-        var updatedLines = new List<string>(lines);
-        updatedLines.Insert(featuresSectionIndex + 1, $"{CodexHooksFeatureKey} = true");
+        if (!hasHooksFeatureFlag)
+        {
+            updatedLines.Insert(featuresSectionIndex + 1, $"{HooksFeatureKey} = true");
+            currentLastLineIndex++;
+        }
+
+        for (var lineIndex = currentLastLineIndex - 1; lineIndex > featuresSectionIndex; lineIndex--)
+        {
+            if (TryReadTomlKey(updatedLines[lineIndex], out var key) && key.Equals(DeprecatedCodexHooksFeatureKey, StringComparison.Ordinal)) updatedLines.RemoveAt(lineIndex);
+        }
+
         return JoinLines([.. updatedLines]);
     }
 
