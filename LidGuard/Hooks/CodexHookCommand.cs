@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using LidGuard.Ipc;
 using LidGuard.Localization;
@@ -14,7 +15,11 @@ internal static class CodexHookCommand
 
     public static async Task<int> RunAsync()
     {
+        var timing = new HookExecutionTiming();
+        var inputReadStopwatch = Stopwatch.StartNew();
         var hookInputJson = await Console.In.ReadToEndAsync();
+        inputReadStopwatch.Stop();
+        timing.InputReadDuration = inputReadStopwatch.Elapsed;
         if (string.IsNullOrWhiteSpace(hookInputJson))
         {
             CodexHookEventLog.AppendMessage("LidGuard Codex hook received empty input.");
@@ -22,15 +27,20 @@ internal static class CodexHookCommand
         }
 
         CodexHookInput hookInput;
+        var parseStopwatch = Stopwatch.StartNew();
         try
         {
             hookInput = JsonSerializer.Deserialize(hookInputJson, LidGuardJsonSerializerContext.Default.CodexHookInput);
         }
         catch (JsonException exception)
         {
+            parseStopwatch.Stop();
+            timing.ParseDuration = parseStopwatch.Elapsed;
             CodexHookEventLog.AppendMessage($"LidGuard Codex hook could not parse input: {exception.Message}");
             return 0;
         }
+        parseStopwatch.Stop();
+        timing.ParseDuration = parseStopwatch.Elapsed;
 
         if (hookInput is null)
         {
@@ -38,11 +48,11 @@ internal static class CodexHookCommand
             return 0;
         }
 
-        CodexHookEventLog.AppendReceived(hookInput);
+        timing.AddLogWriteDuration(CodexHookEventLog.AppendReceived(hookInput));
         var hookEventName = hookInput.HookEventName.Trim();
-        if (hookEventName.Equals(CodexHookEventNames.UserPromptSubmit, StringComparison.Ordinal)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Start, hookInput);
+        if (hookEventName.Equals(CodexHookEventNames.UserPromptSubmit, StringComparison.Ordinal)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Start, hookInput, timing);
         if (hookEventName.Equals(CodexHookEventNames.PermissionRequest, StringComparison.Ordinal)) return await WriteClosedLidPermissionRequestDecisionAsync();
-        if (CodexHookEventNames.IsStopTrigger(hookEventName)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookInput);
+        if (CodexHookEventNames.IsStopTrigger(hookEventName)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookInput, timing);
 
         return 0;
     }
@@ -96,22 +106,32 @@ internal static class CodexHookCommand
         return CodexClosedLidPermissionRequestDecisionOutput.Write(response.Settings);
     }
 
-    private static async Task<int> SendRuntimeRequestAsync(string commandName, CodexHookInput hookInput)
+    private static async Task<int> SendRuntimeRequestAsync(string commandName, CodexHookInput hookInput, HookExecutionTiming timing)
     {
         // codex-rs hook handling accepts exit 0 + empty stdout as a no-op success,
         // while non-empty stdout can be interpreted differently per event.
         var hasSettings = false;
         var settings = LidGuardSettings.Default;
+        var settingsLoadStopwatch = Stopwatch.StartNew();
         if (commandName == LidGuardPipeCommands.Start)
         {
             if (!LidGuardSettingsStore.TryLoadOrCreate(out settings, out var settingsMessage))
             {
+                settingsLoadStopwatch.Stop();
+                timing.SettingsLoadDuration = settingsLoadStopwatch.Elapsed;
                 CodexHookEventLog.AppendMessage(settingsMessage);
                 return 0;
             }
 
             hasSettings = true;
         }
+        settingsLoadStopwatch.Stop();
+        timing.SettingsLoadDuration = settingsLoadStopwatch.Elapsed;
+
+        var parentProcessResolveStopwatch = Stopwatch.StartNew();
+        var watchedProcessIdentifier = HookCommandUtilities.ResolveHookWatchedProcessIdentifier(commandName, AgentProvider.Codex, settings);
+        parentProcessResolveStopwatch.Stop();
+        timing.ParentProcessResolveDuration = parentProcessResolveStopwatch.Elapsed;
 
         var request = new LidGuardPipeRequest
         {
@@ -120,7 +140,7 @@ internal static class CodexHookCommand
             SessionIdentifier = GetSessionIdentifier(hookInput),
             IsProviderSessionEnd = commandName == LidGuardPipeCommands.Stop,
             SessionEndReason = commandName == LidGuardPipeCommands.Stop ? CreateSessionEndReason(hookInput) : string.Empty,
-            WatchedProcessIdentifier = HookCommandUtilities.ResolveHookWatchedProcessIdentifier(commandName, AgentProvider.Codex, settings),
+            WatchedProcessIdentifier = watchedProcessIdentifier,
             InputPrompt = commandName == LidGuardPipeCommands.Start ? hookInput.Prompt : string.Empty,
             WorkingDirectory = GetWorkingDirectory(hookInput),
             TranscriptPath = hookInput.TranscriptPath,
@@ -129,8 +149,19 @@ internal static class CodexHookCommand
         };
 
         var startRuntimeIfUnavailable = commandName == LidGuardPipeCommands.Start;
-        var response = await new LidGuardRuntimeClient().SendAsync(request, startRuntimeIfUnavailable);
-        CodexHookEventLog.AppendRuntimeResult(hookInput, commandName, response.Succeeded, response.RuntimeUnavailable, response.ActiveSessionCount, response.Message);
+        var runtimeClientDiagnostics = new LidGuardRuntimeClientDiagnostics();
+        var ipcStopwatch = Stopwatch.StartNew();
+        var response = await new LidGuardRuntimeClient().SendAsync(request, startRuntimeIfUnavailable, diagnostics: runtimeClientDiagnostics);
+        ipcStopwatch.Stop();
+        timing.InterprocessCommunicationDuration = ipcStopwatch.Elapsed;
+        CodexHookEventLog.AppendRuntimeResult(
+            hookInput,
+            commandName,
+            response.Succeeded,
+            response.RuntimeUnavailable,
+            response.ActiveSessionCount,
+            response.Message,
+            timing.CreateRuntimeResultDetails(runtimeClientDiagnostics));
         return 0;
     }
 

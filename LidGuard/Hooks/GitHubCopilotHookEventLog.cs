@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Diagnostics;
 using System.Text;
 using LidGuard.Hooks;
 
@@ -11,7 +12,7 @@ public static class GitHubCopilotHookEventLog
 
     public static void AppendMessage(string message) => AppendLine(CreateLogLine("message", string.Empty, string.Empty, string.Empty, Sanitize(message)));
 
-    public static void AppendReceived(string configuredHookEventName, GitHubCopilotHookInput hookInput)
+    public static TimeSpan AppendReceived(string configuredHookEventName, GitHubCopilotHookInput hookInput)
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
@@ -21,26 +22,30 @@ public static class GitHubCopilotHookEventLog
             + $"transcriptPath={Sanitize(hookInput.TranscriptPath)} errorContext={Sanitize(hookInput.ErrorContext)} recoverable={Sanitize(hookInput.Recoverable?.ToString() ?? string.Empty)}";
         if (IsUserPromptSubmittedEvent(configuredHookEventName)) details = $"{details} prompt={Sanitize(hookInput.Prompt)}";
 
-        AppendLine(CreateLogLine("received", configuredHookEventName, hookInput.SessionIdentifier, hookInput.WorkingDirectory, details));
+        return AppendLine(CreateLogLine("received", configuredHookEventName, hookInput.SessionIdentifier, hookInput.WorkingDirectory, details));
     }
 
-    public static void AppendRuntimeResult(
+    public static TimeSpan AppendRuntimeResult(
         string configuredHookEventName,
         GitHubCopilotHookInput hookInput,
         string commandName,
         bool succeeded,
         bool runtimeUnavailable,
         int activeSessionCount,
-        string message)
+        string message,
+        string timingDetails = "")
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
-        AppendLine(CreateLogLine(
+        var details = $"command={Sanitize(commandName)} succeeded={succeeded} runtimeUnavailable={runtimeUnavailable} activeSessions={activeSessionCount} message={Sanitize(message)}";
+        if (!string.IsNullOrWhiteSpace(timingDetails)) details = $"{details} {Sanitize(timingDetails)}";
+
+        return AppendLine(CreateLogLine(
             "runtime-result",
             configuredHookEventName,
             hookInput.SessionIdentifier,
             hookInput.WorkingDirectory,
-            $"command={Sanitize(commandName)} succeeded={succeeded} runtimeUnavailable={runtimeUnavailable} activeSessions={activeSessionCount} message={Sanitize(message)}"));
+            details));
     }
 
     public static string GetDefaultLogFilePath()
@@ -69,8 +74,9 @@ public static class GitHubCopilotHookEventLog
         }
     }
 
-    private static void AppendLine(string line)
+    private static TimeSpan AppendLine(string line)
     {
+        var stopwatch = Stopwatch.StartNew();
         try
         {
             var logFilePath = GetDefaultLogFilePath();
@@ -81,6 +87,12 @@ public static class GitHubCopilotHookEventLog
         catch
         {
         }
+        finally
+        {
+            stopwatch.Stop();
+        }
+
+        return stopwatch.Elapsed;
     }
 
     private static string CreateLogLine(string kind, string hookEventName, string sessionIdentifier, string workingDirectory, string details)

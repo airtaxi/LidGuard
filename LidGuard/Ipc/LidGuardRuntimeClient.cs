@@ -21,14 +21,33 @@ internal sealed class LidGuardRuntimeClient
     public async Task<LidGuardPipeResponse> SendAsync(
         LidGuardPipeRequest request,
         bool startRuntimeIfUnavailable,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        LidGuardRuntimeClientDiagnostics diagnostics = null)
     {
+        var initialConnectStopwatch = Stopwatch.StartNew();
         var pipeClientStream = startRuntimeIfUnavailable
             ? await TryConnectAsync(s_runtimeAutoStartProbeTimeout, cancellationToken)
             : await WaitForRuntimeAsync(s_runtimeConnectionTimeout, cancellationToken);
+        initialConnectStopwatch.Stop();
+        if (diagnostics is not null)
+        {
+            diagnostics.InitialConnectDuration = initialConnectStopwatch.Elapsed;
+            diagnostics.InitialConnectSucceeded = pipeClientStream is not null;
+        }
+
         if (pipeClientStream is null && startRuntimeIfUnavailable)
         {
-            if (!TryStartRuntime())
+            if (diagnostics is not null) diagnostics.RuntimeStartAttempted = true;
+            var runtimeStartStopwatch = Stopwatch.StartNew();
+            var runtimeStarted = TryStartRuntime();
+            runtimeStartStopwatch.Stop();
+            if (diagnostics is not null)
+            {
+                diagnostics.RuntimeStartDuration = runtimeStartStopwatch.Elapsed;
+                diagnostics.RuntimeStartSucceeded = runtimeStarted;
+            }
+
+            if (!runtimeStarted)
             {
                 return LidGuardPipeResponse.Failure(
                     "Failed to start the LidGuard runtime.",
@@ -36,7 +55,14 @@ internal sealed class LidGuardRuntimeClient
                     messageCode: LidGuardPipeResponseMessageCodes.FailedToStartRuntime);
             }
 
+            var startupConnectStopwatch = Stopwatch.StartNew();
             pipeClientStream = await WaitForRuntimeAsync(s_runtimeStartupTimeout, cancellationToken);
+            startupConnectStopwatch.Stop();
+            if (diagnostics is not null)
+            {
+                diagnostics.StartupConnectDuration = startupConnectStopwatch.Elapsed;
+                diagnostics.StartupConnectSucceeded = pipeClientStream is not null;
+            }
         }
 
         if (pipeClientStream is null)
@@ -49,7 +75,11 @@ internal sealed class LidGuardRuntimeClient
 
         using (pipeClientStream)
         {
-            return await SendConnectedAsync(pipeClientStream, request, cancellationToken);
+            var sendReceiveStopwatch = Stopwatch.StartNew();
+            var response = await SendConnectedAsync(pipeClientStream, request, cancellationToken);
+            sendReceiveStopwatch.Stop();
+            if (diagnostics is not null) diagnostics.SendReceiveDuration = sendReceiveStopwatch.Elapsed;
+            return response;
         }
     }
 

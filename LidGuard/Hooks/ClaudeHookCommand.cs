@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using LidGuard.Ipc;
 using LidGuard.Settings;
@@ -13,7 +14,11 @@ internal static class ClaudeHookCommand
 
     public static async Task<int> RunAsync()
     {
+        var timing = new HookExecutionTiming();
+        var inputReadStopwatch = Stopwatch.StartNew();
         var hookInputJson = await Console.In.ReadToEndAsync();
+        inputReadStopwatch.Stop();
+        timing.InputReadDuration = inputReadStopwatch.Elapsed;
         if (string.IsNullOrWhiteSpace(hookInputJson))
         {
             ClaudeHookEventLog.AppendMessage("LidGuard Claude hook received empty input.");
@@ -21,15 +26,20 @@ internal static class ClaudeHookCommand
         }
 
         ClaudeHookInput hookInput;
+        var parseStopwatch = Stopwatch.StartNew();
         try
         {
             hookInput = JsonSerializer.Deserialize(hookInputJson, LidGuardJsonSerializerContext.Default.ClaudeHookInput);
         }
         catch (JsonException exception)
         {
+            parseStopwatch.Stop();
+            timing.ParseDuration = parseStopwatch.Elapsed;
             ClaudeHookEventLog.AppendMessage($"LidGuard Claude hook could not parse input: {exception.Message}");
             return 0;
         }
+        parseStopwatch.Stop();
+        timing.ParseDuration = parseStopwatch.Elapsed;
 
         if (hookInput is null)
         {
@@ -37,7 +47,7 @@ internal static class ClaudeHookCommand
             return 0;
         }
 
-        ClaudeHookEventLog.AppendReceived(hookInput);
+        timing.AddLogWriteDuration(ClaudeHookEventLog.AppendReceived(hookInput));
         var hookEventName = hookInput.HookEventName.Trim();
         if (hookEventName.Equals(ClaudeHookEventNames.Notification, StringComparison.Ordinal)) return await HandleNotificationAsync(hookInput);
         if (hookEventName.Equals(ClaudeHookEventNames.SubagentStart, StringComparison.Ordinal))
@@ -74,7 +84,7 @@ internal static class ClaudeHookCommand
         if (hookEventName.Equals(ClaudeHookEventNames.PostToolUseFailure, StringComparison.Ordinal))
         {
             return hookInput.IsInterrupt
-                ? await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookInput)
+                ? await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookInput, timing: timing)
                 : await ReportActivityAsync(hookInput);
         }
 
@@ -85,7 +95,7 @@ internal static class ClaudeHookCommand
                 return await ReportActivityAsync(hookInput, "task-notification");
             }
 
-            return await SendRuntimeRequestAsync(LidGuardPipeCommands.Start, hookInput);
+            return await SendRuntimeRequestAsync(LidGuardPipeCommands.Start, hookInput, timing: timing);
         }
 
         if (hookEventName.Equals(ClaudeHookEventNames.Elicitation, StringComparison.Ordinal)) return await WriteClosedLidElicitationDecisionAsync();
@@ -104,10 +114,11 @@ internal static class ClaudeHookCommand
                     LidGuardPipeCommands.Stop,
                     hookInput,
                     hasPendingProviderWork: true,
-                    pendingProviderWorkReason: pendingProviderWorkReason);
+                    pendingProviderWorkReason: pendingProviderWorkReason,
+                    timing: timing);
             }
 
-            return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookInput, isProviderSessionEnd);
+            return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookInput, isProviderSessionEnd, timing: timing);
         }
 
         return 0;
@@ -188,22 +199,33 @@ internal static class ClaudeHookCommand
         bool isProviderSessionEnd = false,
         string sessionEndReason = "",
         bool hasPendingProviderWork = false,
-        string pendingProviderWorkReason = "")
+        string pendingProviderWorkReason = "",
+        HookExecutionTiming timing = null)
     {
         // Claude Code hook handling accepts exit 0 + empty stdout as a no-op success,
         // while structured JSON is only needed when a hook intentionally makes a decision.
         var hasSettings = false;
         var settings = LidGuardSettings.Default;
+        var settingsLoadStopwatch = Stopwatch.StartNew();
         if (commandName == LidGuardPipeCommands.Start)
         {
             if (!LidGuardSettingsStore.TryLoadOrCreate(out settings, out var settingsMessage))
             {
+                settingsLoadStopwatch.Stop();
+                if (timing is not null) timing.SettingsLoadDuration = settingsLoadStopwatch.Elapsed;
                 ClaudeHookEventLog.AppendMessage(settingsMessage);
                 return 0;
             }
 
             hasSettings = true;
         }
+        settingsLoadStopwatch.Stop();
+        if (timing is not null) timing.SettingsLoadDuration = settingsLoadStopwatch.Elapsed;
+
+        var parentProcessResolveStopwatch = Stopwatch.StartNew();
+        var watchedProcessIdentifier = HookCommandUtilities.ResolveHookWatchedProcessIdentifier(commandName, AgentProvider.Claude, settings);
+        parentProcessResolveStopwatch.Stop();
+        if (timing is not null) timing.ParentProcessResolveDuration = parentProcessResolveStopwatch.Elapsed;
 
         var request = new LidGuardPipeRequest
         {
@@ -214,7 +236,7 @@ internal static class ClaudeHookCommand
             SessionEndReason = isProviderSessionEnd ? CreateSessionEndReason(hookInput, sessionEndReason) : string.Empty,
             HasPendingProviderWork = hasPendingProviderWork,
             PendingProviderWorkReason = pendingProviderWorkReason,
-            WatchedProcessIdentifier = HookCommandUtilities.ResolveHookWatchedProcessIdentifier(commandName, AgentProvider.Claude, settings),
+            WatchedProcessIdentifier = watchedProcessIdentifier,
             InputPrompt = commandName == LidGuardPipeCommands.Start ? hookInput.Prompt : string.Empty,
             WorkingDirectory = GetWorkingDirectory(hookInput),
             TranscriptPath = hookInput.TranscriptPath,
@@ -223,8 +245,19 @@ internal static class ClaudeHookCommand
         };
 
         var startRuntimeIfUnavailable = commandName == LidGuardPipeCommands.Start;
-        var response = await new LidGuardRuntimeClient().SendAsync(request, startRuntimeIfUnavailable);
-        ClaudeHookEventLog.AppendRuntimeResult(hookInput, commandName, response.Succeeded, response.RuntimeUnavailable, response.ActiveSessionCount, response.Message);
+        var runtimeClientDiagnostics = new LidGuardRuntimeClientDiagnostics();
+        var ipcStopwatch = Stopwatch.StartNew();
+        var response = await new LidGuardRuntimeClient().SendAsync(request, startRuntimeIfUnavailable, diagnostics: runtimeClientDiagnostics);
+        ipcStopwatch.Stop();
+        if (timing is not null) timing.InterprocessCommunicationDuration = ipcStopwatch.Elapsed;
+        ClaudeHookEventLog.AppendRuntimeResult(
+            hookInput,
+            commandName,
+            response.Succeeded,
+            response.RuntimeUnavailable,
+            response.ActiveSessionCount,
+            response.Message,
+            timing?.CreateRuntimeResultDetails(runtimeClientDiagnostics) ?? string.Empty);
         if (commandName == LidGuardPipeCommands.Stop && !hasPendingProviderWork) ClaudeHookWorkTracker.ClearSessionState(GetSessionIdentifier(hookInput));
         return 0;
     }

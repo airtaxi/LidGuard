@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Diagnostics;
 using System.Text;
 using LidGuard.Hooks;
 
@@ -16,14 +17,14 @@ public static class CodexHookEventLog
         return Path.Combine(localApplicationDataPath, LogDirectoryName, LogFileName);
     }
 
-    public static void AppendReceived(CodexHookInput hookInput)
+    public static TimeSpan AppendReceived(CodexHookInput hookInput)
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
         var details = $"source={Sanitize(hookInput.Source)} model={Sanitize(hookInput.Model)} transcriptPath={Sanitize(hookInput.TranscriptPath)}";
         if (IsUserPromptSubmitEvent(hookInput.HookEventName)) details = $"{details} prompt={Sanitize(hookInput.Prompt)}";
 
-        AppendLine(CreateLogLine(
+        return AppendLine(CreateLogLine(
             "received",
             hookInput.HookEventName,
             hookInput.SessionIdentifier,
@@ -31,16 +32,26 @@ public static class CodexHookEventLog
             details));
     }
 
-    public static void AppendRuntimeResult(CodexHookInput hookInput, string commandName, bool succeeded, bool runtimeUnavailable, int activeSessionCount, string message)
+    public static TimeSpan AppendRuntimeResult(
+        CodexHookInput hookInput,
+        string commandName,
+        bool succeeded,
+        bool runtimeUnavailable,
+        int activeSessionCount,
+        string message,
+        string timingDetails = "")
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
-        AppendLine(CreateLogLine(
+        var details = $"command={Sanitize(commandName)} transcriptPath={Sanitize(hookInput.TranscriptPath)} succeeded={succeeded} runtimeUnavailable={runtimeUnavailable} activeSessions={activeSessionCount} message={Sanitize(message)}";
+        if (!string.IsNullOrWhiteSpace(timingDetails)) details = $"{details} {Sanitize(timingDetails)}";
+
+        return AppendLine(CreateLogLine(
             "runtime-result",
             hookInput.HookEventName,
             hookInput.SessionIdentifier,
             hookInput.WorkingDirectory,
-            $"command={Sanitize(commandName)} transcriptPath={Sanitize(hookInput.TranscriptPath)} succeeded={succeeded} runtimeUnavailable={runtimeUnavailable} activeSessions={activeSessionCount} message={Sanitize(message)}"));
+            details));
     }
 
     public static void AppendMessage(string message) => AppendLine(CreateLogLine("message", string.Empty, string.Empty, string.Empty, Sanitize(message)));
@@ -64,8 +75,9 @@ public static class CodexHookEventLog
         }
     }
 
-    private static void AppendLine(string line)
+    private static TimeSpan AppendLine(string line)
     {
+        var stopwatch = Stopwatch.StartNew();
         try
         {
             var logFilePath = GetDefaultLogFilePath();
@@ -76,6 +88,12 @@ public static class CodexHookEventLog
         catch
         {
         }
+        finally
+        {
+            stopwatch.Stop();
+        }
+
+        return stopwatch.Elapsed;
     }
 
     private static string CreateLogLine(string kind, string hookEventName, string sessionIdentifier, string workingDirectory, string details)

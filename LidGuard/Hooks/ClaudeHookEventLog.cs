@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Diagnostics;
 using System.Text;
 using LidGuard.Hooks;
 
@@ -16,7 +17,7 @@ public static class ClaudeHookEventLog
         return Path.Combine(localApplicationDataPath, LogDirectoryName, LogFileName);
     }
 
-    public static void AppendReceived(ClaudeHookInput hookInput)
+    public static TimeSpan AppendReceived(ClaudeHookInput hookInput)
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
@@ -27,7 +28,7 @@ public static class ClaudeHookEventLog
             + $"isInterrupt={hookInput.IsInterrupt} stopHookActive={hookInput.StopHookActive}";
         if (IsUserPromptSubmitEvent(hookInput.HookEventName)) details = $"{details} prompt={Sanitize(hookInput.Prompt)}";
 
-        AppendLine(CreateLogLine(
+        return AppendLine(CreateLogLine(
             "received",
             hookInput.HookEventName,
             hookInput.SessionIdentifier,
@@ -35,16 +36,26 @@ public static class ClaudeHookEventLog
             details));
     }
 
-    public static void AppendRuntimeResult(ClaudeHookInput hookInput, string commandName, bool succeeded, bool runtimeUnavailable, int activeSessionCount, string message)
+    public static TimeSpan AppendRuntimeResult(
+        ClaudeHookInput hookInput,
+        string commandName,
+        bool succeeded,
+        bool runtimeUnavailable,
+        int activeSessionCount,
+        string message,
+        string timingDetails = "")
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
-        AppendLine(CreateLogLine(
+        var details = $"command={Sanitize(commandName)} transcriptPath={Sanitize(hookInput.TranscriptPath)} succeeded={succeeded} runtimeUnavailable={runtimeUnavailable} activeSessions={activeSessionCount} message={Sanitize(message)}";
+        if (!string.IsNullOrWhiteSpace(timingDetails)) details = $"{details} {Sanitize(timingDetails)}";
+
+        return AppendLine(CreateLogLine(
             "runtime-result",
             hookInput.HookEventName,
             hookInput.SessionIdentifier,
             hookInput.WorkingDirectory,
-            $"command={Sanitize(commandName)} transcriptPath={Sanitize(hookInput.TranscriptPath)} succeeded={succeeded} runtimeUnavailable={runtimeUnavailable} activeSessions={activeSessionCount} message={Sanitize(message)}"));
+            details));
     }
 
     public static void AppendMessage(string message) => AppendLine(CreateLogLine("message", string.Empty, string.Empty, string.Empty, Sanitize(message)));
@@ -68,8 +79,9 @@ public static class ClaudeHookEventLog
         }
     }
 
-    private static void AppendLine(string line)
+    private static TimeSpan AppendLine(string line)
     {
+        var stopwatch = Stopwatch.StartNew();
         try
         {
             var logFilePath = GetDefaultLogFilePath();
@@ -80,6 +92,12 @@ public static class ClaudeHookEventLog
         catch
         {
         }
+        finally
+        {
+            stopwatch.Stop();
+        }
+
+        return stopwatch.Elapsed;
     }
 
     private static string CreateLogLine(string kind, string hookEventName, string sessionIdentifier, string workingDirectory, string details)
