@@ -83,10 +83,40 @@ jobs:
           if ([string]::IsNullOrWhiteSpace($version)) { throw "VersionPrefix was not found." }
 
           Remove-Item -LiteralPath "artifacts" -Recurse -Force -ErrorAction SilentlyContinue
+          $packRootDirectory = Join-Path $env:GITHUB_WORKSPACE "artifacts/pack"
+          $packagesDirectory = Join-Path $env:GITHUB_WORKSPACE "artifacts/packages"
+          New-Item -ItemType Directory -Path $packRootDirectory, $packagesDirectory -Force | Out-Null
+
           $runtimeIdentifiers = @("win-x64", "win-x86", "win-arm64")
           foreach ($runtimeIdentifier in $runtimeIdentifiers) {
-            dotnet pack "LidGuard/LidGuard.csproj" -c Release -r $runtimeIdentifier /p:ContinuousIntegrationBuild=true
-            if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for $runtimeIdentifier." }
+            $runtimePackDirectory = Join-Path $packRootDirectory $runtimeIdentifier
+            $runtimeProjectDirectory = Join-Path $runtimePackDirectory "LidGuard"
+            New-Item -ItemType Directory -Path $runtimePackDirectory -Force | Out-Null
+            Copy-Item -LiteralPath "LidGuard" -Destination $runtimeProjectDirectory -Recurse -Force
+          }
+
+          $packJobs = foreach ($runtimeIdentifier in $runtimeIdentifiers) {
+            $runtimeProjectPath = Join-Path $packRootDirectory "$runtimeIdentifier/LidGuard/LidGuard.csproj"
+            Start-Job -Name "pack-$runtimeIdentifier" -ArgumentList $runtimeIdentifier, $runtimeProjectPath, $packagesDirectory -ScriptBlock {
+              param($runtimeIdentifier, $runtimeProjectPath, $packagesDirectory)
+              $ErrorActionPreference = "Stop"
+              & dotnet pack $runtimeProjectPath -c Release -r $runtimeIdentifier /p:ContinuousIntegrationBuild=true "/p:PackageOutputPath=$packagesDirectory"
+              if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for $runtimeIdentifier." }
+            }
+          }
+
+          $packJobs | Wait-Job | Out-Null
+          $failedRuntimeIdentifiers = @()
+          foreach ($packJob in $packJobs) {
+            Receive-Job -Job $packJob -ErrorAction Continue
+            if ($packJob.State -ne "Completed") {
+              $failedRuntimeIdentifiers += $packJob.Name.Replace("pack-", "")
+            }
+          }
+
+          $packJobs | Remove-Job
+          if ($failedRuntimeIdentifiers.Count -gt 0) {
+            throw "dotnet pack failed for: $($failedRuntimeIdentifiers -join ', ')"
           }
 
           foreach ($runtimeIdentifier in $runtimeIdentifiers) {
@@ -128,10 +158,47 @@ jobs:
           fi
 
           rm -rf artifacts
+          pack_root_directory="$GITHUB_WORKSPACE/artifacts/pack"
+          packages_directory="$GITHUB_WORKSPACE/artifacts/packages"
+          logs_directory="$GITHUB_WORKSPACE/artifacts/logs"
+          mkdir -p "$pack_root_directory" "$packages_directory" "$logs_directory"
+
           runtime_identifiers="linux-x64"
           for runtime_identifier in $runtime_identifiers; do
-            dotnet pack LidGuard/LidGuard.csproj -c Release -r "$runtime_identifier" /p:ContinuousIntegrationBuild=true
+            runtime_pack_directory="$pack_root_directory/$runtime_identifier"
+            runtime_project_directory="$runtime_pack_directory/LidGuard"
+            mkdir -p "$runtime_pack_directory"
+            cp -R LidGuard "$runtime_project_directory"
           done
+
+          pack_process_ids=""
+          for runtime_identifier in $runtime_identifiers; do
+            runtime_project_path="$pack_root_directory/$runtime_identifier/LidGuard/LidGuard.csproj"
+            log_path="$logs_directory/pack-$runtime_identifier.log"
+            (
+              set -euo pipefail
+              dotnet pack "$runtime_project_path" -c Release -r "$runtime_identifier" /p:ContinuousIntegrationBuild=true "/p:PackageOutputPath=$packages_directory"
+            ) > "$log_path" 2>&1 &
+            pack_process_ids="$pack_process_ids $runtime_identifier:$!"
+          done
+
+          failed_runtime_identifiers=""
+          for pack_process_id in $pack_process_ids; do
+            runtime_identifier="${pack_process_id%%:*}"
+            process_id="${pack_process_id##*:}"
+            log_path="$logs_directory/pack-$runtime_identifier.log"
+            if wait "$process_id"; then
+              cat "$log_path"
+            else
+              cat "$log_path"
+              failed_runtime_identifiers="$failed_runtime_identifiers $runtime_identifier"
+            fi
+          done
+
+          if [ -n "$failed_runtime_identifiers" ]; then
+            echo "dotnet pack failed for:$failed_runtime_identifiers" >&2
+            exit 1
+          fi
 
           for runtime_identifier in $runtime_identifiers; do
             package_path="artifacts/packages/lidguard.$runtime_identifier.$version.nupkg"
@@ -175,11 +242,54 @@ jobs:
           fi
 
           rm -rf artifacts
-          dotnet pack LidGuard/LidGuard.csproj -c Release /p:ContinuousIntegrationBuild=true
+          pack_root_directory="$GITHUB_WORKSPACE/artifacts/pack"
+          packages_directory="$GITHUB_WORKSPACE/artifacts/packages"
+          logs_directory="$GITHUB_WORKSPACE/artifacts/logs"
+          mkdir -p "$pack_root_directory" "$packages_directory" "$logs_directory"
+
           runtime_identifiers="osx-x64 osx-arm64"
           for runtime_identifier in $runtime_identifiers; do
-            dotnet pack LidGuard/LidGuard.csproj -c Release -r "$runtime_identifier" /p:ContinuousIntegrationBuild=true
+            runtime_pack_directory="$pack_root_directory/$runtime_identifier"
+            runtime_project_directory="$runtime_pack_directory/LidGuard"
+            mkdir -p "$runtime_pack_directory"
+            cp -R LidGuard "$runtime_project_directory"
           done
+
+          pack_process_ids=""
+          log_path="$logs_directory/pack-root.log"
+          (
+            set -euo pipefail
+            dotnet pack LidGuard/LidGuard.csproj -c Release /p:ContinuousIntegrationBuild=true "/p:PackageOutputPath=$packages_directory"
+          ) > "$log_path" 2>&1 &
+          pack_process_ids="$pack_process_ids root:$!"
+
+          for runtime_identifier in $runtime_identifiers; do
+            runtime_project_path="$pack_root_directory/$runtime_identifier/LidGuard/LidGuard.csproj"
+            log_path="$logs_directory/pack-$runtime_identifier.log"
+            (
+              set -euo pipefail
+              dotnet pack "$runtime_project_path" -c Release -r "$runtime_identifier" /p:ContinuousIntegrationBuild=true "/p:PackageOutputPath=$packages_directory"
+            ) > "$log_path" 2>&1 &
+            pack_process_ids="$pack_process_ids $runtime_identifier:$!"
+          done
+
+          failed_runtime_identifiers=""
+          for pack_process_id in $pack_process_ids; do
+            runtime_identifier="${pack_process_id%%:*}"
+            process_id="${pack_process_id##*:}"
+            log_path="$logs_directory/pack-$runtime_identifier.log"
+            if wait "$process_id"; then
+              cat "$log_path"
+            else
+              cat "$log_path"
+              failed_runtime_identifiers="$failed_runtime_identifiers $runtime_identifier"
+            fi
+          done
+
+          if [ -n "$failed_runtime_identifiers" ]; then
+            echo "dotnet pack failed for:$failed_runtime_identifiers" >&2
+            exit 1
+          fi
 
           package_path="artifacts/packages/lidguard.$version.nupkg"
           if [ ! -f "$package_path" ]; then
