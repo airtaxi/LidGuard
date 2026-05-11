@@ -15,6 +15,8 @@ public sealed class ProcessExitWatcher : IProcessExitWatcher
     {
         if (processIdentifier <= 0) return LidGuardOperationResult.Failure("A process identifier is required.");
 
+        await Task.Yield();
+
         var accessRights = PROCESS_ACCESS_RIGHTS.PROCESS_SYNCHRONIZE | PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_LIMITED_INFORMATION;
         using var processHandle = PInvoke.OpenProcess_SafeHandle(accessRights, false, (uint)processIdentifier);
         if (processHandle.IsInvalid) return LidGuardOperationResult.Failure("Failed to open the process to watch.", Marshal.GetLastPInvokeError());

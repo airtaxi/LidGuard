@@ -9,6 +9,8 @@ namespace LidGuard.Ipc;
 
 internal sealed class LidGuardRuntimeClient
 {
+    private static readonly TimeSpan s_runtimeAutoStartProbeTimeout = TimeSpan.FromMilliseconds(50);
+    private static readonly TimeSpan s_runtimeConnectionAttemptTimeout = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan s_runtimeConnectionTimeout = TimeSpan.FromMilliseconds(750);
     private static readonly TimeSpan s_runtimeStartupTimeout = TimeSpan.FromSeconds(5);
     private static readonly string s_unixDetachedLauncherScript =
@@ -21,7 +23,9 @@ internal sealed class LidGuardRuntimeClient
         bool startRuntimeIfUnavailable,
         CancellationToken cancellationToken = default)
     {
-        var pipeClientStream = await WaitForRuntimeAsync(s_runtimeConnectionTimeout, cancellationToken);
+        var pipeClientStream = startRuntimeIfUnavailable
+            ? await TryConnectAsync(s_runtimeAutoStartProbeTimeout, cancellationToken)
+            : await WaitForRuntimeAsync(s_runtimeConnectionTimeout, cancellationToken);
         if (pipeClientStream is null && startRuntimeIfUnavailable)
         {
             if (!TryStartRuntime())
@@ -164,7 +168,7 @@ internal sealed class LidGuardRuntimeClient
         while (DateTimeOffset.UtcNow < stopAt)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var pipeClientStream = await TryConnectAsync(cancellationToken);
+            var pipeClientStream = await TryConnectAsync(s_runtimeConnectionAttemptTimeout, cancellationToken);
             if (pipeClientStream is not null) return pipeClientStream;
             await Task.Delay(100, cancellationToken);
         }
@@ -172,7 +176,7 @@ internal sealed class LidGuardRuntimeClient
         return null;
     }
 
-    private static async Task<NamedPipeClientStream> TryConnectAsync(CancellationToken cancellationToken)
+    private static async Task<NamedPipeClientStream> TryConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
     {
         var pipeClientStream = new NamedPipeClientStream(
             ".",
@@ -182,7 +186,8 @@ internal sealed class LidGuardRuntimeClient
 
         try
         {
-            await pipeClientStream.ConnectAsync(250, cancellationToken);
+            var timeoutMilliseconds = Math.Max(1, (int)timeout.TotalMilliseconds);
+            await pipeClientStream.ConnectAsync(timeoutMilliseconds, cancellationToken);
             return pipeClientStream;
         }
         catch (OperationCanceledException)

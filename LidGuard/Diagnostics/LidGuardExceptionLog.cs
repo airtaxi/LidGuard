@@ -8,6 +8,7 @@ internal static class LidGuardExceptionLog
 {
     private const string LogDirectoryName = "log";
     private const string LogFileName = "exceptions.log";
+    private const string FirstChanceExceptionLogEnvironmentVariable = "LIDGUARD_LOG_FIRST_CHANCE_EXCEPTIONS";
     private static readonly object s_subscriptionGate = new();
     private static readonly object s_writeGate = new();
     private static bool s_handlersSubscribed;
@@ -24,11 +25,21 @@ internal static class LidGuardExceptionLog
         {
             if (s_handlersSubscribed) return;
 
-            AppDomain.CurrentDomain.FirstChanceException += HandleFirstChanceException;
+            if (IsFirstChanceExceptionLoggingEnabled()) AppDomain.CurrentDomain.FirstChanceException += HandleFirstChanceException;
             AppDomain.CurrentDomain.UnhandledException += HandleUnhandledException;
             TaskScheduler.UnobservedTaskException += HandleUnobservedTaskException;
             s_handlersSubscribed = true;
         }
+    }
+
+    private static bool IsFirstChanceExceptionLoggingEnabled()
+    {
+        var configuredValue = Environment.GetEnvironmentVariable(FirstChanceExceptionLogEnvironmentVariable);
+        return configuredValue is not null
+            && (configuredValue.Equals("1", StringComparison.OrdinalIgnoreCase)
+                || configuredValue.Equals("true", StringComparison.OrdinalIgnoreCase)
+                || configuredValue.Equals("yes", StringComparison.OrdinalIgnoreCase)
+                || configuredValue.Equals("on", StringComparison.OrdinalIgnoreCase));
     }
 
     private static void HandleFirstChanceException(object sender, FirstChanceExceptionEventArgs eventArguments)
