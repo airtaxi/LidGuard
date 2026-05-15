@@ -8,8 +8,8 @@ namespace LidGuard.Hooks;
 
 public static class HookCommandUtilities
 {
-    private const string BashShellName = "bash";
-    private const string PowerShellShellName = "powershell";
+    public const string BashShellName = "bash";
+    public const string PowerShellShellName = "powershell";
 
     public static string GetDefaultHookExecutableReference()
     {

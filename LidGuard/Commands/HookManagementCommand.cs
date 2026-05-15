@@ -254,14 +254,14 @@ internal static class HookManagementCommand
         return false;
     }
 
-    private static void WriteHookManagementResult(string backupFilePath, bool changed, AgentProvider provider, string message)
+    internal static void WriteHookManagementResult(string backupFilePath, bool changed, AgentProvider provider, string message)
     {
         if (!string.IsNullOrWhiteSpace(backupFilePath)) Console.WriteLine(LocalizationService.GetFormattedString("ManagementBackup", backupFilePath));
         Console.WriteLine(LocalizationService.GetFormattedString("ManagementChanged", LocalizationService.DisplayBoolean(changed)));
         Console.WriteLine(LocalizationService.GetFormattedString("ManagementMessage", DisplayHookManagementMessage(provider, message)));
     }
 
-    private static void WriteHookInspection(HookInstallationInspection inspection)
+    internal static void WriteHookInspection(HookInstallationInspection inspection)
     {
         switch (inspection.Provider)
         {

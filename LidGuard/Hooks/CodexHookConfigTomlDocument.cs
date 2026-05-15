@@ -69,7 +69,7 @@ public static class CodexHookConfigTomlDocument
         var hasSessionEndHook = ContainsHookBlock(content, CodexHookEventNames.SessionEnd);
         var hasExpectedHookCommand = HasAllRequiredHookCommands(contentUsedForRequiredHookInspection, command => command.Equals(hookCommand, StringComparison.Ordinal));
         var hasValidHookCommand = HasAllRequiredHookCommands(contentUsedForRequiredHookInspection, IsLidGuardCodexHookCommand);
-        var isInstalled = hasHooksFeatureFlag && !hasDeprecatedCodexHooksFeatureFlag && hasValidHookCommand;
+        var isInstalled = hasHooksFeatureFlag && !hasDeprecatedCodexHooksFeatureFlag && hasValidHookCommand && hasExpectedHookCommand;
         var status = isInstalled ? HookInstallationStatus.Installed : hasManagedHookEntries ? HookInstallationStatus.NeedsUpdate : HookInstallationStatus.NotInstalled;
         var message = isInstalled ? "Codex hook is installed." : hasManagedHookEntries ? "Codex hook is installed but needs update." : "Codex hook is not installed.";
 

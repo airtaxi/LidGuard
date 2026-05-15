@@ -20,6 +20,15 @@ Detect the operating system and shell:
 - Linux with systemd/logind support where available
 - macOS
 
+On Windows, also detect whether WSL is installed and whether any distro is available. Use non-destructive checks such as:
+
+```powershell
+wsl.exe --status
+wsl.exe --list --quiet
+```
+
+If WSL is unavailable, continue with normal Windows setup. If WSL is available, remember the available distro names and whether the user has a default distro. Do not install WSL hook or MCP configuration yet; ask the user later before changing WSL-side provider configuration.
+
 Also detect whether the current shell can run commands interactively. If this agent cannot run commands, tell the user to use the manual installation instructions instead of pretending the install succeeded.
 
 ## 2. Ensure .NET 10 SDK Is Available
@@ -122,6 +131,34 @@ lidguard mcp-status all
 
 Missing provider configuration roots can be reported as skipped. That is expected when the user has not installed or initialized a provider CLI.
 
+On Windows, if WSL was detected in step 1, ask the user whether they also want LidGuard integration installed inside WSL. Explain that this edits provider hook/MCP configuration inside the WSL distro, but the configured commands call the Windows `lidguard.exe`; LidGuard does not need to be installed inside WSL.
+
+Ask which distro to target:
+
+- Use the default WSL distro.
+- Use a specific detected distro name.
+- Skip WSL integration.
+
+If the user chooses WSL integration, run the matching commands. Omit `--distro` for the default distro, or include `--distro "<name>"` for a named distro:
+
+```bash
+lidguard wsl-hook-install --provider all
+lidguard wsl-hook-status --provider all
+lidguard wsl-mcp-install all
+lidguard wsl-mcp-status all
+```
+
+If the user chose a named distro:
+
+```bash
+lidguard wsl-hook-install --provider all --distro "<distro-name>"
+lidguard wsl-hook-status --provider all --distro "<distro-name>"
+lidguard wsl-mcp-install all --distro "<distro-name>"
+lidguard wsl-mcp-status all --distro "<distro-name>"
+```
+
+As with native provider setup, missing WSL-side provider configuration roots can be reported as skipped. That is expected when the provider has not been installed or initialized inside that distro.
+
 If the current AI provider is not one of LidGuard's native hook providers, or if the user wants to use another provider that supports custom stdio MCP servers, offer Provider MCP as a best-effort fallback. Ask the user for:
 
 - the provider display name to pass as `--provider-name`
@@ -134,6 +171,16 @@ lidguard provider-mcp-status --config "<json-path>"
 lidguard provider-mcp-install --config "<json-path>" --provider-name "<name>"
 lidguard provider-mcp-status --config "<json-path>"
 ```
+
+If the user wants Provider MCP for a provider running inside WSL, and Windows WSL integration was selected, use the WSL-specific commands with a WSL-side JSON path:
+
+```bash
+lidguard wsl-provider-mcp-status --config "<json-path>"
+lidguard wsl-provider-mcp-install --config "<json-path>" --provider-name "<name>"
+lidguard wsl-provider-mcp-status --config "<json-path>"
+```
+
+For a named distro, add `--distro "<distro-name>"` to each command.
 
 After installing Provider MCP, tell the user to give [ProviderMcpModelPrompt.md](../ProviderMcpModelPrompt.md) to that provider's model as a provider/session instruction. If the agent needs to fetch it directly, use `https://raw.githubusercontent.com/airtaxi/LidGuard/master/ProviderMcpModelPrompt.md`. The model must follow that prompt so it knows when to call `provider_start_session`, `provider_set_soft_lock`, `provider_clear_soft_lock`, and `provider_stop_session`.
 
@@ -293,6 +340,7 @@ When finished, summarize:
 - Whether .NET 10 was already present or installed.
 - The installed LidGuard version if you can determine it.
 - Which provider hooks and MCP servers were installed or skipped.
+- Whether WSL was detected, and whether WSL hook/MCP integration was installed, skipped, or declined.
 - Whether Provider MCP was installed for a non-native provider, including the provider name and config path.
 - The concrete current settings from `lidguard status`.
 - Any permission checks that still need manual attention.

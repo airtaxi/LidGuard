@@ -1806,4 +1806,70 @@
   <data name="DisplaySuspendHistoryEntryCount" xml:space="preserve">
     <value>{0}개 항목</value>
   </data>
+  <data name="WslExecutableNotFound" xml:space="preserve">
+    <value>wsl.exe를 시작할 수 없습니다. WSL 통합 명령을 사용하기 전에 WSL을 설치하세요.</value>
+  </data>
+  <data name="WslStatusFailed" xml:space="preserve">
+    <value>WSL을 사용할 수 없습니다: {0}</value>
+  </data>
+  <data name="WslDefaultDistroUnavailable" xml:space="preserve">
+    <value>기본 WSL distro를 사용할 수 없습니다: {0}</value>
+  </data>
+  <data name="WslNamedDistroUnavailable" xml:space="preserve">
+    <value>WSL distro '{0}'를 사용할 수 없습니다: {1}</value>
+  </data>
+  <data name="WslPathConversionFailed" xml:space="preserve">
+    <value>wslpath로 LidGuard 실행 파일 경로를 변환하지 못했습니다: {0}</value>
+  </data>
+  <data name="WslPathConversionEmpty" xml:space="preserve">
+    <value>wslpath가 빈 LidGuard 실행 파일 경로를 반환했습니다.</value>
+  </data>
+  <data name="WslLidGuardExecutableNotResolved" xml:space="preserve">
+    <value>WSL 통합에 사용할 Windows lidguard.exe 경로를 확인할 수 없습니다.</value>
+  </data>
+  <data name="Help_Wsl_DistroOption" xml:space="preserve">
+    <value>기본 distro 대신 특정 WSL distro를 사용합니다.</value>
+  </data>
+  <data name="Help_Wsl_WindowsOnlyNote" xml:space="preserve">
+    <value>이 명령은 Windows 빌드에서만 사용할 수 있습니다.</value>
+  </data>
+  <data name="Help_Wsl_CommandNote" xml:space="preserve">
+    <value>생성되는 WSL 설정은 현재 Windows lidguard.exe를 WSL 경로로 실행합니다.</value>
+  </data>
+  <data name="Help_WslHookStatus_Description" xml:space="preserve">
+    <value>WSL distro 내부의 LidGuard hook 상태를 표시합니다.</value>
+  </data>
+  <data name="Help_WslHookInstall_Description" xml:space="preserve">
+    <value>WSL distro 내부에 LidGuard-managed hook을 설치합니다.</value>
+  </data>
+  <data name="Help_WslHookRemove_Description" xml:space="preserve">
+    <value>WSL distro 내부에서 LidGuard-managed hook을 제거합니다.</value>
+  </data>
+  <data name="Help_WslCodexHooks_Description" xml:space="preserve">
+    <value>WSL에서 Windows LidGuard를 실행하는 Codex hook snippet을 출력합니다.</value>
+  </data>
+  <data name="Help_WslClaudeHooks_Description" xml:space="preserve">
+    <value>WSL에서 Windows LidGuard를 실행하는 Claude hook snippet을 출력합니다.</value>
+  </data>
+  <data name="Help_WslCopilotHooks_Description" xml:space="preserve">
+    <value>WSL에서 Windows LidGuard를 실행하는 GitHub Copilot hook snippet을 출력합니다.</value>
+  </data>
+  <data name="Help_WslMcpStatus_Description" xml:space="preserve">
+    <value>WSL distro 내부의 LidGuard MCP 서버 상태를 표시합니다.</value>
+  </data>
+  <data name="Help_WslMcpInstall_Description" xml:space="preserve">
+    <value>WSL distro 내부에 LidGuard MCP 서버를 설치합니다.</value>
+  </data>
+  <data name="Help_WslMcpRemove_Description" xml:space="preserve">
+    <value>WSL distro 내부에서 LidGuard MCP 서버를 제거합니다.</value>
+  </data>
+  <data name="Help_WslProviderMcpStatus_Description" xml:space="preserve">
+    <value>WSL distro 내부의 generic Provider MCP 서버 상태를 표시합니다.</value>
+  </data>
+  <data name="Help_WslProviderMcpInstall_Description" xml:space="preserve">
+    <value>WSL distro 내부에 generic Provider MCP 서버를 설치합니다.</value>
+  </data>
+  <data name="Help_WslProviderMcpRemove_Description" xml:space="preserve">
+    <value>WSL distro 내부에서 generic Provider MCP 서버를 제거합니다.</value>
+  </data>
 </root>

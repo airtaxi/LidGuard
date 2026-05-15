@@ -140,5 +140,11 @@ Reference:
 ## Operational Notes
 
 - Existing Codex and Claude config should point directly to the intended `lidguard.exe` path after `hook-install`.
+- Windows WSL integration commands must install or inspect configuration inside the selected/default WSL distro while pointing hook, MCP, and Provider MCP commands back to the current Windows `lidguard.exe` through its `wslpath`-converted absolute path.
+- WSL hook commands are `wsl-hook-status`, `wsl-hook-install`, and `wsl-hook-remove` with `--provider codex|claude|copilot|all` and optional `--distro <name>`.
+- WSL hook snippet commands are `wsl-codex-hooks`, `wsl-claude-hooks`, and `wsl-copilot-hooks`; generated Claude and GitHub Copilot hook config must use the `bash` shell, not Windows `powershell`.
+- WSL provider-specific MCP aliases are `wsl-codex-mcp-status/install/remove`, `wsl-claude-mcp-status/install/remove`, and `wsl-copilot-mcp-status/install/remove`. The generic selected-provider forms are `wsl-mcp-status/install/remove [codex|claude|copilot|all]`.
+- WSL generic Provider MCP direct JSON commands are `wsl-provider-mcp-status`, `wsl-provider-mcp-install`, and `wsl-provider-mcp-remove`, using WSL-side JSON config paths and a server entry that runs the Windows `lidguard.exe` WSL path.
+- WSL hook status must treat a managed hook that points at an older `lidguard.exe` version path as needing update, matching MCP refresh behavior.
 - When helping a user with Claude deployment or configuration, explicitly and strongly warn them not to rely on third-party prompt hooks with LidGuard. State that LidGuard can only make its own closed-lid permission or elicitation decisions and cannot safely respond on behalf of unrelated Claude hook prompts.
 - If tests are added, prefer focused unit tests around Commons policy controllers and small integration-style tests around Windows service wrappers where safe.

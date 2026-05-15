@@ -19,6 +19,7 @@ Most keep-awake tools protect a process, a timer, or the whole machine. LidGuard
 
 - Agent-aware sleep prevention for Codex, Claude Code, and GitHub Copilot CLI.
 - Optional lid-close protection so protected agent work can continue after the laptop closes, with automatic restoration of the original OS policy.
+- Windows-to-WSL hook and MCP setup, so providers running inside WSL can call the Windows LidGuard runtime without installing LidGuard inside the distro.
 - Automatic Sleep or Hibernate after protected sessions finish, helping avoid unnecessary battery drain.
 - Cross-platform power control for Windows, systemd/logind Linux, and macOS.
 - Safety controls such as SoftLock, inactive timeout, pre-suspend hooks, diagnostics, and emergency hibernation.
@@ -64,6 +65,18 @@ lidguard hook-install --provider all
 lidguard mcp-install all
 ```
 
+### Windows WSL Integration
+
+On Windows, LidGuard can also install hook, MCP, and Provider MCP configuration inside WSL distributions. Nothing needs to run or be installed as a separate LidGuard binary inside WSL. The WSL-side provider config points back to the current Windows `lidguard.exe` through its `wslpath`-converted absolute path.
+
+```powershell
+lidguard wsl-hook-install --provider all
+lidguard wsl-mcp-install all
+lidguard wsl-provider-mcp-install --config "~/.example/mcp.json" --provider-name "ExampleProvider"
+```
+
+Pass `--distro <name>` to target a specific distribution. If `--distro` is omitted, LidGuard lets `wsl.exe` use the default distribution.
+
 ### Provider MCP For Other Agents
 
 If an AI tool does not have a native LidGuard hook integration but can register a custom stdio MCP server, use Provider MCP as a best-effort integration path:
@@ -83,7 +96,7 @@ LidGuard is currently officially tested with Codex on Windows. Linux, macOS, Cla
 ## Full Feature Overview
 
 - Session tracking and status: active session count, provider/session identity, watched process id, SoftLock state, working directory, local start and last-activity times, current lid state, visible display monitor count, and a live terminal status dashboard.
-- Provider integration: Codex, Claude Code, and GitHub Copilot CLI hooks; hook install/status/remove/events commands; regular MCP install/status/remove commands; and Provider MCP for other tools that can call a custom stdio MCP server.
+- Provider integration: Codex, Claude Code, and GitHub Copilot CLI hooks; hook install/status/remove/events commands; regular MCP install/status/remove commands; Windows WSL hook/MCP setup commands; and Provider MCP for other tools that can call a custom stdio MCP server.
 - Keep-awake controls: configurable system sleep prevention, display sleep prevention, Windows away-mode requests, and the Windows power request reason text shown by the operating system.
 - Lid-close handling: temporary Windows lid-action override, Linux `handle-lid-switch` inhibitor, macOS `pmset disablesleep`, and restoration of the user's original policy after protection ends or recovery runs.
 - Process and runtime cleanup: parent-process watching, orphan cleanup, inactive-session timeout SoftLocking, and automatic runtime exit after the configured cleanup delay once all sessions are gone.

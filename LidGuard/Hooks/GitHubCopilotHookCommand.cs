@@ -26,17 +26,23 @@ internal static class GitHubCopilotHookCommand
         }
 
         var hookCommand = HookCommandUtilities.CreateHookCommand(executablePath, LidGuardPipeCommands.CopilotHook);
+        return WriteHookSnippet(format, hookCommand, HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform());
+    }
+
+    internal static int WriteHookSnippet(string format, string hookCommand, string hookShellName)
+    {
+        if (string.IsNullOrWhiteSpace(format)) format = ConfigurationJsonFormat;
         var hookCommandsByEvent = GitHubCopilotHookConfigurationJsonDocument.CreateManagedHookCommands(hookCommand);
 
         if (format.Equals(ConfigurationJsonFormat, StringComparison.OrdinalIgnoreCase) || format.Equals("json", StringComparison.OrdinalIgnoreCase))
         {
-            Console.WriteLine(GitHubCopilotHookConfigurationJsonDocument.CreateConfigurationJson(hookCommandsByEvent));
+            Console.WriteLine(GitHubCopilotHookConfigurationJsonDocument.CreateConfigurationJson(hookCommandsByEvent, hookShellName));
             return 0;
         }
 
         if (format.Equals(HooksJsonFormat, StringComparison.OrdinalIgnoreCase))
         {
-            Console.WriteLine(GitHubCopilotHookConfigurationJsonDocument.CreateHooksJson(hookCommandsByEvent));
+            Console.WriteLine(GitHubCopilotHookConfigurationJsonDocument.CreateHooksJson(hookCommandsByEvent, hookShellName));
             return 0;
         }
 

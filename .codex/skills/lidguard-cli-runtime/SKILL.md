@@ -8,6 +8,10 @@ description: "LidGuard CLI, settings, permission commands, examples, and failure
 ## Command Routing
 
 - Parse `help`, `start`, `stop`, `remove-pre-suspend-webhook`, `remove-post-session-end-webhook`, `remove-session`, `status`, `live-status`, `settings`, `cleanup-orphans`, `current-lid-state`, `current-monitor-count`, `current-temperature`, `suspend-history`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `preview-current-sound`, `mcp-server`, and `provider-mcp-server`.
+- In Windows builds, additionally parse `wsl-hook-status`, `wsl-hook-install`, `wsl-hook-remove`, `wsl-codex-hooks`, `wsl-claude-hooks`, `wsl-copilot-hooks`, `wsl-mcp-status`, `wsl-mcp-install`, `wsl-mcp-remove`, `wsl-codex-mcp-status`, `wsl-codex-mcp-install`, `wsl-codex-mcp-remove`, `wsl-claude-mcp-status`, `wsl-claude-mcp-install`, `wsl-claude-mcp-remove`, `wsl-copilot-mcp-status`, `wsl-copilot-mcp-install`, `wsl-copilot-mcp-remove`, `wsl-provider-mcp-status`, `wsl-provider-mcp-install`, and `wsl-provider-mcp-remove`.
+- WSL management commands are Windows-only and must not appear in Linux or macOS routing or help output.
+- WSL management commands accept optional `--distro <name>`. When present, pass the distro through to `wsl.exe --distribution <name>`; when absent, do not pass a distro so WSL uses its default distro.
+- Before any WSL management command does provider work, verify that `wsl.exe` is usable and that the selected/default distro can execute a trivial command.
 - In Linux builds, additionally parse `linux-permission status`, `linux-permission check`, `linux-permission install`, and `linux-permission remove`.
 - Do not include Linux permission commands in Windows routing or help output.
 - In macOS builds, additionally parse `macos-permission status`, `macos-permission check`, `macos-permission install`, and `macos-permission remove`.
@@ -102,12 +106,24 @@ lidguard hook-status --provider copilot
 lidguard hook-install --provider copilot
 lidguard hook-remove --provider copilot
 lidguard hook-events --provider copilot --count 50
+lidguard wsl-hook-status --provider codex --distro Ubuntu
+lidguard wsl-hook-install --provider claude
+lidguard wsl-hook-remove --provider copilot --distro Ubuntu
+lidguard wsl-codex-hooks config-toml --distro Ubuntu
+lidguard wsl-claude-hooks settings-json
+lidguard wsl-copilot-hooks config-json
 lidguard mcp-status all
 lidguard mcp-install all
 lidguard mcp-remove all
+lidguard wsl-mcp-status codex --distro Ubuntu
+lidguard wsl-codex-mcp-install
+lidguard wsl-claude-mcp-remove --distro Ubuntu
 lidguard provider-mcp-status --config "C:\path\to\mcp.json"
 lidguard provider-mcp-install --config "C:\path\to\mcp.json" --provider-name "ExampleProvider"
 lidguard provider-mcp-remove --config "C:\path\to\mcp.json"
+lidguard wsl-provider-mcp-status --config "~/.example/mcp.json" --distro Ubuntu
+lidguard wsl-provider-mcp-install --config "~/.example/mcp.json" --provider-name "ExampleProvider"
+lidguard wsl-provider-mcp-remove --config "~/.example/mcp.json"
 lidguard provider-mcp-server --provider-name "ExampleProvider"
 lidguard current-lid-state
 lidguard current-monitor-count

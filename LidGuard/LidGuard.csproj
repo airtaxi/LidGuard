@@ -26,6 +26,7 @@
     <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' == '' and $([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))">macOS</CurrentTargetPlatform>
     <DefineConstants Condition="'$(CurrentTargetPlatform)' == 'linux'">$(DefineConstants);LIDGUARD_LINUX</DefineConstants>
     <DefineConstants Condition="'$(CurrentTargetPlatform)' == 'macOS'">$(DefineConstants);LIDGUARD_MACOS</DefineConstants>
+    <DefineConstants Condition="'$(CurrentTargetPlatform)' == 'windows'">$(DefineConstants);LIDGUARD_WINDOWS</DefineConstants>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>lidguard</ToolCommandName>
     <PackageId>lidguard</PackageId>

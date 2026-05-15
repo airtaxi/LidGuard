@@ -26,16 +26,21 @@ internal static class ClaudeHookCommand
         }
 
         var hookCommand = HookCommandUtilities.CreateHookCommand(executablePath, LidGuardPipeCommands.ClaudeHook);
+        return WriteHookSnippet(format, hookCommand, HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform());
+    }
 
+    internal static int WriteHookSnippet(string format, string hookCommand, string hookShellName)
+    {
+        if (string.IsNullOrWhiteSpace(format)) format = SettingsJsonFormat;
         if (format.Equals(SettingsJsonFormat, StringComparison.OrdinalIgnoreCase) || format.Equals("json", StringComparison.OrdinalIgnoreCase))
         {
-            Console.WriteLine(ClaudeHookSettingsJsonDocument.CreateSettingsJsonSnippet(hookCommand));
+            Console.WriteLine(ClaudeHookSettingsJsonDocument.CreateSettingsJsonSnippet(hookCommand, hookShellName));
             return 0;
         }
 
         if (format.Equals(HooksJsonFormat, StringComparison.OrdinalIgnoreCase))
         {
-            Console.WriteLine(ClaudeHookSettingsJsonDocument.CreateHooksJsonSnippet(hookCommand));
+            Console.WriteLine(ClaudeHookSettingsJsonDocument.CreateHooksJsonSnippet(hookCommand, hookShellName));
             return 0;
         }
 

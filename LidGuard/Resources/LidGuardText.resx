@@ -1806,4 +1806,70 @@
   <data name="DisplaySuspendHistoryEntryCount" xml:space="preserve">
     <value>{0} entries</value>
   </data>
+  <data name="WslExecutableNotFound" xml:space="preserve">
+    <value>wsl.exe could not be started. Install WSL before using WSL integration commands.</value>
+  </data>
+  <data name="WslStatusFailed" xml:space="preserve">
+    <value>WSL is not available: {0}</value>
+  </data>
+  <data name="WslDefaultDistroUnavailable" xml:space="preserve">
+    <value>The default WSL distro is not available: {0}</value>
+  </data>
+  <data name="WslNamedDistroUnavailable" xml:space="preserve">
+    <value>The WSL distro '{0}' is not available: {1}</value>
+  </data>
+  <data name="WslPathConversionFailed" xml:space="preserve">
+    <value>Failed to convert the LidGuard executable path with wslpath: {0}</value>
+  </data>
+  <data name="WslPathConversionEmpty" xml:space="preserve">
+    <value>wslpath returned an empty LidGuard executable path.</value>
+  </data>
+  <data name="WslLidGuardExecutableNotResolved" xml:space="preserve">
+    <value>A Windows lidguard.exe path could not be resolved for WSL integration.</value>
+  </data>
+  <data name="Help_Wsl_DistroOption" xml:space="preserve">
+    <value>Use a specific WSL distro instead of the default distro.</value>
+  </data>
+  <data name="Help_Wsl_WindowsOnlyNote" xml:space="preserve">
+    <value>This command is available only in Windows builds.</value>
+  </data>
+  <data name="Help_Wsl_CommandNote" xml:space="preserve">
+    <value>The generated WSL config runs the current Windows lidguard.exe through its WSL path.</value>
+  </data>
+  <data name="Help_WslHookStatus_Description" xml:space="preserve">
+    <value>Show LidGuard hook status inside a WSL distro.</value>
+  </data>
+  <data name="Help_WslHookInstall_Description" xml:space="preserve">
+    <value>Install LidGuard-managed hooks inside a WSL distro.</value>
+  </data>
+  <data name="Help_WslHookRemove_Description" xml:space="preserve">
+    <value>Remove LidGuard-managed hooks from a WSL distro.</value>
+  </data>
+  <data name="Help_WslCodexHooks_Description" xml:space="preserve">
+    <value>Print a Codex hook snippet that runs Windows LidGuard from WSL.</value>
+  </data>
+  <data name="Help_WslClaudeHooks_Description" xml:space="preserve">
+    <value>Print a Claude hook snippet that runs Windows LidGuard from WSL.</value>
+  </data>
+  <data name="Help_WslCopilotHooks_Description" xml:space="preserve">
+    <value>Print a GitHub Copilot hook snippet that runs Windows LidGuard from WSL.</value>
+  </data>
+  <data name="Help_WslMcpStatus_Description" xml:space="preserve">
+    <value>Show LidGuard MCP server status inside a WSL distro.</value>
+  </data>
+  <data name="Help_WslMcpInstall_Description" xml:space="preserve">
+    <value>Install the LidGuard MCP server inside a WSL distro.</value>
+  </data>
+  <data name="Help_WslMcpRemove_Description" xml:space="preserve">
+    <value>Remove the LidGuard MCP server from a WSL distro.</value>
+  </data>
+  <data name="Help_WslProviderMcpStatus_Description" xml:space="preserve">
+    <value>Show generic Provider MCP server status inside a WSL distro.</value>
+  </data>
+  <data name="Help_WslProviderMcpInstall_Description" xml:space="preserve">
+    <value>Install a generic Provider MCP server inside a WSL distro.</value>
+  </data>
+  <data name="Help_WslProviderMcpRemove_Description" xml:space="preserve">
+    <value>Remove a generic Provider MCP server from a WSL distro.</value>
+  </data>
 </root>

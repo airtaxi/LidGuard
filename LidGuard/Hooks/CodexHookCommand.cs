@@ -26,7 +26,12 @@ internal static class CodexHookCommand
         }
 
         var hookCommand = HookCommandUtilities.CreateHookCommand(executablePath, LidGuardPipeCommands.CodexHook);
+        return WriteHookSnippet(format, hookCommand);
+    }
 
+    internal static int WriteHookSnippet(string format, string hookCommand)
+    {
+        if (string.IsNullOrWhiteSpace(format)) format = ConfigTomlFormat;
         if (format.Equals(ConfigTomlFormat, StringComparison.OrdinalIgnoreCase) || format.Equals("toml", StringComparison.OrdinalIgnoreCase))
         {
             WriteConfigTomlSnippet(hookCommand);

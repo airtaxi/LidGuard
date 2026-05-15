@@ -11,6 +11,7 @@ description: "LidGuard MCP runtime reference. Use when working on regular MCP se
 - `mcp-status` inspects the provider's global/user MCP configuration and reports whether the `lidguard` server entry is present and still points at the current LidGuard executable plus `mcp-server`.
 - `mcp-install` and `mcp-remove` register or remove the user/global LidGuard stdio MCP server named `lidguard` for Codex, Claude Code, and GitHub Copilot CLI.
 - `mcp-install` refreshes an existing managed LidGuard MCP registration, including one that points at an older LidGuard executable, by removing the existing provider entry first, then reinstalling it with the current command and arguments.
+- Windows WSL MCP management mirrors regular MCP management with WSL-side provider CLIs and config files, but the registered command must be the current Windows `lidguard.exe` converted through `wslpath`. Supported commands are `wsl-mcp-status/install/remove [codex|claude|copilot|all]` plus `wsl-codex-mcp-*`, `wsl-claude-mcp-*`, and `wsl-copilot-mcp-*` aliases.
 - Prefer the current `lidguard.exe` path over the Windows `.cmd` shim when registering stdio MCP servers, because shim wrapper processes can remain visible under MCP clients and should not be mistaken for agent work.
 - Expose `get_settings_status`, `list_sessions`, `update_settings`, `remove_session`, `set_session_soft_lock`, and `clear_session_soft_lock`.
 - Make `list_sessions` return the active session list plus runtime lid/session state without the full settings payload.
@@ -29,6 +30,7 @@ description: "LidGuard MCP runtime reference. Use when working on regular MCP se
 - Host the separate stdio Provider MCP server through `lidguard provider-mcp-server --provider-name <name>`.
 - `provider-mcp-install` and `provider-mcp-remove` directly edit a caller-supplied JSON config file and register or remove a managed stdio server entry for `provider-mcp-server`.
 - `provider-mcp-status` inspects a caller-supplied JSON config file and reports whether the managed server entry still points at the current LidGuard executable plus `provider-mcp-server`.
+- Windows WSL Provider MCP install/remove/status commands are `lidguard wsl-provider-mcp-status --config <json-path>`, `lidguard wsl-provider-mcp-install --config <json-path> --provider-name <name>`, and `lidguard wsl-provider-mcp-remove --config <json-path>`, with optional `--distro <name>` and WSL-side JSON paths.
 - Do not use Codex, Claude Code, or GitHub Copilot CLI-specific MCP registration commands in the generic Provider MCP config path.
 - Use the same MCP executable selection policy as `mcp-install`: prefer the current `lidguard.exe` path over the Windows `.cmd` shim.
 - Expose `provider_start_session`, `provider_stop_session`, `provider_set_soft_lock`, and `provider_clear_soft_lock`.
@@ -56,8 +58,14 @@ lidguard mcp-remove copilot
 lidguard mcp-status all
 lidguard mcp-install all
 lidguard mcp-remove all
+lidguard wsl-mcp-status codex --distro Ubuntu
+lidguard wsl-codex-mcp-install
+lidguard wsl-claude-mcp-remove --distro Ubuntu
 lidguard provider-mcp-status --config "C:\path\to\mcp.json"
 lidguard provider-mcp-install --config "C:\path\to\mcp.json" --provider-name "ExampleProvider"
 lidguard provider-mcp-remove --config "C:\path\to\mcp.json"
+lidguard wsl-provider-mcp-status --config "~/.example/mcp.json" --distro Ubuntu
+lidguard wsl-provider-mcp-install --config "~/.example/mcp.json" --provider-name "ExampleProvider"
+lidguard wsl-provider-mcp-remove --config "~/.example/mcp.json"
 lidguard provider-mcp-server --provider-name "ExampleProvider"
 ```

@@ -115,9 +115,17 @@ lidguard hook-events --provider codex --count 20
 lidguard codex-hooks
 lidguard claude-hooks
 lidguard copilot-hooks
+lidguard wsl-hook-status --provider codex
+lidguard wsl-hook-install --provider all --distro Ubuntu
+lidguard wsl-hook-remove --provider claude
+lidguard wsl-codex-hooks config-toml --distro Ubuntu
+lidguard wsl-claude-hooks settings-json
+lidguard wsl-copilot-hooks config-json
 ```
 
 `hook-status`, `hook-install`, `hook-remove`, `hook-events`에서 `--provider`를 생략하면 LidGuard가 provider를 물어봅니다. `--provider all`을 사용하면 LidGuard는 기본 설정 루트가 이미 존재하는 provider만 처리하고, 없는 provider는 skipped로 보고합니다.
+
+`wsl-*` hook 명령은 Windows 빌드에서만 사용할 수 있습니다. 이 명령은 WSL 내부의 provider 설정을 검사하거나 수정하고, hook 명령에는 WSL 경로로 변환한 현재 Windows `lidguard.exe`를 기록합니다. 특정 distro를 선택하려면 `--distro <name>`을 전달하세요. 생략하면 `wsl.exe`가 기본 distro를 사용합니다. WSL hook 상태 검사는 이전 버전의 managed `lidguard.exe` 경로를 업데이트 필요 상태로 인식하므로 재설치하면 versioned tool path가 갱신됩니다.
 
 ## MCP 통합
 
@@ -125,12 +133,23 @@ lidguard copilot-hooks
 lidguard mcp-status codex
 lidguard mcp-install codex
 lidguard mcp-remove codex
+lidguard wsl-mcp-status codex
+lidguard wsl-mcp-install all --distro Ubuntu
+lidguard wsl-mcp-remove claude
+lidguard wsl-codex-mcp-install
+lidguard wsl-claude-mcp-status --distro Ubuntu
+lidguard wsl-copilot-mcp-remove
 lidguard provider-mcp-status --config "<json-path>"
 lidguard provider-mcp-install --config "<json-path>" --provider-name "<name>"
 lidguard provider-mcp-remove --config "<json-path>"
+lidguard wsl-provider-mcp-status --config "~/.example/mcp.json"
+lidguard wsl-provider-mcp-install --config "~/.example/mcp.json" --provider-name "<name>" --distro Ubuntu
+lidguard wsl-provider-mcp-remove --config "~/.example/mcp.json"
 ```
 
 `mcp-status`, `mcp-install`, `mcp-remove`에서 provider 위치 인자를 생략하면 LidGuard가 provider를 물어봅니다. `mcp-install`을 다시 실행하면 기존 managed LidGuard MCP server를 먼저 제거한 뒤 현재 명령으로 다시 설치하여 갱신합니다. `all`을 사용하면 LidGuard는 기본 설정 루트가 이미 존재하는 provider만 처리하고, 없는 provider는 skipped로 보고합니다.
+
+WSL MCP 명령은 Windows 전용입니다. 선택한 또는 기본 WSL distro 안에서 provider CLI를 실행하지만, stdio server command에는 Windows `lidguard.exe`의 WSL 경로를 등록합니다. `wsl-codex-mcp-*`, `wsl-claude-mcp-*`, `wsl-copilot-mcp-*`는 `wsl-mcp-*`의 provider별 별칭입니다. `wsl-provider-mcp-*`는 WSL 쪽 JSON config path를 직접 편집합니다.
 
 ## Managed / 내부 명령
 
@@ -161,5 +180,7 @@ LidGuard는 기본 설정과 runtime log를 다음 위치에 저장합니다:
 Linux에서는 idle sleep protection이 systemd/logind `sleep`, `idle` inhibitor를 사용합니다. Lid-close handling은 별도이며 `--change-lid-action true`는 `handle-lid-switch` inhibitor를 유지하고, `false`는 배포판의 lid-close 처리를 변경하지 않습니다.
 
 macOS에서는 idle sleep protection이 `caffeinate`를 사용합니다. `--change-lid-action true`의 lid-close protection은 `pmset -a disablesleep 1`을 임시 적용하고 원래 `SleepDisabled` 상태를 pending backup으로 저장한 뒤, 보호 종료 또는 다음 CLI recovery path에서 복구합니다. Hibernate는 지원되는 `hibernatemode` 값을 임시로 `25`로 바꾸고 `pmset sleepnow`를 요청한 뒤, 원래 mode는 pending backup에 남겨 이후 CLI recovery에서 복구합니다. 온도는 먼저 Apple Silicon `IOHIDEventSystemClient` processor sensor에서 가능한 범위에서 읽고, 실패하면 `powermetrics --samplers smc` sample로 fallback합니다. sensor나 권한이 없으면 Emergency Hibernation poll을 건너뜁니다. Emergency Hibernation 요청에서 hibernate에 실패하면 LidGuard는 즉시 Sleep을 대체 동작으로 요청하고 두 결과를 모두 기록합니다.
+
+Windows에서 WSL 통합은 설정 관리 기능입니다. WSL provider는 Windows LidGuard 실행 파일을 호출하며, LidGuard는 여전히 Windows host runtime을 보호합니다. distro 내부에 별도의 Linux 전원 관리를 추가하지는 않습니다. WSL 명령이 provider 작업을 실행하기 전에는 `wsl.exe`를 사용할 수 있는지와 선택한 또는 기본 distro가 간단한 명령을 실행할 수 있는지 먼저 확인합니다.
 
 Provider MCP 통합은 동작이 보장되지 않는 보조 기능입니다. 모델이 적절한 시점에 실제로 LidGuard MCP tool을 호출해야만 동작하므로, LidGuard는 provider가 세션을 올바르게 시작, soft-lock, clear, stop한다고 보장할 수 없습니다.

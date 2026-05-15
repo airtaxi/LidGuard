@@ -19,6 +19,7 @@ LidGuard는 노트북 덮개를 닫은 뒤에도 오래 걸리는 로컬 AI 코�
 
 - Codex, Claude Code, GitHub Copilot CLI 같은 로컬 AI 코딩 에이전트 작업을 인식해 절전 진입을 막습니다.
 - 보호 중인 에이전트 작업이 노트북 덮개를 닫은 뒤에도 계속될 수 있도록 덮개 닫힘 동작을 임시로 바꾸고, 작업 종료 후 원래 OS 전원 정책으로 복원합니다.
+- Windows에서 WSL 내부의 hook과 MCP 설정을 설치해, WSL에서 실행되는 provider가 별도 LidGuard 바이너리 설치 없이 Windows LidGuard runtime을 호출할 수 있게 합니다.
 - 보호 중인 작업이 끝난 뒤 설정에 따라 절전 모드 또는 최대 절전 모드로 전환해 불필요한 배터리 소모를 줄이는 데 도움을 줍니다.
 - Windows, systemd/logind 기반 Linux, macOS 전원 제어를 지원합니다.
 - SoftLock, 비활성 시간 제한, 절전 진입 전 Webhook, 진단 기능, 긴급 최대 절전 모드 같은 안전 장치를 제공합니다.
@@ -64,6 +65,18 @@ lidguard hook-install --provider all
 lidguard mcp-install all
 ```
 
+### Windows WSL 통합
+
+Windows에서는 WSL distro 내부에 hook, MCP, Provider MCP 설정을 설치할 수 있습니다. WSL 내부에 별도 LidGuard 바이너리를 설치하거나 실행할 필요는 없습니다. WSL 쪽 provider 설정은 `wslpath`로 변환한 현재 Windows `lidguard.exe` 절대 경로를 호출합니다.
+
+```powershell
+lidguard wsl-hook-install --provider all
+lidguard wsl-mcp-install all
+lidguard wsl-provider-mcp-install --config "~/.example/mcp.json" --provider-name "ExampleProvider"
+```
+
+특정 distro를 지정하려면 `--distro <name>`을 전달하세요. 생략하면 `wsl.exe`가 기본 distro를 사용합니다.
+
 ### 다른 AI 도구 연결
 
 AI 도구가 LidGuard를 직접 지원하지 않더라도, 사용자 지정 도구 서버를 등록할 수 있다면 별도 연결 방식으로 시도할 수 있습니다. 이 방식은 모델이 정해진 시점에 LidGuard 도구를 직접 호출해야 하므로 동작이 보장되지는 않습니다.
@@ -83,7 +96,7 @@ lidguard provider-mcp-install --config "C:\path\to\mcp.json" --provider-name "Ex
 ## 전체 기능
 
 - 현재 상태 표시: 보호 중인 세션 수, 연결된 도구와 세션 식별값, 감시 중인 프로세스 번호, 사용자 입력 대기 여부, 작업 폴더, 시작 시각, 마지막 활동 시각, 덮개 상태, 보이는 모니터 수, 실시간 터미널 상태 화면을 확인할 수 있습니다.
-- AI 도구 연결: Codex, Claude Code, GitHub Copilot CLI 연결 설정을 설치, 확인, 제거하고 이벤트 기록을 볼 수 있습니다. 사용자 지정 도구 서버를 등록할 수 있는 다른 도구도 별도 연결 방식으로 시도할 수 있습니다.
+- AI 도구 연결: Codex, Claude Code, GitHub Copilot CLI 연결 설정을 설치, 확인, 제거하고 이벤트 기록을 볼 수 있습니다. Windows에서는 WSL 내부 hook/MCP 설정도 설치할 수 있으며, 사용자 지정 도구 서버를 등록할 수 있는 다른 도구도 별도 연결 방식으로 시도할 수 있습니다.
 - 잠들지 않게 하기: 시스템 절전 방지, 화면 절전 방지, Windows의 백그라운드 작업 유지 모드, Windows 전원 설정 화면에 표시할 절전 방지 사유 문구를 설정할 수 있습니다.
 - 덮개 닫힘 처리: Windows에서는 덮개를 닫아도 아무 동작을 하지 않도록 임시 변경하고, Linux와 macOS에서는 각 운영체제 방식으로 덮개 닫힘 절전을 막습니다. 보호가 끝나면 원래 설정으로 되돌립니다.
 - 작업 감시와 정리: AI 도구의 부모 프로세스를 감시하고, 이미 끝난 세션을 정리하며, 오래 활동이 없는 세션은 절전 방지를 풀 수 있습니다. 모든 세션이 끝난 뒤 LidGuard가 얼마 뒤 자동 종료될지도 정할 수 있습니다.

@@ -37,5 +37,17 @@ internal static class LidGuardPipeCommands
     public const string Status = "status";
     public const string Stop = "stop";
     public const string SuspendHistory = "suspend-history";
+    public const string WslClaudeHooks = "wsl-claude-hooks";
+    public const string WslCodexHooks = "wsl-codex-hooks";
+    public const string WslCopilotHooks = "wsl-copilot-hooks";
+    public const string WslHookInstall = "wsl-hook-install";
+    public const string WslHookRemove = "wsl-hook-remove";
+    public const string WslHookStatus = "wsl-hook-status";
+    public const string WslMcpInstall = "wsl-mcp-install";
+    public const string WslMcpRemove = "wsl-mcp-remove";
+    public const string WslMcpStatus = "wsl-mcp-status";
+    public const string WslProviderMcpInstall = "wsl-provider-mcp-install";
+    public const string WslProviderMcpRemove = "wsl-provider-mcp-remove";
+    public const string WslProviderMcpStatus = "wsl-provider-mcp-status";
 }
 

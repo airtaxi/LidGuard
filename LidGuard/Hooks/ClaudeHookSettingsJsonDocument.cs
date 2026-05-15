@@ -32,17 +32,23 @@ public static class ClaudeHookSettingsJsonDocument
     ];
 
     public static string CreateSettingsJsonSnippet(string hookCommand)
+        => CreateSettingsJsonSnippet(hookCommand, HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform());
+
+    public static string CreateSettingsJsonSnippet(string hookCommand, string hookShellName)
     {
         var settingsObject = new JsonObject
         {
             ["$schema"] = ClaudeCodeSettingsSchemaUrl,
-            [HooksPropertyName] = CreateHooksObject(hookCommand)
+            [HooksPropertyName] = CreateHooksObject(hookCommand, hookShellName)
         };
 
         return settingsObject.ToJsonString(s_jsonSerializerOptions);
     }
 
-    public static string CreateHooksJsonSnippet(string hookCommand) => CreateHooksObject(hookCommand).ToJsonString(s_jsonSerializerOptions);
+    public static string CreateHooksJsonSnippet(string hookCommand)
+        => CreateHooksJsonSnippet(hookCommand, HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform());
+
+    public static string CreateHooksJsonSnippet(string hookCommand, string hookShellName) => CreateHooksObject(hookCommand, hookShellName).ToJsonString(s_jsonSerializerOptions);
 
     public static HookInstallationInspection InspectSettingsJson(
         string configurationFilePath,
@@ -50,6 +56,15 @@ public static class ClaudeHookSettingsJsonDocument
         string hookCommand,
         string content,
         bool configurationFileExists)
+        => InspectSettingsJson(configurationFilePath, hookExecutablePath, hookCommand, content, configurationFileExists, HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform());
+
+    public static HookInstallationInspection InspectSettingsJson(
+        string configurationFilePath,
+        string hookExecutablePath,
+        string hookCommand,
+        string content,
+        bool configurationFileExists,
+        string expectedHookShellName)
     {
         if (!TryParseSettingsRoot(content, out var settingsObject, out var parseMessage))
         {
@@ -94,20 +109,20 @@ public static class ClaudeHookSettingsJsonDocument
             };
         }
 
-        if (!TryInspectHookEvent(hooksObject, ClaudeHookEventNames.UserPromptSubmit, hookCommand, string.Empty, out var userPromptSubmitInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PreToolUse, hookCommand, string.Empty, out var preToolUseInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PostToolUse, hookCommand, string.Empty, out var postToolUseInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PostToolUseFailure, hookCommand, string.Empty, out var postToolUseFailureInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SubagentStart, hookCommand, string.Empty, out var subagentStartInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SubagentStop, hookCommand, string.Empty, out var subagentStopInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.TaskCreated, hookCommand, string.Empty, out var taskCreatedInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.TaskCompleted, hookCommand, string.Empty, out var taskCompletedInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Stop, hookCommand, string.Empty, out var stopInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.StopFailure, hookCommand, string.Empty, out var stopFailureInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Elicitation, hookCommand, string.Empty, out var elicitationInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PermissionRequest, hookCommand, string.Empty, out var permissionRequestInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Notification, hookCommand, ClaudeSoftLockSignalSource.NotificationMatcher, out var notificationInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SessionEnd, hookCommand, string.Empty, out var sessionEndInspection, out parseMessage))
+        if (!TryInspectHookEvent(hooksObject, ClaudeHookEventNames.UserPromptSubmit, hookCommand, string.Empty, expectedHookShellName, out var userPromptSubmitInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PreToolUse, hookCommand, string.Empty, expectedHookShellName, out var preToolUseInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PostToolUse, hookCommand, string.Empty, expectedHookShellName, out var postToolUseInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PostToolUseFailure, hookCommand, string.Empty, expectedHookShellName, out var postToolUseFailureInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SubagentStart, hookCommand, string.Empty, expectedHookShellName, out var subagentStartInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SubagentStop, hookCommand, string.Empty, expectedHookShellName, out var subagentStopInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.TaskCreated, hookCommand, string.Empty, expectedHookShellName, out var taskCreatedInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.TaskCompleted, hookCommand, string.Empty, expectedHookShellName, out var taskCompletedInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Stop, hookCommand, string.Empty, expectedHookShellName, out var stopInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.StopFailure, hookCommand, string.Empty, expectedHookShellName, out var stopFailureInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Elicitation, hookCommand, string.Empty, expectedHookShellName, out var elicitationInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PermissionRequest, hookCommand, string.Empty, expectedHookShellName, out var permissionRequestInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Notification, hookCommand, ClaudeSoftLockSignalSource.NotificationMatcher, expectedHookShellName, out var notificationInspection, out parseMessage)
+            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SessionEnd, hookCommand, string.Empty, expectedHookShellName, out var sessionEndInspection, out parseMessage))
         {
             return new HookInstallationInspection
             {
@@ -236,6 +251,9 @@ public static class ClaudeHookSettingsJsonDocument
     }
 
     public static bool TryInstallManagedHooks(string content, string hookCommand, out string updatedContent, out string message)
+        => TryInstallManagedHooks(content, hookCommand, HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform(), out updatedContent, out message);
+
+    public static bool TryInstallManagedHooks(string content, string hookCommand, string hookShellName, out string updatedContent, out string message)
     {
         updatedContent = string.Empty;
         if (!TryParseSettingsRoot(content, out var settingsObject, out message)) return false;
@@ -249,6 +267,7 @@ public static class ClaudeHookSettingsJsonDocument
                 hooksObject,
                 hookDefinition.HookEventName,
                 hookCommand,
+                hookShellName,
                 hookDefinition.GetStatusMessage(),
                 hookDefinition.Matcher,
                 out message))
@@ -307,13 +326,13 @@ public static class ClaudeHookSettingsJsonDocument
         return true;
     }
 
-    private static JsonObject CreateHooksObject(string hookCommand)
+    private static JsonObject CreateHooksObject(string hookCommand, string hookShellName)
     {
         var hooksObject = new JsonObject();
         foreach (var hookDefinition in s_requiredHookDefinitions)
         {
             hooksObject[hookDefinition.HookEventName] = JsonHookConfigurationDocument.CreateJsonArrayWithSingleNode(
-                CreateManagedHookMatcher(hookCommand, hookDefinition.GetStatusMessage(), hookDefinition.Matcher));
+                CreateManagedHookMatcher(hookCommand, hookShellName, hookDefinition.GetStatusMessage(), hookDefinition.Matcher));
         }
 
         return hooksObject;
@@ -349,6 +368,7 @@ public static class ClaudeHookSettingsJsonDocument
         string hookEventName,
         string expectedHookCommand,
         string expectedMatcher,
+        string expectedHookShellName,
         out JsonHookEventInspection inspection,
         out string message)
         => JsonHookConfigurationDocument.TryInspectNestedCommandHookEvent(
@@ -359,7 +379,7 @@ public static class ClaudeHookSettingsJsonDocument
             "Claude",
             IsLidGuardClaudeHookCommand,
             HasExpectedHookCommand,
-            HasExpectedHookShell,
+            hookDefinitionObject => HasExpectedHookShell(hookDefinitionObject, expectedHookShellName),
             out inspection,
             out message);
 
@@ -367,6 +387,7 @@ public static class ClaudeHookSettingsJsonDocument
         JsonObject hooksObject,
         string hookEventName,
         string hookCommand,
+        string hookShellName,
         string statusMessage,
         string matcher,
         out string message)
@@ -375,7 +396,7 @@ public static class ClaudeHookSettingsJsonDocument
 
         if (!hooksObject.TryGetPropertyValue(hookEventName, out var hookEventNode) || hookEventNode is null)
         {
-            hooksObject[hookEventName] = JsonHookConfigurationDocument.CreateJsonArrayWithSingleNode(CreateManagedHookMatcher(hookCommand, statusMessage, matcher));
+            hooksObject[hookEventName] = JsonHookConfigurationDocument.CreateJsonArrayWithSingleNode(CreateManagedHookMatcher(hookCommand, hookShellName, statusMessage, matcher));
             return true;
         }
 
@@ -410,12 +431,12 @@ public static class ClaudeHookSettingsJsonDocument
                 var command = JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "command");
                 if (!IsLidGuardClaudeHookCommand(command)) continue;
 
-                ReplaceManagedHookDefinition(hookMatcherObject, hookDefinitionObject, hookCommand, statusMessage, matcher);
+                ReplaceManagedHookDefinition(hookMatcherObject, hookDefinitionObject, hookCommand, hookShellName, statusMessage, matcher);
                 return true;
             }
         }
 
-        JsonHookConfigurationDocument.AddJsonNode(hookMatchers, CreateManagedHookMatcher(hookCommand, statusMessage, matcher));
+        JsonHookConfigurationDocument.AddJsonNode(hookMatchers, CreateManagedHookMatcher(hookCommand, hookShellName, statusMessage, matcher));
         return true;
     }
 
@@ -432,24 +453,24 @@ public static class ClaudeHookSettingsJsonDocument
             out changed,
             out message);
 
-    private static JsonObject CreateManagedHookMatcher(string hookCommand, string statusMessage, string matcher)
+    private static JsonObject CreateManagedHookMatcher(string hookCommand, string hookShellName, string statusMessage, string matcher)
     {
         var hookMatcherObject = new JsonObject
         {
-            ["hooks"] = JsonHookConfigurationDocument.CreateJsonArrayWithSingleNode(CreateManagedHookDefinition(hookCommand, statusMessage))
+            ["hooks"] = JsonHookConfigurationDocument.CreateJsonArrayWithSingleNode(CreateManagedHookDefinition(hookCommand, hookShellName, statusMessage))
         };
 
         if (!string.IsNullOrWhiteSpace(matcher)) hookMatcherObject["matcher"] = matcher;
         return hookMatcherObject;
     }
 
-    private static JsonObject CreateManagedHookDefinition(string hookCommand, string statusMessage)
+    private static JsonObject CreateManagedHookDefinition(string hookCommand, string hookShellName, string statusMessage)
     {
         return new JsonObject
         {
             ["type"] = "command",
             ["command"] = hookCommand,
-            ["shell"] = HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform(),
+            ["shell"] = hookShellName,
             ["timeout"] = 30,
             ["statusMessage"] = statusMessage
         };
@@ -459,6 +480,7 @@ public static class ClaudeHookSettingsJsonDocument
         JsonObject hookMatcherObject,
         JsonObject hookDefinitionObject,
         string hookCommand,
+        string hookShellName,
         string statusMessage,
         string matcher)
     {
@@ -468,7 +490,7 @@ public static class ClaudeHookSettingsJsonDocument
         hookDefinitionObject.Clear();
         hookDefinitionObject["type"] = "command";
         hookDefinitionObject["command"] = hookCommand;
-        hookDefinitionObject["shell"] = HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform();
+        hookDefinitionObject["shell"] = hookShellName;
         hookDefinitionObject["timeout"] = 30;
         hookDefinitionObject["statusMessage"] = statusMessage;
     }
@@ -476,8 +498,8 @@ public static class ClaudeHookSettingsJsonDocument
     private static bool HasExpectedHookCommand(JsonObject hookDefinitionObject, string expectedHookCommand)
         => JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "command").Equals(expectedHookCommand, StringComparison.Ordinal);
 
-    private static bool HasExpectedHookShell(JsonObject hookDefinitionObject)
-        => JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "shell").Equals(HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform(), StringComparison.OrdinalIgnoreCase);
+    private static bool HasExpectedHookShell(JsonObject hookDefinitionObject, string expectedHookShellName)
+        => JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "shell").Equals(expectedHookShellName, StringComparison.OrdinalIgnoreCase);
 
     private static bool IsLidGuardClaudeHookCommand(string command)
     {

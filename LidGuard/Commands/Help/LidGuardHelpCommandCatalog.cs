@@ -35,12 +35,28 @@ internal static class LidGuardHelpCommandCatalog
             CodexHooksHelpContent.Create(documentContext),
             ClaudeHooksHelpContent.Create(documentContext),
             CopilotHooksHelpContent.Create(documentContext),
+#if LIDGUARD_WINDOWS
+            WslHookStatusHelpContent.Create(documentContext),
+            WslHookInstallHelpContent.Create(documentContext),
+            WslHookRemoveHelpContent.Create(documentContext),
+            WslCodexHooksHelpContent.Create(documentContext),
+            WslClaudeHooksHelpContent.Create(documentContext),
+            WslCopilotHooksHelpContent.Create(documentContext),
+#endif
             McpStatusHelpContent.Create(documentContext),
             McpInstallHelpContent.Create(documentContext),
             McpRemoveHelpContent.Create(documentContext),
             ProviderMcpStatusHelpContent.Create(documentContext),
             ProviderMcpInstallHelpContent.Create(documentContext),
             ProviderMcpRemoveHelpContent.Create(documentContext),
+#if LIDGUARD_WINDOWS
+            WslMcpStatusHelpContent.Create(documentContext),
+            WslMcpInstallHelpContent.Create(documentContext),
+            WslMcpRemoveHelpContent.Create(documentContext),
+            WslProviderMcpStatusHelpContent.Create(documentContext),
+            WslProviderMcpInstallHelpContent.Create(documentContext),
+            WslProviderMcpRemoveHelpContent.Create(documentContext),
+#endif
             McpServerHelpContent.Create(documentContext),
             ProviderMcpServerHelpContent.Create(documentContext),
             CodexHookHelpContent.Create(documentContext),

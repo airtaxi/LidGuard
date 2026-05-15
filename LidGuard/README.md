@@ -115,9 +115,17 @@ lidguard hook-events --provider codex --count 20
 lidguard codex-hooks
 lidguard claude-hooks
 lidguard copilot-hooks
+lidguard wsl-hook-status --provider codex
+lidguard wsl-hook-install --provider all --distro Ubuntu
+lidguard wsl-hook-remove --provider claude
+lidguard wsl-codex-hooks config-toml --distro Ubuntu
+lidguard wsl-claude-hooks settings-json
+lidguard wsl-copilot-hooks config-json
 ```
 
 If `--provider` is omitted on `hook-status`, `hook-install`, `hook-remove`, or `hook-events`, LidGuard prompts for a provider. With `--provider all`, LidGuard only processes providers whose default configuration roots already exist and reports missing providers as skipped.
+
+The `wsl-*` hook commands are available only in Windows builds. They inspect or edit provider configuration inside WSL and write hook commands that call the current Windows `lidguard.exe` through its WSL path. Pass `--distro <name>` to select a distro; when omitted, `wsl.exe` uses the default distro. WSL hook status treats older managed `lidguard.exe` paths as needing update so reinstalling refreshes versioned tool paths.
 
 ## MCP Integration
 
@@ -125,12 +133,23 @@ If `--provider` is omitted on `hook-status`, `hook-install`, `hook-remove`, or `
 lidguard mcp-status codex
 lidguard mcp-install codex
 lidguard mcp-remove codex
+lidguard wsl-mcp-status codex
+lidguard wsl-mcp-install all --distro Ubuntu
+lidguard wsl-mcp-remove claude
+lidguard wsl-codex-mcp-install
+lidguard wsl-claude-mcp-status --distro Ubuntu
+lidguard wsl-copilot-mcp-remove
 lidguard provider-mcp-status --config "<json-path>"
 lidguard provider-mcp-install --config "<json-path>" --provider-name "<name>"
 lidguard provider-mcp-remove --config "<json-path>"
+lidguard wsl-provider-mcp-status --config "~/.example/mcp.json"
+lidguard wsl-provider-mcp-install --config "~/.example/mcp.json" --provider-name "<name>" --distro Ubuntu
+lidguard wsl-provider-mcp-remove --config "~/.example/mcp.json"
 ```
 
 If the provider positional value is omitted on `mcp-status`, `mcp-install`, or `mcp-remove`, LidGuard prompts for a provider. Re-running `mcp-install` refreshes an existing managed LidGuard MCP server by removing it first and then installing the current command. With `all`, LidGuard only processes providers whose default configuration roots already exist and reports missing providers as skipped.
+
+The WSL MCP commands are Windows-only and run the provider CLI inside the selected/default WSL distro while registering the Windows `lidguard.exe` WSL path as the stdio server command. `wsl-codex-mcp-*`, `wsl-claude-mcp-*`, and `wsl-copilot-mcp-*` are provider-specific aliases for `wsl-mcp-*`. `wsl-provider-mcp-*` directly edits a WSL-side JSON config path.
 
 ## Managed / Internal Commands
 
@@ -163,5 +182,7 @@ This package targets `net10.0` and is packaged as RID-specific NativeAOT .NET to
 On Linux, idle sleep protection uses systemd/logind `sleep` and `idle` inhibitors. Lid-close handling is separate: `--change-lid-action true` holds a `handle-lid-switch` inhibitor, while `false` leaves distribution lid-close handling unchanged. Partial systemd/logind environments report missing prerequisites per operation so diagnostics can still explain what is unavailable.
 
 On macOS, idle sleep protection uses `caffeinate`. Lid-close protection with `--change-lid-action true` temporarily sets `pmset -a disablesleep 1`, stores the original `SleepDisabled` state as a pending backup, and restores it when protection ends or during the next CLI recovery path. Hibernate temporarily sets supported `hibernatemode` values to `25` before `pmset sleepnow`, then leaves the original mode in the pending backup for recovery on a later CLI run. Temperature readings first use best-effort Apple Silicon `IOHIDEventSystemClient` processor sensors, then fall back to `powermetrics --samplers smc` samples; unavailable sensors or permissions simply make Emergency Hibernation skip that poll. If an Emergency Hibernation request cannot hibernate, LidGuard immediately requests Sleep as a best-effort fallback and records both outcomes.
+
+On Windows, WSL integration is only configuration management. WSL providers call the Windows LidGuard executable; LidGuard still protects the Windows host runtime and does not add independent Linux power management inside the distro. Before WSL commands run provider work, LidGuard checks that `wsl.exe` is usable and that the selected or default distro can execute a trivial command.
 
 Provider MCP integrations are best-effort only. They depend on the model actually calling the LidGuard MCP tools at the right times, so LidGuard cannot guarantee that a provider will start, soft-lock, clear, and stop sessions correctly.

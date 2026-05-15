@@ -45,6 +45,10 @@ internal static class LidGuardCommandLineApplication
 #if LIDGUARD_MACOS
         if (commandName == MacOSPermissionCommand.CommandName) return MacOSPermissionCommand.Run(commandLineArguments[1..]);
 #endif
+#if LIDGUARD_WINDOWS
+        if (WslHookSnippetCommand.IsCommandName(commandName)) return WslHookSnippetCommand.WriteHookSnippet(commandName, commandLineArguments[1..]);
+        if (WslMcpManagementCommand.IsCommandName(commandName)) return WslMcpManagementCommand.Run(commandName, commandLineArguments[1..]);
+#endif
 
         if (IsSingleValueCommandName(commandName))
         {
@@ -56,6 +60,28 @@ internal static class LidGuardCommandLineApplication
 
             return RunSingleValueCommand(commandName, commandArgument, runtimePlatform);
         }
+
+#if LIDGUARD_WINDOWS
+        if (IsWslOptionParsedCommandName(commandName))
+        {
+            if (!CommandOptionReader.TryParseOptions(commandLineArguments, 1, out var wslOptions, out var wslParseMessage))
+            {
+                Console.Error.WriteLine(wslParseMessage);
+                return 1;
+            }
+
+            return commandName switch
+            {
+                LidGuardPipeCommands.WslHookStatus => WslHookManagementCommand.WriteHookStatus(wslOptions),
+                LidGuardPipeCommands.WslHookInstall => WslHookManagementCommand.InstallHook(wslOptions),
+                LidGuardPipeCommands.WslHookRemove or "wsl-hook-uninstall" => WslHookManagementCommand.RemoveHook(wslOptions),
+                LidGuardPipeCommands.WslProviderMcpStatus => WslProviderMcpManagementCommand.WriteProviderMcpStatus(wslOptions),
+                LidGuardPipeCommands.WslProviderMcpInstall => WslProviderMcpManagementCommand.InstallProviderMcp(wslOptions),
+                LidGuardPipeCommands.WslProviderMcpRemove or "wsl-provider-mcp-uninstall" => WslProviderMcpManagementCommand.RemoveProviderMcp(wslOptions),
+                _ => LidGuardCommandConsole.WriteUnknownCommand(requestedCommandName)
+            };
+        }
+#endif
 
         if (!IsOptionParsedCommandName(commandName)) return LidGuardCommandConsole.WriteUnknownCommand(requestedCommandName);
 
@@ -190,6 +216,18 @@ internal static class LidGuardCommandLineApplication
             or LidGuardPipeCommands.ProviderMcpInstall
             or LidGuardPipeCommands.ProviderMcpRemove
             or "provider-mcp-uninstall";
+
+#if LIDGUARD_WINDOWS
+    private static bool IsWslOptionParsedCommandName(string commandName)
+        => commandName is LidGuardPipeCommands.WslHookStatus
+            or LidGuardPipeCommands.WslHookInstall
+            or LidGuardPipeCommands.WslHookRemove
+            or "wsl-hook-uninstall"
+            or LidGuardPipeCommands.WslProviderMcpStatus
+            or LidGuardPipeCommands.WslProviderMcpInstall
+            or LidGuardPipeCommands.WslProviderMcpRemove
+            or "wsl-provider-mcp-uninstall";
+#endif
 
     private static async Task<int> RunServerAsync(ILidGuardRuntimePlatform runtimePlatform)
     {
