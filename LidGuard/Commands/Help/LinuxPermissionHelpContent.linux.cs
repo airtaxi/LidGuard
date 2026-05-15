@@ -1,3 +1,5 @@
+using LidGuard.Localization;
+
 namespace LidGuard.Commands.Help;
 
 internal static class LinuxPermissionHelpContent
@@ -9,31 +11,31 @@ internal static class LinuxPermissionHelpContent
             LinuxPermissionCommand.CommandName,
             [],
             LidGuardHelpSectionTitles.Diagnostics,
-            "Inspect or manage Linux polkit permissions for systemd/logind suspend and inhibitor operations.",
+            LocalizationService.GetString("Help_LinuxPermission_Description"),
             [
                 new LidGuardHelpCommand(
                     $"{commandDisplayName} {LinuxPermissionCommand.CommandName} status",
-                    "Print the current Linux permission environment without making changes.",
+                    LocalizationService.GetString("Help_LinuxPermission_StatusDescription"),
                     [],
                     []),
                 new LidGuardHelpCommand(
                     $"{commandDisplayName} {LinuxPermissionCommand.CommandName} check",
-                    "Verify required Linux runtime operations without requesting an actual suspend or hibernate.",
+                    LocalizationService.GetString("Help_LinuxPermission_CheckDescription"),
                     [],
                     []),
                 new LidGuardHelpCommand(
                     $"{commandDisplayName} {LinuxPermissionCommand.CommandName} install",
-                    "Install a LidGuard-managed polkit rule for the current user.",
+                    LocalizationService.GetString("Help_LinuxPermission_InstallDescription"),
                     [],
                     [
-                        "This subcommand uses sudo for the one-time administrator write to /etc/polkit-1/rules.d/49-lidguard.rules."
+                        LocalizationService.GetString("Help_LinuxPermission_InstallNote")
                     ]),
                 new LidGuardHelpCommand(
                     $"{commandDisplayName} {LinuxPermissionCommand.CommandName} remove",
-                    "Remove the LidGuard-managed polkit rule when that exact managed rule file is present.",
+                    LocalizationService.GetString("Help_LinuxPermission_RemoveDescription"),
                     [],
                     [
-                        "The rule file is not removed if it does not contain LidGuard's managed markers."
+                        LocalizationService.GetString("Help_LinuxPermission_RemoveNote")
                     ])
             ]);
     }

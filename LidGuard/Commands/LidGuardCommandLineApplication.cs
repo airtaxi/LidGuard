@@ -94,7 +94,7 @@ internal static class LidGuardCommandLineApplication
         if (commandLineArguments.Length == 1) return LidGuardCommandConsole.WriteHelp(0);
         if (commandLineArguments.Length == 2) return LidGuardCommandConsole.WriteHelpForCommand(commandLineArguments[1]);
 
-        Console.Error.WriteLine(LidGuardText.CommandUnexpectedArgument(commandLineArguments[2]));
+        Console.Error.WriteLine(LocalizationService.GetFormattedString("CommandUnexpectedArgument", commandLineArguments[2]));
         LidGuardCommandConsole.TryWriteHelpForCommand(LidGuardPipeCommands.Help, out _);
         return 1;
     }
@@ -137,7 +137,7 @@ internal static class LidGuardCommandLineApplication
         {
             if (!commandLineArguments[argumentIndex].StartsWith("--", StringComparison.Ordinal)) continue;
 
-            message = LidGuardText.CommandUnexpectedArgument(commandLineArguments[argumentIndex]);
+            message = LocalizationService.GetFormattedString("CommandUnexpectedArgument", commandLineArguments[argumentIndex]);
             return false;
         }
 
@@ -147,7 +147,7 @@ internal static class LidGuardCommandLineApplication
             return true;
         }
 
-        message = LidGuardText.CommandUnexpectedArgument(commandLineArguments[2]);
+        message = LocalizationService.GetFormattedString("CommandUnexpectedArgument", commandLineArguments[2]);
         return false;
     }
 
@@ -359,7 +359,7 @@ internal static class LidGuardCommandLineApplication
         var response = await new LidGuardRuntimeClient().SendAsync(request, false);
         if (!response.Succeeded && response.RuntimeUnavailable)
         {
-            Console.WriteLine(LidGuardText.ConsoleRuntimeNotRunningNoSessionRemoved);
+            Console.WriteLine(LocalizationService.GetString("ConsoleRuntimeNotRunningNoSessionRemoved"));
             return 0;
         }
 
@@ -372,11 +372,11 @@ internal static class LidGuardCommandLineApplication
         var response = await new LidGuardRuntimeClient().SendAsync(request, false);
         if (!response.Succeeded && response.RuntimeUnavailable)
         {
-            Console.WriteLine(LidGuardText.ConsoleRuntimeNotRunning);
-            Console.WriteLine(LidGuardText.ConsoleActiveSessions(0));
+            Console.WriteLine(LocalizationService.GetString("ConsoleRuntimeNotRunning"));
+            Console.WriteLine(LocalizationService.GetFormattedString("ConsoleActiveSessions", 0));
             if (LidGuardSettingsStore.TryLoadOrCreate(out var settings, out var settingsMessage))
             {
-                Console.WriteLine(LidGuardText.ConsoleSettingsFile(LidGuardSettingsStore.GetDefaultSettingsFilePath()));
+                Console.WriteLine(LocalizationService.GetFormattedString("ConsoleSettingsFile", LidGuardSettingsStore.GetDefaultSettingsFilePath()));
                 LidGuardCommandConsole.WriteSettings(settings);
             }
             else
@@ -396,7 +396,7 @@ internal static class LidGuardCommandLineApplication
         var response = await new LidGuardRuntimeClient().SendAsync(request, false);
         if (!response.Succeeded && response.RuntimeUnavailable)
         {
-            Console.WriteLine(LidGuardText.ConsoleRuntimeNotRunningNoCleanup);
+            Console.WriteLine(LocalizationService.GetString("ConsoleRuntimeNotRunningNoCleanup"));
             return 0;
         }
 
@@ -415,18 +415,18 @@ internal static class LidGuardCommandLineApplication
         if (!currentTemperatureCelsius.HasValue)
         {
             Console.WriteLine(
-                LidGuardText.GetResourceString(
+                LocalizationService.GetString(
                     "ConsoleCurrentTemperatureUnavailable",
                     "Current recognized system temperature is unavailable from this platform's thermal-zone information using {0} mode.")
-                    .Replace("{0}", LidGuardText.DisplayEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode), StringComparison.Ordinal));
+                    .Replace("{0}", LocalizationService.DisplayEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode), StringComparison.Ordinal));
             return 0;
         }
 
         Console.WriteLine(
-            LidGuardText.GetResourceString(
+            LocalizationService.GetString(
                 "ConsoleCurrentTemperature",
                 "Current recognized system temperature using {0} mode: {1} Celsius")
-                .Replace("{0}", LidGuardText.DisplayEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode), StringComparison.Ordinal)
+                .Replace("{0}", LocalizationService.DisplayEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode), StringComparison.Ordinal)
                 .Replace("{1}", currentTemperatureCelsius.Value.ToString(), StringComparison.Ordinal));
         return 0;
     }
@@ -442,7 +442,7 @@ internal static class LidGuardCommandLineApplication
 
         using var serviceSet = serviceSetResult.Value;
         var visibleDisplayMonitorCount = serviceSet.VisibleDisplayMonitorCountProvider.GetVisibleDisplayMonitorCount();
-        Console.WriteLine(LidGuardText.ConsoleCurrentMonitorCount(visibleDisplayMonitorCount));
+        Console.WriteLine(LocalizationService.GetFormattedString("ConsoleCurrentMonitorCount", visibleDisplayMonitorCount));
         return 0;
     }
 
@@ -457,7 +457,7 @@ internal static class LidGuardCommandLineApplication
 
         using var serviceSet = serviceSetResult.Value;
         var lidSwitchState = ReadCurrentLidSwitchState(serviceSet.LidStateSource);
-        Console.WriteLine(LidGuardText.ConsoleCurrentLidState(LidGuardText.DisplayLidSwitchState(lidSwitchState)));
+        Console.WriteLine(LocalizationService.GetFormattedString("ConsoleCurrentLidState", LocalizationService.DisplayLidSwitchState(lidSwitchState)));
         return 0;
     }
 
@@ -489,7 +489,7 @@ internal static class LidGuardCommandLineApplication
         if (string.IsNullOrWhiteSpace(temperatureModeText) || temperatureModeText.Trim().Equals("default", StringComparison.OrdinalIgnoreCase)) return TryLoadCurrentTemperatureModeFromSettings(out emergencyHibernationTemperatureMode, out message);
         if (LidGuardSettingsCommand.TryParseEmergencyHibernationTemperatureMode(temperatureModeText, out emergencyHibernationTemperatureMode)) return true;
 
-        message = LidGuardText.GetResourceString(
+        message = LocalizationService.GetString(
             "ConsoleCurrentTemperatureModeValidation",
             "The temperature mode must be default, low, average, or high.");
         return false;

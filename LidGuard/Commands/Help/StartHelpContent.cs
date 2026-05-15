@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,16 +13,16 @@ internal static class StartHelpContent
             [],
             LidGuardHelpSectionTitles.SessionControl,
             $"{commandDisplayName} start --provider codex|claude|copilot|custom|mcp [--session <id>] [--provider-name <name>] [--parent-pid <pid>] [--working-directory <path>]",
-            "Start or refresh a tracked session and load the saved default settings.",
+            LocalizationService.GetString("Help_Start_Description"),
             [
-                new LidGuardHelpOption("--provider <provider>", "Required. Allowed values: codex, claude, copilot, custom, or mcp."),
-                new LidGuardHelpOption("--session <id>", "Optional. Session identifier to track. When omitted, LidGuard derives one from the provider display name and normalized working directory."),
-                new LidGuardHelpOption("--provider-name <name>", "Required when --provider mcp is used. Distinguishes one MCP-backed provider from another."),
-                new LidGuardHelpOption("--parent-pid <pid>", "Optional process ID to monitor so LidGuard can clean up if that process exits."),
-                new LidGuardHelpOption("--working-directory <path>", "Optional working directory used for fallback session identity and metadata. Defaults to the current directory.")
+                new LidGuardHelpOption("--provider <provider>", LocalizationService.GetString("Help_Session_ProviderOption")),
+                new LidGuardHelpOption("--session <id>", LocalizationService.GetString("Help_Start_SessionOption")),
+                new LidGuardHelpOption("--provider-name <name>", LocalizationService.GetString("Help_Start_ProviderNameOption")),
+                new LidGuardHelpOption("--parent-pid <pid>", LocalizationService.GetString("Help_Start_ParentProcessOption")),
+                new LidGuardHelpOption("--working-directory <path>", LocalizationService.GetString("Help_Start_WorkingDirectoryOption"))
             ],
             [
-                "If no runtime is listening, start launches the detached runtime server automatically."
+                LocalizationService.GetString("Help_Start_RuntimeLaunchNote")
             ]);
     }
 }

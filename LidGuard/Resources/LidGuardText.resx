@@ -57,6 +57,9 @@
   <data name="CultureSettingsLoadWarning" xml:space="preserve">
     <value>Warning: LidGuard could not load settings while resolving UI culture: {0}</value>
   </data>
+  <data name="CultureAutomaticStoredValueCannotBeExplicitCultureName" xml:space="preserve">
+    <value>auto is a stored settings value and cannot be used as an explicit CultureInfo name.</value>
+  </data>
   <data name="HelpAliasLabel" xml:space="preserve">
     <value>alias</value>
   </data>

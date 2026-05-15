@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,11 +13,11 @@ internal static class LiveStatusHelpContent
             [],
             LidGuardHelpSectionTitles.SessionControl,
             $"{commandDisplayName} {LidGuardPipeCommands.LiveStatus}",
-            "Show a live terminal dashboard for runtime state, active sessions, and recent LidGuard flow logs.",
+            LocalizationService.GetString("Help_LiveStatus_Description"),
             [],
             [
-                "This command does not start the runtime; it waits and reconnects when the runtime is unavailable.",
-                "Press q, Escape, or Ctrl+C to exit."
+                LocalizationService.GetString("Help_LiveStatus_RuntimeNotStartedNote"),
+                LocalizationService.GetString("Help_LiveStatus_ExitNote")
             ]);
     }
 }

@@ -65,28 +65,28 @@ internal static class LidGuardSettingsUpdateCommand
         };
 
         var response = await new LidGuardRuntimeClient().SendAsync(request, false);
-        Console.WriteLine(LidGuardText.ConsoleSettingsFile(LidGuardSettingsStore.GetDefaultSettingsFilePath()));
+        Console.WriteLine(LocalizationService.GetFormattedString("ConsoleSettingsFile", LidGuardSettingsStore.GetDefaultSettingsFilePath()));
         LidGuardCommandConsole.WriteSettings(settings);
         if (managedHookStatusMessageRefreshResult is not null) WriteManagedHookStatusMessageRefreshResult(managedHookStatusMessageRefreshResult);
         if (isInteractiveSettings)
         {
             var commandDisplayName = LidGuardCommandConsole.GetCommandDisplayName();
-            Console.WriteLine(LidGuardText.SettingsInteractiveGuidanceChangeReason(commandDisplayName));
-            Console.WriteLine(LidGuardText.SettingsInteractiveGuidanceChangePreSuspendWebhook(commandDisplayName));
-            Console.WriteLine(LidGuardText.SettingsInteractiveGuidanceRemovePreSuspendWebhook(commandDisplayName, LidGuardPipeCommands.RemovePreSuspendWebhook));
-            Console.WriteLine(LidGuardText.SettingsInteractiveGuidanceChangePostSessionEndWebhook(commandDisplayName));
-            Console.WriteLine(LidGuardText.SettingsInteractiveGuidanceRemovePostSessionEndWebhook(commandDisplayName, LidGuardPipeCommands.RemovePostSessionEndWebhook));
+            Console.WriteLine(LocalizationService.GetFormattedString("SettingsInteractiveGuidanceChangeReason", commandDisplayName));
+            Console.WriteLine(LocalizationService.GetFormattedString("SettingsInteractiveGuidanceChangePreSuspendWebhook", commandDisplayName));
+            Console.WriteLine(LocalizationService.GetFormattedString("SettingsInteractiveGuidanceRemovePreSuspendWebhook", commandDisplayName, LidGuardPipeCommands.RemovePreSuspendWebhook));
+            Console.WriteLine(LocalizationService.GetFormattedString("SettingsInteractiveGuidanceChangePostSessionEndWebhook", commandDisplayName));
+            Console.WriteLine(LocalizationService.GetFormattedString("SettingsInteractiveGuidanceRemovePostSessionEndWebhook", commandDisplayName, LidGuardPipeCommands.RemovePostSessionEndWebhook));
         }
 
         if (response.Succeeded)
         {
-            Console.WriteLine(LidGuardText.SettingsRuntimeUpdated);
+            Console.WriteLine(LocalizationService.GetString("SettingsRuntimeUpdated"));
             return 0;
         }
 
         if (response.RuntimeUnavailable)
         {
-            Console.WriteLine(LidGuardText.SettingsRuntimeNotRunningSaved);
+            Console.WriteLine(LocalizationService.GetString("SettingsRuntimeNotRunningSaved"));
             return 0;
         }
 
@@ -109,10 +109,10 @@ internal static class LidGuardSettingsUpdateCommand
     private static void WriteManagedHookStatusMessageRefreshResult(ManagedHookStatusMessageRefreshResult result)
     {
         var message = result.ChangedProviderNames.Count > 0
-            ? LidGuardText.SettingsManagedHookStatusMessageRefreshChanged(string.Join(", ", result.ChangedProviderNames))
-            : LidGuardText.SettingsManagedHookStatusMessageRefreshUnchanged;
+            ? LocalizationService.GetFormattedString("SettingsManagedHookStatusMessageRefreshChanged", string.Join(", ", result.ChangedProviderNames))
+            : LocalizationService.GetString("SettingsManagedHookStatusMessageRefreshUnchanged");
 
         Console.WriteLine(message);
-        foreach (var warningMessage in result.WarningMessages) Console.WriteLine(LidGuardText.TextWarning(LidGuardText.SettingsManagedHookStatusMessageRefreshFailed(warningMessage)));
+        foreach (var warningMessage in result.WarningMessages) Console.WriteLine(LocalizationService.GetFormattedString("TextWarning", LocalizationService.GetFormattedString("SettingsManagedHookStatusMessageRefreshFailed", warningMessage)));
     }
 }

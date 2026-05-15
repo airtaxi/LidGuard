@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,10 +13,10 @@ internal static class RemovePreSuspendWebhookHelpContent
             [],
             LidGuardHelpSectionTitles.SettingsAndSuspend,
             $"{commandDisplayName} remove-pre-suspend-webhook",
-            "Clear the saved before sleep or hibernate webhook URL.",
+            LocalizationService.GetString("Help_RemovePreSuspendWebhook_Description"),
             [],
             [
-                "This command does not accept any options."
+                LocalizationService.GetString("Help_Command_NoOptionsNote")
             ]);
     }
 }

@@ -16,20 +16,20 @@ public static class ClaudeHookSettingsJsonDocument
     private static readonly JsonSerializerOptions s_jsonSerializerOptions = new() { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All), WriteIndented = true };
     private static readonly (string HookEventName, Func<string> GetStatusMessage, string Matcher)[] s_requiredHookDefinitions =
     [
-        (ClaudeHookEventNames.UserPromptSubmit, () => LidGuardText.HookStatusMessageStartingTurnProtection, string.Empty),
-        (ClaudeHookEventNames.PreToolUse, () => LidGuardText.HookStatusMessageRecordingClaudeToolActivity, string.Empty),
-        (ClaudeHookEventNames.PostToolUse, () => LidGuardText.HookStatusMessageRecordingClaudeToolCompletionActivity, string.Empty),
-        (ClaudeHookEventNames.PostToolUseFailure, () => LidGuardText.HookStatusMessageRecordingClaudeFailedToolActivity, string.Empty),
-        (ClaudeHookEventNames.SubagentStart, () => LidGuardText.HookStatusMessageRecordingClaudeSubagentActivity, string.Empty),
-        (ClaudeHookEventNames.SubagentStop, () => LidGuardText.HookStatusMessageRecordingClaudeSubagentCompletionActivity, string.Empty),
-        (ClaudeHookEventNames.TaskCreated, () => LidGuardText.HookStatusMessageRecordingClaudeBackgroundTaskActivity, string.Empty),
-        (ClaudeHookEventNames.TaskCompleted, () => LidGuardText.HookStatusMessageRecordingClaudeBackgroundTaskCompletion, string.Empty),
-        (ClaudeHookEventNames.Stop, () => LidGuardText.HookStatusMessageStoppingSessionProtection, string.Empty),
-        (ClaudeHookEventNames.StopFailure, () => LidGuardText.HookStatusMessageStoppingSessionProtection, string.Empty),
-        (ClaudeHookEventNames.Elicitation, () => LidGuardText.HookStatusMessageCancelingClosedLidElicitationRequest, string.Empty),
-        (ClaudeHookEventNames.PermissionRequest, () => LidGuardText.HookStatusMessageRespondingToClosedLidPermissionRequest, string.Empty),
-        (ClaudeHookEventNames.Notification, () => LidGuardText.HookStatusMessageRecordingClaudeSoftLockTelemetry, ClaudeSoftLockSignalSource.NotificationMatcher),
-        (ClaudeHookEventNames.SessionEnd, () => LidGuardText.HookStatusMessageStoppingSessionProtection, string.Empty)
+        (ClaudeHookEventNames.UserPromptSubmit, () => LocalizationService.GetString("HookStatusMessageStartingTurnProtection"), string.Empty),
+        (ClaudeHookEventNames.PreToolUse, () => LocalizationService.GetString("HookStatusMessageRecordingClaudeToolActivity"), string.Empty),
+        (ClaudeHookEventNames.PostToolUse, () => LocalizationService.GetString("HookStatusMessageRecordingClaudeToolCompletionActivity"), string.Empty),
+        (ClaudeHookEventNames.PostToolUseFailure, () => LocalizationService.GetString("HookStatusMessageRecordingClaudeFailedToolActivity"), string.Empty),
+        (ClaudeHookEventNames.SubagentStart, () => LocalizationService.GetString("HookStatusMessageRecordingClaudeSubagentActivity"), string.Empty),
+        (ClaudeHookEventNames.SubagentStop, () => LocalizationService.GetString("HookStatusMessageRecordingClaudeSubagentCompletionActivity"), string.Empty),
+        (ClaudeHookEventNames.TaskCreated, () => LocalizationService.GetString("HookStatusMessageRecordingClaudeBackgroundTaskActivity"), string.Empty),
+        (ClaudeHookEventNames.TaskCompleted, () => LocalizationService.GetString("HookStatusMessageRecordingClaudeBackgroundTaskCompletion"), string.Empty),
+        (ClaudeHookEventNames.Stop, () => LocalizationService.GetString("HookStatusMessageStoppingSessionProtection"), string.Empty),
+        (ClaudeHookEventNames.StopFailure, () => LocalizationService.GetString("HookStatusMessageStoppingSessionProtection"), string.Empty),
+        (ClaudeHookEventNames.Elicitation, () => LocalizationService.GetString("HookStatusMessageCancelingClosedLidElicitationRequest"), string.Empty),
+        (ClaudeHookEventNames.PermissionRequest, () => LocalizationService.GetString("HookStatusMessageRespondingToClosedLidPermissionRequest"), string.Empty),
+        (ClaudeHookEventNames.Notification, () => LocalizationService.GetString("HookStatusMessageRecordingClaudeSoftLockTelemetry"), ClaudeSoftLockSignalSource.NotificationMatcher),
+        (ClaudeHookEventNames.SessionEnd, () => LocalizationService.GetString("HookStatusMessageStoppingSessionProtection"), string.Empty)
     ];
 
     public static string CreateSettingsJsonSnippet(string hookCommand)

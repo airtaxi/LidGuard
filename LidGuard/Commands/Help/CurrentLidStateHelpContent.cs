@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,10 +13,10 @@ internal static class CurrentLidStateHelpContent
             [],
             LidGuardHelpSectionTitles.Diagnostics,
             $"{commandDisplayName} {LidGuardPipeCommands.CurrentLidState}",
-            "Report the current lid switch state using the same platform lid-state source LidGuard uses for closed-lid policy decisions.",
+            LocalizationService.GetString("Help_CurrentLidState_Description"),
             [],
             [
-                "This reports Open, Closed, or Unknown based on the current platform lid-state source."
+                LocalizationService.GetString("Help_CurrentLidState_StateNote")
             ]);
     }
 }

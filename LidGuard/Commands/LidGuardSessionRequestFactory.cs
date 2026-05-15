@@ -23,7 +23,7 @@ internal static class LidGuardSessionRequestFactory
         var providerText = CommandOptionReader.GetOption(options, "provider");
         if (!AgentProviderOptionParser.TryParseProvider(providerText, out var provider))
         {
-            message = LidGuardText.GetResourceString(
+            message = LocalizationService.GetString(
                 "SessionRequestProviderRequired",
                 "A provider is required. Use codex, claude, copilot, custom, mcp, or unknown.");
             return false;
@@ -35,7 +35,7 @@ internal static class LidGuardSessionRequestFactory
         if (string.IsNullOrWhiteSpace(sessionIdentifier)) sessionIdentifier = CreateFallbackSessionIdentifier(provider, providerName, workingDirectory);
         if (provider == AgentProvider.Mcp && string.IsNullOrWhiteSpace(providerName))
         {
-            message = LidGuardText.GetResourceString(
+            message = LocalizationService.GetString(
                 "SessionRequestProviderNameRequiredForMcp",
                 "The --provider-name option is required when --provider mcp is used.");
             return false;
@@ -71,7 +71,7 @@ internal static class LidGuardSessionRequestFactory
         {
             if (CommandOptionReader.TryGetOption(options, out _, "session", "session-id", "session-identifier"))
             {
-                message = LidGuardText.GetResourceString(
+                message = LocalizationService.GetString(
                     "SessionRequestAllCannotCombineWithSession",
                     "The --all option cannot be combined with --session.");
                 return false;
@@ -79,7 +79,7 @@ internal static class LidGuardSessionRequestFactory
 
             if (CommandOptionReader.TryGetOption(options, out _, "provider"))
             {
-                message = LidGuardText.GetResourceString(
+                message = LocalizationService.GetString(
                     "SessionRequestAllCannotCombineWithProvider",
                     "The --all option cannot be combined with --provider.");
                 return false;
@@ -87,7 +87,7 @@ internal static class LidGuardSessionRequestFactory
 
             if (CommandOptionReader.TryGetOption(options, out _, "provider-name"))
             {
-                message = LidGuardText.GetResourceString(
+                message = LocalizationService.GetString(
                     "SessionRequestAllCannotCombineWithProviderName",
                     "The --all option cannot be combined with --provider-name.");
                 return false;
@@ -104,7 +104,7 @@ internal static class LidGuardSessionRequestFactory
         var sessionIdentifier = CommandOptionReader.GetOption(options, "session", "session-id", "session-identifier");
         if (string.IsNullOrWhiteSpace(sessionIdentifier))
         {
-            message = LidGuardText.GetResourceString("SessionRequestSessionIdentifierRequired", "A session identifier is required.");
+            message = LocalizationService.GetString("SessionRequestSessionIdentifierRequired", "A session identifier is required.");
             return false;
         }
 
@@ -112,7 +112,7 @@ internal static class LidGuardSessionRequestFactory
         var providerWasSpecified = CommandOptionReader.TryGetOption(options, out var providerText, "provider");
         if (providerWasSpecified && !AgentProviderOptionParser.TryParseProvider(providerText, out provider))
         {
-            message = LidGuardText.GetResourceString(
+            message = LocalizationService.GetString(
                 "SessionRequestUnsupportedProvider",
                 "Unsupported provider. Use codex, claude, copilot, custom, mcp, or unknown.");
             return false;
@@ -144,7 +144,7 @@ internal static class LidGuardSessionRequestFactory
         if (string.IsNullOrWhiteSpace(watchedProcessText)) return true;
         if (int.TryParse(watchedProcessText, out watchedProcessIdentifier) && watchedProcessIdentifier >= 0) return true;
 
-        message = LidGuardText.GetResourceString(
+        message = LocalizationService.GetString(
             "SessionRequestWatchedProcessIdentifierValidation",
             "The watched process identifier must be a non-negative integer.");
         return false;

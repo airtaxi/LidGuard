@@ -37,13 +37,13 @@ public static class CodexHookConfigTomlDocument
         var builder = new StringBuilder();
 
         builder.AppendLine(ManagedBlockStartMarker);
-        AppendHookBlock(builder, CodexHookEventNames.UserPromptSubmit, tomlCommandLiteral, LidGuardText.HookStatusMessageStartingTurnProtection);
+        AppendHookBlock(builder, CodexHookEventNames.UserPromptSubmit, tomlCommandLiteral, LocalizationService.GetString("HookStatusMessageStartingTurnProtection"));
         builder.AppendLine();
-        AppendHookBlock(builder, CodexHookEventNames.PermissionRequest, tomlCommandLiteral, LidGuardText.HookStatusMessageRespondingToClosedLidPermissionRequest);
+        AppendHookBlock(builder, CodexHookEventNames.PermissionRequest, tomlCommandLiteral, LocalizationService.GetString("HookStatusMessageRespondingToClosedLidPermissionRequest"));
         foreach (var hookEventName in s_requiredStopHookEventNames)
         {
             builder.AppendLine();
-            AppendHookBlock(builder, hookEventName, tomlCommandLiteral, LidGuardText.HookStatusMessageStoppingSessionProtection);
+            AppendHookBlock(builder, hookEventName, tomlCommandLiteral, LocalizationService.GetString("HookStatusMessageStoppingSessionProtection"));
         }
 
         builder.AppendLine(ManagedBlockEndMarker);
@@ -102,9 +102,9 @@ public static class CodexHookConfigTomlDocument
         var updatedContent = EnsureHooksFeatureFlag(content);
         if (HasAnyLidGuardCodexHookCommand(updatedContent))
         {
-            updatedContent = UpsertManagedHookCommand(updatedContent, CodexHookEventNames.UserPromptSubmit, hookCommand, LidGuardText.HookStatusMessageStartingTurnProtection);
-            updatedContent = UpsertManagedHookCommand(updatedContent, CodexHookEventNames.PermissionRequest, hookCommand, LidGuardText.HookStatusMessageRespondingToClosedLidPermissionRequest);
-            foreach (var hookEventName in s_requiredStopHookEventNames) updatedContent = UpsertManagedHookCommand(updatedContent, hookEventName, hookCommand, LidGuardText.HookStatusMessageStoppingSessionProtection);
+            updatedContent = UpsertManagedHookCommand(updatedContent, CodexHookEventNames.UserPromptSubmit, hookCommand, LocalizationService.GetString("HookStatusMessageStartingTurnProtection"));
+            updatedContent = UpsertManagedHookCommand(updatedContent, CodexHookEventNames.PermissionRequest, hookCommand, LocalizationService.GetString("HookStatusMessageRespondingToClosedLidPermissionRequest"));
+            foreach (var hookEventName in s_requiredStopHookEventNames) updatedContent = UpsertManagedHookCommand(updatedContent, hookEventName, hookCommand, LocalizationService.GetString("HookStatusMessageStoppingSessionProtection"));
             return updatedContent;
         }
 
@@ -463,10 +463,10 @@ public static class CodexHookConfigTomlDocument
     {
         statusMessage = hookEventName switch
         {
-            CodexHookEventNames.UserPromptSubmit => LidGuardText.HookStatusMessageStartingTurnProtection,
-            CodexHookEventNames.PermissionRequest => LidGuardText.HookStatusMessageRespondingToClosedLidPermissionRequest,
-            CodexHookEventNames.Stop => LidGuardText.HookStatusMessageStoppingSessionProtection,
-            CodexHookEventNames.SessionEnd => LidGuardText.HookStatusMessageStoppingSessionProtection,
+            CodexHookEventNames.UserPromptSubmit => LocalizationService.GetString("HookStatusMessageStartingTurnProtection"),
+            CodexHookEventNames.PermissionRequest => LocalizationService.GetString("HookStatusMessageRespondingToClosedLidPermissionRequest"),
+            CodexHookEventNames.Stop => LocalizationService.GetString("HookStatusMessageStoppingSessionProtection"),
+            CodexHookEventNames.SessionEnd => LocalizationService.GetString("HookStatusMessageStoppingSessionProtection"),
             _ => string.Empty
         };
 

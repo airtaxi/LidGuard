@@ -25,8 +25,8 @@ internal static class LidGuardRuntimeResponseLocalizer
             LidGuardPipeResponseMessageCodes.CleanupOrphansCompleted => Format("RuntimeResponseCleanupOrphansCompleted", "Cleaned {0} orphan session(s).", Argument(messageArguments, 0)),
             LidGuardPipeResponseMessageCodes.FailedToStartRuntime => Get("RuntimeResponseFailedToStartRuntime", "Failed to start the LidGuard runtime."),
             LidGuardPipeResponseMessageCodes.RuntimeIsRunning => Get("RuntimeResponseRuntimeIsRunning", "LidGuard runtime is running."),
-            LidGuardPipeResponseMessageCodes.RuntimeNotRunning => LidGuardText.ConsoleRuntimeNotRunning,
-            LidGuardPipeResponseMessageCodes.SettingsRuntimeUpdated => LidGuardText.SettingsRuntimeUpdated,
+            LidGuardPipeResponseMessageCodes.RuntimeNotRunning => LocalizationService.GetString("ConsoleRuntimeNotRunning"),
+            LidGuardPipeResponseMessageCodes.SettingsRuntimeUpdated => LocalizationService.GetString("SettingsRuntimeUpdated"),
             LidGuardPipeResponseMessageCodes.SessionAlreadyStopped => Format("RuntimeResponseSessionAlreadyStopped", "Session {0} is already stopped.", Argument(messageArguments, 0)),
             LidGuardPipeResponseMessageCodes.SessionIdAlreadyStopped => Format("RuntimeResponseSessionIdAlreadyStopped", "Session id {0} is already stopped.", Argument(messageArguments, 0)),
             LidGuardPipeResponseMessageCodes.SessionIdAlreadyStoppedForProvider => Format("RuntimeResponseSessionIdAlreadyStoppedForProvider", "Session id {0} is already stopped for {1}.", Argument(messageArguments, 0), Argument(messageArguments, 1)),
@@ -57,7 +57,7 @@ internal static class LidGuardRuntimeResponseLocalizer
 
     private static string CreateSuspendScheduleMessage(LidGuardPipeResponse response)
     {
-        var suspendMode = LidGuardText.DisplaySuspendMode(response.SuspendMode);
+        var suspendMode = LocalizationService.DisplaySuspendMode(response.SuspendMode);
         var suspendDelay = response.SuspendDelaySeconds == 0
             ? Get("RuntimeResponseSuspendDelayImmediate", "immediately")
             : Format("RuntimeResponseSuspendDelaySeconds", "in {0} second(s)", response.SuspendDelaySeconds);
@@ -74,7 +74,7 @@ internal static class LidGuardRuntimeResponseLocalizer
     }
 
     private static string Get(string resourceName, string fallbackValue)
-        => LidGuardText.GetResourceString(resourceName, fallbackValue);
+        => LocalizationService.GetString(resourceName, fallbackValue);
 
     private static string Format(string resourceName, string fallbackValue, params object[] arguments)
         => string.Format(CultureInfo.CurrentCulture, Get(resourceName, fallbackValue), arguments);

@@ -123,9 +123,9 @@ internal static class CodexHookCommand
         var jsonCommandLiteral = CodexHookConfigTomlDocument.ToJsonStringLiteral(hookCommand);
         var hookBlockDefinitions = new (string HookEventName, string StatusMessage)[]
         {
-            (CodexHookEventNames.UserPromptSubmit, LidGuardText.HookStatusMessageStartingTurnProtection),
-            (CodexHookEventNames.PermissionRequest, LidGuardText.HookStatusMessageRespondingToClosedLidPermissionRequest),
-            (CodexHookEventNames.Stop, LidGuardText.HookStatusMessageStoppingSessionProtection)
+            (CodexHookEventNames.UserPromptSubmit, LocalizationService.GetString("HookStatusMessageStartingTurnProtection")),
+            (CodexHookEventNames.PermissionRequest, LocalizationService.GetString("HookStatusMessageRespondingToClosedLidPermissionRequest")),
+            (CodexHookEventNames.Stop, LocalizationService.GetString("HookStatusMessageStoppingSessionProtection"))
         };
 
         Console.WriteLine("{");

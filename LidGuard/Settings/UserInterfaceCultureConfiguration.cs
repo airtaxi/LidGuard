@@ -40,9 +40,9 @@ internal static class UserInterfaceCultureConfiguration
         var normalizedUserInterfaceCulture = NormalizeStoredValue(userInterfaceCulture);
         if (IsAutomatic(normalizedUserInterfaceCulture))
         {
-            message = LidGuardText.CultureInvalidUserInterfaceCulture(
+            message = LocalizationService.GetFormattedString("CultureInvalidUserInterfaceCulture",
                 normalizedUserInterfaceCulture,
-                "auto is a stored settings value and cannot be used as an explicit CultureInfo name.");
+                LocalizationService.GetString("CultureAutomaticStoredValueCannotBeExplicitCultureName"));
             return false;
         }
 

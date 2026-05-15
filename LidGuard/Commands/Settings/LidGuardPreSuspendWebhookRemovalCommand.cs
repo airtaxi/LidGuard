@@ -14,7 +14,7 @@ internal static class LidGuardPreSuspendWebhookRemovalCommand
     {
         if (options.Count > 0)
         {
-            Console.Error.WriteLine(LidGuardText.CommandDoesNotAcceptOptions(LidGuardPipeCommands.RemovePreSuspendWebhook));
+            Console.Error.WriteLine(LocalizationService.GetFormattedString("CommandDoesNotAcceptOptions", LidGuardPipeCommands.RemovePreSuspendWebhook));
             return 1;
         }
 
@@ -27,7 +27,7 @@ internal static class LidGuardPreSuspendWebhookRemovalCommand
         var normalizedCurrentSettings = LidGuardSettings.Normalize(currentSettings);
         if (string.IsNullOrWhiteSpace(normalizedCurrentSettings.PreSuspendWebhookUrl))
         {
-            Console.WriteLine(LidGuardText.SettingsNoPreSuspendWebhookConfigured);
+            Console.WriteLine(LocalizationService.GetString("SettingsNoPreSuspendWebhookConfigured"));
             return 0;
         }
 
@@ -48,19 +48,19 @@ internal static class LidGuardPreSuspendWebhookRemovalCommand
         }
 
         var outcome = updateResult.Value;
-        Console.WriteLine(LidGuardText.ConsoleSettingsFile(LidGuardSettingsStore.GetDefaultSettingsFilePath()));
+        Console.WriteLine(LocalizationService.GetFormattedString("ConsoleSettingsFile", LidGuardSettingsStore.GetDefaultSettingsFilePath()));
         LidGuardCommandConsole.WriteSettings(outcome.UpdatedStoredSettings);
-        Console.WriteLine(LidGuardText.SettingsPreSuspendWebhookUrlRemoved);
+        Console.WriteLine(LocalizationService.GetString("SettingsPreSuspendWebhookUrlRemoved"));
 
         if (outcome.Snapshot.RuntimeReachable)
         {
-            Console.WriteLine(LidGuardText.SettingsRuntimeUpdated);
+            Console.WriteLine(LocalizationService.GetString("SettingsRuntimeUpdated"));
             return 0;
         }
 
         if (outcome.Snapshot.RuntimeUnavailable)
         {
-            Console.WriteLine(LidGuardText.SettingsRuntimeNotRunningSaved);
+            Console.WriteLine(LocalizationService.GetString("SettingsRuntimeNotRunningSaved"));
             return 0;
         }
 

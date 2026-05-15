@@ -43,7 +43,7 @@ internal static class LinuxPermissionCommand
 
         if (arguments.Length > 1)
         {
-            Console.Error.WriteLine(LidGuardText.CommandUnexpectedArgument(arguments[1]));
+            Console.Error.WriteLine(LocalizationService.GetFormattedString("CommandUnexpectedArgument", arguments[1]));
             return 1;
         }
 
@@ -444,7 +444,7 @@ polkit.addRule(function(action, subject) {
         => Console.WriteLine(Format("ManagementField", "{0}: {1}", Get(labelResourceName, fallbackLabel), value));
 
     private static string Get(string resourceName, string fallbackValue)
-        => LidGuardText.GetResourceString(resourceName, fallbackValue);
+        => LocalizationService.GetString(resourceName, fallbackValue);
 
     private static string Format(string resourceName, string fallbackValue, params object[] arguments)
         => string.Format(System.Globalization.CultureInfo.CurrentCulture, Get(resourceName, fallbackValue), arguments);

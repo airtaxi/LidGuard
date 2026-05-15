@@ -17,17 +17,17 @@ public static class GitHubCopilotHookConfigurationJsonDocument
     private static readonly JsonSerializerOptions s_jsonSerializerOptions = new() { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All), WriteIndented = true };
     private static readonly (string HookEventName, Func<string> GetStatusMessage, string Matcher)[] s_requiredHookDefinitions =
     [
-        (GitHubCopilotHookEventNames.SessionStart, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotSessionStart, string.Empty),
-        (GitHubCopilotHookEventNames.SessionEnd, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotSessionEnd, string.Empty),
-        (GitHubCopilotHookEventNames.UserPromptSubmitted, () => LidGuardText.HookStatusMessageStartingTurnProtection, string.Empty),
-        (GitHubCopilotHookEventNames.PreToolUse, () => LidGuardText.HookStatusMessageBlockingClosedLidAskUserPrompt, string.Empty),
-        (GitHubCopilotHookEventNames.PostToolUse, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotToolCompletionActivity, string.Empty),
-        (GitHubCopilotHookEventNames.PermissionRequest, () => LidGuardText.HookStatusMessageRespondingToClosedLidPermissionRequest, string.Empty),
-        (GitHubCopilotHookEventNames.AgentStop, () => LidGuardText.HookStatusMessageStoppingTurnProtection, string.Empty),
-        (GitHubCopilotHookEventNames.SubagentStart, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotSubagentActivity, string.Empty),
-        (GitHubCopilotHookEventNames.SubagentStop, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotSubagentCompletionActivity, string.Empty),
-        (GitHubCopilotHookEventNames.ErrorOccurred, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotErrorTelemetry, string.Empty),
-        (GitHubCopilotHookEventNames.Notification, () => LidGuardText.HookStatusMessageRecordingGitHubCopilotPromptTelemetry, GitHubCopilotSoftLockSignalSource.NotificationMatcher)
+        (GitHubCopilotHookEventNames.SessionStart, () => LocalizationService.GetString("HookStatusMessageRecordingGitHubCopilotSessionStart"), string.Empty),
+        (GitHubCopilotHookEventNames.SessionEnd, () => LocalizationService.GetString("HookStatusMessageRecordingGitHubCopilotSessionEnd"), string.Empty),
+        (GitHubCopilotHookEventNames.UserPromptSubmitted, () => LocalizationService.GetString("HookStatusMessageStartingTurnProtection"), string.Empty),
+        (GitHubCopilotHookEventNames.PreToolUse, () => LocalizationService.GetString("HookStatusMessageBlockingClosedLidAskUserPrompt"), string.Empty),
+        (GitHubCopilotHookEventNames.PostToolUse, () => LocalizationService.GetString("HookStatusMessageRecordingGitHubCopilotToolCompletionActivity"), string.Empty),
+        (GitHubCopilotHookEventNames.PermissionRequest, () => LocalizationService.GetString("HookStatusMessageRespondingToClosedLidPermissionRequest"), string.Empty),
+        (GitHubCopilotHookEventNames.AgentStop, () => LocalizationService.GetString("HookStatusMessageStoppingTurnProtection"), string.Empty),
+        (GitHubCopilotHookEventNames.SubagentStart, () => LocalizationService.GetString("HookStatusMessageRecordingGitHubCopilotSubagentActivity"), string.Empty),
+        (GitHubCopilotHookEventNames.SubagentStop, () => LocalizationService.GetString("HookStatusMessageRecordingGitHubCopilotSubagentCompletionActivity"), string.Empty),
+        (GitHubCopilotHookEventNames.ErrorOccurred, () => LocalizationService.GetString("HookStatusMessageRecordingGitHubCopilotErrorTelemetry"), string.Empty),
+        (GitHubCopilotHookEventNames.Notification, () => LocalizationService.GetString("HookStatusMessageRecordingGitHubCopilotPromptTelemetry"), GitHubCopilotSoftLockSignalSource.NotificationMatcher)
     ];
 
     public static IReadOnlyDictionary<string, string> CreateManagedHookCommands(string hookCommand)

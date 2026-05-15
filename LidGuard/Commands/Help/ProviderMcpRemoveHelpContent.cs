@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,10 +13,10 @@ internal static class ProviderMcpRemoveHelpContent
             ["provider-mcp-uninstall"],
             LidGuardHelpSectionTitles.McpIntegration,
             $"{commandDisplayName} {LidGuardPipeCommands.ProviderMcpRemove} --config <json-path> [--server-name <name>]",
-            "Remove a managed provider MCP server entry from a caller-supplied JSON configuration file.",
+            LocalizationService.GetString("Help_ProviderMcpRemove_Description"),
             [
-                new LidGuardHelpOption("--config <json-path>", "Required. JSON configuration file to update."),
-                new LidGuardHelpOption("--server-name <name>", "Optional managed server entry name. Defaults to lidguard-provider.")
+                new LidGuardHelpOption("--config <json-path>", LocalizationService.GetString("Help_ProviderMcpRemove_ConfigOption")),
+                new LidGuardHelpOption("--server-name <name>", LocalizationService.GetString("Help_ProviderMcp_ServerNameOption"))
             ],
             []);
     }

@@ -20,20 +20,20 @@ internal static class LidGuardCommandConsole
 
         var responseMessage = LidGuardRuntimeResponseLocalizer.Localize(response);
         if (!string.IsNullOrWhiteSpace(responseMessage)) Console.WriteLine(responseMessage);
-        Console.WriteLine(LidGuardText.ConsoleActiveSessions(response.ActiveSessionCount));
-        Console.WriteLine(LidGuardText.ConsoleLidState(LidGuardText.DisplayLidSwitchState(response.LidSwitchState)));
-        Console.WriteLine(LidGuardText.ConsoleVisibleDisplayMonitorCount(response.VisibleDisplayMonitorCount));
+        Console.WriteLine(LocalizationService.GetFormattedString("ConsoleActiveSessions", response.ActiveSessionCount));
+        Console.WriteLine(LocalizationService.GetFormattedString("ConsoleLidState", LocalizationService.DisplayLidSwitchState(response.LidSwitchState)));
+        Console.WriteLine(LocalizationService.GetFormattedString("ConsoleVisibleDisplayMonitorCount", response.VisibleDisplayMonitorCount));
 
         if (includeSessions)
         {
             foreach (var session in response.Sessions)
             {
-                var processText = session.WatchedProcessIdentifier > 0 ? session.WatchedProcessIdentifier.ToString() : LidGuardText.SessionProcessNone;
+                var processText = session.WatchedProcessIdentifier > 0 ? session.WatchedProcessIdentifier.ToString() : LocalizationService.GetString("SessionProcessNone");
                 var providerDisplayText = AgentProviderDisplay.CreateProviderDisplayText(session.Provider, session.ProviderName);
                 var startedAt = LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(session.StartedAt);
                 var lastActivityAt = LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(session.LastActivityAt);
                 Console.WriteLine(
-                    LidGuardText.ConsoleSessionLine(
+                    LocalizationService.GetFormattedString("ConsoleSessionLine",
                         providerDisplayText,
                         session.SessionIdentifier,
                         processText,
@@ -53,36 +53,36 @@ internal static class LidGuardCommandConsole
     {
         var normalizedSettings = LidGuardSettings.Normalize(settings);
         var powerRequest = normalizedSettings.PowerRequest ?? PowerRequestOptions.Default;
-        Console.WriteLine(LidGuardText.SettingsTitle);
-        Console.WriteLine(LidGuardText.SettingsPreventSystemSleep(LidGuardText.DisplayBoolean(powerRequest.PreventSystemSleep)));
+        Console.WriteLine(LocalizationService.GetString("SettingsTitle"));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsPreventSystemSleep", LocalizationService.DisplayBoolean(powerRequest.PreventSystemSleep)));
 #if !LIDGUARD_LINUX && !LIDGUARD_MACOS
-        Console.WriteLine(LidGuardText.SettingsPreventAwayModeSleep(LidGuardText.DisplayBoolean(powerRequest.PreventAwayModeSleep)));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsPreventAwayModeSleep", LocalizationService.DisplayBoolean(powerRequest.PreventAwayModeSleep)));
 #endif
-        Console.WriteLine(LidGuardText.SettingsPreventDisplaySleep(LidGuardText.DisplayBoolean(powerRequest.PreventDisplaySleep)));
-        Console.WriteLine(LidGuardText.SettingsChangeLidAction(LidGuardText.DisplayBoolean(normalizedSettings.ChangeLidAction)));
-        Console.WriteLine(LidGuardText.SettingsWatchParentProcess(LidGuardText.DisplayBoolean(normalizedSettings.WatchParentProcess)));
-        Console.WriteLine(LidGuardText.SettingsSessionTimeout(LidGuardText.DisplayMinuteCount(normalizedSettings.SessionTimeoutMinutes)));
-        Console.WriteLine(LidGuardText.SettingsServerRuntimeCleanupDelay(LidGuardText.DisplayMinuteCount(normalizedSettings.ServerRuntimeCleanupDelayMinutes)));
-        Console.WriteLine(LidGuardText.SettingsEmergencyHibernationOnHighTemperature(LidGuardText.DisplayBoolean(normalizedSettings.EmergencyHibernationOnHighTemperature)));
-        Console.WriteLine(LidGuardText.SettingsEmergencyHibernationTemperatureMode(LidGuardText.DisplayEmergencyHibernationTemperatureMode(normalizedSettings.EmergencyHibernationTemperatureMode)));
-        Console.WriteLine(LidGuardText.SettingsEmergencyHibernationTemperatureCelsius(normalizedSettings.EmergencyHibernationTemperatureCelsius));
-        Console.WriteLine(LidGuardText.SettingsSuspendMode(LidGuardText.DisplaySuspendMode(normalizedSettings.SuspendMode)));
-        Console.WriteLine(LidGuardText.SettingsPostStopSuspendDelaySeconds(normalizedSettings.PostStopSuspendDelaySeconds));
-        Console.WriteLine(LidGuardText.SettingsPostStopSuspendSound(LidGuardText.DisplayOptionalValue(PostStopSuspendSoundConfiguration.GetDisplayValue(normalizedSettings.PostStopSuspendSound))));
-        Console.WriteLine(LidGuardText.SettingsPostStopSuspendSoundVolumeOverridePercent(LidGuardText.DisplayOptionalValue(PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(normalizedSettings.PostStopSuspendSoundVolumeOverridePercent))));
-        Console.WriteLine(LidGuardText.SettingsSuspendHistoryCount(LidGuardText.DisplaySuspendHistoryEntryCount(normalizedSettings.SuspendHistoryEntryCount)));
-        Console.WriteLine(LidGuardText.SettingsPreSuspendWebhookUrl(LidGuardText.DisplayOptionalValue(PreSuspendWebhookConfiguration.GetDisplayValue(normalizedSettings.PreSuspendWebhookUrl))));
-        Console.WriteLine(LidGuardText.SettingsPostSessionEndWebhookUrl(LidGuardText.DisplayOptionalValue(PostSessionEndWebhookConfiguration.GetDisplayValue(normalizedSettings.PostSessionEndWebhookUrl))));
-        Console.WriteLine(LidGuardText.SettingsClosedLidPermissionRequestDecision(LidGuardText.DisplayClosedLidPermissionRequestDecision(normalizedSettings.ClosedLidPermissionRequestDecision)));
-        Console.WriteLine(LidGuardText.SettingsUserInterfaceCulture(UserInterfaceCultureConfiguration.GetDisplayValue(normalizedSettings.UserInterfaceCulture)));
-        Console.WriteLine(LidGuardText.SettingsReason(powerRequest.Reason));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsPreventDisplaySleep", LocalizationService.DisplayBoolean(powerRequest.PreventDisplaySleep)));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsChangeLidAction", LocalizationService.DisplayBoolean(normalizedSettings.ChangeLidAction)));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsWatchParentProcess", LocalizationService.DisplayBoolean(normalizedSettings.WatchParentProcess)));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsSessionTimeout", LocalizationService.DisplayMinuteCount(normalizedSettings.SessionTimeoutMinutes)));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsServerRuntimeCleanupDelay", LocalizationService.DisplayMinuteCount(normalizedSettings.ServerRuntimeCleanupDelayMinutes)));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsEmergencyHibernationOnHighTemperature", LocalizationService.DisplayBoolean(normalizedSettings.EmergencyHibernationOnHighTemperature)));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsEmergencyHibernationTemperatureMode", LocalizationService.DisplayEmergencyHibernationTemperatureMode(normalizedSettings.EmergencyHibernationTemperatureMode)));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsEmergencyHibernationTemperatureCelsius", normalizedSettings.EmergencyHibernationTemperatureCelsius));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsSuspendMode", LocalizationService.DisplaySuspendMode(normalizedSettings.SuspendMode)));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsPostStopSuspendDelaySeconds", normalizedSettings.PostStopSuspendDelaySeconds));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsPostStopSuspendSound", LocalizationService.DisplayOptionalValue(PostStopSuspendSoundConfiguration.GetDisplayValue(normalizedSettings.PostStopSuspendSound))));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsPostStopSuspendSoundVolumeOverridePercent", LocalizationService.DisplayOptionalValue(PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(normalizedSettings.PostStopSuspendSoundVolumeOverridePercent))));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsSuspendHistoryCount", LocalizationService.DisplaySuspendHistoryEntryCount(normalizedSettings.SuspendHistoryEntryCount)));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsPreSuspendWebhookUrl", LocalizationService.DisplayOptionalValue(PreSuspendWebhookConfiguration.GetDisplayValue(normalizedSettings.PreSuspendWebhookUrl))));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsPostSessionEndWebhookUrl", LocalizationService.DisplayOptionalValue(PostSessionEndWebhookConfiguration.GetDisplayValue(normalizedSettings.PostSessionEndWebhookUrl))));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsClosedLidPermissionRequestDecision", LocalizationService.DisplayClosedLidPermissionRequestDecision(normalizedSettings.ClosedLidPermissionRequestDecision)));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsUserInterfaceCulture", UserInterfaceCultureConfiguration.GetDisplayValue(normalizedSettings.UserInterfaceCulture)));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsReason", powerRequest.Reason));
     }
 
     public static int WriteHelp(int exitCode)
     {
         var helpDocument = CreateHelpDocument();
         foreach (var helpSection in LidGuardHelpContent.CreateSummarySections(helpDocument)) WriteHelpSection(helpSection);
-        Console.WriteLine(LidGuardText.HelpCommandSpecificHelpHint);
+        Console.WriteLine(LocalizationService.GetString("HelpCommandSpecificHelpHint"));
         return exitCode;
     }
 
@@ -118,7 +118,7 @@ internal static class LidGuardCommandConsole
 
     public static int WriteUnknownCommand(string commandName)
     {
-        Console.Error.WriteLine(LidGuardText.CommandUnknownCommand(commandName));
+        Console.Error.WriteLine(LocalizationService.GetFormattedString("CommandUnknownCommand", commandName));
         return WriteHelp(1);
     }
 
@@ -148,15 +148,15 @@ internal static class LidGuardCommandConsole
     {
         Console.WriteLine($"  {helpCommand.Synopsis}");
         Console.WriteLine($"    {helpCommand.Description}");
-        foreach (var helpOption in helpCommand.Options) Console.WriteLine($"    {LidGuardText.HelpOptionLabel(helpOption.Label, helpOption.Description)}");
-        foreach (var note in helpCommand.Notes) Console.WriteLine($"    {LidGuardText.HelpNoteLabel}: {note}");
+        foreach (var helpOption in helpCommand.Options) Console.WriteLine($"    {LocalizationService.GetFormattedString("HelpOptionLabel", helpOption.Label, helpOption.Description)}");
+        foreach (var note in helpCommand.Notes) Console.WriteLine($"    {LocalizationService.GetString("HelpNoteLabel")}: {note}");
     }
 
     private static string DescribeSoftLockStatus(LidGuardSessionStatus session)
     {
-        if (session.SoftLockState != LidGuardSessionSoftLockState.SoftLocked) return LidGuardText.DisplaySessionSoftLockState(session.SoftLockState);
+        if (session.SoftLockState != LidGuardSessionSoftLockState.SoftLocked) return LocalizationService.DisplaySessionSoftLockState(session.SoftLockState);
 
-        var details = LidGuardText.DisplaySessionSoftLockState(session.SoftLockState);
+        var details = LocalizationService.DisplaySessionSoftLockState(session.SoftLockState);
         if (!string.IsNullOrWhiteSpace(session.SoftLockReason)) details = $"{details}:{session.SoftLockReason}";
         if (session.SoftLockedAt is not null) details = $"{details}@{LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(session.SoftLockedAt.Value)}";
         return details;

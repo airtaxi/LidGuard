@@ -108,6 +108,9 @@
   <data name="InvalidAccessToken" xml:space="preserve">
     <value>Invalid access token.</value>
   </data>
+  <data name="CultureAutomaticStoredValueCannotBeExplicitCultureName" xml:space="preserve">
+    <value>auto is a stored settings value and cannot be used as an explicit CultureInfo name.</value>
+  </data>
   <data name="LastActivityLabel" xml:space="preserve">
     <value>Last activity</value>
   </data>

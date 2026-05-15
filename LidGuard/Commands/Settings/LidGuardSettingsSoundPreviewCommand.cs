@@ -13,7 +13,7 @@ internal static class LidGuardSettingsSoundPreviewCommand
     {
         if (options.Count > 0)
         {
-            Console.Error.WriteLine(LidGuardText.CommandDoesNotAcceptOptions(LidGuardPipeCommands.PreviewCurrentSound));
+            Console.Error.WriteLine(LocalizationService.GetFormattedString("CommandDoesNotAcceptOptions", LidGuardPipeCommands.PreviewCurrentSound));
             return 1;
         }
 
@@ -56,7 +56,7 @@ internal static class LidGuardSettingsSoundPreviewCommand
             normalizedStoredSettings.PostStopSuspendSoundVolumeOverridePercent,
             postStopSuspendSoundPlayerResult.Value,
             systemAudioVolumeControllerResult.Value,
-            LidGuardText.SettingsPreviewPlayedCurrentPostStopSuspendSound(PostStopSuspendSoundConfiguration.GetDisplayValue(normalizeResult.Value)));
+            LocalizationService.GetFormattedString("SettingsPreviewPlayedCurrentPostStopSuspendSound", PostStopSuspendSoundConfiguration.GetDisplayValue(normalizeResult.Value)));
     }
 
     public static int PreviewSystemSound(string systemSoundName, ILidGuardRuntimePlatform runtimePlatform)
@@ -83,7 +83,7 @@ internal static class LidGuardSettingsSoundPreviewCommand
 
         if (string.IsNullOrWhiteSpace(systemSoundName))
         {
-            Console.Error.WriteLine(LidGuardText.SettingsPreviewSystemSoundNameRequired(LidGuardSupportedSystemSounds.Describe()));
+            Console.Error.WriteLine(LocalizationService.GetFormattedString("SettingsPreviewSystemSoundNameRequired", LidGuardSupportedSystemSounds.Describe()));
             return 1;
         }
 
@@ -91,8 +91,8 @@ internal static class LidGuardSettingsSoundPreviewCommand
         if (!LidGuardSupportedSystemSounds.Names.Any(
             supportedSystemSoundName => supportedSystemSoundName.Equals(normalizedSystemSoundName, StringComparison.OrdinalIgnoreCase)))
         {
-            Console.Error.WriteLine(LidGuardText.SettingsPreviewUnsupportedSystemSoundName(normalizedSystemSoundName));
-            Console.Error.WriteLine(LidGuardText.SettingsPreviewSupportedSystemSounds(LidGuardSupportedSystemSounds.Describe()));
+            Console.Error.WriteLine(LocalizationService.GetFormattedString("SettingsPreviewUnsupportedSystemSoundName", normalizedSystemSoundName));
+            Console.Error.WriteLine(LocalizationService.GetFormattedString("SettingsPreviewSupportedSystemSounds", LidGuardSupportedSystemSounds.Describe()));
             return 1;
         }
 
@@ -102,7 +102,7 @@ internal static class LidGuardSettingsSoundPreviewCommand
             normalizedStoredSettings.PostStopSuspendSoundVolumeOverridePercent,
             postStopSuspendSoundPlayerResult.Value,
             systemAudioVolumeControllerResult.Value,
-            LidGuardText.SettingsPreviewPlayedSystemSound(normalizedSystemSoundName));
+            LocalizationService.GetFormattedString("SettingsPreviewPlayedSystemSound", normalizedSystemSoundName));
     }
 
     private static int PreviewPostStopSuspendSound(
@@ -124,7 +124,7 @@ internal static class LidGuardSettingsSoundPreviewCommand
 
         foreach (var volumeWarningResult in playbackResult.VolumeWarningResults)
         {
-            Console.Error.WriteLine(LidGuardText.TextWarning(volumeWarningResult.Message));
+            Console.Error.WriteLine(LocalizationService.GetFormattedString("TextWarning", volumeWarningResult.Message));
         }
 
         if (!playbackResult.PlaybackResult.Succeeded)
@@ -134,17 +134,17 @@ internal static class LidGuardSettingsSoundPreviewCommand
         }
 
         Console.WriteLine(successMessage);
-        Console.WriteLine(LidGuardText.SettingsPreviewVolumeOverrideSetting(PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(postStopSuspendSoundVolumeOverridePercent)));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsPreviewVolumeOverrideSetting", PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(postStopSuspendSoundVolumeOverridePercent)));
         return 0;
     }
 
     private static void WriteCurrentSoundConfigurationGuide()
     {
         var commandDisplayName = LidGuardCommandConsole.GetCommandDisplayName();
-        Console.WriteLine(LidGuardText.SettingsPreviewCurrentSoundNotConfigured);
-        Console.WriteLine(LidGuardText.SettingsPreviewConfigureCurrentSound(commandDisplayName));
-        Console.WriteLine(LidGuardText.SettingsPreviewSupportedSystemSounds(LidGuardSupportedSystemSounds.Describe()));
-        Console.WriteLine(LidGuardText.SettingsPreviewPlayableWavSupported);
-        Console.WriteLine(LidGuardText.SettingsPreviewVolumeOverrideGuidance(commandDisplayName));
+        Console.WriteLine(LocalizationService.GetString("SettingsPreviewCurrentSoundNotConfigured"));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsPreviewConfigureCurrentSound", commandDisplayName));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsPreviewSupportedSystemSounds", LidGuardSupportedSystemSounds.Describe()));
+        Console.WriteLine(LocalizationService.GetString("SettingsPreviewPlayableWavSupported"));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsPreviewVolumeOverrideGuidance", commandDisplayName));
     }
 }

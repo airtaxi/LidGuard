@@ -75,7 +75,7 @@ internal static class ManagedProviderSelection
 
     public static int WriteNoAvailableProvidersFound()
     {
-        Console.WriteLine(LidGuardText.ManagementNoAvailableProviders);
+        Console.WriteLine(LocalizationService.GetString("ManagementNoAvailableProviders"));
         return 0;
     }
 
@@ -106,7 +106,7 @@ internal static class ManagedProviderSelection
         skippedProviderMessage = string.Empty;
         if (HasExistingProviderConfigurationRoot(candidatePaths)) return true;
 
-        skippedProviderMessage = LidGuardText.ManagementSkippedAbsentProvider(GetProviderDisplayName(provider), string.Join(" | ", candidatePaths));
+        skippedProviderMessage = LocalizationService.GetFormattedString("ManagementSkippedAbsentProvider", GetProviderDisplayName(provider), string.Join(" | ", candidatePaths));
         return false;
     }
 
@@ -126,18 +126,18 @@ internal static class ManagedProviderSelection
 
         if (providers.Count > 0) return true;
 
-        message = LidGuardText.ManagementUnsupportedProviderSelection;
+        message = LocalizationService.GetString("ManagementUnsupportedProviderSelection");
         return false;
     }
 
     private static bool TryReadProviders(string prompt, out IReadOnlyList<AgentProvider> providers, out string message)
     {
-        Console.Write(LidGuardText.ManagementProviderSelectionPrompt(prompt));
+        Console.Write(LocalizationService.GetFormattedString("ManagementProviderSelectionPrompt", prompt));
         var providerText = Console.ReadLine();
         if (providerText is null)
         {
             providers = [];
-            message = LidGuardText.GetResourceString("ManagementProviderSelectionInputEnded", "Input ended before a provider was selected.");
+            message = LocalizationService.GetString("ManagementProviderSelectionInputEnded", "Input ended before a provider was selected.");
             return false;
         }
 

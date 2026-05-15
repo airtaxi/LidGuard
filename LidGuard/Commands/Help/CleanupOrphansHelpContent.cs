@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,10 +13,10 @@ internal static class CleanupOrphansHelpContent
             [],
             LidGuardHelpSectionTitles.SessionControl,
             $"{commandDisplayName} cleanup-orphans",
-            "Remove sessions whose watched processes have already exited.",
+            LocalizationService.GetString("Help_CleanupOrphans_Description"),
             [],
             [
-                "If LidGuard is not running, cleanup-orphans reports that nothing needs cleanup."
+                LocalizationService.GetString("Help_CleanupOrphans_RuntimeNotRunningNote")
             ]);
     }
 }

@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,9 +13,9 @@ internal static class CopilotHookHelpContent
             [],
             LidGuardHelpSectionTitles.ManagedAndInternalCommands,
             $"{commandDisplayName} copilot-hook --event <event-name>",
-            "Read GitHub Copilot CLI hook JSON from standard input for one configured event name.",
+            LocalizationService.GetString("Help_CopilotHook_Description"),
             [
-                new LidGuardHelpOption("--event <event-name>", "Required. Typical values include sessionStart, sessionEnd, userPromptSubmitted, preToolUse, postToolUse, permissionRequest, agentStop, subagentStart, subagentStop, errorOccurred, and notification.")
+                new LidGuardHelpOption("--event <event-name>", LocalizationService.GetString("Help_CopilotHook_EventOption"))
             ],
             []);
     }

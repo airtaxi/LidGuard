@@ -18,7 +18,7 @@ internal static class CommandOptionReader
             var argument = commandLineArguments[argumentIndex];
             if (!argument.StartsWith("--", StringComparison.Ordinal))
             {
-                message = LidGuardText.CommandUnexpectedArgument(argument);
+                message = LocalizationService.GetFormattedString("CommandUnexpectedArgument", argument);
                 return false;
             }
 
@@ -33,7 +33,7 @@ internal static class CommandOptionReader
             var standaloneOptionName = argument[2..];
             if (string.IsNullOrWhiteSpace(standaloneOptionName))
             {
-                message = LidGuardText.GetResourceString("CommandOptionNameRequired", "An option name is required after --.");
+                message = LocalizationService.GetString("CommandOptionNameRequired", "An option name is required after --.");
                 return false;
             }
 
@@ -77,7 +77,7 @@ internal static class CommandOptionReader
             return true;
         }
 
-        message = LidGuardText.GetResourceString("CommandRequiredOption", "The --{0} option is required.").Replace("{0}", optionName, StringComparison.Ordinal);
+        message = LocalizationService.GetString("CommandRequiredOption", "The --{0} option is required.").Replace("{0}", optionName, StringComparison.Ordinal);
         return false;
     }
 
@@ -93,7 +93,7 @@ internal static class CommandOptionReader
         if (!TryGetOption(options, out var valueText, optionNames)) return true;
         if (TryParseBoolean(valueText, out value)) return true;
 
-        message = LidGuardText.GetResourceString("CommandBooleanOptionValidation", "The {0} option must be true or false.").Replace("{0}", optionNames[0], StringComparison.Ordinal);
+        message = LocalizationService.GetString("CommandBooleanOptionValidation", "The {0} option must be true or false.").Replace("{0}", optionNames[0], StringComparison.Ordinal);
         return false;
     }
 

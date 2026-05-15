@@ -1,3 +1,5 @@
+using LidGuard.Localization;
+
 namespace LidGuard.Commands.Help;
 
 internal static class MacOSPermissionHelpContent
@@ -9,32 +11,32 @@ internal static class MacOSPermissionHelpContent
             MacOSPermissionCommand.CommandName,
             [],
             LidGuardHelpSectionTitles.Diagnostics,
-            "Inspect or manage macOS sudoers permissions for pmset and powermetrics operations.",
+            LocalizationService.GetString("Help_MacOSPermission_Description"),
             [
                 new LidGuardHelpCommand(
                     $"{commandDisplayName} {MacOSPermissionCommand.CommandName} status",
-                    "Print the current macOS permission environment without making changes.",
+                    LocalizationService.GetString("Help_MacOSPermission_StatusDescription"),
                     [],
                     []),
                 new LidGuardHelpCommand(
                     $"{commandDisplayName} {MacOSPermissionCommand.CommandName} check",
-                    "Verify required macOS runtime operations without requesting an actual sleep or hibernate.",
+                    LocalizationService.GetString("Help_MacOSPermission_CheckDescription"),
                     [],
                     []),
                 new LidGuardHelpCommand(
                     $"{commandDisplayName} {MacOSPermissionCommand.CommandName} install",
-                    "Install a LidGuard-managed sudoers rule for the current user.",
+                    LocalizationService.GetString("Help_MacOSPermission_InstallDescription"),
                     [],
                     [
-                        "This subcommand uses sudo for the one-time administrator write to /private/etc/sudoers.d/lidguard.",
-                        "The managed rule permits only LidGuard's pmset disablesleep, pmset hibernatemode, and powermetrics SMC sample commands."
+                        LocalizationService.GetString("Help_MacOSPermission_InstallNote"),
+                        LocalizationService.GetString("Help_MacOSPermission_ManagedRuleNote")
                     ]),
                 new LidGuardHelpCommand(
                     $"{commandDisplayName} {MacOSPermissionCommand.CommandName} remove",
-                    "Remove the LidGuard-managed sudoers rule when that exact managed rule file is present.",
+                    LocalizationService.GetString("Help_MacOSPermission_RemoveDescription"),
                     [],
                     [
-                        "The sudoers file is not removed if it does not contain LidGuard's managed markers."
+                        LocalizationService.GetString("Help_MacOSPermission_RemoveNote")
                     ])
             ]);
     }

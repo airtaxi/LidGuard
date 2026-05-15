@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,9 +13,9 @@ internal static class CopilotHooksHelpContent
             [],
             LidGuardHelpSectionTitles.HookIntegration,
             $"{commandDisplayName} copilot-hooks [config-json|json|hooks-json]",
-            "Print a managed GitHub Copilot CLI hook configuration snippet.",
+            LocalizationService.GetString("Help_CopilotHooks_Description"),
             [
-                new LidGuardHelpOption("<format>", "Optional positional value. Defaults to config-json. Accepts config-json, json, or hooks-json.")
+                new LidGuardHelpOption("<format>", LocalizationService.GetString("Help_CopilotHooks_FormatOption"))
             ],
             []);
     }

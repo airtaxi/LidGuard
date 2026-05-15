@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,9 +13,9 @@ internal static class CodexHooksHelpContent
             [],
             LidGuardHelpSectionTitles.HookIntegration,
             $"{commandDisplayName} codex-hooks [config-toml|toml|hooks-json|json]",
-            "Print a managed Codex hook configuration snippet.",
+            LocalizationService.GetString("Help_CodexHooks_Description"),
             [
-                new LidGuardHelpOption("<format>", "Optional positional value. Defaults to config-toml. Accepts config-toml, toml, hooks-json, or json.")
+                new LidGuardHelpOption("<format>", LocalizationService.GetString("Help_CodexHooks_FormatOption"))
             ],
             []);
     }

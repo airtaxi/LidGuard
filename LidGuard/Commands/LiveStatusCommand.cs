@@ -28,7 +28,7 @@ internal static class LiveStatusCommand
     {
         if (commandLineArguments.Length > 0)
         {
-            Console.Error.WriteLine(LidGuardText.CommandUnexpectedArgument(commandLineArguments[0]));
+            Console.Error.WriteLine(LocalizationService.GetFormattedString("CommandUnexpectedArgument", commandLineArguments[0]));
             LidGuardCommandConsole.TryWriteHelpForCommand(LidGuardPipeCommands.LiveStatus, out _);
             return 1;
         }
@@ -218,7 +218,7 @@ internal static class LiveStatusCommand
         foreach (var session in response.Sessions.OrderBy(static session => session.Provider).ThenBy(static session => session.SessionIdentifier, StringComparer.OrdinalIgnoreCase))
         {
             var providerDisplayText = StyleStrong(AgentProviderDisplay.CreateProviderDisplayText(session.Provider, session.ProviderName), enableStyles);
-            var processText = session.WatchedProcessIdentifier > 0 ? session.WatchedProcessIdentifier.ToString(CultureInfo.InvariantCulture) : LidGuardText.SessionProcessNone;
+            var processText = session.WatchedProcessIdentifier > 0 ? session.WatchedProcessIdentifier.ToString(CultureInfo.InvariantCulture) : LocalizationService.GetString("SessionProcessNone");
             sessionLines.Add(Format(
                 "LiveStatusSessionLine",
                 "{0} session={1} process={2} softLock={3} started={4} last={5} workingDirectory={6}",
@@ -247,7 +247,7 @@ internal static class LiveStatusCommand
     private static IReadOnlyList<string> CreateFlowPanelLines(LiveStatusSnapshot snapshot, bool enableStyles)
     {
         var flowEventLines = new List<LiveStatusFlowEventLine>();
-        foreach (var warningMessage in snapshot.WarningMessages) flowEventLines.Add(new LiveStatusFlowEventLine(DateTimeOffset.MaxValue, StyleWarning(LidGuardText.TextWarning(warningMessage), enableStyles)));
+        foreach (var warningMessage in snapshot.WarningMessages) flowEventLines.Add(new LiveStatusFlowEventLine(DateTimeOffset.MaxValue, StyleWarning(LocalizationService.GetFormattedString("TextWarning", warningMessage), enableStyles)));
 
         foreach (var runtimeLogEntry in snapshot.RuntimeLogEntries)
         {
@@ -323,7 +323,7 @@ internal static class LiveStatusCommand
         lineBuilder.Append(" event=");
         lineBuilder.Append(DisplayValue(suspendHistoryEntry.EventName));
         lineBuilder.Append(" mode=");
-        lineBuilder.Append(LidGuardText.DisplaySuspendMode(suspendHistoryEntry.SuspendMode));
+        lineBuilder.Append(LocalizationService.DisplaySuspendMode(suspendHistoryEntry.SuspendMode));
         lineBuilder.Append(" reason=");
         lineBuilder.Append(DisplaySuspendWebhookReason(suspendHistoryEntry.Reason));
         lineBuilder.Append(' ');
@@ -378,7 +378,7 @@ internal static class LiveStatusCommand
         return Format(
             "LiveStatusPendingSuspendDetails",
             "{0}, delay={1}, reason={2}",
-            LidGuardText.DisplaySuspendMode(response.SuspendMode),
+            LocalizationService.DisplaySuspendMode(response.SuspendMode),
             suspendDelayText,
             DisplaySuspendReason(response.SuspendReasonCode));
     }
@@ -392,13 +392,13 @@ internal static class LiveStatusCommand
     }
 
     private static string DisplaySuspendWebhookReason(SuspendWebhookReason reason)
-        => LidGuardText.GetResourceString($"DisplaySuspendWebhookReason{reason}", reason.ToString());
+        => LocalizationService.GetString($"DisplaySuspendWebhookReason{reason}", reason.ToString());
 
     private static string DisplayLidSwitchState(LidGuardPipeResponse response, bool enableStyles)
     {
-        if (response.RuntimeUnavailable) return StyleMuted(LidGuardText.TextDisplayNone, enableStyles);
+        if (response.RuntimeUnavailable) return StyleMuted(LocalizationService.GetString("TextDisplayNone"), enableStyles);
 
-        var lidSwitchStateText = LidGuardText.DisplayLidSwitchState(response.LidSwitchState);
+        var lidSwitchStateText = LocalizationService.DisplayLidSwitchState(response.LidSwitchState);
         return response.LidSwitchState switch
         {
             LidSwitchState.Open => StyleSuccess(lidSwitchStateText, enableStyles),
@@ -408,13 +408,13 @@ internal static class LiveStatusCommand
     }
 
     private static string DisplayVisibleDisplayMonitorCount(LidGuardPipeResponse response)
-        => response.RuntimeUnavailable ? LidGuardText.TextDisplayNone : response.VisibleDisplayMonitorCount.ToString(CultureInfo.InvariantCulture);
+        => response.RuntimeUnavailable ? LocalizationService.GetString("TextDisplayNone") : response.VisibleDisplayMonitorCount.ToString(CultureInfo.InvariantCulture);
 
     private static string DescribeSoftLockStatus(LidGuardSessionStatus session, bool enableStyles)
     {
-        if (session.SoftLockState != LidGuardSessionSoftLockState.SoftLocked) return StyleSuccess(LidGuardText.DisplaySessionSoftLockState(session.SoftLockState), enableStyles);
+        if (session.SoftLockState != LidGuardSessionSoftLockState.SoftLocked) return StyleSuccess(LocalizationService.DisplaySessionSoftLockState(session.SoftLockState), enableStyles);
 
-        var details = LidGuardText.DisplaySessionSoftLockState(session.SoftLockState);
+        var details = LocalizationService.DisplaySessionSoftLockState(session.SoftLockState);
         if (!string.IsNullOrWhiteSpace(session.SoftLockReason)) details = $"{details}:{session.SoftLockReason}";
         if (session.SoftLockedAt is not null) details = $"{details}@{FormatCompactTimestamp(session.SoftLockedAt.Value)}";
         return StyleFailure(details, enableStyles);
@@ -422,8 +422,8 @@ internal static class LiveStatusCommand
 
     private static string FormatCompactTimestamp(DateTimeOffset timestamp)
     {
-        if (timestamp == DateTimeOffset.MinValue) return LidGuardText.TextDisplayNone;
-        if (timestamp == DateTimeOffset.MaxValue) return LidGuardText.TextDisplayNone;
+        if (timestamp == DateTimeOffset.MinValue) return LocalizationService.GetString("TextDisplayNone");
+        if (timestamp == DateTimeOffset.MaxValue) return LocalizationService.GetString("TextDisplayNone");
 
         return timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture);
     }
@@ -749,7 +749,7 @@ internal static class LiveStatusCommand
     }
 
     private static string CreateSucceededText(bool succeeded, bool enableStyles)
-        => succeeded ? StyleSuccess(LidGuardText.DisplayBoolean(true), enableStyles) : StyleFailure(LidGuardText.DisplayBoolean(false), enableStyles);
+        => succeeded ? StyleSuccess(LocalizationService.DisplayBoolean(true), enableStyles) : StyleFailure(LocalizationService.DisplayBoolean(false), enableStyles);
 
     private static string StyleSuccess(string value, bool enableStyles)
         => StyleText(value, enableStyles, StyleBoldSequence, StyleGreenSequence);
@@ -777,10 +777,10 @@ internal static class LiveStatusCommand
     }
 
     private static string DisplayValue(string value)
-        => string.IsNullOrWhiteSpace(value) ? LidGuardText.TextDisplayNone : value.Trim();
+        => string.IsNullOrWhiteSpace(value) ? LocalizationService.GetString("TextDisplayNone") : value.Trim();
 
     private static string Text(string resourceName, string fallbackValue)
-        => LidGuardText.GetResourceString(resourceName, fallbackValue);
+        => LocalizationService.GetString(resourceName, fallbackValue);
 
     private static string Format(string resourceName, string fallbackValue, params object[] arguments)
         => string.Format(CultureInfo.CurrentCulture, Text(resourceName, fallbackValue), arguments);

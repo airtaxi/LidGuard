@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,10 +13,10 @@ internal static class HelpHelpContent
             [],
             LidGuardHelpSectionTitles.SessionControl,
             $"{commandDisplayName} help [command]",
-            "Show the categorized command overview or focused detailed help for one known command or alias.",
+            LocalizationService.GetString("Help_Help_Description"),
             [],
             [
-                "The <command> --help form uses the same command metadata."
+                LocalizationService.GetString("Help_Help_CommandOptionNote")
             ]);
     }
 }

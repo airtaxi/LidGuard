@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,12 +13,12 @@ internal static class PreviewSystemSoundHelpContent
             [],
             LidGuardHelpSectionTitles.SettingsAndSuspend,
             $"{commandDisplayName} preview-system-sound Asterisk|Beep|Exclamation|Hand|Question",
-            "Play one supported SystemSound name now, using the saved temporary volume setting.",
+            LocalizationService.GetString("Help_PreviewSystemSound_Description"),
             [
-                new LidGuardHelpOption("<sound>", "Required positional value. Allowed values: Asterisk, Beep, Exclamation, Hand, or Question.")
+                new LidGuardHelpOption("<sound>", LocalizationService.GetString("Help_PreviewSystemSound_NameOption"))
             ],
             [
-                "This command waits until playback finishes."
+                LocalizationService.GetString("Help_SoundPreview_WaitsForPlaybackNote")
             ]);
     }
 }

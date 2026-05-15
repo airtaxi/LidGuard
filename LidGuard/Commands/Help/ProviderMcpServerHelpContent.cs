@@ -1,4 +1,5 @@
 using LidGuard.Mcp;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,9 +13,9 @@ internal static class ProviderMcpServerHelpContent
             [],
             LidGuardHelpSectionTitles.ManagedAndInternalCommands,
             $"{commandDisplayName} {ProviderMcpServerCommand.CommandName} --provider-name <name>",
-            "Host the dedicated provider MCP stdio server for a single caller-supplied provider name.",
+            LocalizationService.GetString("Help_ProviderMcpServer_Description"),
             [
-                new LidGuardHelpOption("--provider-name <name>", "Required provider name exposed to the provider MCP tools.")
+                new LidGuardHelpOption("--provider-name <name>", LocalizationService.GetString("Help_ProviderMcpServer_ProviderNameOption"))
             ],
             []);
     }

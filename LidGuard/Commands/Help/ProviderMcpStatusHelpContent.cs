@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,10 +13,10 @@ internal static class ProviderMcpStatusHelpContent
             [],
             LidGuardHelpSectionTitles.McpIntegration,
             $"{commandDisplayName} {LidGuardPipeCommands.ProviderMcpStatus} --config <json-path> [--server-name <name>]",
-            "Inspect a caller-supplied JSON configuration file for a managed provider MCP server entry.",
+            LocalizationService.GetString("Help_ProviderMcpStatus_Description"),
             [
-                new LidGuardHelpOption("--config <json-path>", "Required. JSON configuration file to inspect."),
-                new LidGuardHelpOption("--server-name <name>", "Optional managed server entry name. Defaults to lidguard-provider.")
+                new LidGuardHelpOption("--config <json-path>", LocalizationService.GetString("Help_ProviderMcpStatus_ConfigOption")),
+                new LidGuardHelpOption("--server-name <name>", LocalizationService.GetString("Help_ProviderMcp_ServerNameOption"))
             ],
             []);
     }

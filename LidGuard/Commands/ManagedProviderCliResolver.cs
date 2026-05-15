@@ -34,7 +34,7 @@ internal static class ManagedProviderCliResolver
             return true;
         }
 
-        message = LidGuardText.ManagementProviderCliNotFound(
+        message = LocalizationService.GetFormattedString("ManagementProviderCliNotFound",
             ManagedProviderSelection.GetProviderDisplayName(provider),
             string.Join(" | ", GetProviderCliCandidatePaths(provider)));
         return false;
@@ -56,7 +56,7 @@ internal static class ManagedProviderCliResolver
             using var process = new Process { StartInfo = processStartInfo };
             if (!process.Start())
             {
-                Console.Error.WriteLine(LidGuardText.ManagementFailedToStartProcess(fileName));
+                Console.Error.WriteLine(LocalizationService.GetFormattedString("ManagementFailedToStartProcess", fileName));
                 return 1;
             }
 

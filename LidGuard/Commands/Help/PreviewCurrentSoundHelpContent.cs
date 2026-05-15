@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,11 +13,11 @@ internal static class PreviewCurrentSoundHelpContent
             [],
             LidGuardHelpSectionTitles.SettingsAndSuspend,
             $"{commandDisplayName} preview-current-sound",
-            "Play the saved sleep or hibernate warning sound now, using the saved temporary volume setting.",
+            LocalizationService.GetString("Help_PreviewCurrentSound_Description"),
             [],
             [
-                "If no warning sound is configured, this command prints settings guidance instead of failing.",
-                "This command waits until playback finishes."
+                LocalizationService.GetString("Help_PreviewCurrentSound_NoSoundNote"),
+                LocalizationService.GetString("Help_SoundPreview_WaitsForPlaybackNote")
             ]);
     }
 }

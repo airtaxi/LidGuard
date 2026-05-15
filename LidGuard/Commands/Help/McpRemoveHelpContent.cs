@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,12 +13,12 @@ internal static class McpRemoveHelpContent
             ["mcp-uninstall"],
             LidGuardHelpSectionTitles.McpIntegration,
             $"{commandDisplayName} mcp-remove [codex|claude|copilot|all]",
-            "Remove the managed stdio MCP server named lidguard from the selected provider CLI.",
+            LocalizationService.GetString("Help_McpRemove_Description"),
             [
-                new LidGuardHelpOption("<provider>", "Optional positional value. Allowed values: codex, claude, copilot, or all. When omitted, LidGuard prompts for a provider.")
+                new LidGuardHelpOption("<provider>", LocalizationService.GetString("Help_Mcp_ProviderArgument"))
             ],
             [
-                "With all, only providers whose default configuration roots already exist are processed. Missing providers are reported and skipped."
+                LocalizationService.GetString("Help_ManagedProvider_AllProvidersArgumentNote")
             ]);
     }
 }

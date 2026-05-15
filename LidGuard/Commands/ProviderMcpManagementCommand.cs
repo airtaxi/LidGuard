@@ -28,7 +28,7 @@ internal static class ProviderMcpManagementCommand
 
         if (!HookCommandUtilities.HookExecutableExists(managedExecutableReference))
         {
-            Console.Error.WriteLine(LidGuardText.GetResourceString("ManagementLidGuardExecutableMissing", "LidGuard executable or command does not exist: {0}").Replace("{0}", managedExecutableReference, StringComparison.Ordinal));
+            Console.Error.WriteLine(LocalizationService.GetString("ManagementLidGuardExecutableMissing", "LidGuard executable or command does not exist: {0}").Replace("{0}", managedExecutableReference, StringComparison.Ordinal));
             return 1;
         }
 
@@ -55,9 +55,9 @@ internal static class ProviderMcpManagementCommand
             return 1;
         }
 
-        Console.WriteLine(LidGuardText.ManagementProviderMcpInstalled(managedServerName, configurationFilePath));
-        Console.WriteLine(LidGuardText.ManagementProviderName(normalizedProviderName));
-        Console.WriteLine(LidGuardText.ManagementCommand($"{managedExecutableReference} {ProviderMcpServerCommand.CommandName} --provider-name {normalizedProviderName}"));
+        Console.WriteLine(LocalizationService.GetFormattedString("ManagementProviderMcpInstalled", managedServerName, configurationFilePath));
+        Console.WriteLine(LocalizationService.GetFormattedString("ManagementProviderName", normalizedProviderName));
+        Console.WriteLine(LocalizationService.GetFormattedString("ManagementCommand", $"{managedExecutableReference} {ProviderMcpServerCommand.CommandName} --provider-name {normalizedProviderName}"));
         return 0;
     }
 
@@ -72,8 +72,8 @@ internal static class ProviderMcpManagementCommand
         var managedServerName = GetManagedServerName(options);
         if (!File.Exists(configurationFilePath))
         {
-            Console.WriteLine(LidGuardText.ManagementConfigurationFileDoesNotExist(configurationFilePath));
-            Console.WriteLine(LidGuardText.ManagementNoProviderMcpServerNamedRemoved(managedServerName));
+            Console.WriteLine(LocalizationService.GetFormattedString("ManagementConfigurationFileDoesNotExist", configurationFilePath));
+            Console.WriteLine(LocalizationService.GetFormattedString("ManagementNoProviderMcpServerNamedRemoved", managedServerName));
             return 0;
         }
 
@@ -85,14 +85,14 @@ internal static class ProviderMcpManagementCommand
 
         if (!McpConfigurationJsonUtilities.TryGetMcpServersObject(rootObject, out var mcpServersObject))
         {
-            Console.WriteLine(LidGuardText.GetResourceString("ManagementMcpServersObjectNotFound", "The mcpServers object was not found in {0}.").Replace("{0}", configurationFilePath, StringComparison.Ordinal));
-            Console.WriteLine(LidGuardText.ManagementNoProviderMcpServerNamedRemoved(managedServerName));
+            Console.WriteLine(LocalizationService.GetString("ManagementMcpServersObjectNotFound", "The mcpServers object was not found in {0}.").Replace("{0}", configurationFilePath, StringComparison.Ordinal));
+            Console.WriteLine(LocalizationService.GetFormattedString("ManagementNoProviderMcpServerNamedRemoved", managedServerName));
             return 0;
         }
 
         if (!mcpServersObject.Remove(managedServerName))
         {
-            Console.WriteLine(LidGuardText.ManagementNoProviderMcpServerNamedFound(managedServerName, configurationFilePath));
+            Console.WriteLine(LocalizationService.GetFormattedString("ManagementNoProviderMcpServerNamedFound", managedServerName, configurationFilePath));
             return 0;
         }
 
@@ -102,7 +102,7 @@ internal static class ProviderMcpManagementCommand
             return 1;
         }
 
-        Console.WriteLine(LidGuardText.ManagementProviderMcpRemoved(managedServerName, configurationFilePath));
+        Console.WriteLine(LocalizationService.GetFormattedString("ManagementProviderMcpRemoved", managedServerName, configurationFilePath));
         return 0;
     }
 
@@ -141,7 +141,7 @@ internal static class ProviderMcpManagementCommand
             }
         }
 
-        Console.WriteLine(LidGuardText.ManagementProviderMcpInstallationTitle);
+        Console.WriteLine(LocalizationService.GetString("ManagementProviderMcpInstallationTitle"));
         WriteField("ManagementLabelConfig", "Config", configurationFilePath);
         WriteField("ManagementLabelConfigExists", "Config exists", configurationFileExists);
         WriteField("ManagementLabelServerName", "Server name", managedServerName);
@@ -163,10 +163,10 @@ internal static class ProviderMcpManagementCommand
 
     private static string CreateStatusMessage(string configurationFilePath, bool configurationFileExists, bool installed, string message)
     {
-        if (!configurationFileExists) return LidGuardText.ManagementConfigurationFileDoesNotExist(configurationFilePath);
+        if (!configurationFileExists) return LocalizationService.GetFormattedString("ManagementConfigurationFileDoesNotExist", configurationFilePath);
         if (!string.IsNullOrWhiteSpace(message)) return message;
-        if (!installed) return LidGuardText.ManagementNoProviderMcpServerEntryFound;
-        return LidGuardText.ManagementProviderMcpRegistered;
+        if (!installed) return LocalizationService.GetString("ManagementNoProviderMcpServerEntryFound");
+        return LocalizationService.GetString("ManagementProviderMcpRegistered");
     }
 
     private static string GetManagedServerName(IReadOnlyDictionary<string, string> options)
@@ -199,7 +199,7 @@ internal static class ProviderMcpManagementCommand
 
     private static void WriteField(string labelResourceName, string fallbackLabel, object value)
     {
-        var displayValue = value is bool booleanValue ? LidGuardText.DisplayBoolean(booleanValue) : LidGuardText.DisplayOptionalValue(value?.ToString() ?? string.Empty);
-        Console.WriteLine(LidGuardText.ManagementField(LidGuardText.GetResourceString(labelResourceName, fallbackLabel), displayValue));
+        var displayValue = value is bool booleanValue ? LocalizationService.DisplayBoolean(booleanValue) : LocalizationService.DisplayOptionalValue(value?.ToString() ?? string.Empty);
+        Console.WriteLine(LocalizationService.GetFormattedString("ManagementField", LocalizationService.GetString(labelResourceName, fallbackLabel), displayValue));
     }
 }

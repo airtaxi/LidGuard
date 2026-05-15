@@ -17,7 +17,7 @@ internal static class LidGuardHelpSectionCatalog
             new LidGuardHelpSectionEntry(
                 LidGuardHelpSectionTitles.ManagedAndInternalCommands,
                 [
-                    LidGuardHelpTextLocalizer.Localize("These commands are intended for provider-managed integrations and stdio hosts rather than direct everyday CLI use.")
+                    LocalizationService.GetString("Help_ManagedCommands_Detail")
                 ]),
             new LidGuardHelpSectionEntry(
                 LidGuardHelpSectionTitles.PathsAndNotes,
@@ -43,9 +43,9 @@ internal static class LidGuardHelpSectionCatalog
         return
         [
             $"{commandDisplayName} <command> [options]",
-            "Use --name value or --name=value for options.",
-            "Boolean options accept true/false, yes/no, on/off, and 1/0.",
-            "Quote paths or text values when they contain spaces."
+            LocalizationService.GetString("Help_Usage_OptionSyntax"),
+            LocalizationService.GetString("Help_Usage_BooleanOptions"),
+            LocalizationService.GetString("Help_Usage_QuoteValues")
         ];
     }
 
@@ -56,17 +56,17 @@ internal static class LidGuardHelpSectionCatalog
     {
         return
         [
-            LidGuardText.ConsoleSettingsFile(settingsFilePath),
-            LidGuardText.HelpSessionLogFile(sessionLogFilePath),
-            LidGuardText.HelpSuspendHistoryLogFile(suspendHistoryLogFilePath),
+            LocalizationService.GetFormattedString("ConsoleSettingsFile", settingsFilePath),
+            LocalizationService.GetFormattedString("HelpSessionLogFile", sessionLogFilePath),
+            LocalizationService.GetFormattedString("HelpSuspendHistoryLogFile", suspendHistoryLogFilePath),
 #if LIDGUARD_LINUX
-            "Linux support is implemented for systemd/logind systems. macOS support is implemented in macOS builds.",
+            LocalizationService.GetString("Help_Paths_LinuxRuntimeBehavior"),
 #elif LIDGUARD_MACOS
-            "macOS support uses caffeinate and pmset. Windows and Linux support is implemented in their platform builds.",
+            LocalizationService.GetString("Help_Paths_MacOSRuntimeBehavior"),
 #else
-            "This build includes Windows support. Linux and macOS support is implemented in their platform builds.",
+            LocalizationService.GetString("Help_Paths_WindowsRuntimeBehavior"),
 #endif
-            "Provider MCP integrations are best-effort only because correct behavior depends on the model calling the LidGuard MCP tools at the right times."
+            LocalizationService.GetString("Help_Paths_ProviderMcpBestEffort")
         ];
     }
 }

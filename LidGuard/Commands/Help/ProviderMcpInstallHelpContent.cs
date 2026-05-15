@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,14 +13,14 @@ internal static class ProviderMcpInstallHelpContent
             [],
             LidGuardHelpSectionTitles.McpIntegration,
             $"{commandDisplayName} {LidGuardPipeCommands.ProviderMcpInstall} --config <json-path> --provider-name <name> [--server-name <name>]",
-            "Write or update a managed provider MCP stdio server entry in a caller-supplied JSON configuration file.",
+            LocalizationService.GetString("Help_ProviderMcpInstall_Description"),
             [
-                new LidGuardHelpOption("--config <json-path>", "Required. JSON configuration file to create or update."),
-                new LidGuardHelpOption("--provider-name <name>", "Required provider name passed through to provider-mcp-server."),
-                new LidGuardHelpOption("--server-name <name>", "Optional managed server entry name. Defaults to lidguard-provider.")
+                new LidGuardHelpOption("--config <json-path>", LocalizationService.GetString("Help_ProviderMcpInstall_ConfigOption")),
+                new LidGuardHelpOption("--provider-name <name>", LocalizationService.GetString("Help_ProviderMcpInstall_ProviderNameOption")),
+                new LidGuardHelpOption("--server-name <name>", LocalizationService.GetString("Help_ProviderMcp_ServerNameOption"))
             ],
             [
-                "This path edits the supplied JSON file directly and does not call provider-specific mcp add/remove commands."
+                LocalizationService.GetString("Help_ProviderMcpInstall_DirectEditNote")
             ]);
     }
 }

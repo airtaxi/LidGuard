@@ -57,6 +57,9 @@
   <data name="CultureSettingsLoadWarning" xml:space="preserve">
     <value>경고: UI 문화권을 확인하는 동안 LidGuard 설정을 읽지 못했습니다: {0}</value>
   </data>
+  <data name="CultureAutomaticStoredValueCannotBeExplicitCultureName" xml:space="preserve">
+    <value>auto는 저장용 설정 값이며 명시적인 CultureInfo 이름으로 사용할 수 없습니다.</value>
+  </data>
   <data name="HelpAliasLabel" xml:space="preserve">
     <value>별칭</value>
   </data>

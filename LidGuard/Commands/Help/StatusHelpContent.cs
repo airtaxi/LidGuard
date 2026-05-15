@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,10 +13,10 @@ internal static class StatusHelpContent
             [],
             LidGuardHelpSectionTitles.SessionControl,
             $"{commandDisplayName} status",
-            "Show runtime state, active sessions, and effective stored settings.",
+            LocalizationService.GetString("Help_Status_Description"),
             [],
             [
-                "If LidGuard is not running, status still prints the stored settings file contents."
+                LocalizationService.GetString("Help_Status_RuntimeNotRunningNote")
             ]);
     }
 }

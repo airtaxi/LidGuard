@@ -26,7 +26,7 @@ internal static class LidGuardCulture
 
         if (!LidGuardSettingsStore.TryLoadExistingOrDefault(out var settings, out _, out var settingsMessage))
         {
-            if (!string.IsNullOrWhiteSpace(settingsMessage)) Console.Error.WriteLine(LidGuardText.CultureSettingsLoadWarning(settingsMessage));
+            if (!string.IsNullOrWhiteSpace(settingsMessage)) Console.Error.WriteLine(LocalizationService.GetFormattedString("CultureSettingsLoadWarning", settingsMessage));
             ConfigureWindowsUnicodeConsoleEncoding(CultureInfo.CurrentUICulture);
             return;
         }
@@ -40,7 +40,7 @@ internal static class LidGuardCulture
 
         if (TryApplyConfiguredCulture(normalizedSettings.UserInterfaceCulture, out var message)) return;
 
-        Console.Error.WriteLine(LidGuardText.CultureInvalidUserInterfaceCultureWarning(normalizedSettings.UserInterfaceCulture, message));
+        Console.Error.WriteLine(LocalizationService.GetFormattedString("CultureInvalidUserInterfaceCultureWarning", normalizedSettings.UserInterfaceCulture, message));
         ConfigureWindowsUnicodeConsoleEncoding(CultureInfo.CurrentUICulture);
     }
 
@@ -67,7 +67,7 @@ internal static class LidGuardCulture
 
         if (TryApplyConfiguredCulture(normalizedSettings.UserInterfaceCulture, out var settingsMessage)) return;
 
-        Console.Error.WriteLine(LidGuardText.CultureInvalidUserInterfaceCultureWarning(normalizedSettings.UserInterfaceCulture, settingsMessage));
+        Console.Error.WriteLine(LocalizationService.GetFormattedString("CultureInvalidUserInterfaceCultureWarning", normalizedSettings.UserInterfaceCulture, settingsMessage));
         ConfigureWindowsUnicodeConsoleEncoding(CultureInfo.CurrentUICulture);
     }
 
@@ -157,7 +157,7 @@ internal static class LidGuardCulture
     }
 
     private static string CultureInvalidEnvironmentWarning(string cultureName, string detail)
-        => LidGuardText.CultureInvalidUserInterfaceCultureWarning(
+        => LocalizationService.GetFormattedString("CultureInvalidUserInterfaceCultureWarning",
             $"{UserInterfaceCultureEnvironmentVariableName}={cultureName}",
             detail);
 }

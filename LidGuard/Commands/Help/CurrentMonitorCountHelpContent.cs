@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,10 +13,10 @@ internal static class CurrentMonitorCountHelpContent
             [],
             LidGuardHelpSectionTitles.Diagnostics,
             $"{commandDisplayName} {LidGuardPipeCommands.CurrentMonitorCount}",
-            "Report the current visible display monitor count using the same base platform monitor visibility check LidGuard uses for closed-lid policy decisions.",
+            LocalizationService.GetString("Help_CurrentMonitorCount_Description"),
             [],
             [
-                "Internal laptop panel connections are only excluded by the final suspend eligibility check."
+                LocalizationService.GetString("Help_CurrentMonitorCount_InternalPanelNote")
             ]);
     }
 }

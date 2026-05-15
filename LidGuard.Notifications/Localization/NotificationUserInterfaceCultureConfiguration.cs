@@ -36,7 +36,7 @@ internal static class NotificationUserInterfaceCultureConfiguration
         var normalizedUserInterfaceCulture = NormalizeStoredValue(userInterfaceCulture);
         if (IsAutomatic(normalizedUserInterfaceCulture))
         {
-            message = "auto is a stored settings value and cannot be used as an explicit CultureInfo name.";
+            message = LocalizationService.GetString("CultureAutomaticStoredValueCannotBeExplicitCultureName");
             return false;
         }
 

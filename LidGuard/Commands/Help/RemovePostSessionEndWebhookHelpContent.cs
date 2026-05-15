@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,10 +13,10 @@ internal static class RemovePostSessionEndWebhookHelpContent
             [],
             LidGuardHelpSectionTitles.SettingsAndSuspend,
             $"{commandDisplayName} remove-post-session-end-webhook",
-            "Clear the saved session completion webhook URL.",
+            LocalizationService.GetString("Help_RemovePostSessionEndWebhook_Description"),
             [],
             [
-                "This command does not accept any options."
+                LocalizationService.GetString("Help_Command_NoOptionsNote")
             ]);
     }
 }

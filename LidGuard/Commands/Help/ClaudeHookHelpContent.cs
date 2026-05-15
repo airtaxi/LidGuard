@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,7 +13,7 @@ internal static class ClaudeHookHelpContent
             [],
             LidGuardHelpSectionTitles.ManagedAndInternalCommands,
             $"{commandDisplayName} claude-hook",
-            "Read Claude Code hook JSON from standard input and forward start, stop, activity, soft-lock, elicitation, or permission decisions to LidGuard.",
+            LocalizationService.GetString("Help_ClaudeHook_Description"),
             [],
             []);
     }

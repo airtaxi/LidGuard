@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,9 +13,9 @@ internal static class ClaudeHooksHelpContent
             [],
             LidGuardHelpSectionTitles.HookIntegration,
             $"{commandDisplayName} claude-hooks [settings-json|json|hooks-json]",
-            "Print a managed Claude Code hook configuration snippet.",
+            LocalizationService.GetString("Help_ClaudeHooks_Description"),
             [
-                new LidGuardHelpOption("<format>", "Optional positional value. Defaults to settings-json. Accepts settings-json, json, or hooks-json.")
+                new LidGuardHelpOption("<format>", LocalizationService.GetString("Help_ClaudeHooks_FormatOption"))
             ],
             []);
     }

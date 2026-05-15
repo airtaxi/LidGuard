@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,7 +13,7 @@ internal static class CodexHookHelpContent
             [],
             LidGuardHelpSectionTitles.ManagedAndInternalCommands,
             $"{commandDisplayName} codex-hook",
-            "Read Codex hook JSON from standard input and forward start, stop, or closed-lid permission decisions to the runtime.",
+            LocalizationService.GetString("Help_CodexHook_Description"),
             [],
             []);
     }

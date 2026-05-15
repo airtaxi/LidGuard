@@ -19,7 +19,7 @@ internal static class LidGuardSettingsValueParser
 
         if (string.IsNullOrWhiteSpace(preSuspendWebhookUrlText) || preSuspendWebhookUrlText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
         {
-            message = LidGuardText.SettingsOptionPreSuspendWebhookRemovalCommand(LidGuardCommandConsole.GetCommandDisplayName(), LidGuardPipeCommands.RemovePreSuspendWebhook);
+            message = LocalizationService.GetFormattedString("SettingsOptionPreSuspendWebhookRemovalCommand", LidGuardCommandConsole.GetCommandDisplayName(), LidGuardPipeCommands.RemovePreSuspendWebhook);
             return false;
         }
 
@@ -41,7 +41,7 @@ internal static class LidGuardSettingsValueParser
 
         if (string.IsNullOrWhiteSpace(postSessionEndWebhookUrlText) || postSessionEndWebhookUrlText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
         {
-            message = LidGuardText.SettingsOptionPostSessionEndWebhookRemovalCommand(LidGuardCommandConsole.GetCommandDisplayName(), LidGuardPipeCommands.RemovePostSessionEndWebhook);
+            message = LocalizationService.GetFormattedString("SettingsOptionPostSessionEndWebhookRemovalCommand", LidGuardCommandConsole.GetCommandDisplayName(), LidGuardPipeCommands.RemovePostSessionEndWebhook);
             return false;
         }
 
@@ -87,7 +87,7 @@ internal static class LidGuardSettingsValueParser
         message = string.Empty;
         if (string.IsNullOrWhiteSpace(permissionRequestDecisionText))
         {
-            message = LidGuardText.SettingsOptionClosedLidPermissionRequestDecisionValidation;
+            message = LocalizationService.GetString("SettingsOptionClosedLidPermissionRequestDecisionValidation");
             return false;
         }
 
@@ -100,7 +100,7 @@ internal static class LidGuardSettingsValueParser
                 closedLidPermissionRequestDecision = ClosedLidPermissionRequestDecision.Deny;
                 return true;
             default:
-                message = LidGuardText.SettingsOptionClosedLidPermissionRequestDecisionValidation;
+                message = LocalizationService.GetString("SettingsOptionClosedLidPermissionRequestDecisionValidation");
                 return false;
         }
     }
@@ -125,7 +125,7 @@ internal static class LidGuardSettingsValueParser
 
         if (suspendMode == defaultValue && !normalizedSuspendModeText.Equals(defaultValue.ToString(), StringComparison.OrdinalIgnoreCase))
         {
-            message = LidGuardText.SettingsOptionSuspendModeValidation;
+            message = LocalizationService.GetString("SettingsOptionSuspendModeValidation");
             return false;
         }
 
@@ -143,7 +143,7 @@ internal static class LidGuardSettingsValueParser
         if (!CommandOptionReader.TryGetOption(options, out var postStopSuspendDelaySecondsText, "post-stop-suspend-delay-seconds")) return true;
         if (int.TryParse(postStopSuspendDelaySecondsText.Trim(), out postStopSuspendDelaySeconds) && postStopSuspendDelaySeconds >= 0) return true;
 
-        message = LidGuardText.SettingsOptionPostStopSuspendDelaySecondsValidation;
+        message = LocalizationService.GetString("SettingsOptionPostStopSuspendDelaySecondsValidation");
         return false;
     }
 
@@ -177,7 +177,7 @@ internal static class LidGuardSettingsValueParser
             return true;
         }
 
-        message = LidGuardText.SettingsOptionPostStopSuspendSoundVolumeOverrideValidation(
+        message = LocalizationService.GetFormattedString("SettingsOptionPostStopSuspendSoundVolumeOverrideValidation",
             LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent,
             LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent);
         return false;
@@ -214,7 +214,7 @@ internal static class LidGuardSettingsValueParser
             return true;
         }
 
-        message = LidGuardText.SettingsOptionSuspendHistoryCountValidation(LidGuardSettings.MinimumSuspendHistoryEntryCount);
+        message = LocalizationService.GetFormattedString("SettingsOptionSuspendHistoryCountValidation", LidGuardSettings.MinimumSuspendHistoryEntryCount);
         return false;
     }
 
@@ -242,7 +242,7 @@ internal static class LidGuardSettingsValueParser
             return true;
         }
 
-        message = LidGuardText.SettingsOptionSessionTimeoutValidation(LidGuardSettings.MinimumSessionTimeoutMinutes);
+        message = LocalizationService.GetFormattedString("SettingsOptionSessionTimeoutValidation", LidGuardSettings.MinimumSessionTimeoutMinutes);
         return false;
     }
 
@@ -276,7 +276,7 @@ internal static class LidGuardSettingsValueParser
             return true;
         }
 
-        message = LidGuardText.SettingsOptionServerRuntimeCleanupDelayValidation(LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes);
+        message = LocalizationService.GetFormattedString("SettingsOptionServerRuntimeCleanupDelayValidation", LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes);
         return false;
     }
 
@@ -294,7 +294,7 @@ internal static class LidGuardSettingsValueParser
             && emergencyHibernationTemperatureCelsius <= LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius)
             return true;
 
-        message = LidGuardText.SettingsOptionEmergencyHibernationTemperatureCelsiusValidation(
+        message = LocalizationService.GetFormattedString("SettingsOptionEmergencyHibernationTemperatureCelsiusValidation",
             LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius,
             LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius);
         return false;
@@ -311,7 +311,7 @@ internal static class LidGuardSettingsValueParser
         if (!CommandOptionReader.TryGetOption(options, out var emergencyHibernationTemperatureModeText, "emergency-hibernation-temperature-mode")) return true;
         if (TryParseEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureModeText, out emergencyHibernationTemperatureMode)) return true;
 
-        message = LidGuardText.SettingsOptionEmergencyHibernationTemperatureModeValidation;
+        message = LocalizationService.GetString("SettingsOptionEmergencyHibernationTemperatureModeValidation");
         return false;
     }
 

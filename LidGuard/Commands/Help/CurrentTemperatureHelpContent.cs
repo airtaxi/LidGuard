@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,13 +13,13 @@ internal static class CurrentTemperatureHelpContent
             [],
             LidGuardHelpSectionTitles.Diagnostics,
             $"{commandDisplayName} {LidGuardPipeCommands.CurrentTemperature} [default|low|average|high]",
-            "Report the current system temperature in Celsius using the selected temperature mode.",
+            LocalizationService.GetString("Help_CurrentTemperature_Description"),
             [
-                new LidGuardHelpOption("<mode>", "Optional positional value. Use default to follow the saved setting, or choose low, average, or high for this command only.")
+                new LidGuardHelpOption("<mode>", LocalizationService.GetString("Help_CurrentTemperature_TemperatureModeOption"))
             ],
             [
-                "If no supported temperature sensor data is available on this platform, the command reports that the value is unavailable.",
-                "When the settings file does not exist yet, default uses Average."
+                LocalizationService.GetString("Help_CurrentTemperature_UnavailableNote"),
+                LocalizationService.GetString("Help_CurrentTemperature_DefaultModeNote")
             ]);
     }
 }

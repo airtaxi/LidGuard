@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Resources;
 using LidGuard.Notifications.Data;
 using LidGuard.Notifications.Models;
 
@@ -17,8 +15,6 @@ internal static class LidGuardNotificationText
     private const string DisplayWebhookStatusProcessingResourceName = "DisplayWebhookStatusProcessing";
     private const string DisplayWebhookStatusCompletedResourceName = "DisplayWebhookStatusCompleted";
     private const string DisplayWebhookStatusFailedResourceName = "DisplayWebhookStatusFailed";
-    private static readonly ResourceManager s_resourceManager = new("LidGuard.Notifications.Resources.LidGuardNotificationText", typeof(LidGuardNotificationText).Assembly);
-
     public static string AccessTokenLabel => Get(nameof(AccessTokenLabel));
     public static string AccessTokenRequired => Get(nameof(AccessTokenRequired));
     public static string ActiveSessionsLabel => Get(nameof(ActiveSessionsLabel));
@@ -149,8 +145,8 @@ internal static class LidGuardNotificationText
     public static string PushTitlePostSessionEnd => Get(nameof(PushTitlePostSessionEnd));
     public static string PushTitleSoftLocked => Get(nameof(PushTitleSoftLocked));
 
-    private static string Get(string name) => s_resourceManager.GetString(name, CultureInfo.CurrentUICulture) ?? name;
+    private static string Get(string name) => LocalizationService.GetString(name);
 
     private static string Format(string name, params object[] arguments)
-        => string.Format(CultureInfo.CurrentCulture, Get(name), arguments);
+        => LocalizationService.GetFormattedString(name, arguments);
 }

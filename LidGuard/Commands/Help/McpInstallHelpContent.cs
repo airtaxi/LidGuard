@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,13 +13,13 @@ internal static class McpInstallHelpContent
             [],
             LidGuardHelpSectionTitles.McpIntegration,
             $"{commandDisplayName} mcp-install [codex|claude|copilot|all]",
-            "Register or refresh the managed stdio MCP server named lidguard with the selected provider CLI.",
+            LocalizationService.GetString("Help_McpInstall_Description"),
             [
-                new LidGuardHelpOption("<provider>", "Optional positional value. Allowed values: codex, claude, copilot, or all. When omitted, LidGuard prompts for a provider.")
+                new LidGuardHelpOption("<provider>", LocalizationService.GetString("Help_Mcp_ProviderArgument"))
             ],
             [
-                "If an existing managed LidGuard MCP server is found, mcp-install removes it first and then installs the current command.",
-                "With all, only providers whose default configuration roots already exist are processed. Missing providers are reported and skipped."
+                LocalizationService.GetString("Help_McpInstall_RefreshNote"),
+                LocalizationService.GetString("Help_ManagedProvider_AllProvidersArgumentNote")
             ]);
     }
 }

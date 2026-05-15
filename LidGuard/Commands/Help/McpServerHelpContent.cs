@@ -1,4 +1,5 @@
 using LidGuard.Mcp;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,7 +13,7 @@ internal static class McpServerHelpContent
             [],
             LidGuardHelpSectionTitles.ManagedAndInternalCommands,
             $"{commandDisplayName} {LidGuardMcpServerCommand.CommandName}",
-            "Host the regular LidGuard stdio MCP server that exposes settings and session management tools.",
+            LocalizationService.GetString("Help_McpServer_Description"),
             [],
             []);
     }

@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,12 +13,12 @@ internal static class SuspendHistoryHelpContent
             [],
             LidGuardHelpSectionTitles.Diagnostics,
             $"{commandDisplayName} {LidGuardPipeCommands.SuspendHistory} [count]",
-            "Print recent sleep/hibernate request history from the local history log.",
+            LocalizationService.GetString("Help_SuspendHistory_Description"),
             [
-                new LidGuardHelpOption("<count>", "Optional positive entry count to display. Defaults to the saved suspend-history-count value, or 10 when recording is off.")
+                new LidGuardHelpOption("<count>", LocalizationService.GetString("Help_SuspendHistory_CountOption"))
             ],
             [
-                "The saved suspend-history-count setting controls how many entries are retained. The count argument only limits how many retained entries are displayed."
+                LocalizationService.GetString("Help_SuspendHistory_CountNote")
             ]);
     }
 }

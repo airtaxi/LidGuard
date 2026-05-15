@@ -15,14 +15,14 @@ internal static class LidGuardSettingsInteractivePromptReader
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
+            message = LocalizationService.GetFormattedString("SettingsInteractiveInputEnded", settingName);
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(valueText)) return true;
         if (LidGuardSettingsValueParser.TryParseInteractiveBoolean(valueText.Trim(), out value)) return true;
 
-        message = LidGuardText.SettingsInteractiveBooleanValidation(settingName);
+        message = LocalizationService.GetFormattedString("SettingsInteractiveBooleanValidation", settingName);
         return false;
     }
 
@@ -37,14 +37,14 @@ internal static class LidGuardSettingsInteractivePromptReader
         message = string.Empty;
         WriteInteractiveSettingPrompt(
             settingName,
-            LidGuardText.DisplaySuspendMode(storedValue),
-            LidGuardText.DisplaySuspendMode(defaultValue),
-            LidGuardText.GetResourceString("SettingsInteractiveSuspendModeDetails", "candidates: Sleep, Hibernate"));
+            LocalizationService.DisplaySuspendMode(storedValue),
+            LocalizationService.DisplaySuspendMode(defaultValue),
+            LocalizationService.GetString("SettingsInteractiveSuspendModeDetails", "candidates: Sleep, Hibernate"));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
+            message = LocalizationService.GetFormattedString("SettingsInteractiveInputEnded", settingName);
             return false;
         }
 
@@ -61,7 +61,7 @@ internal static class LidGuardSettingsInteractivePromptReader
         if (normalizedValueText.Equals("sleep", StringComparison.OrdinalIgnoreCase)) return true;
         if (normalizedValueText.Equals("hibernate", StringComparison.OrdinalIgnoreCase)) return true;
 
-        message = LidGuardText.SettingsInteractiveSuspendModeValidation(settingName);
+        message = LocalizationService.GetFormattedString("SettingsInteractiveSuspendModeValidation", settingName);
         return false;
     }
 
@@ -74,19 +74,19 @@ internal static class LidGuardSettingsInteractivePromptReader
     {
         value = storedValue;
         message = string.Empty;
-        WriteInteractiveSettingPrompt(settingName, storedValue.ToString(), defaultValue.ToString(), LidGuardText.GetResourceString("SettingsInteractiveImmediateDetails", "0 = immediate"));
+        WriteInteractiveSettingPrompt(settingName, storedValue.ToString(), defaultValue.ToString(), LocalizationService.GetString("SettingsInteractiveImmediateDetails", "0 = immediate"));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
+            message = LocalizationService.GetFormattedString("SettingsInteractiveInputEnded", settingName);
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(valueText)) return true;
         if (int.TryParse(valueText.Trim(), out value) && value >= 0) return true;
 
-        message = LidGuardText.SettingsInteractiveNonNegativeIntegerValidation(settingName);
+        message = LocalizationService.GetFormattedString("SettingsInteractiveNonNegativeIntegerValidation", settingName);
         return false;
     }
 
@@ -101,14 +101,14 @@ internal static class LidGuardSettingsInteractivePromptReader
         message = string.Empty;
         WriteInteractiveSettingPrompt(
             settingName,
-            LidGuardText.DisplayMinuteCount(storedValue),
-            LidGuardText.DisplayMinuteCount(defaultValue),
-            LidGuardText.SettingsInteractiveSessionTimeoutDetails(LidGuardSettings.MinimumSessionTimeoutMinutes));
+            LocalizationService.DisplayMinuteCount(storedValue),
+            LocalizationService.DisplayMinuteCount(defaultValue),
+            LocalizationService.GetFormattedString("SettingsInteractiveSessionTimeoutDetails", LidGuardSettings.MinimumSessionTimeoutMinutes));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
+            message = LocalizationService.GetFormattedString("SettingsInteractiveInputEnded", settingName);
             return false;
         }
 
@@ -126,7 +126,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             return true;
         }
 
-        message = LidGuardText.SettingsInteractiveValueOffOrMinimumValidation(settingName, LidGuardSettings.MinimumSessionTimeoutMinutes);
+        message = LocalizationService.GetFormattedString("SettingsInteractiveValueOffOrMinimumValidation", settingName, LidGuardSettings.MinimumSessionTimeoutMinutes);
         return false;
     }
 
@@ -141,14 +141,14 @@ internal static class LidGuardSettingsInteractivePromptReader
         message = string.Empty;
         WriteInteractiveSettingPrompt(
             settingName,
-            LidGuardText.DisplayMinuteCount(storedValue),
-            LidGuardText.DisplayMinuteCount(defaultValue),
-            LidGuardText.SettingsInteractiveServerRuntimeCleanupDelayDetails(LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes));
+            LocalizationService.DisplayMinuteCount(storedValue),
+            LocalizationService.DisplayMinuteCount(defaultValue),
+            LocalizationService.GetFormattedString("SettingsInteractiveServerRuntimeCleanupDelayDetails", LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
+            message = LocalizationService.GetFormattedString("SettingsInteractiveInputEnded", settingName);
             return false;
         }
 
@@ -166,7 +166,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             return true;
         }
 
-        message = LidGuardText.SettingsInteractiveValueOffOrMinimumValidation(settingName, LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes);
+        message = LocalizationService.GetFormattedString("SettingsInteractiveValueOffOrMinimumValidation", settingName, LidGuardSettings.MinimumServerRuntimeCleanupDelayMinutes);
         return false;
     }
 
@@ -181,16 +181,16 @@ internal static class LidGuardSettingsInteractivePromptReader
         message = string.Empty;
         WriteInteractiveSettingPrompt(
             settingName,
-            LidGuardText.DisplayOptionalValue(PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(storedValue)),
-            LidGuardText.DisplayOptionalValue(PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(defaultValue)),
-            LidGuardText.SettingsInteractiveVolumeOverrideDetails(
+            LocalizationService.DisplayOptionalValue(PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(storedValue)),
+            LocalizationService.DisplayOptionalValue(PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(defaultValue)),
+            LocalizationService.GetFormattedString("SettingsInteractiveVolumeOverrideDetails",
                 LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent,
                 LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
+            message = LocalizationService.GetFormattedString("SettingsInteractiveInputEnded", settingName);
             return false;
         }
 
@@ -208,7 +208,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             return true;
         }
 
-        message = LidGuardText.SettingsInteractiveVolumeOverrideValidation(
+        message = LocalizationService.GetFormattedString("SettingsInteractiveVolumeOverrideValidation",
             settingName,
             LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent,
             LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent);
@@ -226,14 +226,14 @@ internal static class LidGuardSettingsInteractivePromptReader
         message = string.Empty;
         WriteInteractiveSettingPrompt(
             settingName,
-            LidGuardText.DisplaySuspendHistoryEntryCount(storedValue),
-            LidGuardText.DisplaySuspendHistoryEntryCount(defaultValue),
-            LidGuardText.SettingsInteractiveSuspendHistoryEntryCountDetails(LidGuardSettings.MinimumSuspendHistoryEntryCount));
+            LocalizationService.DisplaySuspendHistoryEntryCount(storedValue),
+            LocalizationService.DisplaySuspendHistoryEntryCount(defaultValue),
+            LocalizationService.GetFormattedString("SettingsInteractiveSuspendHistoryEntryCountDetails", LidGuardSettings.MinimumSuspendHistoryEntryCount));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
+            message = LocalizationService.GetFormattedString("SettingsInteractiveInputEnded", settingName);
             return false;
         }
 
@@ -251,7 +251,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             return true;
         }
 
-        message = LidGuardText.SettingsInteractiveValueOffOrMinimumValidation(settingName, LidGuardSettings.MinimumSuspendHistoryEntryCount);
+        message = LocalizationService.GetFormattedString("SettingsInteractiveValueOffOrMinimumValidation", settingName, LidGuardSettings.MinimumSuspendHistoryEntryCount);
         return false;
     }
 
@@ -268,14 +268,14 @@ internal static class LidGuardSettingsInteractivePromptReader
             settingName,
             storedValue.ToString(),
             defaultValue.ToString(),
-            LidGuardText.SettingsInteractiveRangeDetails(
+            LocalizationService.GetFormattedString("SettingsInteractiveRangeDetails",
                 LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius,
                 LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
+            message = LocalizationService.GetFormattedString("SettingsInteractiveInputEnded", settingName);
             return false;
         }
 
@@ -285,7 +285,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             && value <= LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius)
             return true;
 
-        message = LidGuardText.SettingsInteractiveRangeValidation(
+        message = LocalizationService.GetFormattedString("SettingsInteractiveRangeValidation",
             settingName,
             LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius,
             LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius);
@@ -303,21 +303,21 @@ internal static class LidGuardSettingsInteractivePromptReader
         message = string.Empty;
         WriteInteractiveSettingPrompt(
             settingName,
-            LidGuardText.DisplayEmergencyHibernationTemperatureMode(storedValue),
-            LidGuardText.DisplayEmergencyHibernationTemperatureMode(defaultValue),
-            LidGuardText.GetResourceString("SettingsInteractiveEmergencyHibernationTemperatureModeDetails", "candidates: Low, Average, High"));
+            LocalizationService.DisplayEmergencyHibernationTemperatureMode(storedValue),
+            LocalizationService.DisplayEmergencyHibernationTemperatureMode(defaultValue),
+            LocalizationService.GetString("SettingsInteractiveEmergencyHibernationTemperatureModeDetails", "candidates: Low, Average, High"));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
+            message = LocalizationService.GetFormattedString("SettingsInteractiveInputEnded", settingName);
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(valueText)) return true;
         if (LidGuardSettingsValueParser.TryParseEmergencyHibernationTemperatureMode(valueText, out value)) return true;
 
-        message = LidGuardText.SettingsInteractiveEmergencyHibernationTemperatureModeValidation(settingName);
+        message = LocalizationService.GetFormattedString("SettingsInteractiveEmergencyHibernationTemperatureModeValidation", settingName);
         return false;
     }
 
@@ -334,14 +334,14 @@ internal static class LidGuardSettingsInteractivePromptReader
         var defaultDisplayValue = PostStopSuspendSoundConfiguration.GetDisplayValue(defaultValue);
         WriteInteractiveSettingPrompt(
             settingName,
-            LidGuardText.DisplayOptionalValue(storedDisplayValue),
-            LidGuardText.DisplayOptionalValue(defaultDisplayValue),
-            LidGuardText.SettingsInteractivePostStopSuspendSoundDetails(LidGuardSupportedSystemSounds.Describe()));
+            LocalizationService.DisplayOptionalValue(storedDisplayValue),
+            LocalizationService.DisplayOptionalValue(defaultDisplayValue),
+            LocalizationService.GetFormattedString("SettingsInteractivePostStopSuspendSoundDetails", LidGuardSupportedSystemSounds.Describe()));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
+            message = LocalizationService.GetFormattedString("SettingsInteractiveInputEnded", settingName);
             return false;
         }
 
@@ -361,14 +361,14 @@ internal static class LidGuardSettingsInteractivePromptReader
         message = string.Empty;
         WriteInteractiveSettingPrompt(
             settingName,
-            LidGuardText.DisplayClosedLidPermissionRequestDecision(storedValue),
-            LidGuardText.DisplayClosedLidPermissionRequestDecision(defaultValue),
-            LidGuardText.GetResourceString("SettingsInteractiveClosedLidPermissionRequestDecisionDetails", "candidates: Deny, Allow"));
+            LocalizationService.DisplayClosedLidPermissionRequestDecision(storedValue),
+            LocalizationService.DisplayClosedLidPermissionRequestDecision(defaultValue),
+            LocalizationService.GetString("SettingsInteractiveClosedLidPermissionRequestDecisionDetails", "candidates: Deny, Allow"));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
+            message = LocalizationService.GetFormattedString("SettingsInteractiveInputEnded", settingName);
             return false;
         }
 
@@ -389,12 +389,12 @@ internal static class LidGuardSettingsInteractivePromptReader
             settingName,
             storedValue,
             defaultValue,
-            LidGuardText.GetResourceString("SettingsInteractiveUserInterfaceCultureDetails", "auto, en, ko, or a culture name such as ko-KR"));
+            LocalizationService.GetString("SettingsInteractiveUserInterfaceCultureDetails", "auto, en, ko, or a culture name such as ko-KR"));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
         {
-            message = LidGuardText.SettingsInteractiveInputEnded(settingName);
+            message = LocalizationService.GetFormattedString("SettingsInteractiveInputEnded", settingName);
             return false;
         }
 
@@ -409,8 +409,8 @@ internal static class LidGuardSettingsInteractivePromptReader
         string additionalDetails = "")
     {
         var prompt = string.IsNullOrWhiteSpace(additionalDetails)
-            ? LidGuardText.SettingsInteractivePrompt(settingName, storedValueText, defaultValueText)
-            : LidGuardText.SettingsInteractivePromptWithDetails(settingName, storedValueText, defaultValueText, additionalDetails);
+            ? LocalizationService.GetFormattedString("SettingsInteractivePrompt", settingName, storedValueText, defaultValueText)
+            : LocalizationService.GetFormattedString("SettingsInteractivePromptWithDetails", settingName, storedValueText, defaultValueText, additionalDetails);
         Console.Write(prompt);
     }
 }

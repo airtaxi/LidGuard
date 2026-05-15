@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,13 +13,13 @@ internal static class StopHelpContent
             [],
             LidGuardHelpSectionTitles.SessionControl,
             $"{commandDisplayName} stop --provider codex|claude|copilot|custom|mcp [--session <id>] [--provider-name <name>] [--parent-pid <pid>] [--working-directory <path>]",
-            "Stop a tracked session by matching the same provider and session identity used when the session started.",
+            LocalizationService.GetString("Help_Stop_Description"),
             [
-                new LidGuardHelpOption("--provider <provider>", "Required. Allowed values: codex, claude, copilot, custom, or mcp."),
-                new LidGuardHelpOption("--session <id>", "Optional. When omitted, LidGuard uses the same fallback session identifier strategy as start."),
-                new LidGuardHelpOption("--provider-name <name>", "Required when --provider mcp is used."),
-                new LidGuardHelpOption("--parent-pid <pid>", "Optional process ID to match when stopping a tracked session."),
-                new LidGuardHelpOption("--working-directory <path>", "Optional working directory used for fallback session identity. Defaults to the current directory.")
+                new LidGuardHelpOption("--provider <provider>", LocalizationService.GetString("Help_Session_ProviderOption")),
+                new LidGuardHelpOption("--session <id>", LocalizationService.GetString("Help_Stop_SessionOption")),
+                new LidGuardHelpOption("--provider-name <name>", LocalizationService.GetString("Help_Stop_ProviderNameOption")),
+                new LidGuardHelpOption("--parent-pid <pid>", LocalizationService.GetString("Help_Stop_ParentProcessOption")),
+                new LidGuardHelpOption("--working-directory <path>", LocalizationService.GetString("Help_Stop_WorkingDirectoryOption"))
             ],
             []);
     }

@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,12 +13,12 @@ internal static class McpStatusHelpContent
             [],
             LidGuardHelpSectionTitles.McpIntegration,
             $"{commandDisplayName} mcp-status [codex|claude|copilot|all]",
-            "Inspect the managed user/global LidGuard MCP server registration for one provider or every detected provider.",
+            LocalizationService.GetString("Help_McpStatus_Description"),
             [
-                new LidGuardHelpOption("<provider>", "Optional positional value. Allowed values: codex, claude, copilot, or all. When omitted, LidGuard prompts for a provider.")
+                new LidGuardHelpOption("<provider>", LocalizationService.GetString("Help_Mcp_ProviderArgument"))
             ],
             [
-                "With all, only providers whose default configuration roots already exist are processed. Missing providers are reported and skipped."
+                LocalizationService.GetString("Help_ManagedProvider_AllProvidersArgumentNote")
             ]);
     }
 }

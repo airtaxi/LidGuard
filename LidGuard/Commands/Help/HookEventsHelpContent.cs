@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 
 namespace LidGuard.Commands.Help;
 
@@ -12,13 +13,13 @@ internal static class HookEventsHelpContent
             [],
             LidGuardHelpSectionTitles.HookIntegration,
             $"{commandDisplayName} hook-events [--provider codex|claude|copilot|all] [--count <number>]",
-            "Print recent hook event log lines for the selected provider or providers.",
+            LocalizationService.GetString("Help_HookEvents_Description"),
             [
-                new LidGuardHelpOption("--provider <provider>", "Optional. Allowed values: codex, claude, copilot, or all. When omitted, LidGuard prompts for a provider."),
-                new LidGuardHelpOption("--count <number>", "Optional positive line count. Defaults to 50.")
+                new LidGuardHelpOption("--provider <provider>", LocalizationService.GetString("Help_ManagedProvider_ProviderOption")),
+                new LidGuardHelpOption("--count <number>", LocalizationService.GetString("Help_HookEvents_CountOption"))
             ],
             [
-                "With --provider all, only providers whose default configuration roots already exist are processed. Missing providers are reported and skipped."
+                LocalizationService.GetString("Help_ManagedProvider_AllProvidersNote")
             ]);
     }
 }
