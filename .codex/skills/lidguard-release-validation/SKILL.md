@@ -10,6 +10,7 @@ description: "LidGuard validation and release workflow reference. Use when worki
 - Local build, test, publish, pack, and reinstall validation commands can fail once because of transient Windows Defender file-lock interference.
 - Retry the same validation command before taking any broader recovery action; when this specific issue is the cause, a retry is typically enough.
 - Do not bring down any build server just because the first validation attempt failed with this known Defender issue.
+- When validating multiple Runtime Identifiers locally from the same worktree, run the commands sequentially rather than in parallel. Concurrent `dotnet build` or restore activity against the same project can race on shared `obj` artifacts and produce false-negative reference or restore failures that disappear on a clean sequential rerun.
 
 ## Current Validation Scope
 
