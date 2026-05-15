@@ -81,6 +81,25 @@ detect_target() {
     return 0
 }
 
+clean_build_output_directories() {
+    echo "Removing build output directories..."
+    for BUILD_OUTPUT_TARGET in "$REPO_ROOT/LidGuard/bin" "$REPO_ROOT/LidGuard/obj"; do
+        case "$BUILD_OUTPUT_TARGET" in
+            "$REPO_ROOT"/LidGuard/bin|"$REPO_ROOT"/LidGuard/obj)
+                if [ -e "$BUILD_OUTPUT_TARGET" ]; then
+                    rm -rf "$BUILD_OUTPUT_TARGET"
+                fi
+                ;;
+            *)
+                echo "Refusing to remove unexpected build output path: $BUILD_OUTPUT_TARGET" >&2
+                return 1
+                ;;
+        esac
+    done
+
+    return 0
+}
+
 run_once() {
     if [ ! -f "$PROJECT_FILE" ]; then
         echo "LidGuard project file was not found: $PROJECT_FILE" >&2
@@ -98,6 +117,8 @@ run_once() {
 
     echo "Detected target: $SYSTEM_NAME/$MACHINE_NAME (packing $TOOL_RID package)"
     echo "Using package version from project: $PACKAGE_VERSION"
+    clean_build_output_directories || return 1
+
     echo "Removing stale $PACKAGE_VERSION package outputs..."
     rm -f \
         "$PACKAGE_DIR/lidguard.$PACKAGE_VERSION.nupkg" \

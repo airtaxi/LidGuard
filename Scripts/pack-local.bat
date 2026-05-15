@@ -92,6 +92,8 @@ if errorlevel 1 (
 
 echo Detected system architecture: %NATIVE_ARCH% ^(packing win-%TOOL_ARCH% package^)
 echo Using package version from project: %PACKAGE_VERSION%
+call :clean_build_output_directories
+if errorlevel 1 exit /b 1
 
 echo Removing stale %PACKAGE_VERSION% package outputs...
 if exist "%PACKAGE_DIR%\lidguard.%PACKAGE_VERSION%.nupkg" del /f /q "%PACKAGE_DIR%\lidguard.%PACKAGE_VERSION%.nupkg"
@@ -117,6 +119,12 @@ if not exist "%PACKAGE_DIR%\lidguard.win-%TOOL_ARCH%.%PACKAGE_VERSION%.nupkg" (
     exit /b 1
 )
 
+exit /b 0
+
+:clean_build_output_directories
+echo Removing build output directories...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$repoRoot = [System.IO.Path]::GetFullPath($env:REPO_ROOT); foreach ($relativePath in @('LidGuard\bin', 'LidGuard\obj')) { $target = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $relativePath)); if (-not $target.StartsWith($repoRoot + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) { Write-Error ('Refusing to remove unexpected build output path: ' + $target); exit 1 }; if (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target -Recurse -Force } }"
+if errorlevel 1 exit /b 1
 exit /b 0
 
 :read_package_version

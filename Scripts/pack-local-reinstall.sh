@@ -7,6 +7,25 @@ REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 PACK_SCRIPT=$SCRIPT_DIR/pack-local.sh
 REINSTALL_SCRIPT=$SCRIPT_DIR/reinstall-local.sh
 
+clean_build_output_directories() {
+    echo "Removing build output directories..."
+    for BUILD_OUTPUT_TARGET in "$REPO_ROOT/LidGuard/bin" "$REPO_ROOT/LidGuard/obj"; do
+        case "$BUILD_OUTPUT_TARGET" in
+            "$REPO_ROOT"/LidGuard/bin|"$REPO_ROOT"/LidGuard/obj)
+                if [ -e "$BUILD_OUTPUT_TARGET" ]; then
+                    rm -rf "$BUILD_OUTPUT_TARGET"
+                fi
+                ;;
+            *)
+                echo "Refusing to remove unexpected build output path: $BUILD_OUTPUT_TARGET" >&2
+                return 1
+                ;;
+        esac
+    done
+
+    return 0
+}
+
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --no-pause)
@@ -31,6 +50,11 @@ if [ ! -f "$REINSTALL_SCRIPT" ]; then
     echo "Reinstall script was not found: $REINSTALL_SCRIPT" >&2
     exit 1
 fi
+
+clean_build_output_directories || {
+    echo "Failed." >&2
+    exit 1
+}
 
 echo "Running local pack step..."
 sh "$PACK_SCRIPT" --no-pause || {

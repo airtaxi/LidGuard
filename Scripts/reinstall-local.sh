@@ -23,6 +23,8 @@ REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 PROJECT_FILE=$REPO_ROOT/LidGuard/LidGuard.csproj
 PACKAGE_DIR=$REPO_ROOT/artifacts/packages
 TEMP_CONFIG_DIR=
+DOTNET_TOOLS_DIR=
+PROFILE_FILE=
 EXIT_CODE=0
 
 read_project_version() {
@@ -90,6 +92,110 @@ cleanup_temp_config() {
     fi
 
     TEMP_CONFIG_DIR=
+}
+
+resolve_dotnet_tools_dir() {
+    if [ -n "$DOTNET_TOOLS_DIR" ]; then
+        return 0
+    fi
+
+    if [ -z "${HOME:-}" ]; then
+        echo "HOME is not set; unable to resolve the .NET tools directory." >&2
+        return 1
+    fi
+
+    DOTNET_TOOLS_DIR=$HOME/.dotnet/tools
+    return 0
+}
+
+path_has_directory() {
+    DIRECTORY=$1
+    case ":${PATH:-}:" in
+        *":$DIRECTORY:"*)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+select_shell_profile() {
+    if [ -z "${HOME:-}" ]; then
+        return 1
+    fi
+
+    SHELL_NAME=$(basename "${SHELL:-sh}")
+    case "$SHELL_NAME" in
+        bash)
+            if [ -f "$HOME/.bashrc" ]; then
+                PROFILE_FILE=$HOME/.bashrc
+            elif [ -f "$HOME/.bash_profile" ]; then
+                PROFILE_FILE=$HOME/.bash_profile
+            else
+                PROFILE_FILE=$HOME/.profile
+            fi
+            ;;
+        zsh)
+            PROFILE_FILE=$HOME/.zshrc
+            ;;
+        *)
+            PROFILE_FILE=$HOME/.profile
+            ;;
+    esac
+
+    return 0
+}
+
+profile_has_dotnet_tools_path() {
+    if [ ! -f "$PROFILE_FILE" ]; then
+        return 1
+    fi
+
+    grep -F ".dotnet/tools" "$PROFILE_FILE" >/dev/null 2>&1
+}
+
+register_dotnet_tools_path() {
+    if ! resolve_dotnet_tools_dir; then
+        return 0
+    fi
+
+    if path_has_directory "$DOTNET_TOOLS_DIR"; then
+        echo ".NET tools directory is already on PATH: $DOTNET_TOOLS_DIR"
+    else
+        PATH=${PATH:+$PATH:}$DOTNET_TOOLS_DIR
+        export PATH
+        echo "Added .NET tools directory to PATH for this script: $DOTNET_TOOLS_DIR"
+    fi
+
+    if ! select_shell_profile; then
+        echo "Unable to resolve a shell profile for persistent PATH registration." >&2
+        return 0
+    fi
+
+    if profile_has_dotnet_tools_path; then
+        echo ".NET tools directory is already registered in $PROFILE_FILE"
+        return 0
+    fi
+
+    if {
+        printf '\n'
+        cat <<'EOF'
+# Add .NET global tools to PATH for LidGuard local installs.
+if [ -d "$HOME/.dotnet/tools" ]; then
+    case ":$PATH:" in
+        *":$HOME/.dotnet/tools:"*) ;;
+        *) export PATH="${PATH:+$PATH:}$HOME/.dotnet/tools" ;;
+    esac
+fi
+EOF
+    } >> "$PROFILE_FILE"; then
+        echo "Registered .NET tools directory in $PROFILE_FILE"
+    else
+        echo "Unable to update $PROFILE_FILE for persistent PATH registration." >&2
+    fi
+
+    return 0
 }
 
 stop_running_lidguard() {
@@ -205,18 +311,19 @@ run_once() {
         return 1
     fi
 
-    echo "Detected target: $SYSTEM_NAME/$MACHINE_NAME (installing --arch $TOOL_ARCH from $TOOL_RID package)"
+    echo "Detected target: $SYSTEM_NAME/$MACHINE_NAME (installing from $TOOL_RID package)"
     echo "Using package version from project: $PACKAGE_VERSION"
     stop_running_lidguard || return 1
 
     echo "Creating temporary NuGet config..."
     create_nuget_config || return 1
 
+    register_dotnet_tools_path
     clear_local_cache_entries || return 1
     uninstall_existing_tool || return 1
 
     echo "Installing lidguard $PACKAGE_VERSION from local packages..."
-    dotnet tool install --global lidguard --configfile "$NUGET_CONFIG" --version "$PACKAGE_VERSION" --arch "$TOOL_ARCH" || return 1
+    dotnet tool install --global lidguard --configfile "$NUGET_CONFIG" --version "$PACKAGE_VERSION" || return 1
 
     echo "Verifying lidguard command..."
     if ! command -v lidguard >/dev/null 2>&1; then

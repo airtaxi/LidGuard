@@ -38,6 +38,12 @@ if not exist "%REINSTALL_SCRIPT%" (
     goto finalize
 )
 
+call :clean_build_output_directories
+if errorlevel 1 (
+    set "EXIT_CODE=1"
+    goto finalize
+)
+
 echo Running local pack step...
 call "%PACK_SCRIPT%" --no-pause
 if errorlevel 1 (
@@ -66,3 +72,9 @@ if "%EXIT_CODE%"=="0" (
 if "%NO_PAUSE%"=="0" pause
 
 exit /b %EXIT_CODE%
+
+:clean_build_output_directories
+echo Removing build output directories...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$repoRoot = [System.IO.Path]::GetFullPath($env:REPO_ROOT); foreach ($relativePath in @('LidGuard\bin', 'LidGuard\obj')) { $target = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $relativePath)); if (-not $target.StartsWith($repoRoot + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) { Write-Error ('Refusing to remove unexpected build output path: ' + $target); exit 1 }; if (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target -Recurse -Force } }"
+if errorlevel 1 exit /b 1
+exit /b 0
