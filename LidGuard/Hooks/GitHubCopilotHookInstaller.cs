@@ -25,8 +25,6 @@ public sealed class GitHubCopilotHookInstaller : HookInstallerBase
 
     protected override string DefaultHookCommandName => "copilot-hook";
 
-    protected override string ConfigurationMissingMessage => "GitHub Copilot hook configuration file does not exist.";
-
     public static string GetDefaultGitHubCopilotHooksConfigurationFilePath()
         => Path.Combine(GetDefaultGitHubCopilotConfigurationDirectoryPath(), CopilotHooksDirectoryName, ManagedConfigurationFileName);
 

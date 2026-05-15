@@ -1,3 +1,4 @@
+using LidGuard.Localization;
 using LidGuard.Sessions;
 
 namespace LidGuard.Hooks;
@@ -10,7 +11,8 @@ public abstract class HookInstallerBase : IHookInstaller
 
     protected abstract string DefaultHookCommandName { get; }
 
-    protected virtual string ConfigurationMissingMessage => $"{ProviderDisplayName} configuration file does not exist.";
+    protected virtual string ConfigurationMissingMessage
+        => Format("HookManagementConfigurationFileDoesNotExist", "{0} configuration file does not exist.", ProviderDisplayName);
 
     public HookInstallationInspection Inspect(HookInstallationRequest request)
     {
@@ -37,7 +39,9 @@ public abstract class HookInstallerBase : IHookInstaller
         if (!HookCommandUtilities.HookExecutableExists(normalizedRequest.HookExecutablePath))
         {
             var missingExecutableInspection = Inspect(normalizedRequest);
-            return HookInstallationResult.Failure(missingExecutableInspection, $"Hook executable or command does not exist: {normalizedRequest.HookExecutablePath}");
+            return HookInstallationResult.Failure(
+                missingExecutableInspection,
+                Format("HookManagementHookExecutableDoesNotExist", "Hook executable or command does not exist: {0}", normalizedRequest.HookExecutablePath));
         }
 
         var hookCommand = HookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
@@ -164,19 +168,30 @@ public abstract class HookInstallerBase : IHookInstaller
         };
     }
 
-    private string CreateAlreadyInstalledMessage() => $"{ProviderDisplayName} hook is already installed.";
+    private string CreateAlreadyInstalledMessage()
+        => Format("HookManagementAlreadyInstalled", "{0} hook is already installed.", ProviderDisplayName);
 
-    private string CreateInstalledMessage() => $"{ProviderDisplayName} hook installed.";
+    private string CreateInstalledMessage()
+        => Format("HookManagementInstalled", "{0} hook installed.", ProviderDisplayName);
 
-    private string CreateWrittenNeedsAttentionMessage() => $"{ProviderDisplayName} hook configuration was written but still needs attention.";
+    private string CreateWrittenNeedsAttentionMessage()
+        => Format("HookManagementWrittenNeedsAttention", "{0} hook configuration was written but still needs attention.", ProviderDisplayName);
 
-    private string CreateNotInstalledMessage() => $"{ProviderDisplayName} hook is not installed.";
+    private string CreateNotInstalledMessage()
+        => Format("HookManagementNotInstalled", "{0} hook is not installed.", ProviderDisplayName);
 
-    private string CreateNoManagedHookFoundMessage() => $"No LidGuard-managed {ProviderDisplayName} hook was found.";
+    private string CreateNoManagedHookFoundMessage()
+        => Format("HookManagementNoManagedHookFound", "No LidGuard-managed {0} hook was found.", ProviderDisplayName);
 
-    private string CreateRemovedMessage() => $"{ProviderDisplayName} hook removed.";
+    private string CreateRemovedMessage()
+        => Format("HookManagementRemoved", "{0} hook removed.", ProviderDisplayName);
 
-    private string CreateUnsupportedInstallationMessage() => $"Only {ProviderDisplayName} hook installation is implemented.";
+    private string CreateUnsupportedInstallationMessage()
+        => Format("HookManagementUnsupportedInstallation", "Only {0} hook installation is implemented.", ProviderDisplayName);
 
-    private string CreateUnsupportedRemovalMessage() => $"Only {ProviderDisplayName} hook removal is implemented.";
+    private string CreateUnsupportedRemovalMessage()
+        => Format("HookManagementUnsupportedRemoval", "Only {0} hook removal is implemented.", ProviderDisplayName);
+
+    private static string Format(string resourceName, string fallbackValue, params object[] arguments)
+        => LocalizationService.GetFormattedStringWithFallback(resourceName, fallbackValue, arguments);
 }

@@ -1,4 +1,5 @@
 using LidGuard.Audio;
+using LidGuard.Localization;
 using LidGuard.Results;
 using LidGuard.Services;
 using LidGuard.Power;
@@ -10,7 +11,8 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
 {
     public bool IsSupported => OperatingSystem.IsLinux();
 
-    public string UnsupportedMessage => "LidGuard Linux support requires a systemd/logind environment.";
+    public string UnsupportedMessage
+        => LocalizationService.GetString("PlatformUnsupportedLinux", "LidGuard Linux support requires a systemd/logind environment.");
 
     public LidGuardOperationResult<LidGuardRuntimeServiceSet> CreateRuntimeServiceSet()
     {

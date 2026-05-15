@@ -597,6 +597,12 @@
   <data name="HookManagementWrittenNeedsAttention" xml:space="preserve">
     <value>{0} hook 구성을 썼지만 아직 확인이 필요합니다.</value>
   </data>
+  <data name="HookCommandDefaultExecutableNotResolved" xml:space="preserve">
+    <value>기본 LidGuard hook 실행 파일 경로 또는 명령 이름을 확인하지 못했습니다.</value>
+  </data>
+  <data name="HookCommandUnsupportedSnippetFormat" xml:space="preserve">
+    <value>지원하지 않는 {0} hook 스니펫 형식입니다. {1}을 사용하세요.</value>
+  </data>
   <data name="HookStatusMessageBlockingClosedLidAskUserPrompt" xml:space="preserve">
     <value>덮개가 닫힌 상태의 ask_user 요청 차단 중</value>
   </data>
@@ -1769,6 +1775,15 @@
   </data>
   <data name="LiveStatusMoreEntries" xml:space="preserve">
     <value>... {0}개 더 있음</value>
+  </data>
+  <data name="PlatformUnsupportedWindows" xml:space="preserve">
+    <value>이 LidGuard 빌드는 Windows 7 이상이 필요합니다.</value>
+  </data>
+  <data name="PlatformUnsupportedLinux" xml:space="preserve">
+    <value>LidGuard Linux 지원은 systemd/logind 환경이 필요합니다.</value>
+  </data>
+  <data name="PlatformUnsupportedMacOS" xml:space="preserve">
+    <value>이 LidGuard 빌드는 macOS가 필요합니다.</value>
   </data>
   <data name="DisplayMinuteCount" xml:space="preserve">
     <value>{0}분</value>

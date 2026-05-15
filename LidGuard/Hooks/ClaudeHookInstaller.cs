@@ -14,8 +14,6 @@ public sealed class ClaudeHookInstaller : HookInstallerBase
 
     protected override string DefaultHookCommandName => "claude-hook";
 
-    protected override string ConfigurationMissingMessage => "Claude settings file does not exist.";
-
     public static string GetDefaultClaudeConfigurationDirectoryPath()
     {
         var claudeConfigurationDirectoryPath = Environment.GetEnvironmentVariable(ClaudeConfigurationDirectoryEnvironmentVariableName);

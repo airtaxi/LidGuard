@@ -1,5 +1,6 @@
 using System.Runtime.Versioning;
 using LidGuard.Audio;
+using LidGuard.Localization;
 using LidGuard.Platform;
 using LidGuard.Power;
 using LidGuard.Results;
@@ -12,7 +13,8 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
 {
     public bool IsSupported => OperatingSystem.IsWindowsVersionAtLeast(6, 1);
 
-    public string UnsupportedMessage => "This LidGuard build requires Windows 7 or later.";
+    public string UnsupportedMessage
+        => LocalizationService.GetString("PlatformUnsupportedWindows", "This LidGuard build requires Windows 7 or later.");
 
     public LidGuardOperationResult<LidGuardRuntimeServiceSet> CreateRuntimeServiceSet()
     {

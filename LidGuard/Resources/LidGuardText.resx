@@ -597,6 +597,12 @@
   <data name="HookManagementWrittenNeedsAttention" xml:space="preserve">
     <value>{0} hook configuration was written but still needs attention.</value>
   </data>
+  <data name="HookCommandDefaultExecutableNotResolved" xml:space="preserve">
+    <value>A default LidGuard hook executable or command name could not be resolved.</value>
+  </data>
+  <data name="HookCommandUnsupportedSnippetFormat" xml:space="preserve">
+    <value>Unsupported {0} hook snippet format. Use {1}.</value>
+  </data>
   <data name="HookStatusMessageBlockingClosedLidAskUserPrompt" xml:space="preserve">
     <value>Blocking closed-lid ask_user prompt</value>
   </data>
@@ -1769,6 +1775,15 @@
   </data>
   <data name="LiveStatusMoreEntries" xml:space="preserve">
     <value>... {0} more</value>
+  </data>
+  <data name="PlatformUnsupportedWindows" xml:space="preserve">
+    <value>This LidGuard build requires Windows 7 or later.</value>
+  </data>
+  <data name="PlatformUnsupportedLinux" xml:space="preserve">
+    <value>LidGuard Linux support requires a systemd/logind environment.</value>
+  </data>
+  <data name="PlatformUnsupportedMacOS" xml:space="preserve">
+    <value>This LidGuard build requires macOS.</value>
   </data>
   <data name="DisplayMinuteCount" xml:space="preserve">
     <value>{0} minutes</value>

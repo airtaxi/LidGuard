@@ -1,4 +1,5 @@
 using LidGuard.Audio;
+using LidGuard.Localization;
 using LidGuard.Power;
 using LidGuard.Processes;
 using LidGuard.Results;
@@ -10,7 +11,8 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
 {
     public bool IsSupported => OperatingSystem.IsMacOS();
 
-    public string UnsupportedMessage => "This LidGuard build requires macOS.";
+    public string UnsupportedMessage
+        => LocalizationService.GetString("PlatformUnsupportedMacOS", "This LidGuard build requires macOS.");
 
     public LidGuardOperationResult<LidGuardRuntimeServiceSet> CreateRuntimeServiceSet()
     {

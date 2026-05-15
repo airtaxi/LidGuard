@@ -1,4 +1,5 @@
 using LidGuard.Ipc;
+using LidGuard.Localization;
 using LidGuard.Sessions;
 
 namespace LidGuard.Hooks;
@@ -18,7 +19,9 @@ internal static class GitHubCopilotHookCommand
         var executablePath = HookCommandUtilities.GetDefaultHookExecutableReference();
         if (string.IsNullOrWhiteSpace(executablePath))
         {
-            Console.Error.WriteLine("A default LidGuard hook executable or command name could not be resolved.");
+            Console.Error.WriteLine(LocalizationService.GetString(
+                "HookCommandDefaultExecutableNotResolved",
+                "A default LidGuard hook executable or command name could not be resolved."));
             return 1;
         }
 
@@ -37,7 +40,11 @@ internal static class GitHubCopilotHookCommand
             return 0;
         }
 
-        Console.Error.WriteLine("Unsupported GitHub Copilot hook snippet format. Use config-json or hooks-json.");
+        Console.Error.WriteLine(LocalizationService.GetFormattedStringWithFallback(
+            "HookCommandUnsupportedSnippetFormat",
+            "Unsupported {0} hook snippet format. Use {1}.",
+            "GitHub Copilot",
+            "config-json or hooks-json"));
         return 1;
     }
 

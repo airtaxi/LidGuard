@@ -19,7 +19,9 @@ internal static class CodexHookCommand
         var executablePath = HookCommandUtilities.GetDefaultHookExecutableReference();
         if (string.IsNullOrWhiteSpace(executablePath))
         {
-            Console.Error.WriteLine("A default LidGuard hook executable or command name could not be resolved.");
+            Console.Error.WriteLine(LocalizationService.GetString(
+                "HookCommandDefaultExecutableNotResolved",
+                "A default LidGuard hook executable or command name could not be resolved."));
             return 1;
         }
 
@@ -37,7 +39,11 @@ internal static class CodexHookCommand
             return 0;
         }
 
-        Console.Error.WriteLine("Unsupported Codex hook snippet format. Use config-toml or hooks-json.");
+        Console.Error.WriteLine(LocalizationService.GetFormattedStringWithFallback(
+            "HookCommandUnsupportedSnippetFormat",
+            "Unsupported {0} hook snippet format. Use {1}.",
+            "Codex",
+            "config-toml or hooks-json"));
         return 1;
     }
 

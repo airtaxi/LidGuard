@@ -1,3 +1,4 @@
+using LidGuard.Localization;
 using LidGuard.Sessions;
 
 namespace LidGuard.Hooks;
@@ -12,8 +13,6 @@ public sealed class CodexHookInstaller : HookInstallerBase
     protected override string ProviderDisplayName => "Codex";
 
     protected override string DefaultHookCommandName => "codex-hook";
-
-    protected override string ConfigurationMissingMessage => "Codex configuration file does not exist.";
 
     public static string GetDefaultCodexConfigurationDirectoryPath()
     {
@@ -57,7 +56,10 @@ public sealed class CodexHookInstaller : HookInstallerBase
 
     protected override bool ShouldSkipInstall(HookInstallationInspection currentInspection, out string message)
     {
-        message = "Codex hook is already installed outside the LidGuard managed block.";
+        message = LocalizationService.GetFormattedStringWithFallback(
+            "HookManagementAlreadyInstalledOutsideManagedBlock",
+            "{0} hook is already installed outside the LidGuard managed block.",
+            ProviderDisplayName);
         return currentInspection.IsInstalled && !currentInspection.HasCheck(HookInstallationCheck.ManagedBlock);
     }
 }
