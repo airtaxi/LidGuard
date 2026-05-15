@@ -26,6 +26,8 @@ internal static class McpManagementCommand
         string Message)
     {
         public bool IsManagedMcpServerInstalled => HasNamedServerEntry && MatchesCurrentLidGuardExecutable && ContainsExpectedServerCommand;
+
+        public bool ShouldRefreshManagedMcpServer => HasNamedServerEntry && ContainsExpectedServerCommand;
     }
 
     public static int WriteMcpStatus(string providerText)
@@ -174,7 +176,7 @@ internal static class McpManagementCommand
         string managedExecutableReference,
         ManagedMcpInspectionResult inspectionResult)
     {
-        if (inspectionResult.IsManagedMcpServerInstalled)
+        if (inspectionResult.ShouldRefreshManagedMcpServer)
         {
             Console.WriteLine(
                 LocalizationService.GetString("ManagementExistingMcpServerRefreshing", "Existing managed LidGuard MCP server found for {0}. Refreshing registration.")
