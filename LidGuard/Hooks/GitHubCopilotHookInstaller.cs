@@ -137,9 +137,17 @@ public sealed class GitHubCopilotHookInstaller : HookInstallerBase
 
     private static string GetCommandString(JsonObject hookDefinitionObject)
     {
-        var powershellCommand = GetStringProperty(hookDefinitionObject, "powershell");
-        if (!string.IsNullOrWhiteSpace(powershellCommand)) return powershellCommand;
-        return GetStringProperty(hookDefinitionObject, "bash");
+        var currentPlatformShellName = HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform();
+        var currentPlatformCommand = GetStringProperty(hookDefinitionObject, currentPlatformShellName);
+        if (!string.IsNullOrWhiteSpace(currentPlatformCommand)) return currentPlatformCommand;
+
+        var alternatePlatformShellName = currentPlatformShellName.Equals("powershell", StringComparison.Ordinal)
+            ? "bash"
+            : "powershell";
+        var alternatePlatformCommand = GetStringProperty(hookDefinitionObject, alternatePlatformShellName);
+        if (!string.IsNullOrWhiteSpace(alternatePlatformCommand)) return alternatePlatformCommand;
+
+        return GetStringProperty(hookDefinitionObject, "command");
     }
 
     private static string GetCopilotConfigurationDirectoryPath()

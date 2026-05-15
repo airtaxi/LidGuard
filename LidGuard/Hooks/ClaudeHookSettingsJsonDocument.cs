@@ -12,7 +12,6 @@ public static class ClaudeHookSettingsJsonDocument
     public const string ClaudeCodeSettingsSchemaUrl = "https://json.schemastore.org/claude-code-settings.json";
 
     private const string HooksPropertyName = JsonHookConfigurationDocument.HooksPropertyName;
-    private const string PowerShellShellName = "powershell";
     private static readonly JsonSerializerOptions s_jsonSerializerOptions = new() { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All), WriteIndented = true };
     private static readonly (string HookEventName, Func<string> GetStatusMessage, string Matcher)[] s_requiredHookDefinitions =
     [
@@ -450,7 +449,7 @@ public static class ClaudeHookSettingsJsonDocument
         {
             ["type"] = "command",
             ["command"] = hookCommand,
-            ["shell"] = PowerShellShellName,
+            ["shell"] = HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform(),
             ["timeout"] = 30,
             ["statusMessage"] = statusMessage
         };
@@ -469,7 +468,7 @@ public static class ClaudeHookSettingsJsonDocument
         hookDefinitionObject.Clear();
         hookDefinitionObject["type"] = "command";
         hookDefinitionObject["command"] = hookCommand;
-        hookDefinitionObject["shell"] = PowerShellShellName;
+        hookDefinitionObject["shell"] = HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform();
         hookDefinitionObject["timeout"] = 30;
         hookDefinitionObject["statusMessage"] = statusMessage;
     }
@@ -478,7 +477,7 @@ public static class ClaudeHookSettingsJsonDocument
         => JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "command").Equals(expectedHookCommand, StringComparison.Ordinal);
 
     private static bool HasExpectedHookShell(JsonObject hookDefinitionObject)
-        => JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "shell").Equals(PowerShellShellName, StringComparison.OrdinalIgnoreCase);
+        => JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "shell").Equals(HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform(), StringComparison.OrdinalIgnoreCase);
 
     private static bool IsLidGuardClaudeHookCommand(string command)
     {

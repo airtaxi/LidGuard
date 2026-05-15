@@ -70,7 +70,7 @@ Reference:
 - `hook-install` and `hook-status` require `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `Stop`, `StopFailure`, `Elicitation`, `PermissionRequest`, `Notification`, and `SessionEnd`.
 - Default config path: `CLAUDE_CONFIG_DIR\settings.json` when `CLAUDE_CONFIG_DIR` is set, otherwise `%USERPROFILE%\.claude\settings.json`.
 - Claude MCP registration uses the user-scope global config at `%USERPROFILE%\.claude.json` and delegates to `claude mcp add/remove --scope user`.
-- Windows hook config uses `shell = "powershell"` in Claude `settings.json` command hooks.
+- Windows hook config uses `shell = "powershell"` and Linux/macOS hook config uses `shell = "bash"` in Claude `settings.json` command hooks.
 - Based on analysis of a locally retained Claude Code source snapshot, command hooks treat `exit code 0` with empty stdout as a successful no-op, while non-empty stdout may be interpreted as hook JSON or plain-text output depending on the execution path.
 - Based on the same local source snapshot analysis, `PermissionRequest` only becomes a programmatic allow/deny when the hook returns structured JSON with `hookSpecificOutput.decision`; LidGuard also sets `interrupt: true` on those closed-lid decisions so Claude stops the interactive permission path immediately. Empty stdout keeps the normal permission flow.
 - `claude-hook` reads Claude hook JSON from stdin and maps `hook_event_name` to runtime IPC.
@@ -111,6 +111,7 @@ Reference:
 - Default global config path: `COPILOT_HOME\hooks\lidguard-copilot-cli.json` when `COPILOT_HOME` is set, otherwise `%USERPROFILE%\.copilot\hooks\lidguard-copilot-cli.json`.
 - GitHub Copilot CLI MCP registration delegates to `copilot mcp add/remove` and uses the user config file `%USERPROFILE%\.copilot\mcp-config.json`.
 - GitHub Copilot CLI also supports inline user hooks in `~/.copilot/settings.json`; repository hooks in `.github/hooks/` and repository Copilot settings are loaded alongside user hooks, so `hook-install` and `hook-status` inspect those sources for conflicts.
+- Managed GitHub Copilot CLI command hook entries use `powershell` on Windows and `bash` on Linux/macOS.
 - `hook-install` and `hook-status` require `sessionStart`, `sessionEnd`, `userPromptSubmitted`, `preToolUse`, `postToolUse`, `permissionRequest`, `agentStop`, `subagentStart`, `subagentStop`, `errorOccurred`, and a filtered `notification` hook.
 - Because official Copilot CLI docs allow `agentStop` hooks to return `decision: "block"` with a `reason` continuation prompt, `hook-install` and `hook-status` should warn when non-LidGuard `agentStop` hooks are present.
 - Based on the official Copilot CLI hooks documentation, passive hooks such as `sessionStart` may be implemented as logging-only shell commands with no JSON output, so `exit code 0` with empty stdout is a valid no-op pattern for non-decision hooks.

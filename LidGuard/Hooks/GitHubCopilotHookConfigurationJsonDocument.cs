@@ -343,10 +343,11 @@ public static class GitHubCopilotHookConfigurationJsonDocument
 
     private static JsonObject CreateManagedHookDefinition(string hookCommand, string statusMessage, string matcher)
     {
+        var currentPlatformShellName = HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform();
         var hookDefinitionObject = new JsonObject
         {
             ["type"] = CommandHookTypeName,
-            ["powershell"] = hookCommand,
+            [currentPlatformShellName] = hookCommand,
             ["timeoutSec"] = TimeoutSeconds,
             ["statusMessage"] = statusMessage
         };
@@ -359,9 +360,17 @@ public static class GitHubCopilotHookConfigurationJsonDocument
 
     private static string GetCommandString(JsonObject hookDefinitionObject)
     {
-        var powershellCommand = JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "powershell");
-        if (!string.IsNullOrWhiteSpace(powershellCommand)) return powershellCommand;
-        return JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "bash");
+        var currentPlatformShellName = HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform();
+        var currentPlatformCommand = JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, currentPlatformShellName);
+        if (!string.IsNullOrWhiteSpace(currentPlatformCommand)) return currentPlatformCommand;
+
+        var alternatePlatformShellName = currentPlatformShellName.Equals("powershell", StringComparison.Ordinal)
+            ? "bash"
+            : "powershell";
+        var alternatePlatformCommand = JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, alternatePlatformShellName);
+        if (!string.IsNullOrWhiteSpace(alternatePlatformCommand)) return alternatePlatformCommand;
+
+        return JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "command");
     }
 
     private static bool IsLidGuardGitHubCopilotHookCommand(string command, string expectedHookEventName)
@@ -373,8 +382,10 @@ public static class GitHubCopilotHookConfigurationJsonDocument
     }
 
     private static bool HasExpectedHookCommand(JsonObject hookDefinitionObject, string expectedHookCommand)
-        => JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "type").Equals(CommandHookTypeName, StringComparison.Ordinal)
-            && JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "powershell").Equals(expectedHookCommand, StringComparison.Ordinal);
+    {
+        if (!JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "type").Equals(CommandHookTypeName, StringComparison.Ordinal)) return false;
+        return JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform()).Equals(expectedHookCommand, StringComparison.Ordinal);
+    }
 
     private static bool RemoveManagedHook(JsonObject hooksObject, string hookEventName)
         => JsonHookConfigurationDocument.RemoveFlatManagedCommandHooks(
@@ -398,9 +409,10 @@ public static class GitHubCopilotHookConfigurationJsonDocument
 
     private static void ReplaceManagedHookDefinition(JsonObject hookDefinitionObject, string hookCommand, string statusMessage, string matcher)
     {
+        var currentPlatformShellName = HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform();
         hookDefinitionObject.Clear();
         hookDefinitionObject["type"] = CommandHookTypeName;
-        hookDefinitionObject["powershell"] = hookCommand;
+        hookDefinitionObject[currentPlatformShellName] = hookCommand;
         hookDefinitionObject["timeoutSec"] = TimeoutSeconds;
         hookDefinitionObject["statusMessage"] = statusMessage;
         if (!string.IsNullOrWhiteSpace(matcher)) hookDefinitionObject["matcher"] = matcher;

@@ -8,6 +8,9 @@ namespace LidGuard.Hooks;
 
 public static class HookCommandUtilities
 {
+    private const string BashShellName = "bash";
+    private const string PowerShellShellName = "powershell";
+
     public static string GetDefaultHookExecutableReference()
     {
         if (IsCommandAvailable("lidguard")) return "lidguard";
@@ -29,6 +32,12 @@ public static class HookCommandUtilities
     {
         var escapedExecutableReference = EscapeHookExecutableReference(executablePath);
         return $"{escapedExecutableReference} {hookCommandName}";
+    }
+
+    public static string GetCommandHookShellNameForCurrentPlatform()
+    {
+        if (OperatingSystem.IsWindows()) return PowerShellShellName;
+        return BashShellName;
     }
 
     internal static int ResolveHookWatchedProcessIdentifier(string commandName, AgentProvider provider, LidGuardSettings settings)
