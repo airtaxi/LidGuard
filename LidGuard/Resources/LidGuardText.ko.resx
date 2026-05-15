@@ -237,6 +237,9 @@
   <data name="ManagementMcpServerDoesNotPointAtManagedCommand" xml:space="preserve">
     <value>MCP 서버 '{0}'이 있지만 '{1}'을 가리키지 않습니다.</value>
   </data>
+  <data name="ManagementMcpServerDoesNotPointAtCurrentExecutable" xml:space="preserve">
+    <value>MCP 서버 '{0}'이 있지만 현재 LidGuard 실행 파일을 가리키지 않습니다.</value>
+  </data>
   <data name="ManagementProvider" xml:space="preserve">
     <value>  제공자: {0}</value>
   </data>
@@ -345,6 +348,12 @@
   <data name="ManagementProviderMcpRegistered" xml:space="preserve">
     <value>관리되는 Provider MCP 서버가 등록되어 있습니다.</value>
   </data>
+  <data name="ManagementProviderMcpServerDoesNotPointAtCurrentExecutable" xml:space="preserve">
+    <value>Provider MCP 서버 '{0}'이 있지만 현재 LidGuard 실행 파일을 가리키지 않습니다.</value>
+  </data>
+  <data name="ManagementProviderMcpServerDoesNotPointAtManagedCommand" xml:space="preserve">
+    <value>Provider MCP 서버 '{0}'이 있지만 '{1}'을 가리키지 않습니다.</value>
+  </data>
   <data name="SettingsPreviewSupportedSystemSounds" xml:space="preserve">
     <value>지원 시스템 소리: {0}</value>
   </data>
@@ -356,6 +365,12 @@
   </data>
   <data name="ManagementLabelContainsMcpServerCommand" xml:space="preserve">
     <value>mcp-server 명령 포함</value>
+  </data>
+  <data name="ManagementLabelContainsProviderMcpServerCommand" xml:space="preserve">
+    <value>provider-mcp-server 명령 포함</value>
+  </data>
+  <data name="ManagementLabelMatchesCurrentLidGuardExecutable" xml:space="preserve">
+    <value>현재 LidGuard 실행 파일과 일치</value>
   </data>
   <data name="ManagementConfigExists" xml:space="preserve">
     <value>  구성 존재: {0}</value>

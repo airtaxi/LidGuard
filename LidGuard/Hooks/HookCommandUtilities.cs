@@ -28,6 +28,22 @@ public static class HookCommandUtilities
         return GetCurrentProcessExecutablePath();
     }
 
+    public static bool ExecutableReferencesMatch(string executableReference, string expectedExecutableReference)
+    {
+        if (string.IsNullOrWhiteSpace(executableReference) || string.IsNullOrWhiteSpace(expectedExecutableReference)) return false;
+
+        if (TryResolveExecutableReferencePath(executableReference, out var executablePath)
+            && TryResolveExecutableReferencePath(expectedExecutableReference, out var expectedExecutablePath))
+        {
+            return executablePath.Equals(
+                expectedExecutablePath,
+                OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+        }
+
+        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        return executableReference.Trim().Equals(expectedExecutableReference.Trim(), comparison);
+    }
+
     public static string CreateHookCommand(string executablePath, string hookCommandName)
     {
         var escapedExecutableReference = EscapeHookExecutableReference(executablePath);
@@ -60,6 +76,26 @@ public static class HookCommandUtilities
         if (string.IsNullOrWhiteSpace(executableReference)) return false;
         if (IsPathLikeExecutableReference(executableReference)) return File.Exists(Path.GetFullPath(executableReference));
         return IsCommandAvailable(executableReference);
+    }
+
+    public static bool TryResolveExecutableReferencePath(string executableReference, out string executablePath)
+    {
+        executablePath = string.Empty;
+        if (string.IsNullOrWhiteSpace(executableReference)) return false;
+
+        var normalizedExecutableReference = executableReference.Trim();
+        if (IsPathLikeExecutableReference(normalizedExecutableReference))
+        {
+            try
+            {
+                executablePath = Path.GetFullPath(normalizedExecutableReference);
+                return true;
+            }
+            catch (ArgumentException) { return false; }
+            catch (NotSupportedException) { return false; }
+        }
+
+        return TryResolveCommandExecutablePath(normalizedExecutableReference, out executablePath);
     }
 
     public static string CreateBackupFilePath(string configurationFilePath)

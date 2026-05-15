@@ -41,6 +41,20 @@ internal static class McpConfigurationJsonUtilities
         return valueNode is JsonValue jsonValue && jsonValue.TryGetValue<string>(out var value) ? value : string.Empty;
     }
 
+    public static bool JsonArrayContainsStringValue(JsonObject jsonObject, string propertyName, string expectedValue)
+    {
+        if (jsonObject[propertyName] is not JsonArray jsonArray || string.IsNullOrWhiteSpace(expectedValue)) return false;
+
+        foreach (var item in jsonArray)
+        {
+            if (item is not JsonValue jsonValue) continue;
+            if (!jsonValue.TryGetValue<string>(out var stringValue)) continue;
+            if (stringValue.Equals(expectedValue, StringComparison.Ordinal)) return true;
+        }
+
+        return false;
+    }
+
     public static bool TryGetMcpServersObject(JsonObject rootObject, out JsonObject mcpServersObject)
     {
         if (rootObject["mcpServers"] is JsonObject existingMcpServersObject)

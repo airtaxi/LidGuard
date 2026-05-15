@@ -237,6 +237,9 @@
   <data name="ManagementMcpServerDoesNotPointAtManagedCommand" xml:space="preserve">
     <value>The MCP server '{0}' exists but does not point at '{1}'.</value>
   </data>
+  <data name="ManagementMcpServerDoesNotPointAtCurrentExecutable" xml:space="preserve">
+    <value>The MCP server '{0}' exists but does not point at the current LidGuard executable.</value>
+  </data>
   <data name="ManagementProvider" xml:space="preserve">
     <value>  Provider: {0}</value>
   </data>
@@ -345,6 +348,12 @@
   <data name="ManagementProviderMcpRegistered" xml:space="preserve">
     <value>Managed provider MCP server is registered.</value>
   </data>
+  <data name="ManagementProviderMcpServerDoesNotPointAtCurrentExecutable" xml:space="preserve">
+    <value>The provider MCP server '{0}' exists but does not point at the current LidGuard executable.</value>
+  </data>
+  <data name="ManagementProviderMcpServerDoesNotPointAtManagedCommand" xml:space="preserve">
+    <value>The provider MCP server '{0}' exists but does not point at '{1}'.</value>
+  </data>
   <data name="SettingsPreviewSupportedSystemSounds" xml:space="preserve">
     <value>Supported system sounds: {0}</value>
   </data>
@@ -356,6 +365,12 @@
   </data>
   <data name="ManagementLabelContainsMcpServerCommand" xml:space="preserve">
     <value>Contains mcp-server command</value>
+  </data>
+  <data name="ManagementLabelContainsProviderMcpServerCommand" xml:space="preserve">
+    <value>Contains provider-mcp-server command</value>
+  </data>
+  <data name="ManagementLabelMatchesCurrentLidGuardExecutable" xml:space="preserve">
+    <value>Matches current LidGuard executable</value>
   </data>
   <data name="ManagementConfigExists" xml:space="preserve">
     <value>  Config exists: {0}</value>
