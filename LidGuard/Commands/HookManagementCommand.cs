@@ -504,13 +504,13 @@ internal static class HookManagementCommand
         var displayValue = value switch
         {
             bool booleanValue => LidGuardText.DisplayBoolean(booleanValue),
-            CodexHookInstallationStatus status => DisplayHookInstallationStatus(status),
+            HookInstallationStatus status => DisplayHookInstallationStatus(status),
             _ => LidGuardText.DisplayOptionalValue(value?.ToString() ?? string.Empty)
         };
         Console.WriteLine(LidGuardText.ManagementField(LidGuardText.GetResourceString(labelResourceName, fallbackLabel), displayValue));
     }
 
-    private static string DisplayHookInstallationStatus(CodexHookInstallationStatus status)
+    private static string DisplayHookInstallationStatus(HookInstallationStatus status)
         => LidGuardText.GetResourceString($"DisplayHookInstallationStatus{status}", status.ToString());
 
     private static string GetHookLogFilePath(AgentProvider provider)

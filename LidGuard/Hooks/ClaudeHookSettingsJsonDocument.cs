@@ -57,7 +57,7 @@ public static class ClaudeHookSettingsJsonDocument
             return new ClaudeHookInstallationInspection
             {
                 Provider = AgentProvider.Claude,
-                Status = CodexHookInstallationStatus.Unknown,
+                Status = HookInstallationStatus.Unknown,
                 ConfigurationFilePath = configurationFilePath,
                 HookExecutablePath = hookExecutablePath,
                 HookCommand = hookCommand,
@@ -72,7 +72,7 @@ public static class ClaudeHookSettingsJsonDocument
             return new ClaudeHookInstallationInspection
             {
                 Provider = AgentProvider.Claude,
-                Status = CodexHookInstallationStatus.NotInstalled,
+                Status = HookInstallationStatus.NotInstalled,
                 ConfigurationFilePath = configurationFilePath,
                 HookExecutablePath = hookExecutablePath,
                 HookCommand = hookCommand,
@@ -87,7 +87,7 @@ public static class ClaudeHookSettingsJsonDocument
             return new ClaudeHookInstallationInspection
             {
                 Provider = AgentProvider.Claude,
-                Status = CodexHookInstallationStatus.Unknown,
+                Status = HookInstallationStatus.Unknown,
                 ConfigurationFilePath = configurationFilePath,
                 HookExecutablePath = hookExecutablePath,
                 HookCommand = hookCommand,
@@ -114,7 +114,7 @@ public static class ClaudeHookSettingsJsonDocument
             return new ClaudeHookInstallationInspection
             {
                 Provider = AgentProvider.Claude,
-                Status = CodexHookInstallationStatus.Unknown,
+                Status = HookInstallationStatus.Unknown,
                 ConfigurationFilePath = configurationFilePath,
                 HookExecutablePath = hookExecutablePath,
                 HookCommand = hookCommand,
@@ -197,7 +197,7 @@ public static class ClaudeHookSettingsJsonDocument
             && hasExpectedHookCommand
             && hasExpectedNotificationMatcher
             && hasExpectedHookShell;
-        var status = isInstalled ? CodexHookInstallationStatus.Installed : hasManagedHookEntries ? CodexHookInstallationStatus.NeedsUpdate : CodexHookInstallationStatus.NotInstalled;
+        var status = isInstalled ? HookInstallationStatus.Installed : hasManagedHookEntries ? HookInstallationStatus.NeedsUpdate : HookInstallationStatus.NotInstalled;
         var message = isInstalled ? "Claude hook is installed." : hasManagedHookEntries ? "Claude hook is installed but needs update." : "Claude hook is not installed.";
 
         return new ClaudeHookInstallationInspection

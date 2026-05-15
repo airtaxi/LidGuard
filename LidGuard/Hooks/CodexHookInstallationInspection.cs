@@ -8,7 +8,7 @@ public sealed class CodexHookInstallationInspection
 
     public CodexHookConfigurationFormat Format { get; init; } = CodexHookConfigurationFormat.ConfigToml;
 
-    public CodexHookInstallationStatus Status { get; init; } = CodexHookInstallationStatus.Unknown;
+    public HookInstallationStatus Status { get; init; } = HookInstallationStatus.Unknown;
 
     public string ConfigurationFilePath { get; init; } = string.Empty;
 
@@ -42,5 +42,5 @@ public sealed class CodexHookInstallationInspection
 
     public bool HasAllStopHooks => HasStopHook && HasSessionEndHook;
 
-    public bool IsInstalled => Status == CodexHookInstallationStatus.Installed;
+    public bool IsInstalled => Status == HookInstallationStatus.Installed;
 }

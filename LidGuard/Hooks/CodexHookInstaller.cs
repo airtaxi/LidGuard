@@ -22,7 +22,7 @@ public sealed class CodexHookInstaller
             {
                 Provider = AgentProvider.Codex,
                 Format = CodexHookConfigurationFormat.ConfigToml,
-                Status = CodexHookInstallationStatus.NotInstalled,
+                Status = HookInstallationStatus.NotInstalled,
                 ConfigurationFilePath = normalizedRequest.ConfigurationFilePath,
                 HookExecutablePath = normalizedRequest.HookExecutablePath,
                 HookCommand = hookCommand,
@@ -50,7 +50,7 @@ public sealed class CodexHookInstaller
             {
                 Provider = normalizedRequest.Provider,
                 Format = normalizedRequest.Format,
-                Status = CodexHookInstallationStatus.Unknown,
+                Status = HookInstallationStatus.Unknown,
                 ConfigurationFilePath = normalizedRequest.ConfigurationFilePath,
                 HookExecutablePath = normalizedRequest.HookExecutablePath,
                 Message = "Only Codex hook installation is implemented."
@@ -115,7 +115,7 @@ public sealed class CodexHookInstaller
             {
                 Provider = normalizedRequest.Provider,
                 Format = normalizedRequest.Format,
-                Status = CodexHookInstallationStatus.Unknown,
+                Status = HookInstallationStatus.Unknown,
                 ConfigurationFilePath = normalizedRequest.ConfigurationFilePath,
                 HookExecutablePath = normalizedRequest.HookExecutablePath,
                 Message = "Only Codex hook removal is implemented."

@@ -6,7 +6,7 @@ public sealed class ClaudeHookInstallationInspection
 {
     public AgentProvider Provider { get; init; } = AgentProvider.Claude;
 
-    public CodexHookInstallationStatus Status { get; init; } = CodexHookInstallationStatus.Unknown;
+    public HookInstallationStatus Status { get; init; } = HookInstallationStatus.Unknown;
 
     public string ConfigurationFilePath { get; init; } = string.Empty;
 
@@ -58,5 +58,5 @@ public sealed class ClaudeHookInstallationInspection
 
     public bool HasAllStopHooks => HasStopHook && HasStopFailureHook && HasSessionEndHook;
 
-    public bool IsInstalled => Status == CodexHookInstallationStatus.Installed;
+    public bool IsInstalled => Status == HookInstallationStatus.Installed;
 }

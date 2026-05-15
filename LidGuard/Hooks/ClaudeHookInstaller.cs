@@ -22,7 +22,7 @@ public sealed class ClaudeHookInstaller
             return new ClaudeHookInstallationInspection
             {
                 Provider = AgentProvider.Claude,
-                Status = CodexHookInstallationStatus.NotInstalled,
+                Status = HookInstallationStatus.NotInstalled,
                 ConfigurationFilePath = normalizedRequest.ConfigurationFilePath,
                 HookExecutablePath = normalizedRequest.HookExecutablePath,
                 HookCommand = hookCommand,
@@ -49,7 +49,7 @@ public sealed class ClaudeHookInstaller
             var unsupportedInspection = new ClaudeHookInstallationInspection
             {
                 Provider = normalizedRequest.Provider,
-                Status = CodexHookInstallationStatus.Unknown,
+                Status = HookInstallationStatus.Unknown,
                 ConfigurationFilePath = normalizedRequest.ConfigurationFilePath,
                 HookExecutablePath = normalizedRequest.HookExecutablePath,
                 Message = "Only Claude hook installation is implemented."
@@ -106,7 +106,7 @@ public sealed class ClaudeHookInstaller
             var unsupportedInspection = new ClaudeHookInstallationInspection
             {
                 Provider = normalizedRequest.Provider,
-                Status = CodexHookInstallationStatus.Unknown,
+                Status = HookInstallationStatus.Unknown,
                 ConfigurationFilePath = normalizedRequest.ConfigurationFilePath,
                 HookExecutablePath = normalizedRequest.HookExecutablePath,
                 Message = "Only Claude hook removal is implemented."

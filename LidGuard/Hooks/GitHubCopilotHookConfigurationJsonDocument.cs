@@ -68,7 +68,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
                 HookExecutablePath = hookExecutablePath,
                 Message = parseMessage,
                 Provider = AgentProvider.GitHubCopilot,
-                Status = CodexHookInstallationStatus.Unknown
+                Status = HookInstallationStatus.Unknown
             };
         }
 
@@ -84,7 +84,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
                 HookExecutablePath = hookExecutablePath,
                 Message = "GitHub Copilot hook is not installed.",
                 Provider = AgentProvider.GitHubCopilot,
-                Status = CodexHookInstallationStatus.NotInstalled
+                Status = HookInstallationStatus.NotInstalled
             };
         }
 
@@ -99,7 +99,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
                 HookExecutablePath = hookExecutablePath,
                 Message = "GitHub Copilot hooks setting must be a JSON object.",
                 Provider = AgentProvider.GitHubCopilot,
-                Status = CodexHookInstallationStatus.Unknown
+                Status = HookInstallationStatus.Unknown
             };
         }
 
@@ -131,7 +131,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
                     HookExecutablePath = hookExecutablePath,
                     Message = $"Missing expected hook command for '{hookDefinition.HookEventName}'.",
                     Provider = AgentProvider.GitHubCopilot,
-                    Status = CodexHookInstallationStatus.Unknown
+                    Status = HookInstallationStatus.Unknown
                 };
             }
 
@@ -146,7 +146,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
                     HookExecutablePath = hookExecutablePath,
                     Message = parseMessage,
                     Provider = AgentProvider.GitHubCopilot,
-                    Status = CodexHookInstallationStatus.Unknown
+                    Status = HookInstallationStatus.Unknown
                 };
             }
 
@@ -205,7 +205,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
             && hasNotificationHook
             && hasExpectedHookCommands
             && hasExpectedNotificationMatcher;
-        var status = isInstalled ? CodexHookInstallationStatus.Installed : hasManagedHookEntries ? CodexHookInstallationStatus.NeedsUpdate : CodexHookInstallationStatus.NotInstalled;
+        var status = isInstalled ? HookInstallationStatus.Installed : hasManagedHookEntries ? HookInstallationStatus.NeedsUpdate : HookInstallationStatus.NotInstalled;
         var message = isInstalled
             ? "GitHub Copilot hook is installed."
             : hasManagedHookEntries

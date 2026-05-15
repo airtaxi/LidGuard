@@ -46,13 +46,13 @@ public sealed class GitHubCopilotHookInstallationInspection
 
     public string HookExecutablePath { get; init; } = string.Empty;
 
-    public bool IsInstalled => Status == CodexHookInstallationStatus.Installed;
+    public bool IsInstalled => Status == HookInstallationStatus.Installed;
 
     public string Message { get; init; } = string.Empty;
 
     public AgentProvider Provider { get; init; } = AgentProvider.GitHubCopilot;
 
-    public CodexHookInstallationStatus Status { get; init; } = CodexHookInstallationStatus.Unknown;
+    public HookInstallationStatus Status { get; init; } = HookInstallationStatus.Unknown;
 
     public GitHubCopilotHookInstallationInspection WithConflictingAgentStopHookSources(IReadOnlyList<string> conflictingAgentStopHookSources)
     {

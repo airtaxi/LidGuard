@@ -39,7 +39,7 @@ public sealed class GitHubCopilotHookInstaller
                 HookExecutablePath = normalizedRequest.HookExecutablePath,
                 Message = "GitHub Copilot hook configuration file does not exist.",
                 Provider = AgentProvider.GitHubCopilot,
-                Status = CodexHookInstallationStatus.NotInstalled
+                Status = HookInstallationStatus.NotInstalled
             }.WithConflictingAgentStopHookSources(conflictingAgentStopHookSources);
         }
 
@@ -68,7 +68,7 @@ public sealed class GitHubCopilotHookInstaller
                 HookExecutablePath = normalizedRequest.HookExecutablePath,
                 Message = "Only GitHub Copilot hook installation is implemented.",
                 Provider = normalizedRequest.Provider,
-                Status = CodexHookInstallationStatus.Unknown
+                Status = HookInstallationStatus.Unknown
             };
 
             return GitHubCopilotHookInstallationResult.Failure(unsupportedInspection, unsupportedInspection.Message);
@@ -128,7 +128,7 @@ public sealed class GitHubCopilotHookInstaller
                 HookExecutablePath = normalizedRequest.HookExecutablePath,
                 Message = "Only GitHub Copilot hook removal is implemented.",
                 Provider = normalizedRequest.Provider,
-                Status = CodexHookInstallationStatus.Unknown
+                Status = HookInstallationStatus.Unknown
             };
 
             return GitHubCopilotHookInstallationResult.Failure(unsupportedInspection, unsupportedInspection.Message);

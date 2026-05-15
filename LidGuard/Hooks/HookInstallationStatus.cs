@@ -1,6 +1,6 @@
 namespace LidGuard.Hooks;
 
-public enum CodexHookInstallationStatus
+public enum HookInstallationStatus
 {
     Unknown = 0,
     NotInstalled = 1,
