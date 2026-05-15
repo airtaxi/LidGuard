@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace LidGuard.Hooks;
 
-public sealed class CodexHookInput
+public sealed class CodexHookInput : IHookCommandInput
 {
     [JsonPropertyName("session_id")]
     public string SessionIdentifier { get; init; } = string.Empty;

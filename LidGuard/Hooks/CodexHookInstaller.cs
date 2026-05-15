@@ -1,161 +1,19 @@
-using LidGuard.Hooks;
 using LidGuard.Sessions;
 
 namespace LidGuard.Hooks;
 
-public sealed class CodexHookInstaller
+public sealed class CodexHookInstaller : HookInstallerBase
 {
     private const string CodexConfigurationDirectoryName = ".codex";
     private const string CodexConfigurationFileName = "config.toml";
 
-    public CodexHookInstallationInspection Inspect(CodexHookInstallationRequest request)
-    {
-        ArgumentNullException.ThrowIfNull(request);
+    protected override AgentProvider Provider => AgentProvider.Codex;
 
-        var normalizedRequest = NormalizeRequest(request);
-        var hookCommand = HookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
-        var configurationFileExists = File.Exists(normalizedRequest.ConfigurationFilePath);
-        var content = configurationFileExists ? File.ReadAllText(normalizedRequest.ConfigurationFilePath) : string.Empty;
-        if (!configurationFileExists)
-        {
-            return new CodexHookInstallationInspection
-            {
-                Provider = AgentProvider.Codex,
-                Format = CodexHookConfigurationFormat.ConfigToml,
-                Status = HookInstallationStatus.NotInstalled,
-                ConfigurationFilePath = normalizedRequest.ConfigurationFilePath,
-                HookExecutablePath = normalizedRequest.HookExecutablePath,
-                HookCommand = hookCommand,
-                ConfigurationFileExists = false,
-                Message = "Codex configuration file does not exist."
-            };
-        }
+    protected override string ProviderDisplayName => "Codex";
 
-        return CodexHookConfigTomlDocument.InspectConfigToml(
-            normalizedRequest.ConfigurationFilePath,
-            normalizedRequest.HookExecutablePath,
-            hookCommand,
-            content,
-            configurationFileExists);
-    }
+    protected override string DefaultHookCommandName => "codex-hook";
 
-    public CodexHookInstallationResult Install(CodexHookInstallationRequest request)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-
-        var normalizedRequest = NormalizeRequest(request);
-        if (normalizedRequest.Provider != AgentProvider.Codex)
-        {
-            var unsupportedInspection = new CodexHookInstallationInspection
-            {
-                Provider = normalizedRequest.Provider,
-                Format = normalizedRequest.Format,
-                Status = HookInstallationStatus.Unknown,
-                ConfigurationFilePath = normalizedRequest.ConfigurationFilePath,
-                HookExecutablePath = normalizedRequest.HookExecutablePath,
-                Message = "Only Codex hook installation is implemented."
-            };
-
-            return CodexHookInstallationResult.Failure(unsupportedInspection, unsupportedInspection.Message);
-        }
-
-        if (!HookExecutableExists(normalizedRequest.HookExecutablePath))
-        {
-            var missingExecutableInspection = Inspect(normalizedRequest);
-            return CodexHookInstallationResult.Failure(missingExecutableInspection, $"Hook executable or command does not exist: {normalizedRequest.HookExecutablePath}");
-        }
-
-        var hookCommand = HookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
-        var configurationFileExists = File.Exists(normalizedRequest.ConfigurationFilePath);
-        var originalContent = configurationFileExists ? File.ReadAllText(normalizedRequest.ConfigurationFilePath) : string.Empty;
-        var currentInspection = configurationFileExists
-            ? CodexHookConfigTomlDocument.InspectConfigToml(
-                normalizedRequest.ConfigurationFilePath,
-                normalizedRequest.HookExecutablePath,
-                hookCommand,
-                originalContent,
-                true)
-            : Inspect(normalizedRequest);
-
-        if (currentInspection.IsInstalled && !currentInspection.HasManagedBlock) return CodexHookInstallationResult.Success(currentInspection, false, "Codex hook is already installed outside the LidGuard managed block.");
-
-        var updatedContent = CodexHookConfigTomlDocument.InstallManagedHookBlock(originalContent, hookCommand);
-
-        if (string.Equals(originalContent, updatedContent, StringComparison.Ordinal))
-        {
-            var unchangedInspection = Inspect(normalizedRequest);
-            return CodexHookInstallationResult.Success(unchangedInspection, false, "Codex hook is already installed.");
-        }
-
-        var configurationDirectoryPath = Path.GetDirectoryName(normalizedRequest.ConfigurationFilePath);
-        if (!string.IsNullOrWhiteSpace(configurationDirectoryPath)) Directory.CreateDirectory(configurationDirectoryPath);
-
-        var backupFilePath = string.Empty;
-        if (configurationFileExists && normalizedRequest.CreateBackup)
-        {
-            backupFilePath = HookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
-            File.Copy(normalizedRequest.ConfigurationFilePath, backupFilePath, false);
-        }
-
-        File.WriteAllText(normalizedRequest.ConfigurationFilePath, updatedContent);
-
-        var inspection = Inspect(normalizedRequest);
-        var message = inspection.IsInstalled ? "Codex hook installed." : "Codex hook configuration was written but still needs attention.";
-        return CodexHookInstallationResult.Success(inspection, true, message, backupFilePath);
-    }
-
-    public CodexHookInstallationResult Remove(CodexHookInstallationRequest request)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-
-        var normalizedRequest = NormalizeRequest(request);
-        if (normalizedRequest.Provider != AgentProvider.Codex)
-        {
-            var unsupportedInspection = new CodexHookInstallationInspection
-            {
-                Provider = normalizedRequest.Provider,
-                Format = normalizedRequest.Format,
-                Status = HookInstallationStatus.Unknown,
-                ConfigurationFilePath = normalizedRequest.ConfigurationFilePath,
-                HookExecutablePath = normalizedRequest.HookExecutablePath,
-                Message = "Only Codex hook removal is implemented."
-            };
-
-            return CodexHookInstallationResult.Failure(unsupportedInspection, unsupportedInspection.Message);
-        }
-
-        var configurationFileExists = File.Exists(normalizedRequest.ConfigurationFilePath);
-        if (!configurationFileExists) return CodexHookInstallationResult.Success(Inspect(normalizedRequest), false, "Codex hook is not installed.");
-
-        var originalContent = File.ReadAllText(normalizedRequest.ConfigurationFilePath);
-        var updatedContent = CodexHookConfigTomlDocument.RemoveManagedHookBlock(originalContent);
-        if (string.Equals(originalContent, updatedContent, StringComparison.Ordinal)) return CodexHookInstallationResult.Success(Inspect(normalizedRequest), false, "No LidGuard-managed Codex hook was found.");
-
-        var backupFilePath = string.Empty;
-        if (normalizedRequest.CreateBackup)
-        {
-            backupFilePath = HookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
-            File.Copy(normalizedRequest.ConfigurationFilePath, backupFilePath, false);
-        }
-
-        File.WriteAllText(normalizedRequest.ConfigurationFilePath, updatedContent);
-
-        var inspection = Inspect(normalizedRequest);
-        return CodexHookInstallationResult.Success(inspection, true, "Codex hook removed.", backupFilePath);
-    }
-
-    public CodexHookInstallationRequest CreateDefaultRequest(string configurationFilePath = "", bool createBackup = true)
-    {
-        return new CodexHookInstallationRequest
-        {
-            Provider = AgentProvider.Codex,
-            Format = CodexHookConfigurationFormat.ConfigToml,
-            ConfigurationFilePath = string.IsNullOrWhiteSpace(configurationFilePath) ? GetDefaultCodexConfigurationFilePath() : Path.GetFullPath(configurationFilePath),
-            HookExecutablePath = HookCommandUtilities.GetDefaultHookExecutableReference(),
-            HookCommandName = "codex-hook",
-            CreateBackup = createBackup
-        };
-    }
+    protected override string ConfigurationMissingMessage => "Codex configuration file does not exist.";
 
     public static string GetDefaultCodexConfigurationDirectoryPath()
     {
@@ -172,18 +30,34 @@ public sealed class CodexHookInstaller
     public static string GetDefaultCodexConfigurationFilePath()
         => Path.Combine(GetDefaultCodexConfigurationDirectoryPath(), CodexConfigurationFileName);
 
-    private static CodexHookInstallationRequest NormalizeRequest(CodexHookInstallationRequest request)
+    protected override string GetDefaultConfigurationFilePath() => GetDefaultCodexConfigurationFilePath();
+
+    protected override HookInstallationInspection InspectConfiguration(HookInstallationRequest request, string hookCommand, string content, bool configurationFileExists)
+        => CodexHookConfigTomlDocument.InspectConfigToml(
+            request.ConfigurationFilePath,
+            request.HookExecutablePath,
+            hookCommand,
+            content,
+            configurationFileExists);
+
+    protected override bool TryCreateInstalledContent(string originalContent, string hookCommand, out string updatedContent, out string message)
     {
-        return new CodexHookInstallationRequest
-        {
-            Provider = request.Provider,
-            Format = request.Format,
-            ConfigurationFilePath = string.IsNullOrWhiteSpace(request.ConfigurationFilePath) ? GetDefaultCodexConfigurationFilePath() : Path.GetFullPath(request.ConfigurationFilePath),
-            HookExecutablePath = string.IsNullOrWhiteSpace(request.HookExecutablePath) ? HookCommandUtilities.GetDefaultHookExecutableReference() : HookCommandUtilities.NormalizeHookExecutableReference(request.HookExecutablePath),
-            HookCommandName = string.IsNullOrWhiteSpace(request.HookCommandName) ? "codex-hook" : request.HookCommandName,
-            CreateBackup = request.CreateBackup
-        };
+        updatedContent = CodexHookConfigTomlDocument.InstallManagedHookBlock(originalContent, hookCommand);
+        message = string.Empty;
+        return true;
     }
 
-    private static bool HookExecutableExists(string executableReference) => HookCommandUtilities.HookExecutableExists(executableReference);
+    protected override bool TryCreateRemovedContent(string originalContent, out string updatedContent, out bool changed, out string message)
+    {
+        updatedContent = CodexHookConfigTomlDocument.RemoveManagedHookBlock(originalContent);
+        changed = !string.Equals(originalContent, updatedContent, StringComparison.Ordinal);
+        message = string.Empty;
+        return true;
+    }
+
+    protected override bool ShouldSkipInstall(HookInstallationInspection currentInspection, out string message)
+    {
+        message = "Codex hook is already installed outside the LidGuard managed block.";
+        return currentInspection.IsInstalled && !currentInspection.HasCheck(HookInstallationCheck.ManagedBlock);
+    }
 }

@@ -27,13 +27,7 @@ internal static class HookManagementCommand
         foreach (var provider in providers)
         {
             if (providers.Count > 1) Console.WriteLine(LidGuardText.ManagementHookStatusTitle(provider));
-            var providerExitCode = provider switch
-            {
-                AgentProvider.Codex => WriteCodexHookStatus(options),
-                AgentProvider.Claude => WriteClaudeHookStatus(options),
-                AgentProvider.GitHubCopilot => WriteGitHubCopilotHookStatus(options),
-                _ => WriteUnsupportedProvider()
-            };
+            var providerExitCode = WriteProviderHookStatus(provider, options);
 
             if (providerExitCode != 0) exitCode = providerExitCode;
             if (providers.Count > 1) Console.WriteLine();
@@ -63,13 +57,7 @@ internal static class HookManagementCommand
         foreach (var provider in providers)
         {
             if (providers.Count > 1) Console.WriteLine(LidGuardText.ManagementInstallingHook(provider));
-            var providerExitCode = provider switch
-            {
-                AgentProvider.Codex => InstallCodexHook(options),
-                AgentProvider.Claude => InstallClaudeHook(options),
-                AgentProvider.GitHubCopilot => InstallGitHubCopilotHook(options),
-                _ => WriteUnsupportedProvider()
-            };
+            var providerExitCode = InstallProviderHook(provider, options);
 
             if (providerExitCode != 0) exitCode = providerExitCode;
         }
@@ -98,13 +86,7 @@ internal static class HookManagementCommand
         foreach (var provider in providers)
         {
             if (providers.Count > 1) Console.WriteLine(LidGuardText.ManagementRemovingHook(provider));
-            var providerExitCode = provider switch
-            {
-                AgentProvider.Codex => RemoveCodexHook(options),
-                AgentProvider.Claude => RemoveClaudeHook(options),
-                AgentProvider.GitHubCopilot => RemoveGitHubCopilotHook(options),
-                _ => WriteUnsupportedProvider()
-            };
+            var providerExitCode = RemoveProviderHook(provider, options);
 
             if (providerExitCode != 0) exitCode = providerExitCode;
         }
@@ -169,175 +151,69 @@ internal static class HookManagementCommand
         return exitCode;
     }
 
-    private static int WriteCodexHookStatus(IReadOnlyDictionary<string, string> options)
+    private static int WriteProviderHookStatus(AgentProvider provider, IReadOnlyDictionary<string, string> options)
     {
-        var installer = new CodexHookInstaller();
-        if (!TryCreateCodexHookInstallationRequest(options, installer, out var request, out var message))
+        if (!TryCreateHookInstaller(provider, out var installer)) return WriteUnsupportedProvider();
+        if (!TryCreateHookRequest(options, installer, out var request, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
         }
 
         var inspection = installer.Inspect(request);
-        WriteCodexHookInspection(inspection);
+        WriteHookInspection(inspection);
         return 0;
     }
 
-    private static int WriteClaudeHookStatus(IReadOnlyDictionary<string, string> options)
+    private static int InstallProviderHook(AgentProvider provider, IReadOnlyDictionary<string, string> options)
     {
-        var installer = new ClaudeHookInstaller();
-        if (!TryCreateClaudeHookInstallationRequest(options, installer, out var request, out var message))
-        {
-            Console.Error.WriteLine(message);
-            return 1;
-        }
-
-        var inspection = installer.Inspect(request);
-        WriteClaudeHookInspection(inspection);
-        return 0;
-    }
-
-    private static int WriteGitHubCopilotHookStatus(IReadOnlyDictionary<string, string> options)
-    {
-        var installer = new GitHubCopilotHookInstaller();
-        if (!TryCreateGitHubCopilotHookInstallationRequest(options, installer, out var request, out var message))
-        {
-            Console.Error.WriteLine(message);
-            return 1;
-        }
-
-        var inspection = installer.Inspect(request);
-        WriteGitHubCopilotHookInspection(inspection);
-        return 0;
-    }
-
-    private static int InstallCodexHook(IReadOnlyDictionary<string, string> options)
-    {
-        var installer = new CodexHookInstaller();
-        if (!TryCreateCodexHookInstallationRequest(options, installer, out var request, out var message))
+        if (!TryCreateHookInstaller(provider, out var installer)) return WriteUnsupportedProvider();
+        if (!TryCreateHookRequest(options, installer, out var request, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
         }
 
         var result = installer.Install(request);
-        WriteCodexHookInspection(result.Inspection);
+        WriteHookInspection(result.Inspection);
 
         WriteHookManagementResult(result.BackupFilePath, result.Changed, result.Inspection.Provider, result.Message);
         return result.Succeeded ? 0 : 1;
     }
 
-    private static int InstallGitHubCopilotHook(IReadOnlyDictionary<string, string> options)
+    private static int RemoveProviderHook(AgentProvider provider, IReadOnlyDictionary<string, string> options)
     {
-        var installer = new GitHubCopilotHookInstaller();
-        if (!TryCreateGitHubCopilotHookInstallationRequest(options, installer, out var request, out var message))
-        {
-            Console.Error.WriteLine(message);
-            return 1;
-        }
-
-        var result = installer.Install(request);
-        WriteGitHubCopilotHookInspection(result.Inspection);
-
-        WriteHookManagementResult(result.BackupFilePath, result.Changed, result.Inspection.Provider, result.Message);
-        return result.Succeeded ? 0 : 1;
-    }
-
-    private static int RemoveCodexHook(IReadOnlyDictionary<string, string> options)
-    {
-        var installer = new CodexHookInstaller();
-        if (!TryCreateCodexHookInstallationRequest(options, installer, out var request, out var message))
+        if (!TryCreateHookInstaller(provider, out var installer)) return WriteUnsupportedProvider();
+        if (!TryCreateHookRequest(options, installer, out var request, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
         }
 
         var result = installer.Remove(request);
-        WriteCodexHookInspection(result.Inspection);
+        WriteHookInspection(result.Inspection);
 
         WriteHookManagementResult(result.BackupFilePath, result.Changed, result.Inspection.Provider, result.Message);
         return result.Succeeded ? 0 : 1;
     }
 
-    private static int RemoveGitHubCopilotHook(IReadOnlyDictionary<string, string> options)
+    private static bool TryCreateHookInstaller(AgentProvider provider, out IHookInstaller installer)
     {
-        var installer = new GitHubCopilotHookInstaller();
-        if (!TryCreateGitHubCopilotHookInstallationRequest(options, installer, out var request, out var message))
+        installer = provider switch
         {
-            Console.Error.WriteLine(message);
-            return 1;
-        }
+            AgentProvider.Codex => new CodexHookInstaller(),
+            AgentProvider.Claude => new ClaudeHookInstaller(),
+            AgentProvider.GitHubCopilot => new GitHubCopilotHookInstaller(),
+            _ => null
+        };
 
-        var result = installer.Remove(request);
-        WriteGitHubCopilotHookInspection(result.Inspection);
-
-        WriteHookManagementResult(result.BackupFilePath, result.Changed, result.Inspection.Provider, result.Message);
-        return result.Succeeded ? 0 : 1;
+        return installer is not null;
     }
 
-    private static int InstallClaudeHook(IReadOnlyDictionary<string, string> options)
-    {
-        var installer = new ClaudeHookInstaller();
-        if (!TryCreateClaudeHookInstallationRequest(options, installer, out var request, out var message))
-        {
-            Console.Error.WriteLine(message);
-            return 1;
-        }
-
-        var result = installer.Install(request);
-        WriteClaudeHookInspection(result.Inspection);
-
-        WriteHookManagementResult(result.BackupFilePath, result.Changed, result.Inspection.Provider, result.Message);
-        return result.Succeeded ? 0 : 1;
-    }
-
-    private static int RemoveClaudeHook(IReadOnlyDictionary<string, string> options)
-    {
-        var installer = new ClaudeHookInstaller();
-        if (!TryCreateClaudeHookInstallationRequest(options, installer, out var request, out var message))
-        {
-            Console.Error.WriteLine(message);
-            return 1;
-        }
-
-        var result = installer.Remove(request);
-        WriteClaudeHookInspection(result.Inspection);
-
-        WriteHookManagementResult(result.BackupFilePath, result.Changed, result.Inspection.Provider, result.Message);
-        return result.Succeeded ? 0 : 1;
-    }
-
-    private static bool TryCreateCodexHookInstallationRequest(
+    private static bool TryCreateHookRequest(
         IReadOnlyDictionary<string, string> options,
-        CodexHookInstaller installer,
-        out CodexHookInstallationRequest request,
-        out string message)
-    {
-        request = null;
-        message = string.Empty;
-        var configurationFilePath = CommandOptionReader.GetOption(options, "config", "configuration", "configuration-file");
-        request = installer.CreateDefaultRequest(configurationFilePath);
-        return true;
-    }
-
-    private static bool TryCreateGitHubCopilotHookInstallationRequest(
-        IReadOnlyDictionary<string, string> options,
-        GitHubCopilotHookInstaller installer,
-        out GitHubCopilotHookInstallationRequest request,
-        out string message)
-    {
-        request = null;
-        message = string.Empty;
-
-        var configurationFilePath = CommandOptionReader.GetOption(options, "config", "configuration", "configuration-file");
-        request = installer.CreateDefaultRequest(configurationFilePath);
-        return true;
-    }
-
-    private static bool TryCreateClaudeHookInstallationRequest(
-        IReadOnlyDictionary<string, string> options,
-        ClaudeHookInstaller installer,
-        out ClaudeHookInstallationRequest request,
+        IHookInstaller installer,
+        out HookInstallationRequest request,
         out string message)
     {
         request = null;
@@ -385,7 +261,26 @@ internal static class HookManagementCommand
         Console.WriteLine(LidGuardText.ManagementMessage(DisplayHookManagementMessage(provider, message)));
     }
 
-    private static void WriteCodexHookInspection(CodexHookInstallationInspection inspection)
+    private static void WriteHookInspection(HookInstallationInspection inspection)
+    {
+        switch (inspection.Provider)
+        {
+            case AgentProvider.Codex:
+                WriteCodexHookInspection(inspection);
+                break;
+            case AgentProvider.Claude:
+                WriteClaudeHookInspection(inspection);
+                break;
+            case AgentProvider.GitHubCopilot:
+                WriteGitHubCopilotHookInspection(inspection);
+                break;
+            default:
+                WriteUnsupportedProvider();
+                break;
+        }
+    }
+
+    private static void WriteCodexHookInspection(HookInstallationInspection inspection)
     {
         Console.WriteLine(LidGuardText.ManagementHookInstallationTitle);
         WriteField("ManagementLabelProvider", "Provider", inspection.Provider);
@@ -396,19 +291,19 @@ internal static class HookManagementCommand
         WriteField("ManagementLabelExecutable", "Executable", inspection.HookExecutablePath);
         WriteField("ManagementLabelCommand", "Command", inspection.HookCommand);
         WriteField("ManagementLabelHookLog", "Hook log", GetHookLogFilePath(inspection.Provider));
-        WriteField("ManagementLabelFeatureFlag", "Feature flag", inspection.HasHooksFeatureFlag);
-        WriteField("ManagementLabelManagedBlock", "Managed block", inspection.HasManagedBlock);
-        WriteField("ManagementLabelUserPromptSubmitHook", "UserPromptSubmit hook", inspection.HasUserPromptSubmitHook);
-        WriteField("ManagementLabelStopHook", "Stop hook", inspection.HasStopHook);
-        WriteField("ManagementLabelPermissionRequestHook", "PermissionRequest hook", inspection.HasPermissionRequestHook);
-        WriteField("ManagementLabelRequiredStopHooks", "Required stop hooks", inspection.HasRequiredStopHooks);
-        WriteField("ManagementLabelOptionalSessionEndHook", "Optional SessionEnd hook", inspection.HasSessionEndHook);
-        WriteField("ManagementLabelValidCommand", "Valid command", inspection.HasValidHookCommand);
-        WriteField("ManagementLabelExpectedCommand", "Expected command", inspection.HasExpectedHookCommand);
+        WriteField("ManagementLabelFeatureFlag", "Feature flag", inspection.HasCheck(HookInstallationCheck.HooksFeatureFlag));
+        WriteField("ManagementLabelManagedBlock", "Managed block", inspection.HasCheck(HookInstallationCheck.ManagedBlock));
+        WriteField("ManagementLabelUserPromptSubmitHook", "UserPromptSubmit hook", inspection.HasCheck(HookInstallationCheck.UserPromptSubmitHook));
+        WriteField("ManagementLabelStopHook", "Stop hook", inspection.HasCheck(HookInstallationCheck.StopHook));
+        WriteField("ManagementLabelPermissionRequestHook", "PermissionRequest hook", inspection.HasCheck(HookInstallationCheck.PermissionRequestHook));
+        WriteField("ManagementLabelRequiredStopHooks", "Required stop hooks", inspection.HasCheck(HookInstallationCheck.StopHook));
+        WriteField("ManagementLabelOptionalSessionEndHook", "Optional SessionEnd hook", inspection.HasCheck(HookInstallationCheck.SessionEndHook));
+        WriteField("ManagementLabelValidCommand", "Valid command", inspection.HasCheck(HookInstallationCheck.ValidHookCommand));
+        WriteField("ManagementLabelExpectedCommand", "Expected command", inspection.HasCheck(HookInstallationCheck.ExpectedHookCommand));
         WriteField("ManagementLabelMessage", "Message", DisplayHookManagementMessage(inspection.Provider, inspection.Message));
     }
 
-    private static void WriteClaudeHookInspection(ClaudeHookInstallationInspection inspection)
+    private static void WriteClaudeHookInspection(HookInstallationInspection inspection)
     {
         Console.WriteLine(LidGuardText.ManagementHookInstallationTitle);
         WriteField("ManagementLabelProvider", "Provider", inspection.Provider);
@@ -419,30 +314,30 @@ internal static class HookManagementCommand
         WriteField("ManagementLabelExecutable", "Executable", inspection.HookExecutablePath);
         WriteField("ManagementLabelCommand", "Command", inspection.HookCommand);
         WriteField("ManagementLabelHookLog", "Hook log", GetHookLogFilePath(inspection.Provider));
-        WriteField("ManagementLabelHooksObject", "Hooks object", inspection.HasHooksObject);
-        WriteField("ManagementLabelManagedHooks", "Managed hooks", inspection.HasManagedHookEntries);
-        WriteField("ManagementLabelUserPromptSubmitHook", "UserPromptSubmit hook", inspection.HasUserPromptSubmitHook);
-        WriteField("ManagementLabelPreToolUseHook", "PreToolUse hook", inspection.HasPreToolUseHook);
-        WriteField("ManagementLabelPostToolUseHook", "PostToolUse hook", inspection.HasPostToolUseHook);
-        WriteField("ManagementLabelPostToolUseFailureHook", "PostToolUseFailure hook", inspection.HasPostToolUseFailureHook);
-        WriteField("ManagementLabelSubagentStartHook", "SubagentStart hook", inspection.HasSubagentStartHook);
-        WriteField("ManagementLabelSubagentStopHook", "SubagentStop hook", inspection.HasSubagentStopHook);
-        WriteField("ManagementLabelTaskCreatedHook", "TaskCreated hook", inspection.HasTaskCreatedHook);
-        WriteField("ManagementLabelTaskCompletedHook", "TaskCompleted hook", inspection.HasTaskCompletedHook);
-        WriteField("ManagementLabelStopHook", "Stop hook", inspection.HasStopHook);
-        WriteField("ManagementLabelStopFailureHook", "StopFailure hook", inspection.HasStopFailureHook);
-        WriteField("ManagementLabelElicitationHook", "Elicitation hook", inspection.HasElicitationHook);
-        WriteField("ManagementLabelPermissionRequestHook", "PermissionRequest hook", inspection.HasPermissionRequestHook);
-        WriteField("ManagementLabelNotificationHook", "Notification hook", inspection.HasNotificationHook);
-        WriteField("ManagementLabelSessionEndHook", "SessionEnd hook", inspection.HasSessionEndHook);
-        WriteField("ManagementLabelAllStopHooks", "All stop hooks", inspection.HasAllStopHooks);
-        WriteField("ManagementLabelExpectedCommand", "Expected command", inspection.HasExpectedHookCommand);
-        WriteField("ManagementLabelExpectedNotificationMatcher", "Expected notification matcher", inspection.HasExpectedNotificationMatcher);
-        WriteField("ManagementLabelExpectedShell", "Expected shell", inspection.HasExpectedHookShell);
+        WriteField("ManagementLabelHooksObject", "Hooks object", inspection.HasCheck(HookInstallationCheck.HooksObject));
+        WriteField("ManagementLabelManagedHooks", "Managed hooks", inspection.HasCheck(HookInstallationCheck.ManagedHookEntries));
+        WriteField("ManagementLabelUserPromptSubmitHook", "UserPromptSubmit hook", inspection.HasCheck(HookInstallationCheck.UserPromptSubmitHook));
+        WriteField("ManagementLabelPreToolUseHook", "PreToolUse hook", inspection.HasCheck(HookInstallationCheck.PreToolUseHook));
+        WriteField("ManagementLabelPostToolUseHook", "PostToolUse hook", inspection.HasCheck(HookInstallationCheck.PostToolUseHook));
+        WriteField("ManagementLabelPostToolUseFailureHook", "PostToolUseFailure hook", inspection.HasCheck(HookInstallationCheck.PostToolUseFailureHook));
+        WriteField("ManagementLabelSubagentStartHook", "SubagentStart hook", inspection.HasCheck(HookInstallationCheck.SubagentStartHook));
+        WriteField("ManagementLabelSubagentStopHook", "SubagentStop hook", inspection.HasCheck(HookInstallationCheck.SubagentStopHook));
+        WriteField("ManagementLabelTaskCreatedHook", "TaskCreated hook", inspection.HasCheck(HookInstallationCheck.TaskCreatedHook));
+        WriteField("ManagementLabelTaskCompletedHook", "TaskCompleted hook", inspection.HasCheck(HookInstallationCheck.TaskCompletedHook));
+        WriteField("ManagementLabelStopHook", "Stop hook", inspection.HasCheck(HookInstallationCheck.StopHook));
+        WriteField("ManagementLabelStopFailureHook", "StopFailure hook", inspection.HasCheck(HookInstallationCheck.StopFailureHook));
+        WriteField("ManagementLabelElicitationHook", "Elicitation hook", inspection.HasCheck(HookInstallationCheck.ElicitationHook));
+        WriteField("ManagementLabelPermissionRequestHook", "PermissionRequest hook", inspection.HasCheck(HookInstallationCheck.PermissionRequestHook));
+        WriteField("ManagementLabelNotificationHook", "Notification hook", inspection.HasCheck(HookInstallationCheck.NotificationHook));
+        WriteField("ManagementLabelSessionEndHook", "SessionEnd hook", inspection.HasCheck(HookInstallationCheck.SessionEndHook));
+        WriteField("ManagementLabelAllStopHooks", "All stop hooks", HasClaudeAllStopHooks(inspection));
+        WriteField("ManagementLabelExpectedCommand", "Expected command", inspection.HasCheck(HookInstallationCheck.ExpectedHookCommand));
+        WriteField("ManagementLabelExpectedNotificationMatcher", "Expected notification matcher", inspection.HasCheck(HookInstallationCheck.ExpectedNotificationMatcher));
+        WriteField("ManagementLabelExpectedShell", "Expected shell", inspection.HasCheck(HookInstallationCheck.ExpectedHookShell));
         WriteField("ManagementLabelMessage", "Message", DisplayHookManagementMessage(inspection.Provider, inspection.Message));
     }
 
-    private static void WriteGitHubCopilotHookInspection(GitHubCopilotHookInstallationInspection inspection)
+    private static void WriteGitHubCopilotHookInspection(HookInstallationInspection inspection)
     {
         Console.WriteLine(LidGuardText.ManagementHookInstallationTitle);
         WriteField("ManagementLabelProvider", "Provider", inspection.Provider);
@@ -453,28 +348,33 @@ internal static class HookManagementCommand
         WriteField("ManagementLabelExecutable", "Executable", inspection.HookExecutablePath);
         WriteField("ManagementLabelCommand", "Command", inspection.HookCommand);
         WriteField("ManagementLabelHookLog", "Hook log", GetHookLogFilePath(inspection.Provider));
-        WriteField("ManagementLabelHooksObject", "Hooks object", inspection.HasHooksObject);
-        WriteField("ManagementLabelManagedHooks", "Managed hooks", inspection.HasManagedHookEntries);
-        WriteField("ManagementLabelSessionStartHook", "SessionStart hook", inspection.HasSessionStartHook);
-        WriteField("ManagementLabelSessionEndHook", "SessionEnd hook", inspection.HasSessionEndHook);
-        WriteField("ManagementLabelUserPromptSubmittedHook", "UserPromptSubmitted hook", inspection.HasUserPromptSubmittedHook);
-        WriteField("ManagementLabelPreToolUseHook", "PreToolUse hook", inspection.HasPreToolUseHook);
-        WriteField("ManagementLabelPostToolUseHook", "PostToolUse hook", inspection.HasPostToolUseHook);
-        WriteField("ManagementLabelPermissionRequestHook", "PermissionRequest hook", inspection.HasPermissionRequestHook);
-        WriteField("ManagementLabelAgentStopHook", "AgentStop hook", inspection.HasAgentStopHook);
-        WriteField("ManagementLabelSubagentStartHook", "SubagentStart hook", inspection.HasSubagentStartHook);
-        WriteField("ManagementLabelSubagentStopHook", "SubagentStop hook", inspection.HasSubagentStopHook);
-        WriteField("ManagementLabelErrorOccurredHook", "ErrorOccurred hook", inspection.HasErrorOccurredHook);
-        WriteField("ManagementLabelNotificationHook", "Notification hook", inspection.HasNotificationHook);
-        WriteField("ManagementLabelExpectedCommands", "Expected commands", inspection.HasExpectedHookCommands);
-        WriteField("ManagementLabelExpectedNotificationMatcher", "Expected notification matcher", inspection.HasExpectedNotificationMatcher);
-        WriteField("ManagementLabelConflictingAgentStopHooks", "Conflicting agentStop hooks", inspection.HasConflictingAgentStopHooks);
+        WriteField("ManagementLabelHooksObject", "Hooks object", inspection.HasCheck(HookInstallationCheck.HooksObject));
+        WriteField("ManagementLabelManagedHooks", "Managed hooks", inspection.HasCheck(HookInstallationCheck.ManagedHookEntries));
+        WriteField("ManagementLabelSessionStartHook", "SessionStart hook", inspection.HasCheck(HookInstallationCheck.SessionStartHook));
+        WriteField("ManagementLabelSessionEndHook", "SessionEnd hook", inspection.HasCheck(HookInstallationCheck.SessionEndHook));
+        WriteField("ManagementLabelUserPromptSubmittedHook", "UserPromptSubmitted hook", inspection.HasCheck(HookInstallationCheck.UserPromptSubmittedHook));
+        WriteField("ManagementLabelPreToolUseHook", "PreToolUse hook", inspection.HasCheck(HookInstallationCheck.PreToolUseHook));
+        WriteField("ManagementLabelPostToolUseHook", "PostToolUse hook", inspection.HasCheck(HookInstallationCheck.PostToolUseHook));
+        WriteField("ManagementLabelPermissionRequestHook", "PermissionRequest hook", inspection.HasCheck(HookInstallationCheck.PermissionRequestHook));
+        WriteField("ManagementLabelAgentStopHook", "AgentStop hook", inspection.HasCheck(HookInstallationCheck.AgentStopHook));
+        WriteField("ManagementLabelSubagentStartHook", "SubagentStart hook", inspection.HasCheck(HookInstallationCheck.SubagentStartHook));
+        WriteField("ManagementLabelSubagentStopHook", "SubagentStop hook", inspection.HasCheck(HookInstallationCheck.SubagentStopHook));
+        WriteField("ManagementLabelErrorOccurredHook", "ErrorOccurred hook", inspection.HasCheck(HookInstallationCheck.ErrorOccurredHook));
+        WriteField("ManagementLabelNotificationHook", "Notification hook", inspection.HasCheck(HookInstallationCheck.NotificationHook));
+        WriteField("ManagementLabelExpectedCommands", "Expected commands", inspection.HasCheck(HookInstallationCheck.ExpectedHookCommands));
+        WriteField("ManagementLabelExpectedNotificationMatcher", "Expected notification matcher", inspection.HasCheck(HookInstallationCheck.ExpectedNotificationMatcher));
+        WriteField("ManagementLabelConflictingAgentStopHooks", "Conflicting agentStop hooks", inspection.HasCheck(HookInstallationCheck.ConflictingAgentStopHooks));
         WriteField(
             "ManagementLabelConflictSources",
             "Conflict sources",
             inspection.ConflictingAgentStopHookSources.Count == 0 ? LidGuardText.TextDisplayNone : string.Join(" | ", inspection.ConflictingAgentStopHookSources));
         WriteField("ManagementLabelMessage", "Message", DisplayHookManagementMessage(inspection.Provider, inspection.Message));
     }
+
+    private static bool HasClaudeAllStopHooks(HookInstallationInspection inspection)
+        => inspection.HasCheck(HookInstallationCheck.StopHook)
+        && inspection.HasCheck(HookInstallationCheck.StopFailureHook)
+        && inspection.HasCheck(HookInstallationCheck.SessionEndHook);
 
     private static string DisplayHookManagementMessage(AgentProvider provider, string message)
     {

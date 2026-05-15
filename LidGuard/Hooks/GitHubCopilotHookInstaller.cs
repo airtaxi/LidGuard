@@ -1,11 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using LidGuard.Hooks;
 using LidGuard.Sessions;
 
 namespace LidGuard.Hooks;
 
-public sealed class GitHubCopilotHookInstaller
+public sealed class GitHubCopilotHookInstaller : HookInstallerBase
 {
     private const string CopilotConfigurationDirectoryEnvironmentVariableName = "COPILOT_HOME";
     private const string CopilotConfigurationDirectoryName = ".copilot";
@@ -20,163 +19,44 @@ public sealed class GitHubCopilotHookInstaller
         GitHubCopilotHookEventNames.PascalCaseAgentStopAlias
     ];
 
-    public GitHubCopilotHookInstallationInspection Inspect(GitHubCopilotHookInstallationRequest request)
-    {
-        ArgumentNullException.ThrowIfNull(request);
+    protected override AgentProvider Provider => AgentProvider.GitHubCopilot;
 
-        var normalizedRequest = NormalizeRequest(request);
-        var hookCommand = HookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
-        var expectedHookCommands = GitHubCopilotHookConfigurationJsonDocument.CreateManagedHookCommands(hookCommand);
-        var configurationFileExists = File.Exists(normalizedRequest.ConfigurationFilePath);
-        var conflictingAgentStopHookSources = FindConflictingAgentStopHookSources(normalizedRequest);
-        if (!configurationFileExists)
-        {
-            return new GitHubCopilotHookInstallationInspection
-            {
-                ConfigurationFileExists = false,
-                ConfigurationFilePath = normalizedRequest.ConfigurationFilePath,
-                HookCommand = hookCommand,
-                HookExecutablePath = normalizedRequest.HookExecutablePath,
-                Message = "GitHub Copilot hook configuration file does not exist.",
-                Provider = AgentProvider.GitHubCopilot,
-                Status = HookInstallationStatus.NotInstalled
-            }.WithConflictingAgentStopHookSources(conflictingAgentStopHookSources);
-        }
+    protected override string ProviderDisplayName => "GitHub Copilot";
 
-        var content = File.ReadAllText(normalizedRequest.ConfigurationFilePath);
-        return GitHubCopilotHookConfigurationJsonDocument
-            .InspectConfigurationJson(
-                normalizedRequest.ConfigurationFilePath,
-                normalizedRequest.HookExecutablePath,
-                hookCommand,
-                expectedHookCommands,
-                content,
-                configurationFileExists)
-            .WithConflictingAgentStopHookSources(conflictingAgentStopHookSources);
-    }
+    protected override string DefaultHookCommandName => "copilot-hook";
 
-    public GitHubCopilotHookInstallationResult Install(GitHubCopilotHookInstallationRequest request)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-
-        var normalizedRequest = NormalizeRequest(request);
-        if (normalizedRequest.Provider != AgentProvider.GitHubCopilot)
-        {
-            var unsupportedInspection = new GitHubCopilotHookInstallationInspection
-            {
-                ConfigurationFilePath = normalizedRequest.ConfigurationFilePath,
-                HookExecutablePath = normalizedRequest.HookExecutablePath,
-                Message = "Only GitHub Copilot hook installation is implemented.",
-                Provider = normalizedRequest.Provider,
-                Status = HookInstallationStatus.Unknown
-            };
-
-            return GitHubCopilotHookInstallationResult.Failure(unsupportedInspection, unsupportedInspection.Message);
-        }
-
-        if (!HookCommandUtilities.HookExecutableExists(normalizedRequest.HookExecutablePath))
-        {
-            var missingExecutableInspection = Inspect(normalizedRequest);
-            return GitHubCopilotHookInstallationResult.Failure(
-                missingExecutableInspection,
-                $"Hook executable or command does not exist: {normalizedRequest.HookExecutablePath}");
-        }
-
-        var hookCommand = HookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
-        var hookCommandsByEvent = GitHubCopilotHookConfigurationJsonDocument.CreateManagedHookCommands(hookCommand);
-        var configurationFileExists = File.Exists(normalizedRequest.ConfigurationFilePath);
-        var originalContent = configurationFileExists ? File.ReadAllText(normalizedRequest.ConfigurationFilePath) : string.Empty;
-        var currentInspection = Inspect(normalizedRequest);
-        if (!GitHubCopilotHookConfigurationJsonDocument.TryInstallManagedHooks(originalContent, hookCommandsByEvent, out var updatedContent, out var updateMessage))
-        {
-            return GitHubCopilotHookInstallationResult.Failure(currentInspection, updateMessage);
-        }
-
-        if (string.Equals(originalContent, updatedContent, StringComparison.Ordinal))
-        {
-            var unchangedInspection = Inspect(normalizedRequest);
-            return GitHubCopilotHookInstallationResult.Success(unchangedInspection, false, "GitHub Copilot hook is already installed.");
-        }
-
-        var configurationDirectoryPath = Path.GetDirectoryName(normalizedRequest.ConfigurationFilePath);
-        if (!string.IsNullOrWhiteSpace(configurationDirectoryPath)) Directory.CreateDirectory(configurationDirectoryPath);
-
-        var backupFilePath = string.Empty;
-        if (configurationFileExists && normalizedRequest.CreateBackup)
-        {
-            backupFilePath = HookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
-            File.Copy(normalizedRequest.ConfigurationFilePath, backupFilePath, false);
-        }
-
-        File.WriteAllText(normalizedRequest.ConfigurationFilePath, updatedContent);
-
-        var inspection = Inspect(normalizedRequest);
-        var message = inspection.IsInstalled ? "GitHub Copilot hook installed." : "GitHub Copilot hook configuration was written but still needs attention.";
-        return GitHubCopilotHookInstallationResult.Success(inspection, true, message, backupFilePath);
-    }
-
-    public GitHubCopilotHookInstallationResult Remove(GitHubCopilotHookInstallationRequest request)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-
-        var normalizedRequest = NormalizeRequest(request);
-        if (normalizedRequest.Provider != AgentProvider.GitHubCopilot)
-        {
-            var unsupportedInspection = new GitHubCopilotHookInstallationInspection
-            {
-                ConfigurationFilePath = normalizedRequest.ConfigurationFilePath,
-                HookExecutablePath = normalizedRequest.HookExecutablePath,
-                Message = "Only GitHub Copilot hook removal is implemented.",
-                Provider = normalizedRequest.Provider,
-                Status = HookInstallationStatus.Unknown
-            };
-
-            return GitHubCopilotHookInstallationResult.Failure(unsupportedInspection, unsupportedInspection.Message);
-        }
-
-        var configurationFileExists = File.Exists(normalizedRequest.ConfigurationFilePath);
-        if (!configurationFileExists) return GitHubCopilotHookInstallationResult.Success(Inspect(normalizedRequest), false, "GitHub Copilot hook is not installed.");
-
-        var originalContent = File.ReadAllText(normalizedRequest.ConfigurationFilePath);
-        var currentInspection = Inspect(normalizedRequest);
-        if (!GitHubCopilotHookConfigurationJsonDocument.TryRemoveManagedHooks(originalContent, out var updatedContent, out var changed, out var updateMessage))
-        {
-            return GitHubCopilotHookInstallationResult.Failure(currentInspection, updateMessage);
-        }
-
-        if (!changed) return GitHubCopilotHookInstallationResult.Success(currentInspection, false, "No LidGuard-managed GitHub Copilot hook was found.");
-
-        var backupFilePath = string.Empty;
-        if (normalizedRequest.CreateBackup)
-        {
-            backupFilePath = HookCommandUtilities.CreateBackupFilePath(normalizedRequest.ConfigurationFilePath);
-            File.Copy(normalizedRequest.ConfigurationFilePath, backupFilePath, false);
-        }
-
-        File.WriteAllText(normalizedRequest.ConfigurationFilePath, updatedContent);
-
-        var inspection = Inspect(normalizedRequest);
-        return GitHubCopilotHookInstallationResult.Success(inspection, true, "GitHub Copilot hook removed.", backupFilePath);
-    }
-
-    public GitHubCopilotHookInstallationRequest CreateDefaultRequest(string configurationFilePath = "", bool createBackup = true)
-    {
-        return new GitHubCopilotHookInstallationRequest
-        {
-            ConfigurationFilePath = string.IsNullOrWhiteSpace(configurationFilePath)
-                ? GetDefaultGitHubCopilotHooksConfigurationFilePath()
-                : Path.GetFullPath(configurationFilePath),
-            CreateBackup = createBackup,
-            HookExecutablePath = HookCommandUtilities.GetDefaultHookExecutableReference(),
-            HookCommandName = "copilot-hook",
-            Provider = AgentProvider.GitHubCopilot
-        };
-    }
+    protected override string ConfigurationMissingMessage => "GitHub Copilot hook configuration file does not exist.";
 
     public static string GetDefaultGitHubCopilotHooksConfigurationFilePath()
         => Path.Combine(GetDefaultGitHubCopilotConfigurationDirectoryPath(), CopilotHooksDirectoryName, ManagedConfigurationFileName);
 
     public static string GetDefaultGitHubCopilotConfigurationDirectoryPath() => GetCopilotConfigurationDirectoryPath();
+
+    protected override string GetDefaultConfigurationFilePath() => GetDefaultGitHubCopilotHooksConfigurationFilePath();
+
+    protected override HookInstallationInspection InspectConfiguration(HookInstallationRequest request, string hookCommand, string content, bool configurationFileExists)
+    {
+        var expectedHookCommands = GitHubCopilotHookConfigurationJsonDocument.CreateManagedHookCommands(hookCommand);
+        return GitHubCopilotHookConfigurationJsonDocument.InspectConfigurationJson(
+            request.ConfigurationFilePath,
+            request.HookExecutablePath,
+            hookCommand,
+            expectedHookCommands,
+            content,
+            configurationFileExists);
+    }
+
+    protected override bool TryCreateInstalledContent(string originalContent, string hookCommand, out string updatedContent, out string message)
+    {
+        var hookCommandsByEvent = GitHubCopilotHookConfigurationJsonDocument.CreateManagedHookCommands(hookCommand);
+        return GitHubCopilotHookConfigurationJsonDocument.TryInstallManagedHooks(originalContent, hookCommandsByEvent, out updatedContent, out message);
+    }
+
+    protected override bool TryCreateRemovedContent(string originalContent, out string updatedContent, out bool changed, out string message)
+        => GitHubCopilotHookConfigurationJsonDocument.TryRemoveManagedHooks(originalContent, out updatedContent, out changed, out message);
+
+    protected override HookInstallationInspection AddProviderSpecificInspectionDetails(HookInstallationRequest request, HookInstallationInspection inspection)
+        => inspection.WithConflictingAgentStopHookSources(FindConflictingAgentStopHookSources(request));
 
     private static void AddConflictingAgentStopHooksFromDirectory(string directoryPath, string excludedConfigurationFilePath, ISet<string> conflictingAgentStopHookSources)
     {
@@ -204,10 +84,7 @@ public sealed class GitHubCopilotHookInstaller
             });
             configurationRootObject = rootNode as JsonObject;
         }
-        catch (JsonException)
-        {
-            return;
-        }
+        catch (JsonException) { return; }
 
         if (configurationRootObject is null) return;
         if (!TryGetHooksObject(configurationRootObject, out var hooksObject)) return;
@@ -233,7 +110,7 @@ public sealed class GitHubCopilotHookInstaller
         settingsFilePaths.Add(Path.Combine(settingsDirectoryPath, LegacyCopilotSettingsFileName));
     }
 
-    private static IReadOnlyList<string> FindConflictingAgentStopHookSources(GitHubCopilotHookInstallationRequest request)
+    private static IReadOnlyList<string> FindConflictingAgentStopHookSources(HookInstallationRequest request)
     {
         var conflictingAgentStopHookSources = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
         var normalizedConfigurationFilePath = Path.GetFullPath(request.ConfigurationFilePath);
@@ -278,10 +155,7 @@ public sealed class GitHubCopilotHookInstaller
     }
 
     private static string GetStringProperty(JsonObject jsonObject, string propertyName)
-    {
-        var valueNode = jsonObject[propertyName];
-        return valueNode is JsonValue jsonValue && jsonValue.TryGetValue<string>(out var value) ? value : string.Empty;
-    }
+        => HookJsonPropertyReader.GetStringProperty(jsonObject, propertyName);
 
     private static bool IsLidGuardManagedAgentStopHook(JsonObject hookDefinitionObject)
     {
@@ -290,22 +164,6 @@ public sealed class GitHubCopilotHookInstaller
         if (!hookCommand.Contains("lidguard", StringComparison.OrdinalIgnoreCase)) return false;
         if (!hookCommand.Contains("copilot-hook", StringComparison.OrdinalIgnoreCase)) return false;
         return hookCommand.Contains($"--event {GitHubCopilotHookEventNames.AgentStop}", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static GitHubCopilotHookInstallationRequest NormalizeRequest(GitHubCopilotHookInstallationRequest request)
-    {
-        return new GitHubCopilotHookInstallationRequest
-        {
-            ConfigurationFilePath = string.IsNullOrWhiteSpace(request.ConfigurationFilePath)
-                ? GetDefaultGitHubCopilotHooksConfigurationFilePath()
-                : Path.GetFullPath(request.ConfigurationFilePath),
-            CreateBackup = request.CreateBackup,
-            HookCommandName = string.IsNullOrWhiteSpace(request.HookCommandName) ? "copilot-hook" : request.HookCommandName,
-            HookExecutablePath = string.IsNullOrWhiteSpace(request.HookExecutablePath)
-                ? HookCommandUtilities.GetDefaultHookExecutableReference()
-                : HookCommandUtilities.NormalizeHookExecutableReference(request.HookExecutablePath),
-            Provider = request.Provider
-        };
     }
 
     private static bool TryGetHooksObject(JsonObject configurationRootObject, out JsonObject hooksObject)

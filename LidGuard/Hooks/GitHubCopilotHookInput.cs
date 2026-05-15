@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace LidGuard.Hooks;
 
-public sealed class GitHubCopilotHookInput
+public sealed class GitHubCopilotHookInput : IHookCommandInput
 {
     public string AgentDisplayName { get; init; } = string.Empty;
 
@@ -93,33 +93,11 @@ public sealed class GitHubCopilotHookInput
     }
 
     private static JsonElement GetElement(JsonElement hookInputElement, string primaryPropertyName, string secondaryPropertyName = "")
-    {
-        if (hookInputElement.TryGetProperty(primaryPropertyName, out var primaryPropertyElement)) return primaryPropertyElement.Clone();
-        if (!string.IsNullOrWhiteSpace(secondaryPropertyName) && hookInputElement.TryGetProperty(secondaryPropertyName, out var secondaryPropertyElement)) return secondaryPropertyElement.Clone();
-        return default;
-    }
+        => HookJsonPropertyReader.GetElementProperty(hookInputElement, primaryPropertyName, secondaryPropertyName);
 
     private static bool? GetBoolean(JsonElement hookInputElement, string propertyName)
-    {
-        if (!hookInputElement.TryGetProperty(propertyName, out var propertyValue)) return null;
-        if (propertyValue.ValueKind != JsonValueKind.True && propertyValue.ValueKind != JsonValueKind.False) return null;
-        return propertyValue.GetBoolean();
-    }
+        => HookJsonPropertyReader.GetNullableBooleanProperty(hookInputElement, propertyName);
 
     private static string GetString(JsonElement hookInputElement, string primaryPropertyName, string secondaryPropertyName = "")
-    {
-        if (TryGetString(hookInputElement, primaryPropertyName, out var propertyValue)) return propertyValue;
-        if (!string.IsNullOrWhiteSpace(secondaryPropertyName) && TryGetString(hookInputElement, secondaryPropertyName, out propertyValue)) return propertyValue;
-        return string.Empty;
-    }
-
-    private static bool TryGetString(JsonElement hookInputElement, string propertyName, out string propertyValue)
-    {
-        propertyValue = string.Empty;
-        if (!hookInputElement.TryGetProperty(propertyName, out var propertyElement)) return false;
-        if (propertyElement.ValueKind != JsonValueKind.String) return false;
-
-        propertyValue = propertyElement.GetString() ?? string.Empty;
-        return true;
-    }
+        => HookJsonPropertyReader.GetStringProperty(hookInputElement, primaryPropertyName, secondaryPropertyName);
 }

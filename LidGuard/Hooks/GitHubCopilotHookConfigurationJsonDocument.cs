@@ -10,7 +10,7 @@ namespace LidGuard.Hooks;
 public static class GitHubCopilotHookConfigurationJsonDocument
 {
     private const string CommandHookTypeName = "command";
-    private const string HooksPropertyName = "hooks";
+    private const string HooksPropertyName = JsonHookConfigurationDocument.HooksPropertyName;
     private const int SupportedSchemaVersion = 1;
     private const int TimeoutSeconds = 30;
     private const string VersionPropertyName = "version";
@@ -50,7 +50,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
 
     public static string CreateHooksJson(IReadOnlyDictionary<string, string> hookCommandsByEvent) => CreateHooksObject(hookCommandsByEvent).ToJsonString(s_jsonSerializerOptions);
 
-    public static GitHubCopilotHookInstallationInspection InspectConfigurationJson(
+    public static HookInstallationInspection InspectConfigurationJson(
         string configurationFilePath,
         string hookExecutablePath,
         string hookCommand,
@@ -60,7 +60,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
     {
         if (!TryParseConfigurationRoot(content, out var configurationRootObject, out var parseMessage))
         {
-            return new GitHubCopilotHookInstallationInspection
+            return new HookInstallationInspection
             {
                 ConfigurationFileExists = configurationFileExists,
                 ConfigurationFilePath = configurationFilePath,
@@ -75,11 +75,10 @@ public static class GitHubCopilotHookConfigurationJsonDocument
         var hasHooksProperty = configurationRootObject.TryGetPropertyValue(HooksPropertyName, out var hooksNode);
         if (!hasHooksProperty)
         {
-            return new GitHubCopilotHookInstallationInspection
+            return new HookInstallationInspection
             {
                 ConfigurationFileExists = configurationFileExists,
                 ConfigurationFilePath = configurationFilePath,
-                HasHooksObject = false,
                 HookCommand = hookCommand,
                 HookExecutablePath = hookExecutablePath,
                 Message = "GitHub Copilot hook is not installed.",
@@ -90,11 +89,14 @@ public static class GitHubCopilotHookConfigurationJsonDocument
 
         if (hooksNode is not JsonObject hooksObject)
         {
-            return new GitHubCopilotHookInstallationInspection
+            return new HookInstallationInspection
             {
                 ConfigurationFileExists = configurationFileExists,
                 ConfigurationFilePath = configurationFilePath,
-                HasHooksObject = true,
+                Checks = new Dictionary<HookInstallationCheck, bool>
+                {
+                    [HookInstallationCheck.HooksObject] = true
+                },
                 HookCommand = hookCommand,
                 HookExecutablePath = hookExecutablePath,
                 Message = "GitHub Copilot hooks setting must be a JSON object.",
@@ -122,11 +124,14 @@ public static class GitHubCopilotHookConfigurationJsonDocument
         {
             if (!expectedHookCommands.TryGetValue(hookDefinition.HookEventName, out var expectedHookCommand))
             {
-                return new GitHubCopilotHookInstallationInspection
+                return new HookInstallationInspection
                 {
                     ConfigurationFileExists = configurationFileExists,
                     ConfigurationFilePath = configurationFilePath,
-                    HasHooksObject = true,
+                    Checks = new Dictionary<HookInstallationCheck, bool>
+                    {
+                        [HookInstallationCheck.HooksObject] = true
+                    },
                     HookCommand = hookCommand,
                     HookExecutablePath = hookExecutablePath,
                     Message = $"Missing expected hook command for '{hookDefinition.HookEventName}'.",
@@ -137,11 +142,14 @@ public static class GitHubCopilotHookConfigurationJsonDocument
 
             if (!TryInspectHookEvent(hooksObject, hookDefinition.HookEventName, expectedHookCommand, hookDefinition.Matcher, out var hookEventInspection, out parseMessage))
             {
-                return new GitHubCopilotHookInstallationInspection
+                return new HookInstallationInspection
                 {
                     ConfigurationFileExists = configurationFileExists,
                     ConfigurationFilePath = configurationFilePath,
-                    HasHooksObject = true,
+                    Checks = new Dictionary<HookInstallationCheck, bool>
+                    {
+                        [HookInstallationCheck.HooksObject] = true
+                    },
                     HookCommand = hookCommand,
                     HookExecutablePath = hookExecutablePath,
                     Message = parseMessage,
@@ -212,25 +220,28 @@ public static class GitHubCopilotHookConfigurationJsonDocument
                 ? "GitHub Copilot hook is installed but needs update."
                 : "GitHub Copilot hook is not installed.";
 
-        return new GitHubCopilotHookInstallationInspection
+        return new HookInstallationInspection
         {
             ConfigurationFileExists = configurationFileExists,
             ConfigurationFilePath = configurationFilePath,
-            HasAgentStopHook = hasAgentStopHook,
-            HasErrorOccurredHook = hasErrorOccurredHook,
-            HasExpectedHookCommands = hasExpectedHookCommands,
-            HasExpectedNotificationMatcher = hasExpectedNotificationMatcher,
-            HasHooksObject = true,
-            HasManagedHookEntries = hasManagedHookEntries,
-            HasNotificationHook = hasNotificationHook,
-            HasPermissionRequestHook = hasPermissionRequestHook,
-            HasPostToolUseHook = hasPostToolUseHook,
-            HasPreToolUseHook = hasPreToolUseHook,
-            HasSessionEndHook = hasSessionEndHook,
-            HasSessionStartHook = hasSessionStartHook,
-            HasSubagentStartHook = hasSubagentStartHook,
-            HasSubagentStopHook = hasSubagentStopHook,
-            HasUserPromptSubmittedHook = hasUserPromptSubmittedHook,
+            Checks = new Dictionary<HookInstallationCheck, bool>
+            {
+                [HookInstallationCheck.AgentStopHook] = hasAgentStopHook,
+                [HookInstallationCheck.ErrorOccurredHook] = hasErrorOccurredHook,
+                [HookInstallationCheck.ExpectedHookCommands] = hasExpectedHookCommands,
+                [HookInstallationCheck.ExpectedNotificationMatcher] = hasExpectedNotificationMatcher,
+                [HookInstallationCheck.HooksObject] = true,
+                [HookInstallationCheck.ManagedHookEntries] = hasManagedHookEntries,
+                [HookInstallationCheck.NotificationHook] = hasNotificationHook,
+                [HookInstallationCheck.PermissionRequestHook] = hasPermissionRequestHook,
+                [HookInstallationCheck.PostToolUseHook] = hasPostToolUseHook,
+                [HookInstallationCheck.PreToolUseHook] = hasPreToolUseHook,
+                [HookInstallationCheck.SessionEndHook] = hasSessionEndHook,
+                [HookInstallationCheck.SessionStartHook] = hasSessionStartHook,
+                [HookInstallationCheck.SubagentStartHook] = hasSubagentStartHook,
+                [HookInstallationCheck.SubagentStopHook] = hasSubagentStopHook,
+                [HookInstallationCheck.UserPromptSubmittedHook] = hasUserPromptSubmittedHook
+            },
             HookCommand = hookCommand,
             HookExecutablePath = hookExecutablePath,
             Message = message,
@@ -247,7 +258,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
     {
         updatedContent = string.Empty;
         if (!TryParseConfigurationRoot(content, out var configurationRootObject, out message)) return false;
-        if (!TryGetOrCreateHooksObject(configurationRootObject, out var hooksObject, out message)) return false;
+        if (!JsonHookConfigurationDocument.TryGetOrCreateHooksObject(configurationRootObject, "GitHub Copilot hooks setting must be a JSON object.", out var hooksObject, out message)) return false;
 
         configurationRootObject[VersionPropertyName] = SupportedSchemaVersion;
 
@@ -324,7 +335,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
                 throw new InvalidOperationException($"Missing hook command for '{hookDefinition.HookEventName}'.");
             }
 
-            hooksObject[hookDefinition.HookEventName] = CreateJsonArrayWithSingleNode(CreateManagedHookDefinition(hookCommand, hookDefinition.GetStatusMessage(), hookDefinition.Matcher));
+            hooksObject[hookDefinition.HookEventName] = JsonHookConfigurationDocument.CreateJsonArrayWithSingleNode(CreateManagedHookDefinition(hookCommand, hookDefinition.GetStatusMessage(), hookDefinition.Matcher));
         }
 
         return hooksObject;
@@ -344,34 +355,13 @@ public static class GitHubCopilotHookConfigurationJsonDocument
         return hookDefinitionObject;
     }
 
-    private static JsonArray CreateJsonArrayWithSingleNode(JsonNode jsonNode)
-    {
-        var jsonArray = new JsonArray();
-        AddJsonNode(jsonArray, jsonNode);
-        return jsonArray;
-    }
-
-    private static void AddJsonNode(JsonArray jsonArray, JsonNode jsonNode) => jsonArray.Add(jsonNode);
-
     private static string GetAliasEventName(string hookEventName) => GitHubCopilotHookEventNames.GetPascalCaseAlias(hookEventName);
 
     private static string GetCommandString(JsonObject hookDefinitionObject)
     {
-        var powershellCommand = GetStringProperty(hookDefinitionObject, "powershell");
+        var powershellCommand = JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "powershell");
         if (!string.IsNullOrWhiteSpace(powershellCommand)) return powershellCommand;
-        return GetStringProperty(hookDefinitionObject, "bash");
-    }
-
-    private static string GetStringProperty(JsonObject jsonObject, string propertyName)
-    {
-        var valueNode = jsonObject[propertyName];
-        return valueNode is JsonValue jsonValue && jsonValue.TryGetValue<string>(out var value) ? value : string.Empty;
-    }
-
-    private static bool HasExpectedMatcher(string actualMatcher, string expectedMatcher)
-    {
-        if (string.IsNullOrWhiteSpace(expectedMatcher)) return string.IsNullOrWhiteSpace(actualMatcher);
-        return actualMatcher.Equals(expectedMatcher, StringComparison.Ordinal);
+        return JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "bash");
     }
 
     private static bool IsLidGuardGitHubCopilotHookCommand(string command, string expectedHookEventName)
@@ -382,62 +372,29 @@ public static class GitHubCopilotHookConfigurationJsonDocument
         return command.Contains($"--event {expectedHookEventName}", StringComparison.OrdinalIgnoreCase);
     }
 
+    private static bool HasExpectedHookCommand(JsonObject hookDefinitionObject, string expectedHookCommand)
+        => JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "type").Equals(CommandHookTypeName, StringComparison.Ordinal)
+            && JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "powershell").Equals(expectedHookCommand, StringComparison.Ordinal);
+
     private static bool RemoveManagedHook(JsonObject hooksObject, string hookEventName)
-    {
-        var changed = false;
-        foreach (var compatibleHookEventName in GetSupportedEventNames(hookEventName))
-        {
-            if (!hooksObject.TryGetPropertyValue(compatibleHookEventName, out var hookEventNode) || hookEventNode is not JsonArray hookDefinitions) continue;
-
-            for (var hookDefinitionIndex = hookDefinitions.Count - 1; hookDefinitionIndex >= 0; hookDefinitionIndex--)
-            {
-                if (hookDefinitions[hookDefinitionIndex] is not JsonObject hookDefinitionObject) continue;
-                if (!IsLidGuardGitHubCopilotHookCommand(GetCommandString(hookDefinitionObject), hookEventName)) continue;
-
-                hookDefinitions.RemoveAt(hookDefinitionIndex);
-                changed = true;
-            }
-
-            if (hookDefinitions.Count > 0) continue;
-
-            hooksObject.Remove(compatibleHookEventName);
-            changed = true;
-        }
-
-        return changed;
-    }
+        => JsonHookConfigurationDocument.RemoveFlatManagedCommandHooks(
+            hooksObject,
+            hookEventName,
+            GetSupportedEventNames(hookEventName),
+            GetCommandString,
+            IsLidGuardGitHubCopilotHookCommand);
 
     private static bool TryRefreshManagedHookStatusMessage(JsonObject hooksObject, string hookEventName, string statusMessage, out bool changed, out string message)
-    {
-        changed = false;
-        message = string.Empty;
-        foreach (var compatibleHookEventName in GetSupportedEventNames(hookEventName))
-        {
-            if (!hooksObject.TryGetPropertyValue(compatibleHookEventName, out var hookEventNode) || hookEventNode is null) continue;
-            if (hookEventNode is not JsonArray hookDefinitions)
-            {
-                message = $"GitHub Copilot hook event '{compatibleHookEventName}' must be a JSON array.";
-                return false;
-            }
-
-            foreach (var hookDefinitionNode in hookDefinitions)
-            {
-                if (hookDefinitionNode is not JsonObject hookDefinitionObject)
-                {
-                    message = $"GitHub Copilot hook definition for '{compatibleHookEventName}' must be a JSON object.";
-                    return false;
-                }
-
-                if (!IsLidGuardGitHubCopilotHookCommand(GetCommandString(hookDefinitionObject), hookEventName)) continue;
-                if (GetStringProperty(hookDefinitionObject, "statusMessage").Equals(statusMessage, StringComparison.Ordinal)) continue;
-
-                hookDefinitionObject["statusMessage"] = statusMessage;
-                changed = true;
-            }
-        }
-
-        return true;
-    }
+        => JsonHookConfigurationDocument.TryRefreshFlatManagedHookStatusMessage(
+            hooksObject,
+            hookEventName,
+            GetSupportedEventNames(hookEventName),
+            statusMessage,
+            "GitHub Copilot",
+            GetCommandString,
+            IsLidGuardGitHubCopilotHookCommand,
+            out changed,
+            out message);
 
     private static void ReplaceManagedHookDefinition(JsonObject hookDefinitionObject, string hookCommand, string statusMessage, string matcher)
     {
@@ -449,73 +406,25 @@ public static class GitHubCopilotHookConfigurationJsonDocument
         if (!string.IsNullOrWhiteSpace(matcher)) hookDefinitionObject["matcher"] = matcher;
     }
 
-    private static bool TryGetOrCreateHooksObject(JsonObject configurationRootObject, out JsonObject hooksObject, out string message)
-    {
-        message = string.Empty;
-        if (!configurationRootObject.TryGetPropertyValue(HooksPropertyName, out var hooksNode) || hooksNode is null)
-        {
-            hooksObject = new JsonObject();
-            configurationRootObject[HooksPropertyName] = hooksObject;
-            return true;
-        }
-
-        if (hooksNode is JsonObject existingHooksObject)
-        {
-            hooksObject = existingHooksObject;
-            return true;
-        }
-
-        hooksObject = new JsonObject();
-        message = "GitHub Copilot hooks setting must be a JSON object.";
-        return false;
-    }
-
     private static bool TryInspectHookEvent(
         JsonObject hooksObject,
         string hookEventName,
         string expectedHookCommand,
         string expectedMatcher,
-        out GitHubCopilotHookEventInspection hookEventInspection,
+        out JsonHookEventInspection hookEventInspection,
         out string message)
-    {
-        hookEventInspection = default;
-        message = string.Empty;
-        foreach (var compatibleHookEventName in GetSupportedEventNames(hookEventName))
-        {
-            if (!hooksObject.TryGetPropertyValue(compatibleHookEventName, out var hookEventNode) || hookEventNode is null) continue;
-            if (hookEventNode is not JsonArray hookDefinitions)
-            {
-                message = $"GitHub Copilot hook event '{compatibleHookEventName}' must be a JSON array.";
-                return false;
-            }
-
-            var hasManagedHook = false;
-            var hasExpectedCommand = false;
-            var hasExpectedMatcher = false;
-            foreach (var hookDefinitionNode in hookDefinitions)
-            {
-                if (hookDefinitionNode is not JsonObject hookDefinitionObject)
-                {
-                    message = $"GitHub Copilot hook definition for '{compatibleHookEventName}' must be a JSON object.";
-                    return false;
-                }
-
-                var command = GetCommandString(hookDefinitionObject);
-                if (!IsLidGuardGitHubCopilotHookCommand(command, hookEventName)) continue;
-
-                hasManagedHook = true;
-                hasExpectedCommand |= GetStringProperty(hookDefinitionObject, "type").Equals(CommandHookTypeName, StringComparison.Ordinal)
-                    && GetStringProperty(hookDefinitionObject, "powershell").Equals(expectedHookCommand, StringComparison.Ordinal);
-                hasExpectedMatcher |= HasExpectedMatcher(GetStringProperty(hookDefinitionObject, "matcher"), expectedMatcher);
-            }
-
-            hookEventInspection = new GitHubCopilotHookEventInspection(hasManagedHook, hasExpectedCommand, hasExpectedMatcher);
-            return true;
-        }
-
-        hookEventInspection = new GitHubCopilotHookEventInspection(false, false, string.IsNullOrWhiteSpace(expectedMatcher));
-        return true;
-    }
+        => JsonHookConfigurationDocument.TryInspectFlatCommandHookEvent(
+            hooksObject,
+            hookEventName,
+            GetSupportedEventNames(hookEventName),
+            expectedHookCommand,
+            expectedMatcher,
+            "GitHub Copilot",
+            GetCommandString,
+            IsLidGuardGitHubCopilotHookCommand,
+            HasExpectedHookCommand,
+            out hookEventInspection,
+            out message);
 
     private static bool TryParseConfigurationRoot(string content, out JsonObject configurationRootObject, out string message)
     {
@@ -585,7 +494,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
                 return true;
             }
 
-            AddJsonNode(hookDefinitions, CreateManagedHookDefinition(hookCommand, statusMessage, matcher));
+            JsonHookConfigurationDocument.AddJsonNode(hookDefinitions, CreateManagedHookDefinition(hookCommand, statusMessage, matcher));
             if (!compatibleHookEventName.Equals(hookEventName, StringComparison.Ordinal))
             {
                 hooksObject.Remove(compatibleHookEventName);
@@ -595,7 +504,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
             return true;
         }
 
-        hooksObject[hookEventName] = CreateJsonArrayWithSingleNode(CreateManagedHookDefinition(hookCommand, statusMessage, matcher));
+        hooksObject[hookEventName] = JsonHookConfigurationDocument.CreateJsonArrayWithSingleNode(CreateManagedHookDefinition(hookCommand, statusMessage, matcher));
         return true;
     }
 
@@ -606,6 +515,4 @@ public static class GitHubCopilotHookConfigurationJsonDocument
         var aliasHookEventName = GetAliasEventName(hookEventName);
         if (!string.IsNullOrWhiteSpace(aliasHookEventName)) yield return aliasHookEventName;
     }
-
-    private readonly record struct GitHubCopilotHookEventInspection(bool HasManagedHook, bool HasExpectedCommand, bool HasExpectedMatcher);
 }

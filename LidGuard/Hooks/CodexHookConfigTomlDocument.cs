@@ -51,7 +51,7 @@ public static class CodexHookConfigTomlDocument
         return builder.ToString().TrimEnd();
     }
 
-    public static CodexHookInstallationInspection InspectConfigToml(
+    public static HookInstallationInspection InspectConfigToml(
         string configurationFilePath,
         string hookExecutablePath,
         string hookCommand,
@@ -73,24 +73,26 @@ public static class CodexHookConfigTomlDocument
         var status = isInstalled ? HookInstallationStatus.Installed : hasManagedHookEntries ? HookInstallationStatus.NeedsUpdate : HookInstallationStatus.NotInstalled;
         var message = isInstalled ? "Codex hook is installed." : hasManagedHookEntries ? "Codex hook is installed but needs update." : "Codex hook is not installed.";
 
-        return new CodexHookInstallationInspection
+        return new HookInstallationInspection
         {
             Provider = AgentProvider.Codex,
-            Format = CodexHookConfigurationFormat.ConfigToml,
             Status = status,
             ConfigurationFilePath = configurationFilePath,
             HookExecutablePath = hookExecutablePath,
             HookCommand = hookCommand,
             ConfigurationFileExists = configurationFileExists,
-            HasHooksFeatureFlag = hasHooksFeatureFlag,
-            HasManagedBlock = hasManagedBlock,
-            HasManagedHookEntries = hasManagedHookEntries,
-            HasPermissionRequestHook = hasPermissionRequestHook,
-            HasSessionEndHook = hasSessionEndHook,
-            HasUserPromptSubmitHook = hasUserPromptSubmitHook,
-            HasStopHook = hasStopHook,
-            HasExpectedHookCommand = hasExpectedHookCommand,
-            HasValidHookCommand = hasValidHookCommand,
+            Checks = new Dictionary<HookInstallationCheck, bool>
+            {
+                [HookInstallationCheck.HooksFeatureFlag] = hasHooksFeatureFlag,
+                [HookInstallationCheck.ManagedBlock] = hasManagedBlock,
+                [HookInstallationCheck.ManagedHookEntries] = hasManagedHookEntries,
+                [HookInstallationCheck.PermissionRequestHook] = hasPermissionRequestHook,
+                [HookInstallationCheck.SessionEndHook] = hasSessionEndHook,
+                [HookInstallationCheck.UserPromptSubmitHook] = hasUserPromptSubmitHook,
+                [HookInstallationCheck.StopHook] = hasStopHook,
+                [HookInstallationCheck.ExpectedHookCommand] = hasExpectedHookCommand,
+                [HookInstallationCheck.ValidHookCommand] = hasValidHookCommand
+            },
             Message = message
         };
     }

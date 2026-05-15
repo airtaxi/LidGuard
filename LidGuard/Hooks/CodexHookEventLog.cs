@@ -1,35 +1,21 @@
-using System.Globalization;
-using System.Diagnostics;
-using System.Text;
-using LidGuard.Hooks;
-
 namespace LidGuard.Hooks;
 
 public static class CodexHookEventLog
 {
-    private const string LogDirectoryName = "LidGuard";
     private const string LogFileName = "codex-hook-events.log";
 
-    public static string GetDefaultLogFilePath()
-    {
-        var localApplicationDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        if (string.IsNullOrWhiteSpace(localApplicationDataPath)) localApplicationDataPath = Path.GetTempPath();
-        return Path.Combine(localApplicationDataPath, LogDirectoryName, LogFileName);
-    }
+    private static readonly HookEventLog s_eventLog = new(LogFileName);
+
+    public static string GetDefaultLogFilePath() => s_eventLog.GetDefaultLogFilePath();
 
     public static TimeSpan AppendReceived(CodexHookInput hookInput)
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
-        var details = $"source={Sanitize(hookInput.Source)} model={Sanitize(hookInput.Model)} transcriptPath={Sanitize(hookInput.TranscriptPath)}";
-        if (IsUserPromptSubmitEvent(hookInput.HookEventName)) details = $"{details} prompt={Sanitize(hookInput.Prompt)}";
-
-        return AppendLine(CreateLogLine(
-            "received",
-            hookInput.HookEventName,
-            hookInput.SessionIdentifier,
-            hookInput.WorkingDirectory,
-            details));
+        var details = HookEventLog.CreateDetails(
+            ("source", hookInput.Source),
+            ("model", hookInput.Model));
+        return s_eventLog.AppendReceived(hookInput.HookEventName, hookInput, details, IsUserPromptSubmitEvent(hookInput.HookEventName));
     }
 
     public static TimeSpan AppendRuntimeResult(
@@ -43,75 +29,20 @@ public static class CodexHookEventLog
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
-        var details = $"command={Sanitize(commandName)} transcriptPath={Sanitize(hookInput.TranscriptPath)} succeeded={succeeded} runtimeUnavailable={runtimeUnavailable} activeSessions={activeSessionCount} message={Sanitize(message)}";
-        if (!string.IsNullOrWhiteSpace(timingDetails)) details = $"{details} {Sanitize(timingDetails)}";
-
-        return AppendLine(CreateLogLine(
-            "runtime-result",
+        return s_eventLog.AppendRuntimeResult(
             hookInput.HookEventName,
-            hookInput.SessionIdentifier,
-            hookInput.WorkingDirectory,
-            details));
+            hookInput,
+            commandName,
+            succeeded,
+            runtimeUnavailable,
+            activeSessionCount,
+            message,
+            timingDetails);
     }
 
-    public static void AppendMessage(string message) => AppendLine(CreateLogLine("message", string.Empty, string.Empty, string.Empty, Sanitize(message)));
+    public static void AppendMessage(string message) => s_eventLog.AppendMessage(message);
 
-    public static IReadOnlyList<string> ReadRecentLines(int maximumLineCount)
-    {
-        if (maximumLineCount <= 0) return [];
-
-        var logFilePath = GetDefaultLogFilePath();
-        if (!File.Exists(logFilePath)) return [];
-
-        try
-        {
-            var lines = File.ReadAllLines(logFilePath);
-            if (lines.Length <= maximumLineCount) return lines;
-            return lines[^maximumLineCount..];
-        }
-        catch
-        {
-            return [];
-        }
-    }
-
-    private static TimeSpan AppendLine(string line)
-    {
-        var stopwatch = Stopwatch.StartNew();
-        try
-        {
-            var logFilePath = GetDefaultLogFilePath();
-            var logDirectoryPath = Path.GetDirectoryName(logFilePath);
-            if (!string.IsNullOrWhiteSpace(logDirectoryPath)) Directory.CreateDirectory(logDirectoryPath);
-            File.AppendAllText(logFilePath, line + Environment.NewLine, Encoding.UTF8);
-        }
-        catch
-        {
-        }
-        finally
-        {
-            stopwatch.Stop();
-        }
-
-        return stopwatch.Elapsed;
-    }
-
-    private static string CreateLogLine(string kind, string hookEventName, string sessionIdentifier, string workingDirectory, string details)
-    {
-        var timestamp = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
-        return $"{timestamp} kind={Sanitize(kind)} event={Sanitize(hookEventName)} session={Sanitize(sessionIdentifier)} workingDirectory={Sanitize(workingDirectory)} {details}".TrimEnd();
-    }
+    public static IReadOnlyList<string> ReadRecentLines(int maximumLineCount) => s_eventLog.ReadRecentLines(maximumLineCount);
 
     private static bool IsUserPromptSubmitEvent(string hookEventName) => string.Equals(hookEventName?.Trim(), CodexHookEventNames.UserPromptSubmit, StringComparison.Ordinal);
-
-    private static string Sanitize(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value)) return "<empty>";
-
-        return value
-            .Replace("\r", " ", StringComparison.Ordinal)
-            .Replace("\n", " ", StringComparison.Ordinal)
-            .Replace("\t", " ", StringComparison.Ordinal)
-            .Trim();
-    }
 }

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace LidGuard.Hooks;
 
-public sealed class ClaudeHookInput
+public sealed class ClaudeHookInput : IHookCommandInput
 {
     [JsonPropertyName("message")]
     public string NotificationMessage { get; init; } = string.Empty;

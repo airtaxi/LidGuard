@@ -1,20 +1,20 @@
 namespace LidGuard.Hooks;
 
-public sealed class CodexHookInstallationResult
+public sealed class HookInstallationResult
 {
     public bool Succeeded { get; init; }
 
     public bool Changed { get; init; }
 
-    public CodexHookInstallationInspection Inspection { get; init; } = new();
+    public HookInstallationInspection Inspection { get; init; } = new();
 
     public string BackupFilePath { get; init; } = string.Empty;
 
     public string Message { get; init; } = string.Empty;
 
-    public static CodexHookInstallationResult Success(CodexHookInstallationInspection inspection, bool changed, string message, string backupFilePath = "")
+    public static HookInstallationResult Success(HookInstallationInspection inspection, bool changed, string message, string backupFilePath = "")
     {
-        return new CodexHookInstallationResult
+        return new HookInstallationResult
         {
             Succeeded = true,
             Changed = changed,
@@ -24,9 +24,9 @@ public sealed class CodexHookInstallationResult
         };
     }
 
-    public static CodexHookInstallationResult Failure(CodexHookInstallationInspection inspection, string message)
+    public static HookInstallationResult Failure(HookInstallationInspection inspection, string message)
     {
-        return new CodexHookInstallationResult
+        return new HookInstallationResult
         {
             Succeeded = false,
             Inspection = inspection,

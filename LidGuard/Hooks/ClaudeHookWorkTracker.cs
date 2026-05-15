@@ -470,32 +470,13 @@ internal static class ClaudeHookWorkTracker
     }
 
     private static bool TryGetBooleanProperty(JsonElement element, string propertyName, out bool value)
-    {
-        value = false;
-        if (element.ValueKind != JsonValueKind.Object) return false;
-        if (!element.TryGetProperty(propertyName, out var propertyElement)) return false;
-        if (propertyElement.ValueKind != JsonValueKind.True && propertyElement.ValueKind != JsonValueKind.False) return false;
-
-        value = propertyElement.GetBoolean();
-        return true;
-    }
+        => HookJsonPropertyReader.TryGetBooleanProperty(element, propertyName, out value);
 
     private static bool TryGetStringProperty(JsonElement element, string propertyName, out string value)
-    {
-        value = string.Empty;
-        if (element.ValueKind != JsonValueKind.Object) return false;
-        if (!element.TryGetProperty(propertyName, out var propertyElement)) return false;
-        if (propertyElement.ValueKind != JsonValueKind.String) return false;
-
-        value = propertyElement.GetString() ?? string.Empty;
-        return !string.IsNullOrWhiteSpace(value);
-    }
+        => HookJsonPropertyReader.TryGetNonWhiteSpaceStringProperty(element, propertyName, out value);
 
     private static string GetStringProperty(JsonObject jsonObject, string propertyName)
-    {
-        var valueNode = jsonObject[propertyName];
-        return valueNode is JsonValue jsonValue && jsonValue.TryGetValue<string>(out var value) ? value : string.Empty;
-    }
+        => HookJsonPropertyReader.GetStringProperty(jsonObject, propertyName);
 
     private static DateTimeOffset GetDateTimeOffsetProperty(JsonObject jsonObject, string propertyName)
     {
@@ -506,10 +487,7 @@ internal static class ClaudeHookWorkTracker
     }
 
     private static bool GetBooleanProperty(JsonObject jsonObject, string propertyName)
-    {
-        var valueNode = jsonObject[propertyName];
-        return valueNode is JsonValue jsonValue && jsonValue.TryGetValue<bool>(out var value) && value;
-    }
+        => HookJsonPropertyReader.GetBooleanProperty(jsonObject, propertyName);
 
     private static string GetStateFilePath(string sessionIdentifier)
     {
