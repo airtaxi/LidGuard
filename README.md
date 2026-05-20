@@ -126,6 +126,12 @@ Managed hook cleanup uses the hook process ancestry to attach a watched parent p
 
 You are responsible for monitoring device state and heat risk. Device damage, data loss, property damage, or other loss caused by ignoring those risks is your responsibility.
 
+## Localization
+
+English and Korean are directly maintained and reviewed by the developer. Other languages rely on machine translation because the developer cannot verify them.
+
+If you would like to propose adding a new language or suggest corrections to translations, please open an Issue. If you are a native speaker of that language and can verify the translation, Pull Requests (PRs) are also welcome!
+
 ## Contributing
 
 Pull requests are welcome. Please keep changes focused, test behavior that touches power control carefully, and avoid committing secrets or local machine configuration.
