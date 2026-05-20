@@ -389,7 +389,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             settingName,
             storedValue,
             defaultValue,
-            LocalizationService.GetString("SettingsInteractiveUserInterfaceCultureDetails", "auto, en, ko, or a culture name such as ko-KR"));
+            LocalizationService.GetString("SettingsInteractiveUserInterfaceCultureDetails", "auto, en, ko, ja, zh-Hans, zh-Hant, or a culture name such as ko-KR"));
 
         var valueText = Console.ReadLine();
         if (valueText is null)

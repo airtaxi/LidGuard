@@ -40,8 +40,11 @@ internal static class LidGuardNotificationText
     public static string LastErrorLabel => Get(nameof(LastErrorLabel));
     public static string LastResponseLabel => Get(nameof(LastResponseLabel));
     public static string LanguageEnglish => Get(nameof(LanguageEnglish));
+    public static string LanguageJapanese => Get(nameof(LanguageJapanese));
     public static string LanguageKorean => Get(nameof(LanguageKorean));
     public static string LanguageLabel => Get(nameof(LanguageLabel));
+    public static string LanguageSimplifiedChinese => Get(nameof(LanguageSimplifiedChinese));
+    public static string LanguageTraditionalChinese => Get(nameof(LanguageTraditionalChinese));
     public static string LidGuardWebhookTitle => Get(nameof(LidGuardWebhookTitle));
     public static string LoginTitle => Get(nameof(LoginTitle));
     public static string NoEventsRecorded => Get(nameof(NoEventsRecorded));

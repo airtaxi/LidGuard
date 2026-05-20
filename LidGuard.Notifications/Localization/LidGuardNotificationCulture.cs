@@ -11,7 +11,10 @@ internal static class LidGuardNotificationCulture
     private static readonly CultureInfo[] s_supportedUserInterfaceCultures =
     [
         CultureInfo.GetCultureInfo("en"),
-        CultureInfo.GetCultureInfo("ko")
+        CultureInfo.GetCultureInfo("ko"),
+        CultureInfo.GetCultureInfo("ja"),
+        CultureInfo.GetCultureInfo("zh-Hans"),
+        CultureInfo.GetCultureInfo("zh-Hant")
     ];
 
     // Keep this as an explicit static constructor so auto culture is captured before stored options are applied.
@@ -56,15 +59,12 @@ internal static class LidGuardNotificationCulture
     public static bool TryCreateSelectableCultureInfo(string cultureName, out CultureInfo cultureInfo)
     {
         cultureInfo = CultureInfo.InvariantCulture;
-        var normalizedCultureName = NotificationUserInterfaceCultureConfiguration.NormalizeStoredValue(cultureName);
-        if (!normalizedCultureName.Equals("en", StringComparison.OrdinalIgnoreCase)
-            && !normalizedCultureName.Equals("ko", StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        return NotificationUserInterfaceCultureConfiguration.TryCreateCultureInfo(normalizedCultureName, out cultureInfo, out _);
+        if (!NotificationUserInterfaceCultureConfiguration.TryCreateCultureInfo(cultureName, out var selectedCultureInfo, out _)) return false;
+        return TryResolveSelectableCultureInfo(selectedCultureInfo, out cultureInfo);
     }
+
+    public static string ResolveSelectableCultureName(CultureInfo cultureInfo)
+        => TryResolveSelectableCultureInfo(cultureInfo, out var selectableCultureInfo) ? selectableCultureInfo.Name : "en";
 
     private static bool TryResolveEnvironmentCulture(out CultureInfo cultureInfo)
     {
@@ -111,5 +111,42 @@ internal static class LidGuardNotificationCulture
         CultureInfo.CurrentUICulture = cultureInfo;
         CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
         CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+    }
+
+    private static bool TryResolveSelectableCultureInfo(CultureInfo cultureInfo, out CultureInfo selectableCultureInfo)
+    {
+        selectableCultureInfo = CultureInfo.InvariantCulture;
+        if (cultureInfo is null) return false;
+
+        var currentCultureInfo = cultureInfo;
+        while (!string.IsNullOrWhiteSpace(currentCultureInfo.Name))
+        {
+            for (var index = 0; index < s_supportedUserInterfaceCultures.Length; index++)
+            {
+                var supportedCultureInfo = s_supportedUserInterfaceCultures[index];
+                if (supportedCultureInfo.Name.Equals(currentCultureInfo.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    selectableCultureInfo = supportedCultureInfo;
+                    return true;
+                }
+            }
+
+            currentCultureInfo = currentCultureInfo.Parent;
+        }
+
+        var twoLetterIsoLanguageName = cultureInfo.TwoLetterISOLanguageName;
+        if (string.IsNullOrWhiteSpace(twoLetterIsoLanguageName)) return false;
+
+        for (var index = 0; index < s_supportedUserInterfaceCultures.Length; index++)
+        {
+            var supportedCultureInfo = s_supportedUserInterfaceCultures[index];
+            if (supportedCultureInfo.Name.Equals(twoLetterIsoLanguageName, StringComparison.OrdinalIgnoreCase))
+            {
+                selectableCultureInfo = supportedCultureInfo;
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -31,7 +31,7 @@ internal static class SettingsHelpContent
         powerRequestOptions += " [--prevent-away-mode-sleep <bool>]";
 #endif
 
-        return $"{commandDisplayName} settings [--reset <bool>] [--change-lid-action <bool>] {powerRequestOptions} [--prevent-display-sleep <bool>] [--watch-parent-process <bool>] [--session-timeout-minutes off|<minutes>] [--server-runtime-cleanup-delay-minutes off|0|<minutes>] [--emergency-hibernation-on-high-temperature <bool>] [--emergency-hibernation-temperature-mode low|average|high] [--emergency-hibernation-temperature-celsius <number>] [--suspend-mode sleep|hibernate] [--post-stop-suspend-delay-seconds <number>] [--post-stop-suspend-sound off|<system-sound>|<wav-path>] [--post-stop-suspend-sound-volume-override-percent off|<1-100>] [--suspend-history-count off|<count>] [--pre-suspend-webhook-url <http-or-https-url>] [--post-session-end-webhook-url <http-or-https-url>] [--closed-lid-permission-request-decision deny|allow|ask] [--ui-culture auto|en|ko|<culture-name>] [--power-request-reason <text>]";
+        return $"{commandDisplayName} settings [--reset <bool>] [--change-lid-action <bool>] {powerRequestOptions} [--prevent-display-sleep <bool>] [--watch-parent-process <bool>] [--session-timeout-minutes off|<minutes>] [--server-runtime-cleanup-delay-minutes off|0|<minutes>] [--emergency-hibernation-on-high-temperature <bool>] [--emergency-hibernation-temperature-mode low|average|high] [--emergency-hibernation-temperature-celsius <number>] [--suspend-mode sleep|hibernate] [--post-stop-suspend-delay-seconds <number>] [--post-stop-suspend-sound off|<system-sound>|<wav-path>] [--post-stop-suspend-sound-volume-override-percent off|<1-100>] [--suspend-history-count off|<count>] [--pre-suspend-webhook-url <http-or-https-url>] [--post-session-end-webhook-url <http-or-https-url>] [--closed-lid-permission-request-decision deny|allow|ask] [--ui-culture auto|en|ko|ja|zh-Hans|zh-Hant|<culture-name>] [--power-request-reason <text>]";
     }
 
     private static IReadOnlyList<LidGuardHelpOption> CreateOptions(string supportedPostStopSuspendSystemSounds)
@@ -61,7 +61,7 @@ internal static class SettingsHelpContent
             new LidGuardHelpOption("--pre-suspend-webhook-url <http-or-https-url>", LocalizationService.GetString("Help_Settings_PreSuspendWebhookOption")),
             new LidGuardHelpOption("--post-session-end-webhook-url <http-or-https-url>", LocalizationService.GetString("Help_Settings_PostSessionEndWebhookOption")),
             new LidGuardHelpOption("--closed-lid-permission-request-decision deny|allow|ask", LocalizationService.GetString("Help_Settings_ClosedLidPermissionRequestDecisionOption")),
-            new LidGuardHelpOption("--ui-culture auto|en|ko|<culture-name>", LocalizationService.GetString("Help_Settings_UserInterfaceCultureOption")),
+            new LidGuardHelpOption("--ui-culture auto|en|ko|ja|zh-Hans|zh-Hant|<culture-name>", LocalizationService.GetString("Help_Settings_UserInterfaceCultureOption")),
             new LidGuardHelpOption("--power-request-reason <text>", LocalizationService.GetString("Help_Settings_PowerRequestReasonOption"))
         ]);
 

@@ -1,5 +1,5 @@
 @{
-    var currentLanguageName = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("ko", StringComparison.OrdinalIgnoreCase) ? "ko" : "en";
+    var currentLanguageName = LidGuardNotificationCulture.ResolveSelectableCultureName(CultureInfo.CurrentUICulture);
     var currentReturnUrl = $"{Context.Request.PathBase}{Context.Request.Path}";
     var languageAction = $"{Context.Request.PathBase}/language";
     var initialThemeSwitchLabel = LidGuardNotificationText.ThemeSwitchTo(LidGuardNotificationText.ThemeDarkMode.ToLower(CultureInfo.CurrentCulture));
@@ -31,6 +31,9 @@
                         onchange="this.form.submit()">
                         <option value="en" selected="@(currentLanguageName == "en")">@LidGuardNotificationText.LanguageEnglish</option>
                         <option value="ko" selected="@(currentLanguageName == "ko")">@LidGuardNotificationText.LanguageKorean</option>
+                        <option value="ja" selected="@(currentLanguageName == "ja")">@LidGuardNotificationText.LanguageJapanese</option>
+                        <option value="zh-Hans" selected="@(currentLanguageName == "zh-Hans")">@LidGuardNotificationText.LanguageSimplifiedChinese</option>
+                        <option value="zh-Hant" selected="@(currentLanguageName == "zh-Hant")">@LidGuardNotificationText.LanguageTraditionalChinese</option>
                     </select>
                     <span class="icon icon-chevron-down select-chevron" aria-hidden="true"></span>
                 </span>

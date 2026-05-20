@@ -1,0 +1,1878 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="CommandUnexpectedArgument" xml:space="preserve">
+    <value>予期しない引数です: {0}</value>
+  </data>
+  <data name="CommandDoesNotAcceptOptions" xml:space="preserve">
+    <value>{0} はオプションを受け付けません。</value>
+  </data>
+  <data name="CommandUnknownCommand" xml:space="preserve">
+    <value>不明なコマンドです: {0}</value>
+  </data>
+  <data name="ConsoleActiveSessions" xml:space="preserve">
+    <value>アクティブなセッション: {0}</value>
+  </data>
+  <data name="ConsoleCurrentLidState" xml:space="preserve">
+    <value>現在のふたの状態: {0}</value>
+  </data>
+  <data name="ConsoleCurrentMonitorCount" xml:space="preserve">
+    <value>現在表示中のディスプレイ数: {0}</value>
+  </data>
+  <data name="ConsoleLidState" xml:space="preserve">
+    <value>ふたの状態: {0}</value>
+  </data>
+  <data name="ConsoleRuntimeNotRunning" xml:space="preserve">
+    <value>LidGuard は実行されていません。</value>
+  </data>
+  <data name="ConsoleRuntimeNotRunningNoCleanup" xml:space="preserve">
+    <value>LidGuard は実行されていません。クリーンアップする項目はありません。</value>
+  </data>
+  <data name="ConsoleRuntimeNotRunningNoSessionRemoved" xml:space="preserve">
+    <value>LidGuard は実行されていません。削除されたアクティブなセッションはありません。</value>
+  </data>
+  <data name="ConsoleSettingsFile" xml:space="preserve">
+    <value>設定ファイル: {0}</value>
+  </data>
+  <data name="ConsoleVisibleDisplayMonitorCount" xml:space="preserve">
+    <value>表示中のディスプレイ数: {0}</value>
+  </data>
+  <data name="CultureInvalidUserInterfaceCulture" xml:space="preserve">
+    <value>無効な UI カルチャ '{0}': {1}</value>
+  </data>
+  <data name="CultureInvalidUserInterfaceCultureWarning" xml:space="preserve">
+    <value>警告: 無効な UI カルチャ '{0}' を無視します: {1}</value>
+  </data>
+  <data name="CultureSettingsLoadWarning" xml:space="preserve">
+    <value>警告: UI カルチャの解決中に LidGuard の設定を読み込めませんでした: {0}</value>
+  </data>
+  <data name="CultureAutomaticStoredValueCannotBeExplicitCultureName" xml:space="preserve">
+    <value>auto は保存用の設定値であり、明示的な CultureInfo 名としては使用できません。</value>
+  </data>
+  <data name="HelpAliasLabel" xml:space="preserve">
+    <value>別名</value>
+  </data>
+  <data name="HelpCommandSpecificHelpHint" xml:space="preserve">
+    <value>すべてのオプション、注記、例はコマンド別のヘルプを使用してください。</value>
+  </data>
+  <data name="HelpNoteLabel" xml:space="preserve">
+    <value>注記</value>
+  </data>
+  <data name="HelpOptionLabel" xml:space="preserve">
+    <value>{0}: {1}</value>
+  </data>
+  <data name="HelpSectionDiagnostics" xml:space="preserve">
+    <value>診断</value>
+  </data>
+  <data name="HelpSectionHookIntegration" xml:space="preserve">
+    <value>フック連携</value>
+  </data>
+  <data name="HelpSectionManagedAndInternalCommands" xml:space="preserve">
+    <value>管理/内部コマンド</value>
+  </data>
+  <data name="HelpSectionMcpIntegration" xml:space="preserve">
+    <value>MCP 連携</value>
+  </data>
+  <data name="HelpSectionPathsAndNotes" xml:space="preserve">
+    <value>パスと注記</value>
+  </data>
+  <data name="HelpSectionSessionControl" xml:space="preserve">
+    <value>セッション制御</value>
+  </data>
+  <data name="HelpSectionSettingsAndSuspend" xml:space="preserve">
+    <value>設定とスリープ</value>
+  </data>
+  <data name="HelpSectionUsage" xml:space="preserve">
+    <value>使い方</value>
+  </data>
+  <data name="SessionProcessNone" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="SettingsChangeLidAction" xml:space="preserve">
+    <value>  ふたを閉じたときの動作の上書き: {0}</value>
+  </data>
+  <data name="SettingsClosedLidPermissionRequestDecision" xml:space="preserve">
+    <value>  ふたが閉じているときの許可リクエスト応答: {0}</value>
+  </data>
+  <data name="SettingsEmergencyHibernationOnHighTemperature" xml:space="preserve">
+    <value>  高温時の緊急休止: {0}</value>
+  </data>
+  <data name="SettingsEmergencyHibernationTemperatureCelsius" xml:space="preserve">
+    <value>  緊急休止の温度 (摂氏): {0}</value>
+  </data>
+  <data name="SettingsEmergencyHibernationTemperatureMode" xml:space="preserve">
+    <value>  緊急休止の温度モード: {0}</value>
+  </data>
+  <data name="SettingsNoPostSessionEndWebhookConfigured" xml:space="preserve">
+    <value>セッション完了 Webhook URL は設定されていません。</value>
+  </data>
+  <data name="SettingsNoPreSuspendWebhookConfigured" xml:space="preserve">
+    <value>スリープ/休止状態の前 Webhook URL は設定されていません。</value>
+  </data>
+  <data name="SettingsPostSessionEndWebhookUrl" xml:space="preserve">
+    <value>  セッション完了 Webhook URL: {0}</value>
+  </data>
+  <data name="SettingsPostSessionEndWebhookUrlRemoved" xml:space="preserve">
+    <value>セッション完了 Webhook URL を削除しました。</value>
+  </data>
+  <data name="SettingsPostStopSuspendDelaySeconds" xml:space="preserve">
+    <value>  セッション終了後にスリープ/休止状態に入るまでの待機時間 (秒): {0}</value>
+  </data>
+  <data name="SettingsPostStopSuspendSound" xml:space="preserve">
+    <value>  スリープ/休止状態の警告音: {0}</value>
+  </data>
+  <data name="SettingsPostStopSuspendSoundVolumeOverridePercent" xml:space="preserve">
+    <value>  警告音の一時ボリューム率: {0}</value>
+  </data>
+  <data name="SettingsPreSuspendWebhookUrl" xml:space="preserve">
+    <value>  スリープ/休止状態の前 Webhook URL: {0}</value>
+  </data>
+  <data name="SettingsPreSuspendWebhookUrlRemoved" xml:space="preserve">
+    <value>スリープ/休止状態の前 Webhook URL を削除しました。</value>
+  </data>
+  <data name="SettingsPreventAwayModeSleep" xml:space="preserve">
+    <value>  Away Mode のスリープ防止: {0}</value>
+  </data>
+  <data name="SettingsPreventDisplaySleep" xml:space="preserve">
+    <value>  ディスプレイのスリープ防止: {0}</value>
+  </data>
+  <data name="SettingsPreventSystemSleep" xml:space="preserve">
+    <value>  システムのスリープ防止: {0}</value>
+  </data>
+  <data name="SettingsReason" xml:space="preserve">
+    <value>  理由: {0}</value>
+  </data>
+  <data name="SettingsRuntimeNotRunningSaved" xml:space="preserve">
+    <value>ランタイムは実行されていません。保存された設定は次回起動時に使われます。</value>
+  </data>
+  <data name="SettingsRuntimeUpdated" xml:space="preserve">
+    <value>LidGuard の設定を更新しました。</value>
+  </data>
+  <data name="SettingsServerRuntimeCleanupDelay" xml:space="preserve">
+    <value>  LidGuard 自動終了までの待機時間: {0}</value>
+  </data>
+  <data name="SettingsSessionTimeout" xml:space="preserve">
+    <value>  非アクティブなセッションのタイムアウト: {0}</value>
+  </data>
+  <data name="SettingsSuspendHistoryCount" xml:space="preserve">
+    <value>  スリープ履歴の件数: {0}</value>
+  </data>
+  <data name="SettingsSuspendMode" xml:space="preserve">
+    <value>  スリープ動作: {0}</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>設定:</value>
+  </data>
+  <data name="SettingsUserInterfaceCulture" xml:space="preserve">
+    <value>  CLI の表示言語/カルチャ: {0}</value>
+  </data>
+  <data name="SettingsWatchParentProcess" xml:space="preserve">
+    <value>  プロセス監視: {0}</value>
+  </data>
+  <data name="SettingsOptionSessionTimeoutValidation" xml:space="preserve">
+    <value>session-timeout-minutes オプションは、off または {0} 以上の整数である必要があります。</value>
+  </data>
+  <data name="SettingsInteractiveClosedLidPermissionRequestDecisionValidation" xml:space="preserve">
+    <value>ふたが閉じているときの許可リクエスト応答は deny、allow、ask のいずれかである必要があります。</value>
+  </data>
+  <data name="ManagementLabelStatus" xml:space="preserve">
+    <value>状態</value>
+  </data>
+  <data name="ManagementLabelExpectedShell" xml:space="preserve">
+    <value>想定シェル</value>
+  </data>
+  <data name="ManagementHookStatusTitle" xml:space="preserve">
+    <value>{0} フックの状態:</value>
+  </data>
+  <data name="ManagementMcpInstallationTitle" xml:space="preserve">
+    <value>MCP のインストール:</value>
+  </data>
+  <data name="HelpSessionLogFile" xml:space="preserve">
+    <value>セッション ログ: {0}</value>
+  </data>
+  <data name="SettingsPreviewVolumeOverrideSetting" xml:space="preserve">
+    <value>一時ボリューム設定: {0}</value>
+  </data>
+  <data name="ManagementLabelExecutable" xml:space="preserve">
+    <value>実行ファイル</value>
+  </data>
+  <data name="SettingsInteractiveEmergencyHibernationTemperatureModeValidation" xml:space="preserve">
+    <value>{0} は low、average、high のいずれかである必要があります。</value>
+  </data>
+  <data name="TextDisplayNone" xml:space="preserve">
+    <value>&lt;なし&gt;</value>
+  </data>
+  <data name="SettingsInteractiveRangeValidation" xml:space="preserve">
+    <value>{0} は {1} から {2} までの整数である必要があります。</value>
+  </data>
+  <data name="SettingsInteractiveValueOffOrMinimumValidation" xml:space="preserve">
+    <value>{0} は off または {1} 以上の整数である必要があります。</value>
+  </data>
+  <data name="SettingsOptionPostStopSuspendDelaySecondsValidation" xml:space="preserve">
+    <value>post-stop-suspend-delay-seconds オプションは 0 以上の整数である必要があります。</value>
+  </data>
+  <data name="ManagementContainsMcpServerCommand" xml:space="preserve">
+    <value>  mcp-server コマンドを含む: {0}</value>
+  </data>
+  <data name="ManagementLabelFeatureFlag" xml:space="preserve">
+    <value>機能フラグ</value>
+  </data>
+  <data name="SettingsNameSuspendMode" xml:space="preserve">
+    <value>スリープ動作</value>
+  </data>
+  <data name="SettingsOptionEmergencyHibernationTemperatureModeValidation" xml:space="preserve">
+    <value>emergency-hibernation-temperature-mode オプションは low、average、high のいずれかである必要があります。</value>
+  </data>
+  <data name="ManagementMcpServerDoesNotPointAtManagedCommand" xml:space="preserve">
+    <value>MCP サーバー '{0}' はありますが、'{1}' を指していません。</value>
+  </data>
+  <data name="ManagementMcpServerDoesNotPointAtCurrentExecutable" xml:space="preserve">
+    <value>MCP サーバー '{0}' はありますが、現在の LidGuard 実行ファイルを指していません。</value>
+  </data>
+  <data name="ManagementProvider" xml:space="preserve">
+    <value>  プロバイダー: {0}</value>
+  </data>
+  <data name="SettingsInteractiveServerRuntimeCleanupDelayDetails" xml:space="preserve">
+    <value>最小: {0}、off でランタイムを維持</value>
+  </data>
+  <data name="SettingsInteractiveInputEnded" xml:space="preserve">
+    <value>{0} の入力前に入力が終了しました。</value>
+  </data>
+  <data name="SettingsNameSessionTimeoutMinutes" xml:space="preserve">
+    <value>セッション タイムアウト (分)</value>
+  </data>
+  <data name="ManagementPromptHookRemove" xml:space="preserve">
+    <value>フックを削除するプロバイダー</value>
+  </data>
+  <data name="SettingsInteractiveSuspendModeValidation" xml:space="preserve">
+    <value>{0} は sleep または hibernate である必要があります。</value>
+  </data>
+  <data name="SettingsPreviewPlayedCurrentPostStopSuspendSound" xml:space="preserve">
+    <value>現在設定されているスリープ/休止状態の警告音を再生しました: {0}</value>
+  </data>
+  <data name="ManagementRequiredStopHooks" xml:space="preserve">
+    <value>  必須 stop フック: {0}</value>
+  </data>
+  <data name="ManagementHookInstallationTitle" xml:space="preserve">
+    <value>フックのインストール:</value>
+  </data>
+  <data name="ManagementPromptMcpRemove" xml:space="preserve">
+    <value>MCP サーバーを削除するプロバイダー</value>
+  </data>
+  <data name="ManagementMcpStatusTitle" xml:space="preserve">
+    <value>{0} MCP の状態:</value>
+  </data>
+  <data name="TextDisplayBooleanTrue" xml:space="preserve">
+    <value>オン</value>
+  </data>
+  <data name="ManagementLabelExpectedNotificationMatcher" xml:space="preserve">
+    <value>想定通知マッチャー</value>
+  </data>
+  <data name="ManagementPromptHookStatus" xml:space="preserve">
+    <value>フックの状態を表示するプロバイダー</value>
+  </data>
+  <data name="ManagementLabelPostToolUseFailureHook" xml:space="preserve">
+    <value>PostToolUseFailure フック</value>
+  </data>
+  <data name="ManagementConfigurationFileDoesNotExist" xml:space="preserve">
+    <value>構成ファイルがありません: {0}</value>
+  </data>
+  <data name="SettingsInteractiveRangeDetails" xml:space="preserve">
+    <value>範囲: {0}-{1}</value>
+  </data>
+  <data name="ManagementSkippedAbsentProvider" xml:space="preserve">
+    <value>存在しないプロバイダーをスキップします: {0} (既存の構成ルートが見つからなかったパス: {1})</value>
+  </data>
+  <data name="ManagementNoMcpServerNamedFound" xml:space="preserve">
+    <value>'{0}' という名前の MCP サーバーが見つかりませんでした。</value>
+  </data>
+  <data name="ManagementProviderMcpInstallationTitle" xml:space="preserve">
+    <value>Provider MCP のインストール:</value>
+  </data>
+  <data name="ManagementLabelValidCommand" xml:space="preserve">
+    <value>有効なコマンド</value>
+  </data>
+  <data name="SettingsOptionPreSuspendWebhookRemovalCommand" xml:space="preserve">
+    <value>スリープ/休止状態の前 Webhook URL を削除するには、{0} {1} を実行してください。</value>
+  </data>
+  <data name="ManagementLabelManagedBlock" xml:space="preserve">
+    <value>管理ブロック</value>
+  </data>
+  <data name="ManagementUnsupportedMcpManagement" xml:space="preserve">
+    <value>MCP 管理は Codex、Claude、GitHub Copilot のみ実装されています。</value>
+  </data>
+  <data name="ManagementLabelStopFailureHook" xml:space="preserve">
+    <value>StopFailure フック</value>
+  </data>
+  <data name="HelpSettingsPostStopSuspendSoundOption" xml:space="preserve">
+    <value>スリープ/休止状態の警告音を無効にするか、対応している SystemSound 名 ({0}) を使うか、再生可能な既存の .wav パスを指定します。</value>
+  </data>
+  <data name="SettingsNameChangeLidAction" xml:space="preserve">
+    <value>ふたを閉じたときの動作の上書き</value>
+  </data>
+  <data name="SettingsPreviewVolumeOverrideGuidance" xml:space="preserve">
+    <value>任意の一時ボリューム: {0} settings --post-stop-suspend-sound-volume-override-percent 75</value>
+  </data>
+  <data name="SettingsInteractiveEmergencyHibernationTemperatureModeDetails" xml:space="preserve">
+    <value>候補: Low, Average, High</value>
+  </data>
+  <data name="ManagementPromptHookEvents" xml:space="preserve">
+    <value>フック イベントを表示するプロバイダー</value>
+  </data>
+  <data name="SettingsInteractiveNonNegativeIntegerValidation" xml:space="preserve">
+    <value>{0} は 0 以上の整数である必要があります。</value>
+  </data>
+  <data name="ManagementLabelUserPromptSubmittedHook" xml:space="preserve">
+    <value>UserPromptSubmitted フック</value>
+  </data>
+  <data name="SettingsOptionEmergencyHibernationTemperatureCelsiusValidation" xml:space="preserve">
+    <value>emergency-hibernation-temperature-celsius オプションは {0} から {1} までの整数である必要があります。</value>
+  </data>
+  <data name="ManagementLabelRequiredStopHooks" xml:space="preserve">
+    <value>必須 stop フック</value>
+  </data>
+  <data name="SettingsInteractiveUserInterfaceCultureDetails" xml:space="preserve">
+    <value>auto、en、ko、ja、zh-Hans、zh-Hant、または ko-KR のようなカルチャ名</value>
+  </data>
+  <data name="ManagementProviderMcpRegistered" xml:space="preserve">
+    <value>管理対象の Provider MCP サーバーが登録されています。</value>
+  </data>
+  <data name="ManagementProviderMcpServerDoesNotPointAtCurrentExecutable" xml:space="preserve">
+    <value>Provider MCP サーバー '{0}' はありますが、現在の LidGuard 実行ファイルを指していません。</value>
+  </data>
+  <data name="ManagementProviderMcpServerDoesNotPointAtManagedCommand" xml:space="preserve">
+    <value>Provider MCP サーバー '{0}' はありますが、'{1}' を指していません。</value>
+  </data>
+  <data name="SettingsPreviewSupportedSystemSounds" xml:space="preserve">
+    <value>対応しているシステム音: {0}</value>
+  </data>
+  <data name="TextWarning" xml:space="preserve">
+    <value>警告: {0}</value>
+  </data>
+  <data name="SettingsPreviewPlayedSystemSound" xml:space="preserve">
+    <value>システム音を再生しました: {0}</value>
+  </data>
+  <data name="ManagementLabelContainsMcpServerCommand" xml:space="preserve">
+    <value>mcp-server コマンドを含む</value>
+  </data>
+  <data name="ManagementLabelContainsProviderMcpServerCommand" xml:space="preserve">
+    <value>provider-mcp-server コマンドを含む</value>
+  </data>
+  <data name="ManagementLabelMatchesCurrentLidGuardExecutable" xml:space="preserve">
+    <value>現在の LidGuard 実行ファイルと一致</value>
+  </data>
+  <data name="ManagementConfigExists" xml:space="preserve">
+    <value>  構成あり: {0}</value>
+  </data>
+  <data name="SettingsPreviewSystemSoundNameRequired" xml:space="preserve">
+    <value>システム音名が必要です。対応している値: {0}</value>
+  </data>
+  <data name="ConsoleSessionLine" xml:space="preserve">
+    <value>- {0}:{1} プロセス={2} 入力待ち={3} 作業フォルダー="{4}" 開始={5} 最終アクティビティ={6}</value>
+  </data>
+  <data name="ManagementLabelArgs" xml:space="preserve">
+    <value>引数</value>
+  </data>
+  <data name="ManagementLabelMessage" xml:space="preserve">
+    <value>メッセージ</value>
+  </data>
+  <data name="CommandOptionNameRequired" xml:space="preserve">
+    <value>-- の後にオプション名が必要です。</value>
+  </data>
+  <data name="ManagementProviderName" xml:space="preserve">
+    <value>プロバイダー名: {0}</value>
+  </data>
+  <data name="SettingsPreviewUnsupportedSystemSoundName" xml:space="preserve">
+    <value>対応していないシステム音名です: {0}</value>
+  </data>
+  <data name="ManagementLabelSessionStartHook" xml:space="preserve">
+    <value>SessionStart フック</value>
+  </data>
+  <data name="SettingsOptionPostSessionEndWebhookRemovalCommand" xml:space="preserve">
+    <value>セッション完了 Webhook URL を削除するには、{0} {1} を実行してください。</value>
+  </data>
+  <data name="SettingsOptionSuspendHistoryCountValidation" xml:space="preserve">
+    <value>suspend-history-count オプションは、off または {0} 以上の整数である必要があります。</value>
+  </data>
+  <data name="ManagementLabelStopHook" xml:space="preserve">
+    <value>Stop フック</value>
+  </data>
+  <data name="ManagementProviderMcpInstalled" xml:space="preserve">
+    <value>Provider MCP サーバー '{0}' を {1} にインストールしました。</value>
+  </data>
+  <data name="SettingsOptionPostStopSuspendSoundVolumeOverrideValidation" xml:space="preserve">
+    <value>post-stop-suspend-sound-volume-override-percent オプションは、off または {0} から {1} までの整数である必要があります。</value>
+  </data>
+  <data name="SettingsInteractivePromptWithDetails" xml:space="preserve">
+    <value>{0} (保存値: {1}、既定値: {2}、{3}、Enter で保存値のまま): </value>
+  </data>
+  <data name="TextDisplayEmpty" xml:space="preserve">
+    <value>&lt;空&gt;</value>
+  </data>
+  <data name="ManagementPromptMcpInstall" xml:space="preserve">
+    <value>MCP サーバーをインストールするプロバイダー</value>
+  </data>
+  <data name="ManagementRemovingHook" xml:space="preserve">
+    <value>{0} フックを削除しています...</value>
+  </data>
+  <data name="ManagementInstalled" xml:space="preserve">
+    <value>  インストール済み: {0}</value>
+  </data>
+  <data name="ManagementLabelErrorOccurredHook" xml:space="preserve">
+    <value>ErrorOccurred フック</value>
+  </data>
+  <data name="SettingsInteractiveGuidanceRemovePostSessionEndWebhook" xml:space="preserve">
+    <value>セッション完了 Webhook URL を削除するには、次を実行してください: {0} {1}</value>
+  </data>
+  <data name="SettingsOptionServerRuntimeCleanupDelayValidation" xml:space="preserve">
+    <value>server-runtime-cleanup-delay-minutes オプションは、自動ランタイム終了を無効にする off または {0} 以上の整数である必要があります。</value>
+  </data>
+  <data name="ManagementLidGuardMcpServerRegistered" xml:space="preserve">
+    <value>LidGuard MCP サーバーが登録されています。</value>
+  </data>
+  <data name="SettingsInteractiveVolumeOverrideValidation" xml:space="preserve">
+    <value>{0} は off または {1} から {2} までの整数である必要があります。</value>
+  </data>
+  <data name="SettingsInteractiveImmediateDetails" xml:space="preserve">
+    <value>0 = すぐに実行</value>
+  </data>
+  <data name="ManagementProviderCliAvailable" xml:space="preserve">
+    <value>  CLI 利用可: {0}</value>
+  </data>
+  <data name="SettingsPreviewPlayableWavSupported" xml:space="preserve">
+    <value>再生可能な .wav ファイル パスも使えます。</value>
+  </data>
+  <data name="SettingsPreviewCurrentSoundNotConfigured" xml:space="preserve">
+    <value>スリープ/休止状態の警告音は設定されていません。</value>
+  </data>
+  <data name="ManagementLabelManagedServerEntry" xml:space="preserve">
+    <value>管理サーバー エントリ</value>
+  </data>
+  <data name="ManagementLabelExpectedCommands" xml:space="preserve">
+    <value>想定コマンド</value>
+  </data>
+  <data name="ManagementLabelServerName" xml:space="preserve">
+    <value>サーバー名</value>
+  </data>
+  <data name="ManagementLabelProvider" xml:space="preserve">
+    <value>プロバイダー</value>
+  </data>
+  <data name="ManagementHookEventCountValidation" xml:space="preserve">
+    <value>フック イベント数は正の整数である必要があります。</value>
+  </data>
+  <data name="ManagementLabelAllStopHooks" xml:space="preserve">
+    <value>すべての stop フック</value>
+  </data>
+  <data name="ManagementNoProviderMcpServerNamedRemoved" xml:space="preserve">
+    <value>'{0}' という名前の Provider MCP サーバーは削除されませんでした。</value>
+  </data>
+  <data name="ManagementLidGuardExecutableMissing" xml:space="preserve">
+    <value>LidGuard 実行ファイルまたはコマンドがありません: {0}</value>
+  </data>
+  <data name="SettingsNameServerRuntimeCleanupDelayMinutes" xml:space="preserve">
+    <value>LidGuard 自動終了までの待機時間 (分)</value>
+  </data>
+  <data name="ManagementRemovingMcpServer" xml:space="preserve">
+    <value>{0} MCP サーバーを削除しています...</value>
+  </data>
+  <data name="ManagementProviderSelectionInputEnded" xml:space="preserve">
+    <value>プロバイダーを選択する前に入力が終了しました。</value>
+  </data>
+  <data name="SettingsNameEmergencyHibernationTemperatureMode" xml:space="preserve">
+    <value>緊急休止の温度モード</value>
+  </data>
+  <data name="ManagementProviderSelectionPrompt" xml:space="preserve">
+    <value>{0} (codex, claude, copilot, all; 既定値: all): </value>
+  </data>
+  <data name="SettingsInteractiveSuspendModeDetails" xml:space="preserve">
+    <value>候補: Sleep, Hibernate</value>
+  </data>
+  <data name="SettingsNameWatchParentProcess" xml:space="preserve">
+    <value>プロセス監視</value>
+  </data>
+  <data name="SettingsNameSuspendHistoryEntryCount" xml:space="preserve">
+    <value>スリープ履歴の保持件数</value>
+  </data>
+  <data name="ManagementNoProviderMcpServerNamedFound" xml:space="preserve">
+    <value>{1} で '{0}' という名前の Provider MCP サーバーが見つかりませんでした。</value>
+  </data>
+  <data name="ManagementMcpServersObjectNotFound" xml:space="preserve">
+    <value>{0} に mcpServers オブジェクトが見つかりませんでした。</value>
+  </data>
+  <data name="SettingsOptionSuspendModeValidation" xml:space="preserve">
+    <value>suspend-mode オプションは sleep または hibernate である必要があります。</value>
+  </data>
+  <data name="SettingsInteractiveBooleanValidation" xml:space="preserve">
+    <value>{0} は true または false である必要があります。</value>
+  </data>
+  <data name="ManagementLabelTransport" xml:space="preserve">
+    <value>トランスポート</value>
+  </data>
+  <data name="SettingsInteractiveClosedLidPermissionRequestDecisionDetails" xml:space="preserve">
+    <value>候補: Deny, Allow, Ask</value>
+  </data>
+  <data name="ManagementCommandEmpty" xml:space="preserve">
+    <value>コマンド: &lt;なし&gt;</value>
+  </data>
+  <data name="ManagementLabelPermissionRequestHook" xml:space="preserve">
+    <value>PermissionRequest フック</value>
+  </data>
+  <data name="SettingsNamePreventAwayModeSleep" xml:space="preserve">
+    <value>Away Mode のスリープ防止</value>
+  </data>
+  <data name="ManagementStatus" xml:space="preserve">
+    <value>  状態: {0}</value>
+  </data>
+  <data name="ManagementCommand" xml:space="preserve">
+    <value>コマンド: {0}</value>
+  </data>
+  <data name="ManagementProviderCli" xml:space="preserve">
+    <value>  CLI: {0}</value>
+  </data>
+  <data name="ManagementChanged" xml:space="preserve">
+    <value>変更あり: {0}</value>
+  </data>
+  <data name="ManagementUnsupportedHookEventLogs" xml:space="preserve">
+    <value>フック イベント ログは Codex、Claude、GitHub Copilot のみ実装されています。</value>
+  </data>
+  <data name="ManagementTransport" xml:space="preserve">
+    <value>  トランスポート: {0}</value>
+  </data>
+  <data name="SettingsNameEmergencyHibernationOnHighTemperature" xml:space="preserve">
+    <value>高温時の緊急休止</value>
+  </data>
+  <data name="ManagementBackup" xml:space="preserve">
+    <value>バックアップ: {0}</value>
+  </data>
+  <data name="ManagementConfigCannotBeUsedWithAllProviders" xml:space="preserve">
+    <value>各プロバイダーで構成ファイルが異なるため、config オプションは all プロバイダーと一緒に使えません。</value>
+  </data>
+  <data name="SettingsInteractiveGuidanceRemovePreSuspendWebhook" xml:space="preserve">
+    <value>スリープ/休止状態の前 Webhook URL を削除するには、次を実行してください: {0} {1}</value>
+  </data>
+  <data name="ManagementConfig" xml:space="preserve">
+    <value>  構成: {0}</value>
+  </data>
+  <data name="ManagementLabelConflictingAgentStopHooks" xml:space="preserve">
+    <value>競合している agentStop フック</value>
+  </data>
+  <data name="ManagementLabelUrl" xml:space="preserve">
+    <value>URL</value>
+  </data>
+  <data name="HelpSuspendHistoryLogFile" xml:space="preserve">
+    <value>スリープ履歴ログ: {0}</value>
+  </data>
+  <data name="HookManagementAlreadyInstalled" xml:space="preserve">
+    <value>{0} フックはすでにインストールされています。</value>
+  </data>
+  <data name="HookManagementAlreadyInstalledOutsideManagedBlock" xml:space="preserve">
+    <value>{0} フックは LidGuard の管理ブロック外ですでにインストールされています。</value>
+  </data>
+  <data name="HookManagementConfigurationFileDoesNotExist" xml:space="preserve">
+    <value>{0} の構成ファイルがありません。</value>
+  </data>
+  <data name="HookManagementHookExecutableDoesNotExist" xml:space="preserve">
+    <value>フックの実行ファイルまたはコマンドがありません: {0}</value>
+  </data>
+  <data name="HookManagementInstalled" xml:space="preserve">
+    <value>{0} フックをインストールしました。</value>
+  </data>
+  <data name="HookManagementIsInstalled" xml:space="preserve">
+    <value>{0} フックはインストールされています。</value>
+  </data>
+  <data name="HookManagementInstalledNeedsUpdate" xml:space="preserve">
+    <value>{0} フックはインストールされていますが、更新が必要です。</value>
+  </data>
+  <data name="HookManagementNoManagedHookFound" xml:space="preserve">
+    <value>LidGuard が管理する {0} フックが見つかりませんでした。</value>
+  </data>
+  <data name="HookManagementNotInstalled" xml:space="preserve">
+    <value>{0} フックはインストールされていません。</value>
+  </data>
+  <data name="HookManagementRemoved" xml:space="preserve">
+    <value>{0} フックを削除しました。</value>
+  </data>
+  <data name="HookManagementUnsupportedInstallation" xml:space="preserve">
+    <value>{0} フックのインストールのみ実装されています。</value>
+  </data>
+  <data name="HookManagementUnsupportedRemoval" xml:space="preserve">
+    <value>{0} フックの削除のみ実装されています。</value>
+  </data>
+  <data name="HookManagementWrittenNeedsAttention" xml:space="preserve">
+    <value>{0} フック設定を書き込みましたが、まだ確認が必要です。</value>
+  </data>
+  <data name="HookCommandDefaultExecutableNotResolved" xml:space="preserve">
+    <value>既定の LidGuard フック実行ファイルまたはコマンド名を解決できませんでした。</value>
+  </data>
+  <data name="HookCommandUnsupportedSnippetFormat" xml:space="preserve">
+    <value>対応していない {0} フック スニペット形式です。{1} を使ってください。</value>
+  </data>
+  <data name="HookStatusMessageBlockingClosedLidAskUserPrompt" xml:space="preserve">
+    <value>ふたが閉じているときの ask_user プロンプトをブロック中</value>
+  </data>
+  <data name="HookStatusMessageCancelingClosedLidElicitationRequest" xml:space="preserve">
+    <value>ふたが閉じているときの elicitation 要求をキャンセル中</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeFailedToolActivity" xml:space="preserve">
+    <value>Claude の失敗したツール アクティビティを記録中</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeBackgroundTaskActivity" xml:space="preserve">
+    <value>Claude のバックグラウンド タスク アクティビティを記録中</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeBackgroundTaskCompletion" xml:space="preserve">
+    <value>Claude のバックグラウンド タスク完了を記録中</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeSoftLockTelemetry" xml:space="preserve">
+    <value>Claude の入力待ちテレメトリを記録中</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeSubagentActivity" xml:space="preserve">
+    <value>Claude のサブエージェント アクティビティを記録中</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeSubagentCompletionActivity" xml:space="preserve">
+    <value>Claude のサブエージェント完了アクティビティを記録中</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeToolActivity" xml:space="preserve">
+    <value>Claude のツール アクティビティを記録中</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeToolCompletionActivity" xml:space="preserve">
+    <value>Claude のツール完了アクティビティを記録中</value>
+  </data>
+  <data name="HookStatusMessageRecordingGitHubCopilotErrorTelemetry" xml:space="preserve">
+    <value>GitHub Copilot のエラー テレメトリを記録中</value>
+  </data>
+  <data name="HookStatusMessageRecordingGitHubCopilotPromptTelemetry" xml:space="preserve">
+    <value>GitHub Copilot の通知テレメトリを記録中</value>
+  </data>
+  <data name="HookStatusMessageRecordingGitHubCopilotSessionEnd" xml:space="preserve">
+    <value>GitHub Copilot のセッション終了を記録中</value>
+  </data>
+  <data name="HookStatusMessageRecordingGitHubCopilotSessionStart" xml:space="preserve">
+    <value>GitHub Copilot のセッション開始を記録中</value>
+  </data>
+  <data name="HookStatusMessageRecordingGitHubCopilotSubagentActivity" xml:space="preserve">
+    <value>GitHub Copilot のサブエージェント アクティビティを記録中</value>
+  </data>
+  <data name="HookStatusMessageRecordingGitHubCopilotSubagentCompletionActivity" xml:space="preserve">
+    <value>GitHub Copilot のサブエージェント完了アクティビティを記録中</value>
+  </data>
+  <data name="HookStatusMessageRecordingGitHubCopilotToolCompletionActivity" xml:space="preserve">
+    <value>GitHub Copilot のツール完了アクティビティを記録中</value>
+  </data>
+  <data name="HookStatusMessageRespondingToClosedLidPermissionRequest" xml:space="preserve">
+    <value>ふたが閉じているときの許可リクエストに応答中</value>
+  </data>
+  <data name="HookStatusMessageStartingTurnProtection" xml:space="preserve">
+    <value>LidGuard のターン保護を開始中</value>
+  </data>
+  <data name="HookStatusMessageStoppingSessionProtection" xml:space="preserve">
+    <value>LidGuard のセッション保護を停止中</value>
+  </data>
+  <data name="HookStatusMessageStoppingTurnProtection" xml:space="preserve">
+    <value>LidGuard のターン保護を停止中</value>
+  </data>
+  <data name="ManagementLabelConfigExists" xml:space="preserve">
+    <value>構成あり</value>
+  </data>
+  <data name="SettingsNamePostStopSuspendSoundVolumeOverridePercent" xml:space="preserve">
+    <value>警告音の一時ボリューム率</value>
+  </data>
+  <data name="ManagementLabelAgentStopHook" xml:space="preserve">
+    <value>AgentStop フック</value>
+  </data>
+  <data name="ManagementLabelElicitationHook" xml:space="preserve">
+    <value>Elicitation フック</value>
+  </data>
+  <data name="ManagementLabelExpectedCommand" xml:space="preserve">
+    <value>想定コマンド</value>
+  </data>
+  <data name="ManagementLabelManagedHooks" xml:space="preserve">
+    <value>管理フック</value>
+  </data>
+  <data name="ManagementLabelCliAvailable" xml:space="preserve">
+    <value>CLI 利用可</value>
+  </data>
+  <data name="SettingsInteractiveVolumeOverrideDetails" xml:space="preserve">
+    <value>範囲: {0}-{1}、off で無効</value>
+  </data>
+  <data name="ManagementField" xml:space="preserve">
+    <value>  {0}: {1}</value>
+  </data>
+  <data name="SettingsNamePreventSystemSleep" xml:space="preserve">
+    <value>システムのスリープを防止</value>
+  </data>
+  <data name="ManagementLabelSessionEndHook" xml:space="preserve">
+    <value>SessionEnd フック</value>
+  </data>
+  <data name="SettingsNamePostStopSuspendSound" xml:space="preserve">
+    <value>セッション終了後のスリープ/休止状態の警告音</value>
+  </data>
+  <data name="SettingsNamePostStopSuspendDelaySeconds" xml:space="preserve">
+    <value>セッション終了後にスリープ/休止状態に入るまでの待機時間 (秒)</value>
+  </data>
+  <data name="SettingsInteractiveGuidanceChangeReason" xml:space="preserve">
+    <value>理由を変更するには、次を実行してください: {0} settings --power-request-reason &lt;text&gt;</value>
+  </data>
+  <data name="SettingsManagedHookStatusMessageRefreshChanged" xml:space="preserve">
+    <value>管理フックの状態メッセージを更新しました: {0}</value>
+  </data>
+  <data name="SettingsManagedHookStatusMessageRefreshFailed" xml:space="preserve">
+    <value>管理フックの状態メッセージを更新できませんでした: {0}</value>
+  </data>
+  <data name="SettingsManagedHookStatusMessageRefreshUnchanged" xml:space="preserve">
+    <value>管理フックの状態メッセージはすでに現在の UI カルチャと一致しているか、管理フックが見つかりませんでした。</value>
+  </data>
+  <data name="ManagementNoAvailableProviders" xml:space="preserve">
+    <value>all プロバイダー実行で利用できるプロバイダーが見つかりませんでした。</value>
+  </data>
+  <data name="ManagementMessage" xml:space="preserve">
+    <value>メッセージ: {0}</value>
+  </data>
+  <data name="SettingsNamePreventDisplaySleep" xml:space="preserve">
+    <value>ディスプレイのスリープ防止</value>
+  </data>
+  <data name="ManagementLabelConflictSources" xml:space="preserve">
+    <value>競合元</value>
+  </data>
+  <data name="ManagementNoProviderMcpServerEntryFound" xml:space="preserve">
+    <value>管理対象の Provider MCP サーバー エントリが見つかりませんでした。</value>
+  </data>
+  <data name="ManagementServerName" xml:space="preserve">
+    <value>  サーバー名: {0}</value>
+  </data>
+  <data name="SettingsNameEmergencyHibernationTemperatureCelsius" xml:space="preserve">
+    <value>緊急休止の温度 (摂氏)</value>
+  </data>
+  <data name="SettingsInteractiveSuspendHistoryEntryCountDetails" xml:space="preserve">
+    <value>最小: {0}、off で無効</value>
+  </data>
+  <data name="SettingsInteractivePrompt" xml:space="preserve">
+    <value>{0} (保存値: {1}、既定値: {2}、Enter で保存値のまま): </value>
+  </data>
+  <data name="ManagementLabelOptionalSessionEndHook" xml:space="preserve">
+    <value>任意の SessionEnd フック</value>
+  </data>
+  <data name="SettingsOptionClosedLidPermissionRequestDecisionValidation" xml:space="preserve">
+    <value>ふたが閉じているときの許可リクエスト応答は deny、allow、ask のいずれかである必要があります。</value>
+  </data>
+  <data name="ManagementLabelProviderName" xml:space="preserve">
+    <value>プロバイダー名</value>
+  </data>
+  <data name="ManagementProviderMcpRemoved" xml:space="preserve">
+    <value>Provider MCP サーバー '{0}' を {1} から削除しました。</value>
+  </data>
+  <data name="SettingsInteractiveSessionTimeoutDetails" xml:space="preserve">
+    <value>最小: {0}、off で無効</value>
+  </data>
+  <data name="ManagementExistingMcpServerRefreshing" xml:space="preserve">
+    <value>{0} 用の既存の管理 LidGuard MCP サーバーが見つかりました。登録を更新します。</value>
+  </data>
+  <data name="TextDisplayBooleanFalse" xml:space="preserve">
+    <value>オフ</value>
+  </data>
+  <data name="ManagementLabelHookLog" xml:space="preserve">
+    <value>フック ログ</value>
+  </data>
+  <data name="ManagementLabelHooksObject" xml:space="preserve">
+    <value>Hooks オブジェクト</value>
+  </data>
+  <data name="SettingsInteractivePostStopSuspendSoundDetails" xml:space="preserve">
+    <value>off で無効、SystemSounds: {0}、または .wav パス</value>
+  </data>
+  <data name="SettingsInteractiveGuidanceChangePostSessionEndWebhook" xml:space="preserve">
+    <value>セッション完了 Webhook URL を変更するには、次を実行してください: {0} settings --post-session-end-webhook-url &lt;http-or-https-url&gt;</value>
+  </data>
+  <data name="ManagementInstallingMcpServer" xml:space="preserve">
+    <value>{0} MCP サーバーをインストールしています...</value>
+  </data>
+  <data name="ManagementLabelCli" xml:space="preserve">
+    <value>CLI</value>
+  </data>
+  <data name="ManagementSkippingMcpInstallAfterRemoveFailure" xml:space="preserve">
+    <value>既存の管理登録の削除に失敗したため、{0} MCP のインストールをスキップします。</value>
+  </data>
+  <data name="ManagementUnsupportedProviderSelection" xml:space="preserve">
+    <value>対応していないプロバイダーです。codex、claude、copilot、all のいずれかを使ってください。</value>
+  </data>
+  <data name="ManagementServerArguments" xml:space="preserve">
+    <value>  引数: {0}</value>
+  </data>
+  <data name="ManagementLabelCommand" xml:space="preserve">
+    <value>コマンド</value>
+  </data>
+  <data name="ManagementLabelUserPromptSubmitHook" xml:space="preserve">
+    <value>UserPromptSubmit フック</value>
+  </data>
+  <data name="SettingsNameClosedLidPermissionRequestDecision" xml:space="preserve">
+    <value>ふたが閉じているときの許可リクエスト応答</value>
+  </data>
+  <data name="TextDisplayOff" xml:space="preserve">
+    <value>オフ</value>
+  </data>
+  <data name="ManagementFailedToStartProcess" xml:space="preserve">
+    <value>プロセスを開始できませんでした: {0}</value>
+  </data>
+  <data name="ManagementLabelPostToolUseHook" xml:space="preserve">
+    <value>PostToolUse フック</value>
+  </data>
+  <data name="ManagementLabelPreToolUseHook" xml:space="preserve">
+    <value>PreToolUse フック</value>
+  </data>
+  <data name="ManagementLabelNotificationHook" xml:space="preserve">
+    <value>Notification フック</value>
+  </data>
+  <data name="CommandBooleanOptionValidation" xml:space="preserve">
+    <value>{0} オプションは true または false である必要があります。</value>
+  </data>
+  <data name="SettingsPreviewConfigureCurrentSound" xml:space="preserve">
+    <value>次のコマンドで設定できます: {0} settings --post-stop-suspend-sound Asterisk</value>
+  </data>
+  <data name="ManagementLabelInstalled" xml:space="preserve">
+    <value>インストール済み</value>
+  </data>
+  <data name="ManagementLabelConfig" xml:space="preserve">
+    <value>構成</value>
+  </data>
+  <data name="ManagementPromptHookInstall" xml:space="preserve">
+    <value>フックをインストールするプロバイダー</value>
+  </data>
+  <data name="ManagementHookEventsTitle" xml:space="preserve">
+    <value>{0} フック イベント:</value>
+  </data>
+  <data name="SettingsNameUserInterfaceCulture" xml:space="preserve">
+    <value>CLI の表示言語/カルチャ</value>
+  </data>
+  <data name="ManagementUnsupportedHookManagement" xml:space="preserve">
+    <value>フック管理は Codex、Claude、GitHub Copilot のみ実装されています。</value>
+  </data>
+  <data name="ManagementProviderCliNotFound" xml:space="preserve">
+    <value>Provider CLI が見つかりません: {0} (確認した場所: {1})</value>
+  </data>
+  <data name="ManagementPromptMcpStatus" xml:space="preserve">
+    <value>MCP サーバーの状態を表示するプロバイダー</value>
+  </data>
+  <data name="ManagementUrl" xml:space="preserve">
+    <value>  URL: {0}</value>
+  </data>
+  <data name="SettingsInteractiveGuidanceChangePreSuspendWebhook" xml:space="preserve">
+    <value>スリープ/休止状態の前 Webhook URL を変更するには、次を実行してください: {0} settings --pre-suspend-webhook-url &lt;http-or-https-url&gt;</value>
+  </data>
+  <data name="ManagementInstallingHook" xml:space="preserve">
+    <value>{0} フックをインストールしています...</value>
+  </data>
+  <data name="CommandRequiredOption" xml:space="preserve">
+    <value>--{0} オプションが必要です。</value>
+  </data>
+  <data name="Help_ManagedProvider_ProviderOption" xml:space="preserve">
+    <value>任意です。使用できる値: codex、claude、copilot、all。省略すると LidGuard がプロバイダーの選択を求めます。</value>
+  </data>
+  <data name="Help_Mcp_ProviderArgument" xml:space="preserve">
+    <value>任意の位置引数です。使用できる値: codex、claude、copilot、all。省略すると LidGuard がプロバイダーの選択を求めます。</value>
+  </data>
+  <data name="Help_ProviderMcp_ServerNameOption" xml:space="preserve">
+    <value>任意の管理サーバー エントリ名です。既定値は lidguard-provider です。</value>
+  </data>
+  <data name="Help_CodexHook_Description" xml:space="preserve">
+    <value>標準入力から Codex フック JSON を読み取り、start、stop、またはふたが閉じているときの許可判断をランタイムに転送します。</value>
+  </data>
+  <data name="Help_CurrentTemperature_UnavailableNote" xml:space="preserve">
+    <value>このプラットフォームで対応する温度センサー データが利用できない場合、このコマンドは値を取得できないことを表示します。</value>
+  </data>
+  <data name="Help_ProviderMcpServer_ProviderNameOption" xml:space="preserve">
+    <value>必須のプロバイダー名です。Provider MCP ツールに公開されます。</value>
+  </data>
+  <data name="Help_SuspendHistory_Description" xml:space="preserve">
+    <value>ローカルのスリープ履歴ログから最近のスリープ/休止状態の要求履歴を表示します。</value>
+  </data>
+  <data name="Help_Settings_Description" xml:space="preserve">
+    <value>セッション開始時に使う既定の設定を表示し、更新します。</value>
+  </data>
+  <data name="Help_MacOSPermission_StatusDescription" xml:space="preserve">
+    <value>変更を加えずに現在の macOS の権限環境を表示します。</value>
+  </data>
+  <data name="Help_Help_Description" xml:space="preserve">
+    <value>分類されたコマンド概要、または既知のコマンド/別名 1 つの詳細ヘルプを表示します。</value>
+  </data>
+  <data name="Help_Settings_PreventSystemSleepOption" xml:space="preserve">
+    <value>セッションがアクティブな間、LidGuard が通常のシステム スリープを防ぐかどうかを変更します。</value>
+  </data>
+  <data name="Help_Settings_PreventAwayModeSleepOption" xml:space="preserve">
+    <value>対応する Windows PC で、Away Mode によりバックグラウンド作業を続けるかどうかを変更します。</value>
+  </data>
+  <data name="Help_MacOSPermission_InstallNote" xml:space="preserve">
+    <value>このサブコマンドは、/private/etc/sudoers.d/lidguard への 1 回限りの管理者書き込みのために sudo を使います。</value>
+  </data>
+  <data name="Help_CleanupOrphans_RuntimeNotRunningNote" xml:space="preserve">
+    <value>LidGuard が実行されていない場合、cleanup-orphans はクリーンアップする項目がないことを報告します。</value>
+  </data>
+  <data name="Help_LinuxPermission_Description" xml:space="preserve">
+    <value>systemd/logind のスリープおよび阻止操作のための Linux polkit 権限を確認または管理します。</value>
+  </data>
+  <data name="Help_PreviewCurrentSound_Description" xml:space="preserve">
+    <value>保存された一時ボリューム設定を使って、保存済みのスリープ/休止状態の警告音を今すぐ再生します。</value>
+  </data>
+  <data name="Help_Usage_OptionSyntax" xml:space="preserve">
+    <value>オプションは --name value または --name=value の形式で指定します。</value>
+  </data>
+  <data name="Help_ProviderMcpServer_Description" xml:space="preserve">
+    <value>呼び出し側が指定した 1 つのプロバイダー名で専用 Provider MCP stdio サーバーを起動します。</value>
+  </data>
+  <data name="Help_Settings_PreSuspendWebhookOption" xml:space="preserve">
+    <value>LidGuard がスリープまたは休止状態を要求する前に呼び出す Webhook URL を設定します。</value>
+  </data>
+  <data name="Help_Settings_SessionTimeoutOption" xml:space="preserve">
+    <value>非アクティブ セッションのタイムアウトをオフにするか、最後のアクティビティから指定した分数が過ぎたら、そのセッションがシステムのスリープ防止を続けないようにします。有効にできる最小値は 1 です。</value>
+  </data>
+  <data name="Help_Status_Description" xml:space="preserve">
+    <value>LidGuard の状態、アクティブなセッション、適用される保存済み設定を表示します。</value>
+  </data>
+  <data name="Help_CurrentMonitorCount_Description" xml:space="preserve">
+    <value>LidGuard がふたを閉じたときの判定に使うのと同じ基本プラットフォームのモニター可視性チェックで、現在表示中のディスプレイ数を表示します。</value>
+  </data>
+  <data name="Help_Settings_PreventDisplaySleepOption" xml:space="preserve">
+    <value>セッションがアクティブな間、LidGuard がディスプレイのスリープを防ぐかどうかを変更します。</value>
+  </data>
+  <data name="Help_Settings_SuspendHistoryOption" xml:space="preserve">
+    <value>スリープ履歴の記録を無効にするか、最新のスリープ/休止状態の要求エントリを保持します。有効にできる最小値は 1 です。</value>
+  </data>
+  <data name="Help_Usage_BooleanOptions" xml:space="preserve">
+    <value>Boolean オプションは true/false、yes/no、on/off、1/0 を受け付けます。</value>
+  </data>
+  <data name="Help_Settings_PostStopSuspendSoundVolumeOption" xml:space="preserve">
+    <value>一時的なボリューム変更を無効にするか、スリープ/休止状態の警告音の再生中に使う既定の出力ボリュームを設定します。再生後、LidGuard は以前のボリュームとミュート状態を復元します。</value>
+  </data>
+  <data name="Help_Settings_PostStopSuspendDelayOption" xml:space="preserve">
+    <value>セッション終了後、スリープまたは休止状態に入るまでの待ち時間を秒単位で設定します。0 を指定するとすぐにスリープまたは休止状態に入ります。</value>
+  </data>
+  <data name="Help_SuspendHistory_CountOption" xml:space="preserve">
+    <value>表示する件数を指定する任意の正の数です。既定値は保存されている suspend-history-count の値で、記録がオフのときは 10 です。</value>
+  </data>
+  <data name="Help_ClaudeHooks_Description" xml:space="preserve">
+    <value>LidGuard 管理用の Claude Code フック設定スニペットを表示します。</value>
+  </data>
+  <data name="Help_RemoveSession_ProviderNameOption" xml:space="preserve">
+    <value>任意です。--provider mcp を使うとき、削除対象を 1 つの MCP プロバイダー名に絞ります。</value>
+  </data>
+  <data name="Help_ProviderMcpStatus_Description" xml:space="preserve">
+    <value>呼び出し側が指定した JSON 構成ファイルで、管理対象の Provider MCP サーバー エントリを確認します。</value>
+  </data>
+  <data name="Help_MacOSPermission_RemoveNote" xml:space="preserve">
+    <value>sudoers ファイルに LidGuard の管理マーカーがない場合は削除しません。</value>
+  </data>
+  <data name="Help_CurrentTemperature_TemperatureModeOption" xml:space="preserve">
+    <value>任意の位置引数です。default を使うと保存された設定に従い、low、average、high を選ぶとこのコマンドにだけ適用されます。</value>
+  </data>
+  <data name="Help_RemoveSession_ProviderOption" xml:space="preserve">
+    <value>任意です。削除対象を 1 つのプロバイダーに絞ります。使用できる値: codex、claude、copilot、custom、mcp、unknown。</value>
+  </data>
+  <data name="Help_Settings_ResetOption" xml:space="preserve">
+    <value>true にすると、このコマンドで指定した値を適用する前に、設定を LidGuard の既定値に戻します。</value>
+  </data>
+  <data name="Help_CurrentTemperature_Description" xml:space="preserve">
+    <value>選択した温度モードで、現在のシステム温度を摂氏で表示します。</value>
+  </data>
+  <data name="Help_RemoveSession_ByIdentifierDescription" xml:space="preserve">
+    <value>プロバイダーの stop フックを待たずに、セッション識別子でアクティブなセッションを削除します。</value>
+  </data>
+  <data name="Help_Status_RuntimeNotRunningNote" xml:space="preserve">
+    <value>LidGuard が実行されていなくても、status は保存された設定ファイルの内容を表示します。</value>
+  </data>
+  <data name="Help_Stop_WorkingDirectoryOption" xml:space="preserve">
+    <value>任意の作業ディレクトリです。セッション識別情報がない場合の代替識別に使います。既定値は現在のディレクトリです。</value>
+  </data>
+  <data name="Help_ManagedCommands_Detail" xml:space="preserve">
+    <value>これらのコマンドは、日常的に CLI から直接使うというより、プロバイダー管理の連携や stdio ホスト向けです。</value>
+  </data>
+  <data name="Help_SoundPreview_WaitsForPlaybackNote" xml:space="preserve">
+    <value>このコマンドは再生が終わるまで待機します。</value>
+  </data>
+  <data name="Help_Usage_QuoteValues" xml:space="preserve">
+    <value>パスやテキスト値に空白が含まれる場合は引用符で囲んでください。</value>
+  </data>
+  <data name="Help_MacOSPermission_ManagedRuleNote" xml:space="preserve">
+    <value>管理ルールは、LidGuard の pmset disablesleep、pmset hibernatemode、powermetrics SMC sample コマンドだけを許可します。</value>
+  </data>
+  <data name="Help_CleanupOrphans_Description" xml:space="preserve">
+    <value>監視対象のプロセスがすでに終了しているセッションを削除します。</value>
+  </data>
+  <data name="Help_LinuxPermission_InstallNote" xml:space="preserve">
+    <value>このサブコマンドは、/etc/polkit-1/rules.d/49-lidguard.rules への 1 回限りの管理者書き込みのために sudo を使います。</value>
+  </data>
+  <data name="Help_CurrentLidState_Description" xml:space="preserve">
+    <value>LidGuard がふたを閉じたときの判定に使うのと同じプラットフォームのふた状態ソースで、現在のふたスイッチ状態を報告します。</value>
+  </data>
+  <data name="Help_MacOSPermission_CheckDescription" xml:space="preserve">
+    <value>実際にスリープまたは休止状態を要求せずに、必要な macOS の動作を確認します。</value>
+  </data>
+  <data name="Help_Settings_EmergencyHibernationTemperatureCelsiusOption" xml:space="preserve">
+    <value>緊急休止のしきい値を摂氏で設定します。許容範囲: 70 から 110。</value>
+  </data>
+  <data name="Help_RemoveSession_NoProviderNote" xml:space="preserve">
+    <value>--provider を省略すると、LidGuard はセッション識別子が一致するすべてのアクティブなセッションを削除します。</value>
+  </data>
+  <data name="Help_McpInstall_Description" xml:space="preserve">
+    <value>選択したプロバイダー CLI に、lidguard という名前の管理 stdio MCP サーバーを登録または更新します。</value>
+  </data>
+  <data name="Help_MacOSPermission_RemoveDescription" xml:space="preserve">
+    <value>正確な LidGuard 管理 sudoers ルール ファイルがある場合、そのルールを削除します。</value>
+  </data>
+  <data name="Help_Stop_ParentProcessOption" xml:space="preserve">
+    <value>任意のプロセス ID です。追跡中のセッションを停止するとき、一致するか確認します。</value>
+  </data>
+  <data name="Help_Settings_EmergencyHibernationTemperatureModeOption" xml:space="preserve">
+    <value>LidGuard が利用可能な温度センサー値のうち、最低値、平均値、最高値のどれを使うか選びます。</value>
+  </data>
+  <data name="Help_CurrentMonitorCount_InternalPanelNote" xml:space="preserve">
+    <value>内蔵ノート PC パネル接続は、最終的なスリープ可否チェックでのみ除外されます。</value>
+  </data>
+  <data name="Help_LinuxPermission_RemoveNote" xml:space="preserve">
+    <value>ルール ファイルに LidGuard の管理マーカーがない場合は削除しません。</value>
+  </data>
+  <data name="Help_Stop_SessionOption" xml:space="preserve">
+    <value>任意です。省略すると、LidGuard は start と同じ代替セッション識別戦略を使います。</value>
+  </data>
+  <data name="Help_CodexHooks_Description" xml:space="preserve">
+    <value>LidGuard 管理用の Codex フック設定スニペットを表示します。</value>
+  </data>
+  <data name="Help_ProviderMcpInstall_ProviderNameOption" xml:space="preserve">
+    <value>必須のプロバイダー名です。provider-mcp-server に渡されます。</value>
+  </data>
+  <data name="Help_ProviderMcpRemove_Description" xml:space="preserve">
+    <value>呼び出し側が指定した JSON 構成ファイルから、管理対象の Provider MCP サーバー エントリを削除します。</value>
+  </data>
+  <data name="Help_Command_NoOptionsNote" xml:space="preserve">
+    <value>このコマンドはオプションを受け付けません。</value>
+  </data>
+  <data name="Help_HookInstall_Description" xml:space="preserve">
+    <value>選択した構成ファイルに、管理対象のプロバイダー フック エントリを追加します。</value>
+  </data>
+  <data name="Help_McpRemove_Description" xml:space="preserve">
+    <value>選択したプロバイダー CLI から、lidguard という名前の管理 stdio MCP サーバーを削除します。</value>
+  </data>
+  <data name="Help_Settings_PostSessionEndWebhookOption" xml:space="preserve">
+    <value>セッションが正常に完了し、LidGuard がまもなくスリープまたは休止状態に入る予定ではない場合に呼び出す Webhook URL を設定します。</value>
+  </data>
+  <data name="Help_Paths_MacOSRuntimeBehavior" xml:space="preserve">
+    <value>macOS では caffeinate と pmset を使います。Windows と Linux の動作は各プラットフォーム ビルドに実装されています。</value>
+  </data>
+  <data name="Help_ManagedProvider_ConfigAllNote" xml:space="preserve">
+    <value>各プロバイダーは別々の構成ファイルを使うため、--config と --provider all は組み合わせないでください。</value>
+  </data>
+  <data name="Help_Settings_SuspendModeOption" xml:space="preserve">
+    <value>最後のアクティブなセッションが終了したとき、またはもうシステムのスリープ防止を続けなくなったときに、LidGuard がスリープと休止状態のどちらを要求するかを選びます。</value>
+  </data>
+  <data name="Help_ProviderMcpInstall_DirectEditNote" xml:space="preserve">
+    <value>この方法では指定された JSON ファイルを直接編集し、プロバイダー固有の mcp add/remove コマンドは呼び出しません。</value>
+  </data>
+  <data name="Help_PreviewCurrentSound_NoSoundNote" xml:space="preserve">
+    <value>警告音が設定されていない場合、このコマンドは失敗せずに設定方法を表示します。</value>
+  </data>
+  <data name="Help_LinuxPermission_StatusDescription" xml:space="preserve">
+    <value>変更を加えずに現在の Linux の権限環境を表示します。</value>
+  </data>
+  <data name="Help_Start_WorkingDirectoryOption" xml:space="preserve">
+    <value>任意の作業ディレクトリです。セッション識別情報がない場合の代替識別とメタデータに使います。既定値は現在のディレクトリです。</value>
+  </data>
+  <data name="Help_Settings_ServerRuntimeCleanupDelayOption" xml:space="preserve">
+    <value>すべてのセッションが終わり、保留中のクリーンアップも完了した後に LidGuard をどれだけ動かし続けるかを設定します。off はランタイムを維持し、0 はすぐ終了し、正の値はその分数だけ待機します。</value>
+  </data>
+  <data name="Help_Stop_Description" xml:space="preserve">
+    <value>セッション開始時に使ったのと同じプロバイダーとセッション識別情報で、追跡中のセッションを停止します。</value>
+  </data>
+  <data name="Help_ManagedProvider_AllProvidersNote" xml:space="preserve">
+    <value>--provider all では、既定の構成ルートがすでに存在するプロバイダーだけを処理します。存在しないプロバイダーは報告してスキップします。</value>
+  </data>
+  <data name="Help_ManagedProvider_AllProvidersArgumentNote" xml:space="preserve">
+    <value>all では、既定の構成ルートがすでに存在するプロバイダーだけを処理します。存在しないプロバイダーは報告してスキップします。</value>
+  </data>
+  <data name="Help_Paths_WindowsRuntimeBehavior" xml:space="preserve">
+    <value>このビルドには Windows 対応が含まれています。Linux と macOS の動作は各プラットフォーム ビルドに実装されています。</value>
+  </data>
+  <data name="Help_RemovePreSuspendWebhook_Description" xml:space="preserve">
+    <value>保存されているスリープ/休止状態の前 Webhook URL を消去します。</value>
+  </data>
+  <data name="Help_HookEvents_Description" xml:space="preserve">
+    <value>選択した 1 つまたは複数のプロバイダーについて、最近のフック イベント ログ行を表示します。</value>
+  </data>
+  <data name="Help_ClaudeHook_Description" xml:space="preserve">
+    <value>標準入力から Claude Code フック JSON を読み取り、start、stop、activity、soft-lock、elicitation、または permission の判断を LidGuard に転送します。</value>
+  </data>
+  <data name="Help_SuspendHistory_CountNote" xml:space="preserve">
+    <value>保存されているスリープ履歴件数の設定は保持するエントリ数を制御します。count 引数は、保持済みの中から表示する件数だけを制限します。</value>
+  </data>
+  <data name="Help_Settings_ClosedLidPermissionRequestDecisionOption" xml:space="preserve">
+    <value>LidGuard がふたが閉じていると報告したときに、ふたが閉じている状態の PermissionRequest フックがどう応答するかを選びます。ask はセッションを soft-lock し、プロバイダー本来の権限プロンプトをそのまま続けます。</value>
+  </data>
+  <data name="Help_ProviderMcpRemove_ConfigOption" xml:space="preserve">
+    <value>必須です。更新する JSON 構成ファイルです。</value>
+  </data>
+  <data name="Help_Paths_LinuxRuntimeBehavior" xml:space="preserve">
+    <value>Linux の動作は systemd/logind システム向けに実装されています。macOS の動作は macOS ビルドに実装されています。</value>
+  </data>
+  <data name="Help_RemoveSession_AllDescription" xml:space="preserve">
+    <value>LidGuard が現在追跡しているアクティブなセッションをすべて削除します。</value>
+  </data>
+  <data name="Help_McpStatus_Description" xml:space="preserve">
+    <value>1 つのプロバイダーまたは検出されたすべてのプロバイダーについて、管理対象の user/global LidGuard MCP サーバー登録を確認します。</value>
+  </data>
+  <data name="Help_CurrentLidState_StateNote" xml:space="preserve">
+    <value>現在のプラットフォームのふた状態ソースに基づいて、Open、Closed、または Unknown を報告します。</value>
+  </data>
+  <data name="Help_Start_ParentProcessOption" xml:space="preserve">
+    <value>任意のプロセス ID です。そのプロセスが終了したときに LidGuard がセッションをクリーンアップできるよう監視します。</value>
+  </data>
+  <data name="Help_Session_ProviderOption" xml:space="preserve">
+    <value>必須です。使用できる値: codex、claude、copilot、custom、mcp。</value>
+  </data>
+  <data name="Help_LinuxPermission_InstallDescription" xml:space="preserve">
+    <value>現在のユーザー向けに、LidGuard 管理の polkit ルールをインストールします。</value>
+  </data>
+  <data name="Help_ProviderMcpStatus_ConfigOption" xml:space="preserve">
+    <value>必須です。確認する JSON 構成ファイルです。</value>
+  </data>
+  <data name="Help_RemoveSession_Description" xml:space="preserve">
+    <value>LidGuard が現在追跡しているアクティブなセッションを削除します。</value>
+  </data>
+  <data name="Help_RemovePostSessionEndWebhook_Description" xml:space="preserve">
+    <value>保存されているセッション完了 Webhook URL を消去します。</value>
+  </data>
+  <data name="Help_PreviewSystemSound_Description" xml:space="preserve">
+    <value>保存された一時ボリューム設定を使って、対応している SystemSound 名を 1 つ今すぐ再生します。</value>
+  </data>
+  <data name="Help_MacOSPermission_InstallDescription" xml:space="preserve">
+    <value>現在のユーザー向けに、LidGuard 管理の sudoers ルールをインストールします。</value>
+  </data>
+  <data name="Help_LinuxPermission_RemoveDescription" xml:space="preserve">
+    <value>正確な LidGuard 管理 polkit ルール ファイルがある場合、その polkit ルールを削除します。</value>
+  </data>
+  <data name="Help_MacOSPermission_Description" xml:space="preserve">
+    <value>pmset と powermetrics を使うための macOS sudoers 権限を確認または管理します。</value>
+  </data>
+  <data name="Help_Settings_EmergencyHibernationOption" xml:space="preserve">
+    <value>ふたが閉じている間に保護対象システムの温度が設定したしきい値に達したとき、LidGuard が緊急休止を要求するかどうかを変更します。</value>
+  </data>
+  <data name="Help_HookStatus_Description" xml:space="preserve">
+    <value>1 つのプロバイダーまたは検出されたすべてのプロバイダーについて、管理対象のフック構成を確認します。</value>
+  </data>
+  <data name="Help_McpInstall_RefreshNote" xml:space="preserve">
+    <value>既存の管理 LidGuard MCP サーバーが見つかった場合、mcp-install はまずそれを削除してから現在のコマンドをインストールします。</value>
+  </data>
+  <data name="Help_CurrentTemperature_DefaultModeNote" xml:space="preserve">
+    <value>設定ファイルがまだ存在しない場合、default は Average を使います。</value>
+  </data>
+  <data name="Help_ProviderMcpInstall_Description" xml:space="preserve">
+    <value>呼び出し側が指定した JSON 構成ファイルに、管理対象の Provider MCP stdio サーバー エントリを書き込むか更新します。</value>
+  </data>
+  <data name="Help_HookEvents_CountOption" xml:space="preserve">
+    <value>任意の正の行数です。既定値は 50 です。</value>
+  </data>
+  <data name="Help_Stop_ProviderNameOption" xml:space="preserve">
+    <value>--provider mcp を使う場合は必須です。</value>
+  </data>
+  <data name="Help_ManagedProvider_ConfigOption" xml:space="preserve">
+    <value>任意のプロバイダー別構成ファイル上書きパスです。</value>
+  </data>
+  <data name="Help_Settings_PowerRequestReasonOption" xml:space="preserve">
+    <value>Windows に表示される LidGuard のスリープ防止理由テキストを設定します。</value>
+  </data>
+  <data name="Help_Settings_InteractiveModeNote" xml:space="preserve">
+    <value>オプションなしで settings を実行すると、対話式編集モードに入ります。</value>
+  </data>
+  <data name="Help_LinuxPermission_CheckDescription" xml:space="preserve">
+    <value>実際にスリープまたは休止状態を要求せずに、必要な Linux の動作を確認します。</value>
+  </data>
+  <data name="Help_Settings_RemoveWebhookNote" xml:space="preserve">
+    <value>Webhook URL を消去するには、off や空の値を渡さず、remove-pre-suspend-webhook または remove-post-session-end-webhook を使ってください。</value>
+  </data>
+  <data name="Help_McpServer_Description" xml:space="preserve">
+    <value>設定およびセッション管理ツールを公開する通常の LidGuard stdio MCP サーバーを起動します。</value>
+  </data>
+  <data name="Help_HookRemove_Description" xml:space="preserve">
+    <value>選択した構成ファイルから、管理対象のプロバイダー フック エントリを削除します。</value>
+  </data>
+  <data name="Help_Settings_UserInterfaceCultureOption" xml:space="preserve">
+    <value>CLI の表示言語/カルチャを設定します。よく使う値は en、ko、ja、zh-Hans、zh-Hant です。auto は現在のプロセスまたは OS の設定に従い、LIDGUARD_UI_CULTURE は保存値よりも優先されます。</value>
+  </data>
+  <data name="Help_Paths_ProviderMcpBestEffort" xml:space="preserve">
+    <value>Provider MCP 連携は、モデルが適切なタイミングで LidGuard MCP ツールを呼び出すことに依存するため、ベストエフォートです。</value>
+  </data>
+  <data name="Help_Settings_WatchParentProcessOption" xml:space="preserve">
+    <value>追跡セッションのプロセス監視ポリシーを変更します。</value>
+  </data>
+  <data name="Help_ProviderMcpInstall_ConfigOption" xml:space="preserve">
+    <value>必須です。作成または更新する JSON 構成ファイルです。</value>
+  </data>
+  <data name="Help_Start_Description" xml:space="preserve">
+    <value>追跡セッションを開始または更新し、保存された既定設定を読み込みます。</value>
+  </data>
+  <data name="Help_RemoveSession_SessionOption" xml:space="preserve">
+    <value>必須です。削除するセッション識別子です。</value>
+  </data>
+  <data name="Help_RemoveSession_AllCannotCombineNote" xml:space="preserve">
+    <value>--all は --session、--provider、--provider-name と組み合わせられません。</value>
+  </data>
+  <data name="Help_CopilotHooks_Description" xml:space="preserve">
+    <value>LidGuard 管理用の GitHub Copilot CLI フック設定スニペットを表示します。</value>
+  </data>
+  <data name="Help_Help_CommandOptionNote" xml:space="preserve">
+    <value>&lt;command&gt; --help 形式でも同じコマンド メタデータを使います。</value>
+  </data>
+  <data name="Help_RemoveSession_McpWithoutProviderNameNote" xml:space="preserve">
+    <value>--provider mcp を --provider-name なしで使うと、LidGuard は同じセッション識別子を持つすべての MCP ベース セッションを削除します。</value>
+  </data>
+  <data name="Help_Start_ProviderNameOption" xml:space="preserve">
+    <value>--provider mcp を使う場合は必須です。MCP ベースのプロバイダー同士を区別します。</value>
+  </data>
+  <data name="Help_Settings_PostStopSuspendSoundOption" xml:space="preserve">
+    <value>スリープ/休止状態の警告音を無効にするか、対応している SystemSound 名 ({supportedPostStopSuspendSystemSounds}) を使うか、再生可能な既存の .wav パスを指定します。</value>
+  </data>
+  <data name="Help_CopilotHook_Description" xml:space="preserve">
+    <value>設定された 1 つのイベント名について、標準入力から GitHub Copilot CLI フック JSON を読み取ります。</value>
+  </data>
+  <data name="Help_Start_RuntimeLaunchNote" xml:space="preserve">
+    <value>待機中のランタイムがなければ、start はバックグラウンド ランタイム サーバーを自動で起動します。</value>
+  </data>
+  <data name="Help_PreviewSystemSound_NameOption" xml:space="preserve">
+    <value>必須の位置引数です。使用できる値: Asterisk、Beep、Exclamation、Hand、Question。</value>
+  </data>
+  <data name="Help_Settings_ChangeLidActionOption" xml:space="preserve">
+    <value>LidGuard が現在の電源プランの「ふたを閉じたときの動作」を一時的に「何もしない」に設定するかどうかを変更します。</value>
+  </data>
+  <data name="Help_Start_SessionOption" xml:space="preserve">
+    <value>任意です。追跡するセッション識別子です。省略すると、LidGuard がプロバイダー表示名と正規化された作業ディレクトリから生成します。</value>
+  </data>
+  <data name="Help_CodexHooks_FormatOption" xml:space="preserve">
+    <value>任意の位置引数です。既定値は config-toml です。config-toml、toml、hooks-json、json を受け付けます。</value>
+  </data>
+  <data name="Help_ClaudeHooks_FormatOption" xml:space="preserve">
+    <value>任意の位置引数です。既定値は settings-json です。settings-json、json、hooks-json を受け付けます。</value>
+  </data>
+  <data name="Help_CopilotHook_EventOption" xml:space="preserve">
+    <value>必須です。一般的な値には sessionStart、sessionEnd、userPromptSubmitted、preToolUse、postToolUse、permissionRequest、agentStop、subagentStart、subagentStop、errorOccurred、notification があります。</value>
+  </data>
+  <data name="Help_CopilotHooks_FormatOption" xml:space="preserve">
+    <value>任意の位置引数です。既定値は config-json です。config-json、json、hooks-json を受け付けます。</value>
+  </data>
+  <data name="DisplayClosedLidPermissionRequestDecisionDeny" xml:space="preserve">
+    <value>拒否</value>
+  </data>
+  <data name="DisplayClosedLidPermissionRequestDecisionAllow" xml:space="preserve">
+    <value>許可</value>
+  </data>
+  <data name="DisplayClosedLidPermissionRequestDecisionAsk" xml:space="preserve">
+    <value>確認</value>
+  </data>
+  <data name="DisplayEmergencyHibernationTemperatureModeAverage" xml:space="preserve">
+    <value>平均</value>
+  </data>
+  <data name="DisplayEmergencyHibernationTemperatureModeLow" xml:space="preserve">
+    <value>低い</value>
+  </data>
+  <data name="DisplayEmergencyHibernationTemperatureModeHigh" xml:space="preserve">
+    <value>高い</value>
+  </data>
+  <data name="DisplayLidSwitchStateUnknown" xml:space="preserve">
+    <value>不明</value>
+  </data>
+  <data name="DisplayLidSwitchStateOpen" xml:space="preserve">
+    <value>開いている</value>
+  </data>
+  <data name="DisplayLidSwitchStateClosed" xml:space="preserve">
+    <value>閉じている</value>
+  </data>
+  <data name="DisplaySessionSoftLockStateNone" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="DisplaySessionSoftLockStateSoftLocked" xml:space="preserve">
+    <value>入力待ち</value>
+  </data>
+  <data name="DisplaySuspendModeSleep" xml:space="preserve">
+    <value>スリープ</value>
+  </data>
+  <data name="DisplaySuspendModeHibernate" xml:space="preserve">
+    <value>休止状態</value>
+  </data>
+  <data name="DisplaySuspendWebhookReasonCompleted" xml:space="preserve">
+    <value>完了</value>
+  </data>
+  <data name="DisplaySuspendWebhookReasonSoftLocked" xml:space="preserve">
+    <value>入力待ち</value>
+  </data>
+  <data name="DisplaySuspendWebhookReasonEmergencyHibernation" xml:space="preserve">
+    <value>緊急休止</value>
+  </data>
+  <data name="RuntimeResponseCleanupOrphansCompleted" xml:space="preserve">
+    <value>孤立したセッションを {0} 件クリーンアップしました。</value>
+  </data>
+  <data name="RuntimeResponseCodexWatchedProcessLostCanceled" xml:space="preserve">
+    <value>以前は監視プロセスがあったセッションで、新しい Codex start では監視プロセスが見つからなくなったため、{0} を取り消しました。</value>
+  </data>
+  <data name="RuntimeResponseFailedToStartRuntime" xml:space="preserve">
+    <value>LidGuard ランタイムを起動できませんでした。</value>
+  </data>
+  <data name="RuntimeResponseRuntimeIsRunning" xml:space="preserve">
+    <value>LidGuard は実行中です。</value>
+  </data>
+  <data name="RuntimeResponseSessionAlreadyStopped" xml:space="preserve">
+    <value>セッション {0} はすでに停止しています。</value>
+  </data>
+  <data name="RuntimeResponseSessionIdAlreadyStopped" xml:space="preserve">
+    <value>セッション ID {0} はすでに停止しています。</value>
+  </data>
+  <data name="RuntimeResponseSessionIdAlreadyStoppedForProvider" xml:space="preserve">
+    <value>セッション ID {0} は {1} ではすでに停止しています。</value>
+  </data>
+  <data name="RuntimeResponseSessionRemoved" xml:space="preserve">
+    <value>{0} を削除しました。</value>
+  </data>
+  <data name="RuntimeResponseSessionRemovedAll" xml:space="preserve">
+    <value>アクティブなセッション {0} 件をすべて削除しました。</value>
+  </data>
+  <data name="RuntimeResponseSessionRemovedMatchingProviderSessionId" xml:space="preserve">
+    <value>{1} のセッション ID "{2}" と一致するセッション {0} 件を削除しました。</value>
+  </data>
+  <data name="RuntimeResponseSessionRemovedMatchingSessionId" xml:space="preserve">
+    <value>セッション ID "{1}" と一致するセッション {0} 件を削除しました。</value>
+  </data>
+  <data name="RuntimeResponseSessionRemoveNoActiveSessions" xml:space="preserve">
+    <value>削除するアクティブなセッションはありません。</value>
+  </data>
+  <data name="RuntimeResponseSessionStartedCodexCliFallback" xml:space="preserve">
+    <value>{0} を開始しました。Codex CLI の代替方法でプロセス {1} を監視します。</value>
+  </data>
+  <data name="RuntimeResponseSessionStartedWatchedProcess" xml:space="preserve">
+    <value>{0} を開始しました。プロセス {1} を監視します。</value>
+  </data>
+  <data name="RuntimeResponseSessionStartedCodexCliFallbackSkipped" xml:space="preserve">
+    <value>{0} を開始しました。Codex の代替ウォッチドッグは、解決されたプロセスが {1} の場合にだけ接続されます。stop フックが必要です。</value>
+  </data>
+  <data name="RuntimeResponseSessionStartedNoWatchedProcess" xml:space="preserve">
+    <value>{0} を開始しました。監視するプロセスを解決できませんでした。stop フックが必要です。</value>
+  </data>
+  <data name="RuntimeResponseSessionStopped" xml:space="preserve">
+    <value>{0} を停止しました。</value>
+  </data>
+  <data name="RuntimeResponseSuspendDelayImmediate" xml:space="preserve">
+    <value>すぐに</value>
+  </data>
+  <data name="RuntimeResponseSuspendDelaySeconds" xml:space="preserve">
+    <value>{0} 秒後</value>
+  </data>
+  <data name="RuntimeResponseSuspendReasonCompleted" xml:space="preserve">
+    <value>ふたが閉じていて、スリープを妨げる表示中のディスプレイがなく、最後のセッションが停止したためです。</value>
+  </data>
+  <data name="RuntimeResponseSuspendReasonSoftLocked" xml:space="preserve">
+    <value>ふたが閉じていて、スリープを妨げる表示中のディスプレイがなく、スリープ防止を必要とするセッションが残っていないためです。</value>
+  </data>
+  <data name="RuntimeResponseSuspendScheduled" xml:space="preserve">
+    <value>{0} を予約しました。実行: {1}。{2}</value>
+  </data>
+  <data name="RuntimeResponseWatchedProcessExited" xml:space="preserve">
+    <value>{0} の監視プロセスが終了しました。</value>
+  </data>
+  <data name="RuntimeResponseWatchedProcessOrphanCleaned" xml:space="preserve">
+    <value>孤立したセッション {0} をクリーンアップしました。</value>
+  </data>
+  <data name="ConsoleCurrentTemperatureUnavailable" xml:space="preserve">
+    <value>{0} モードでは、このプラットフォームで対応している温度センサーから現在のシステム温度を取得できません。</value>
+  </data>
+  <data name="ConsoleCurrentTemperature" xml:space="preserve">
+    <value>{0} モードでの現在のシステム温度: 摂氏 {1} 度</value>
+  </data>
+  <data name="ConsoleCurrentTemperatureModeValidation" xml:space="preserve">
+    <value>温度モードは default、low、average、high のいずれかである必要があります。</value>
+  </data>
+  <data name="SuspendHistoryFile" xml:space="preserve">
+    <value>スリープ履歴ファイル: {0}</value>
+  </data>
+  <data name="SuspendHistoryRecording" xml:space="preserve">
+    <value>スリープ履歴の記録: {0}</value>
+  </data>
+  <data name="SuspendHistoryNoEntries" xml:space="preserve">
+    <value>記録されたスリープ履歴はありません。</value>
+  </data>
+  <data name="SuspendHistoryRecentEntries" xml:space="preserve">
+    <value>最近のスリープ履歴: {0}</value>
+  </data>
+  <data name="SuspendHistoryOptionNotAccepted" xml:space="preserve">
+    <value>{0} は --{1} を受け付けません。</value>
+  </data>
+  <data name="SuspendHistoryCountValidation" xml:space="preserve">
+    <value>count 引数は {0} 以上の整数である必要があります。</value>
+  </data>
+  <data name="SuspendHistoryEntryLine" xml:space="preserve">
+    <value>- {0} モード={1} 理由={2} 成功={3} アクティブセッション={4} トリガーセッション={5}</value>
+  </data>
+  <data name="SuspendHistorySession" xml:space="preserve">
+    <value>  セッション={0}:{1}</value>
+  </data>
+  <data name="SuspendHistoryTemperature" xml:space="preserve">
+    <value>  温度=摂氏 {0} 度 モード={1} しきい値=摂氏 {2} 度</value>
+  </data>
+  <data name="SuspendHistoryWorkingDirectory" xml:space="preserve">
+    <value>  cwd="{0}"</value>
+  </data>
+  <data name="SuspendHistoryMessage" xml:space="preserve">
+    <value>  メッセージ={0}</value>
+  </data>
+  <data name="SessionRequestProviderRequired" xml:space="preserve">
+    <value>プロバイダーが必要です。codex、claude、copilot、custom、mcp、unknown のいずれかを使ってください。</value>
+  </data>
+  <data name="SessionRequestProviderNameRequiredForMcp" xml:space="preserve">
+    <value>--provider mcp を使うときは --provider-name オプションが必要です。</value>
+  </data>
+  <data name="SessionRequestAllCannotCombineWithSession" xml:space="preserve">
+    <value>--all オプションは --session と一緒に使えません。</value>
+  </data>
+  <data name="SessionRequestAllCannotCombineWithProvider" xml:space="preserve">
+    <value>--all オプションは --provider と一緒に使えません。</value>
+  </data>
+  <data name="SessionRequestAllCannotCombineWithProviderName" xml:space="preserve">
+    <value>--all オプションは --provider-name と一緒に使えません。</value>
+  </data>
+  <data name="SessionRequestSessionIdentifierRequired" xml:space="preserve">
+    <value>セッション識別子が必要です。</value>
+  </data>
+  <data name="SessionRequestUnsupportedProvider" xml:space="preserve">
+    <value>対応していないプロバイダーです。codex、claude、copilot、custom、mcp、unknown のいずれかを使ってください。</value>
+  </data>
+  <data name="SessionRequestWatchedProcessIdentifierValidation" xml:space="preserve">
+    <value>監視するプロセス ID は 0 以上の整数である必要があります。</value>
+  </data>
+  <data name="SettingsOptionPreventAwayModeSleepUnsupported" xml:space="preserve">
+    <value>prevent-away-mode-sleep オプションは Windows でのみ使えます。このプラットフォームでは prevent-system-sleep を使ってください。</value>
+  </data>
+  <data name="McpConfigurationRootNotObject" xml:space="preserve">
+    <value>構成ルートが JSON オブジェクトではありません。</value>
+  </data>
+  <data name="McpConfigurationJsonInvalid" xml:space="preserve">
+    <value>構成 JSON が無効です: {0}</value>
+  </data>
+  <data name="McpConfigurationServersObjectNotFound" xml:space="preserve">
+    <value>mcpServers オブジェクトが見つかりません。</value>
+  </data>
+  <data name="McpConfigurationNamedServerNotFound" xml:space="preserve">
+    <value>'{0}' という名前の MCP サーバーが見つかりません。</value>
+  </data>
+  <data name="McpConfigurationFileDoesNotExist" xml:space="preserve">
+    <value>構成ファイルがありません: {0}</value>
+  </data>
+  <data name="PermissionSubcommandRequired" xml:space="preserve">
+    <value>サブコマンドが必要です。使用方法: {0} status|check|install|remove</value>
+  </data>
+  <data name="PermissionUnknownSubcommand" xml:space="preserve">
+    <value>不明な {0} サブコマンドです: {1}</value>
+  </data>
+  <data name="PermissionSubcommandUsage" xml:space="preserve">
+    <value>使用方法: {0} status|check|install|remove</value>
+  </data>
+  <data name="PermissionLabelUser" xml:space="preserve">
+    <value>ユーザー</value>
+  </data>
+  <data name="PermissionResultOk" xml:space="preserve">
+    <value>正常</value>
+  </data>
+  <data name="PermissionResultFailed" xml:space="preserve">
+    <value>失敗 - {0}</value>
+  </data>
+  <data name="PermissionResultFailedParenthesized" xml:space="preserve">
+    <value>失敗 ({0})</value>
+  </data>
+  <data name="PermissionResultUnavailable" xml:space="preserve">
+    <value>利用不可 - {0}</value>
+  </data>
+  <data name="PermissionResultUnavailableParenthesized" xml:space="preserve">
+    <value>利用不可 ({0})</value>
+  </data>
+  <data name="PermissionExecutableAvailable" xml:space="preserve">
+    <value>利用可能 ({0})</value>
+  </data>
+  <data name="PermissionExecutableMissing" xml:space="preserve">
+    <value>見つかりません</value>
+  </data>
+  <data name="PermissionExecutableNotFound" xml:space="preserve">
+    <value>{0} が PATH 上に見つかりません。</value>
+  </data>
+  <data name="PermissionSudoNotFound" xml:space="preserve">
+    <value>PATH 上に sudo が見つかりません。root としてこのコマンドを実行するか、sudo をインストールしてください。</value>
+  </data>
+  <data name="PermissionSudoNotFoundShort" xml:space="preserve">
+    <value>PATH 上に sudo が見つかりません。</value>
+  </data>
+  <data name="PermissionUnknownUser" xml:space="preserve">
+    <value>不明</value>
+  </data>
+  <data name="PermissionRuleNotInstalled" xml:space="preserve">
+    <value>インストールされていません</value>
+  </data>
+  <data name="PermissionRulePresentUnmanaged" xml:space="preserve">
+    <value>ありますが LidGuard が管理していません</value>
+  </data>
+  <data name="PermissionRuleInstalledForCurrentUser" xml:space="preserve">
+    <value>現在のユーザー用にインストールされています</value>
+  </data>
+  <data name="PermissionRuleInstalledForAnotherUser" xml:space="preserve">
+    <value>別のユーザー用にインストールされています</value>
+  </data>
+  <data name="LinuxPermissionStatusTitle" xml:space="preserve">
+    <value>Linux の権限状態:</value>
+  </data>
+  <data name="LinuxPermissionCheckTitle" xml:space="preserve">
+    <value>Linux の権限チェック:</value>
+  </data>
+  <data name="LinuxPermissionLabelPolkitRulePath" xml:space="preserve">
+    <value>Polkit ルール パス</value>
+  </data>
+  <data name="LinuxPermissionLabelPolkitRule" xml:space="preserve">
+    <value>Polkit ルール</value>
+  </data>
+  <data name="LinuxPermissionLabelSystemdInhibit" xml:space="preserve">
+    <value>systemd-inhibit</value>
+  </data>
+  <data name="LinuxPermissionLabelSystemctl" xml:space="preserve">
+    <value>systemctl</value>
+  </data>
+  <data name="LinuxPermissionLabelLogindCanSuspend" xml:space="preserve">
+    <value>logind CanSuspend</value>
+  </data>
+  <data name="LinuxPermissionLabelLogindCanHibernate" xml:space="preserve">
+    <value>logind CanHibernate</value>
+  </data>
+  <data name="LinuxPermissionCheckInhibitorAcquireRelease" xml:space="preserve">
+    <value>inhibitor の取得/解放</value>
+  </data>
+  <data name="LinuxPermissionCheckSystemctlVersion" xml:space="preserve">
+    <value>systemctl --version</value>
+  </data>
+  <data name="LinuxPermissionCheckLogindCapability" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="LinuxPermissionInspectPolkitRuleFailed" xml:space="preserve">
+    <value>既存の polkit ルールを確認できませんでした: {0}</value>
+  </data>
+  <data name="LinuxPermissionRefusingOverwriteUnmanagedPolkitRule" xml:space="preserve">
+    <value>管理されていない polkit ルール ファイルの上書きを拒否します: {0}</value>
+  </data>
+  <data name="LinuxPermissionPolkitRuleInstalled" xml:space="preserve">
+    <value>ユーザー {0} 用の LidGuard polkit ルールをインストールしました: {1}</value>
+  </data>
+  <data name="LinuxPermissionInstallPolkitRuleFailed" xml:space="preserve">
+    <value>polkit ルールをインストールできませんでした: {0}</value>
+  </data>
+  <data name="LinuxPermissionPreparePolkitRuleFailed" xml:space="preserve">
+    <value>polkit ルールを準備できませんでした: {0}</value>
+  </data>
+  <data name="LinuxPermissionPolkitRuleNotInstalled" xml:space="preserve">
+    <value>LidGuard polkit ルールはインストールされていません: {0}</value>
+  </data>
+  <data name="LinuxPermissionRefusingRemoveUnmanagedPolkitRule" xml:space="preserve">
+    <value>管理されていない polkit ルール ファイルの削除を拒否します: {0}</value>
+  </data>
+  <data name="LinuxPermissionPolkitRuleRemoved" xml:space="preserve">
+    <value>LidGuard polkit ルールを削除しました: {0}</value>
+  </data>
+  <data name="LinuxPermissionRemovePolkitRuleFailed" xml:space="preserve">
+    <value>polkit ルールを削除できませんでした: {0}</value>
+  </data>
+  <data name="LinuxPermissionBusctlUnrecognizedValue" xml:space="preserve">
+    <value>busctl が認識できない値を返しました。</value>
+  </data>
+  <data name="LinuxPermissionRuleUnableToInspect" xml:space="preserve">
+    <value>確認できません ({0})</value>
+  </data>
+  <data name="MacOSPermissionStatusTitle" xml:space="preserve">
+    <value>macOS の権限状態:</value>
+  </data>
+  <data name="MacOSPermissionCheckTitle" xml:space="preserve">
+    <value>macOS の権限チェック:</value>
+  </data>
+  <data name="MacOSPermissionLabelSudoersPath" xml:space="preserve">
+    <value>sudoers パス</value>
+  </data>
+  <data name="MacOSPermissionLabelSudoersRule" xml:space="preserve">
+    <value>sudoers ルール</value>
+  </data>
+  <data name="MacOSPermissionLabelPrivilegedPmsetUsability" xml:space="preserve">
+    <value>権限付き pmset の可用性</value>
+  </data>
+  <data name="MacOSPermissionLabelCaffeinate" xml:space="preserve">
+    <value>caffeinate</value>
+  </data>
+  <data name="MacOSPermissionLabelPmset" xml:space="preserve">
+    <value>pmset</value>
+  </data>
+  <data name="MacOSPermissionLabelPowermetrics" xml:space="preserve">
+    <value>powermetrics</value>
+  </data>
+  <data name="MacOSPermissionLabelIoreg" xml:space="preserve">
+    <value>ioreg</value>
+  </data>
+  <data name="MacOSPermissionLabelSystemProfiler" xml:space="preserve">
+    <value>system_profiler</value>
+  </data>
+  <data name="MacOSPermissionLabelSleepDisabled" xml:space="preserve">
+    <value>SleepDisabled</value>
+  </data>
+  <data name="MacOSPermissionLabelHibernateMode" xml:space="preserve">
+    <value>hibernatemode</value>
+  </data>
+  <data name="MacOSPermissionCheckCaffeinateAcquireRelease" xml:space="preserve">
+    <value>caffeinate の取得/解放</value>
+  </data>
+  <data name="MacOSPermissionCheckPmsetRead" xml:space="preserve">
+    <value>pmset -g</value>
+  </data>
+  <data name="MacOSPermissionCheckPrivilegedPmsetDisableSleep" xml:space="preserve">
+    <value>権限付き pmset disablesleep</value>
+  </data>
+  <data name="MacOSPermissionCheckPrivilegedPmsetHibernateMode" xml:space="preserve">
+    <value>権限付き pmset hibernatemode</value>
+  </data>
+  <data name="MacOSPermissionCheckPrivilegedPowermetricsSmcSample" xml:space="preserve">
+    <value>権限付き powermetrics SMC sample</value>
+  </data>
+  <data name="MacOSPermissionInspectSudoersRuleFailed" xml:space="preserve">
+    <value>既存の sudoers ルールを確認できませんでした: {0}</value>
+  </data>
+  <data name="MacOSPermissionRefusingOverwriteUnmanagedSudoersRule" xml:space="preserve">
+    <value>管理されていない sudoers ファイルの上書きを拒否します: {0}</value>
+  </data>
+  <data name="MacOSPermissionSudoersRuleInstalled" xml:space="preserve">
+    <value>ユーザー {0} 用の LidGuard sudoers ルールをインストールしました: {1}</value>
+  </data>
+  <data name="MacOSPermissionInstallSudoersRuleFailed" xml:space="preserve">
+    <value>sudoers ルールをインストールできませんでした: {0}</value>
+  </data>
+  <data name="MacOSPermissionPrepareSudoersRuleFailed" xml:space="preserve">
+    <value>sudoers ルールを準備できませんでした: {0}</value>
+  </data>
+  <data name="MacOSPermissionSudoersRuleNotInstalled" xml:space="preserve">
+    <value>LidGuard sudoers ルールはインストールされていません: {0}</value>
+  </data>
+  <data name="MacOSPermissionRefusingRemoveUnmanagedSudoersRule" xml:space="preserve">
+    <value>管理されていない sudoers ファイルの削除を拒否します: {0}</value>
+  </data>
+  <data name="MacOSPermissionSudoersRuleRemoved" xml:space="preserve">
+    <value>LidGuard sudoers ルールを削除しました: {0}</value>
+  </data>
+  <data name="MacOSPermissionRemoveSudoersRuleFailed" xml:space="preserve">
+    <value>sudoers ルールを削除できませんでした: {0}</value>
+  </data>
+  <data name="MacOSPermissionUnsupportedHibernateModeValue" xml:space="preserve">
+    <value>利用不可 - 現在の値 {0} はサポートされていません</value>
+  </data>
+  <data name="MacOSPermissionRuleContentInspectionUnavailable" xml:space="preserve">
+    <value>内容を確認できません ({0})</value>
+  </data>
+  <data name="MacOSPermissionVisudoNotFound" xml:space="preserve">
+    <value>PATH 上に visudo が見つかりません。検証されていない sudoers ルールのインストールを拒否します。</value>
+  </data>
+  <data name="MacOSPermissionPrepareSudoersValidationFileFailed" xml:space="preserve">
+    <value>sudoers 検証ファイルを準備できませんでした: {0}</value>
+  </data>
+  <data name="DisplayHookInstallationStatusUnknown" xml:space="preserve">
+    <value>不明</value>
+  </data>
+  <data name="DisplayHookInstallationStatusNotInstalled" xml:space="preserve">
+    <value>インストールされていません</value>
+  </data>
+  <data name="DisplayHookInstallationStatusInstalled" xml:space="preserve">
+    <value>インストール済み</value>
+  </data>
+  <data name="DisplayHookInstallationStatusNeedsUpdate" xml:space="preserve">
+    <value>更新が必要</value>
+  </data>
+  <data name="Help_LiveStatus_Description" xml:space="preserve">
+    <value>ランタイム状態、アクティブなセッション、最近の LidGuard 実行フロー ログを、リアルタイムのターミナル ダッシュボードで表示します。</value>
+  </data>
+  <data name="Help_LiveStatus_RuntimeNotStartedNote" xml:space="preserve">
+    <value>このコマンドはランタイムを起動しません。ランタイムが利用できないときは待機して再接続します。</value>
+  </data>
+  <data name="Help_LiveStatus_ExitNote" xml:space="preserve">
+    <value>終了するには q、Escape、または Ctrl+C を押してください。</value>
+  </data>
+  <data name="LiveStatusTitle" xml:space="preserve">
+    <value>LidGuard live-status</value>
+  </data>
+  <data name="LiveStatusExitHint" xml:space="preserve">
+    <value>1 秒ごとに更新し、利用できない間は再接続を待ちます。終了するには q、Escape、または Ctrl+C を押してください。</value>
+  </data>
+  <data name="LiveStatusRuntimePanelTitle" xml:space="preserve">
+    <value>ランタイム</value>
+  </data>
+  <data name="LiveStatusSessionsPanelTitle" xml:space="preserve">
+    <value>セッション</value>
+  </data>
+  <data name="LiveStatusHookPanelTitle" xml:space="preserve">
+    <value>フック イベント</value>
+  </data>
+  <data name="LiveStatusFlowPanelTitle" xml:space="preserve">
+    <value>ランタイム フロー</value>
+  </data>
+  <data name="LiveStatusRunning" xml:space="preserve">
+    <value>実行中</value>
+  </data>
+  <data name="LiveStatusNotRunning" xml:space="preserve">
+    <value>実行されていません</value>
+  </data>
+  <data name="LiveStatusError" xml:space="preserve">
+    <value>エラー</value>
+  </data>
+  <data name="LiveStatusNone" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="LiveStatusRuntimeStateLine" xml:space="preserve">
+    <value>状態: {0} | 最終更新: {1}</value>
+  </data>
+  <data name="LiveStatusRuntimeCountsLine" xml:space="preserve">
+    <value>アクティブなセッション: {0} | ふた: {1} | 表示中のモニター: {2}</value>
+  </data>
+  <data name="LiveStatusPendingSuspendLine" xml:space="preserve">
+    <value>保留中のスリープ: {0}</value>
+  </data>
+  <data name="LiveStatusNoRuntimeMessage" xml:space="preserve">
+    <value>ランタイム メッセージ: なし</value>
+  </data>
+  <data name="LiveStatusRuntimeMessageLine" xml:space="preserve">
+    <value>ランタイム メッセージ: {0}</value>
+  </data>
+  <data name="LiveStatusNoSessions" xml:space="preserve">
+    <value>アクティブなセッションはありません。</value>
+  </data>
+  <data name="LiveStatusSessionLine" xml:space="preserve">
+    <value>{0} セッション={1} プロセス={2} 入力待ち={3} 開始={4} 最終={5} 作業ディレクトリ={6}</value>
+  </data>
+  <data name="LiveStatusNoHookEvents" xml:space="preserve">
+    <value>最近の received/runtime-result フック イベントはありません。</value>
+  </data>
+  <data name="LiveStatusNoFlowEvents" xml:space="preserve">
+    <value>最近のランタイム フロー イベントはありません。</value>
+  </data>
+  <data name="LiveStatusRuntimeFlowPrefix" xml:space="preserve">
+    <value>ランタイム</value>
+  </data>
+  <data name="LiveStatusSuspendHistoryPrefix" xml:space="preserve">
+    <value>履歴</value>
+  </data>
+  <data name="LiveStatusSucceededLabel" xml:space="preserve">
+    <value>成功</value>
+  </data>
+  <data name="LiveStatusActiveSessionsShortLabel" xml:space="preserve">
+    <value>稼働</value>
+  </data>
+  <data name="LiveStatusSessionShortLabel" xml:space="preserve">
+    <value>セッション</value>
+  </data>
+  <data name="LiveStatusMessageShortLabel" xml:space="preserve">
+    <value>メッセージ</value>
+  </data>
+  <data name="LiveStatusImmediate" xml:space="preserve">
+    <value>すぐに</value>
+  </data>
+  <data name="LiveStatusDelaySeconds" xml:space="preserve">
+    <value>{0} 秒</value>
+  </data>
+  <data name="LiveStatusPendingSuspendDetails" xml:space="preserve">
+    <value>{0}、遅延={1}、理由={2}</value>
+  </data>
+  <data name="LiveStatusSuspendReasonSoftLocked" xml:space="preserve">
+    <value>入力待ち</value>
+  </data>
+  <data name="LiveStatusSuspendReasonCompleted" xml:space="preserve">
+    <value>完了</value>
+  </data>
+  <data name="LiveStatusMoreEntries" xml:space="preserve">
+    <value>... さらに {0} 件</value>
+  </data>
+  <data name="PlatformUnsupportedWindows" xml:space="preserve">
+    <value>この LidGuard ビルドには Windows 7 以降が必要です。</value>
+  </data>
+  <data name="PlatformUnsupportedLinux" xml:space="preserve">
+    <value>LidGuard の Linux 対応には systemd/logind 環境が必要です。</value>
+  </data>
+  <data name="PlatformUnsupportedMacOS" xml:space="preserve">
+    <value>この LidGuard ビルドには macOS が必要です。</value>
+  </data>
+  <data name="DisplayMinuteCount" xml:space="preserve">
+    <value>{0} 分</value>
+  </data>
+  <data name="DisplaySuspendHistoryEntryCount" xml:space="preserve">
+    <value>{0} 件</value>
+  </data>
+  <data name="WslExecutableNotFound" xml:space="preserve">
+    <value>wsl.exe を起動できません。WSL 連携コマンドを使う前に WSL をインストールしてください。</value>
+  </data>
+  <data name="WslStatusFailed" xml:space="preserve">
+    <value>WSL は利用できません: {0}</value>
+  </data>
+  <data name="WslDefaultDistroUnavailable" xml:space="preserve">
+    <value>既定の WSL ディストリは利用できません: {0}</value>
+  </data>
+  <data name="WslNamedDistroUnavailable" xml:space="preserve">
+    <value>WSL ディストリ '{0}' は利用できません: {1}</value>
+  </data>
+  <data name="WslPathConversionFailed" xml:space="preserve">
+    <value>wslpath で LidGuard 実行ファイルのパスを変換できませんでした: {0}</value>
+  </data>
+  <data name="WslPathConversionEmpty" xml:space="preserve">
+    <value>wslpath が空の LidGuard 実行ファイル パスを返しました。</value>
+  </data>
+  <data name="WslLidGuardExecutableNotResolved" xml:space="preserve">
+    <value>WSL 連携に使う Windows の lidguard.exe パスを解決できません。</value>
+  </data>
+  <data name="Help_Wsl_DistroOption" xml:space="preserve">
+    <value>既定のディストリの代わりに特定の WSL ディストリを使います。</value>
+  </data>
+  <data name="Help_Wsl_WindowsOnlyNote" xml:space="preserve">
+    <value>このコマンドは Windows ビルドでのみ利用できます。</value>
+  </data>
+  <data name="Help_Wsl_CommandNote" xml:space="preserve">
+    <value>生成される WSL 設定は、現在の Windows lidguard.exe を WSL パス経由で実行します。</value>
+  </data>
+  <data name="Help_WslHookStatus_Description" xml:space="preserve">
+    <value>WSL ディストリ内の LidGuard フックの状態を表示します。</value>
+  </data>
+  <data name="Help_WslHookInstall_Description" xml:space="preserve">
+    <value>WSL ディストリ内に LidGuard 管理フックをインストールします。</value>
+  </data>
+  <data name="Help_WslHookRemove_Description" xml:space="preserve">
+    <value>WSL ディストリから LidGuard 管理フックを削除します。</value>
+  </data>
+  <data name="Help_WslCodexHooks_Description" xml:space="preserve">
+    <value>WSL から Windows LidGuard を実行する Codex フック スニペットを表示します。</value>
+  </data>
+  <data name="Help_WslClaudeHooks_Description" xml:space="preserve">
+    <value>WSL から Windows LidGuard を実行する Claude フック スニペットを表示します。</value>
+  </data>
+  <data name="Help_WslCopilotHooks_Description" xml:space="preserve">
+    <value>WSL から Windows LidGuard を実行する GitHub Copilot フック スニペットを表示します。</value>
+  </data>
+  <data name="Help_WslMcpStatus_Description" xml:space="preserve">
+    <value>WSL ディストリ内の LidGuard MCP サーバーの状態を表示します。</value>
+  </data>
+  <data name="Help_WslMcpInstall_Description" xml:space="preserve">
+    <value>WSL ディストリ内に LidGuard MCP サーバーをインストールします。</value>
+  </data>
+  <data name="Help_WslMcpRemove_Description" xml:space="preserve">
+    <value>WSL ディストリから LidGuard MCP サーバーを削除します。</value>
+  </data>
+  <data name="Help_WslProviderMcpStatus_Description" xml:space="preserve">
+    <value>WSL ディストリ内の汎用 Provider MCP サーバーの状態を表示します。</value>
+  </data>
+  <data name="Help_WslProviderMcpInstall_Description" xml:space="preserve">
+    <value>WSL ディストリ内に汎用 Provider MCP サーバーをインストールします。</value>
+  </data>
+  <data name="Help_WslProviderMcpRemove_Description" xml:space="preserve">
+    <value>WSL ディストリから汎用 Provider MCP サーバーを削除します。</value>
+  </data>
+</root>

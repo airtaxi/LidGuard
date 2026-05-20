@@ -343,7 +343,7 @@
     <value>Required stop hooks</value>
   </data>
   <data name="SettingsInteractiveUserInterfaceCultureDetails" xml:space="preserve">
-    <value>auto, en, ko, or a culture name such as ko-KR</value>
+    <value>auto, en, ko, ja, zh-Hans, zh-Hant, or a culture name such as ko-KR</value>
   </data>
   <data name="ManagementProviderMcpRegistered" xml:space="preserve">
     <value>Managed provider MCP server is registered.</value>
@@ -1201,7 +1201,7 @@
     <value>Remove the managed provider hook entries from the selected configuration file.</value>
   </data>
   <data name="Help_Settings_UserInterfaceCultureOption" xml:space="preserve">
-    <value>Set the CLI display language/culture. auto follows the current process or operating system setting, and LIDGUARD_UI_CULTURE takes priority over the saved value.</value>
+    <value>Set the CLI display language/culture. Common choices include en, ko, ja, zh-Hans, and zh-Hant. auto follows the current process or operating system setting, and LIDGUARD_UI_CULTURE takes priority over the saved value.</value>
   </data>
   <data name="Help_Paths_ProviderMcpBestEffort" xml:space="preserve">
     <value>Provider MCP integrations are best-effort only because correct behavior depends on the model calling the LidGuard MCP tools at the right times.</value>
