@@ -184,7 +184,7 @@
     <value>The session-timeout-minutes option must be off or an integer of at least {0}.</value>
   </data>
   <data name="SettingsInteractiveClosedLidPermissionRequestDecisionValidation" xml:space="preserve">
-    <value>Closed lid permission request decision must be deny or allow.</value>
+    <value>Closed lid permission request decision must be deny, allow, or ask.</value>
   </data>
   <data name="ManagementLabelStatus" xml:space="preserve">
     <value>Status</value>
@@ -520,7 +520,7 @@
     <value>Transport</value>
   </data>
   <data name="SettingsInteractiveClosedLidPermissionRequestDecisionDetails" xml:space="preserve">
-    <value>candidates: Deny, Allow</value>
+    <value>candidates: Deny, Allow, Ask</value>
   </data>
   <data name="ManagementCommandEmpty" xml:space="preserve">
     <value>Command: &lt;none&gt;</value>
@@ -763,7 +763,7 @@
     <value>Optional SessionEnd hook</value>
   </data>
   <data name="SettingsOptionClosedLidPermissionRequestDecisionValidation" xml:space="preserve">
-    <value>Closed lid permission request decision must be deny or allow.</value>
+    <value>Closed lid permission request decision must be deny, allow, or ask.</value>
   </data>
   <data name="ManagementLabelProviderName" xml:space="preserve">
     <value>Provider name</value>
@@ -1111,7 +1111,7 @@
     <value>The saved suspend-history-count setting controls how many entries are retained. The count argument only limits how many retained entries are displayed.</value>
   </data>
   <data name="Help_Settings_ClosedLidPermissionRequestDecisionOption" xml:space="preserve">
-    <value>Choose how closed-lid PermissionRequest hooks respond when LidGuard reports the lid is closed.</value>
+    <value>Choose how closed-lid PermissionRequest hooks respond when LidGuard reports the lid is closed. ask soft-locks the session and lets the provider's normal permission prompt continue.</value>
   </data>
   <data name="Help_ProviderMcpRemove_ConfigOption" xml:space="preserve">
     <value>Required. JSON configuration file to update.</value>
@@ -1268,6 +1268,9 @@
   </data>
   <data name="DisplayClosedLidPermissionRequestDecisionAllow" xml:space="preserve">
     <value>Allow</value>
+  </data>
+  <data name="DisplayClosedLidPermissionRequestDecisionAsk" xml:space="preserve">
+    <value>Ask</value>
   </data>
   <data name="DisplayEmergencyHibernationTemperatureModeAverage" xml:space="preserve">
     <value>Average</value>

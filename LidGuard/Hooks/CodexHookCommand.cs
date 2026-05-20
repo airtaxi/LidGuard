@@ -70,7 +70,7 @@ internal static class CodexHookCommand
             timing.AddLogWriteDuration(CodexHookEventLog.AppendReceived(hookInput));
             var hookEventName = hookInput.HookEventName.Trim();
             if (hookEventName.Equals(CodexHookEventNames.UserPromptSubmit, StringComparison.Ordinal)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Start, hookEventName, hookInput, timing: timing);
-            if (hookEventName.Equals(CodexHookEventNames.PermissionRequest, StringComparison.Ordinal)) return await WriteClosedLidPermissionRequestDecisionAsync();
+            if (hookEventName.Equals(CodexHookEventNames.PermissionRequest, StringComparison.Ordinal)) return await WriteClosedLidPermissionRequestDecisionAsync(hookInput);
             if (CodexHookEventNames.IsStopTrigger(hookEventName)) return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookEventName, hookInput, isProviderSessionEnd: true, timing: timing);
 
             return 0;
@@ -117,13 +117,16 @@ internal static class CodexHookCommand
             }
         }
 
-        private Task<int> WriteClosedLidPermissionRequestDecisionAsync()
+        private Task<int> WriteClosedLidPermissionRequestDecisionAsync(CodexHookInput hookInput)
         {
             return WriteClosedLidDecisionAsync(
+                CodexHookEventNames.PermissionRequest,
+                hookInput,
                 response => $"LidGuard Codex hook skipped PermissionRequest decision because runtime status is unavailable: {response.Message}",
                 response => $"LidGuard Codex hook left PermissionRequest to Codex because {ClosedLidPolicyStatus.DescribeInactiveReason(response)}.",
                 response => $"LidGuard Codex hook handled closed-lid PermissionRequest with {response.Settings.ClosedLidPermissionRequestDecision}.",
-                response => CodexClosedLidPermissionRequestDecisionOutput.Write(response.Settings));
+                response => CodexClosedLidPermissionRequestDecisionOutput.Write(response.Settings),
+                true);
         }
     }
 

@@ -201,11 +201,13 @@ internal static class GitHubCopilotHookCommand
                 : HookCommandInputParseResult<GitHubCopilotHookInput>.Failure(message);
         }
 
-        private Task<int> WriteClosedLidAskUserGuardAsync(GitHubCopilotHookInput hookInput)
+        private Task<int> WriteClosedLidAskUserGuardAsync(string configuredHookEventName, GitHubCopilotHookInput hookInput)
         {
             if (!hookInput.ToolName.Equals(GitHubCopilotHookEventNames.AskUserToolName, StringComparison.OrdinalIgnoreCase)) return Task.FromResult(0);
 
             return WriteClosedLidDecisionAsync(
+                configuredHookEventName,
+                hookInput,
                 response => $"LidGuard GitHub Copilot hook skipped preToolUse ask_user guard because runtime status is unavailable: {response.Message}",
                 response => $"LidGuard GitHub Copilot hook left ask_user to Copilot because {ClosedLidPolicyStatus.DescribeInactiveReason(response)}.",
                 _ => "LidGuard GitHub Copilot hook denied closed-lid ask_user.",
@@ -215,10 +217,13 @@ internal static class GitHubCopilotHookCommand
         private Task<int> WriteClosedLidPermissionRequestDecisionAsync(GitHubCopilotHookInput hookInput)
         {
             return WriteClosedLidDecisionAsync(
+                GitHubCopilotHookEventNames.PermissionRequest,
+                hookInput,
                 response => $"LidGuard GitHub Copilot hook skipped permissionRequest decision because runtime status is unavailable: {response.Message}",
                 response => $"LidGuard GitHub Copilot hook left permissionRequest to Copilot because {ClosedLidPolicyStatus.DescribeInactiveReason(response)}.",
                 response => $"LidGuard GitHub Copilot hook handled closed-lid permissionRequest for tool '{hookInput.ToolName}' with {response.Settings.ClosedLidPermissionRequestDecision}.",
-                response => GitHubCopilotClosedLidPermissionRequestDecisionOutput.Write(response.Settings));
+                response => GitHubCopilotClosedLidPermissionRequestDecisionOutput.Write(response.Settings),
+                true);
         }
 
         private async Task<int> HandleNotificationAsync(string configuredHookEventName, GitHubCopilotHookInput hookInput)
@@ -251,7 +256,7 @@ internal static class GitHubCopilotHookCommand
                     DescribeActivityReason(configuredHookEventName, hookInput.ToolName));
             }
 
-            return await WriteClosedLidAskUserGuardAsync(hookInput);
+            return await WriteClosedLidAskUserGuardAsync(configuredHookEventName, hookInput);
         }
 
         private Task<int> ReportActivityAsync(string configuredHookEventName, GitHubCopilotHookInput hookInput, string sessionStateReason)

@@ -8,6 +8,8 @@ namespace LidGuard.Hooks;
 internal abstract class HookCommandBase<THookInput>
     where THookInput : IHookCommandInput
 {
+    private const string ClosedLidPermissionRequestAskSoftLockReason = "closed_lid_permission_request_ask";
+
     protected abstract AgentProvider Provider { get; }
 
     protected async Task<HookCommandInputReadResult<THookInput>> ReadHookInputAsync(
@@ -126,10 +128,13 @@ internal abstract class HookCommandBase<THookInput>
     }
 
     protected async Task<int> WriteClosedLidDecisionAsync(
+        string hookEventName,
+        THookInput hookInput,
         Func<LidGuardPipeResponse, string> createRuntimeUnavailableMessage,
         Func<LidGuardPipeResponse, string> createInactivePolicyMessage,
         Func<LidGuardPipeResponse, string> createDecisionMessage,
-        Func<LidGuardPipeResponse, int> writeDecision)
+        Func<LidGuardPipeResponse, int> writeDecision,
+        bool softLockWhenPermissionRequestAsk = false)
     {
         var response = await new LidGuardRuntimeClient().SendAsync(new LidGuardPipeRequest { Command = LidGuardPipeCommands.Status }, false);
         if (!response.Succeeded)
@@ -141,6 +146,13 @@ internal abstract class HookCommandBase<THookInput>
         if (!ClosedLidPolicyStatus.IsActive(response))
         {
             AppendMessage(createInactivePolicyMessage(response));
+            return 0;
+        }
+
+        if (softLockWhenPermissionRequestAsk && response.Settings.ClosedLidPermissionRequestDecision == ClosedLidPermissionRequestDecision.Ask)
+        {
+            AppendMessage($"LidGuard {Provider} hook soft-locked closed-lid {hookEventName} because ClosedLidPermissionRequestDecision is Ask and left the provider permission flow unchanged.");
+            await SendSessionStateRequestAsync(LidGuardPipeCommands.MarkSessionSoftLocked, hookEventName, hookInput, ClosedLidPermissionRequestAskSoftLockReason);
             return 0;
         }
 

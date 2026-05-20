@@ -15,6 +15,8 @@ internal static class ClaudeClosedLidPermissionRequestDecisionOutput
     {
         var normalizedSettings = LidGuardSettings.Normalize(settings);
         var decision = normalizedSettings.ClosedLidPermissionRequestDecision;
+        if (decision == ClosedLidPermissionRequestDecision.Ask) return 0;
+
         var behaviorText = decision == ClosedLidPermissionRequestDecision.Allow ? "allow" : "deny";
         var decisionObject = new JsonObject
         {

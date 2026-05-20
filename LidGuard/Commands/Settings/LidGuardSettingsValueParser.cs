@@ -96,6 +96,9 @@ internal static class LidGuardSettingsValueParser
             case "allow":
                 closedLidPermissionRequestDecision = ClosedLidPermissionRequestDecision.Allow;
                 return true;
+            case "ask":
+                closedLidPermissionRequestDecision = ClosedLidPermissionRequestDecision.Ask;
+                return true;
             case "deny":
                 closedLidPermissionRequestDecision = ClosedLidPermissionRequestDecision.Deny;
                 return true;

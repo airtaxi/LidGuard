@@ -363,7 +363,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             settingName,
             LocalizationService.DisplayClosedLidPermissionRequestDecision(storedValue),
             LocalizationService.DisplayClosedLidPermissionRequestDecision(defaultValue),
-            LocalizationService.GetString("SettingsInteractiveClosedLidPermissionRequestDecisionDetails", "candidates: Deny, Allow"));
+            LocalizationService.GetString("SettingsInteractiveClosedLidPermissionRequestDecisionDetails", "candidates: Deny, Allow, Ask"));
 
         var valueText = Console.ReadLine();
         if (valueText is null)

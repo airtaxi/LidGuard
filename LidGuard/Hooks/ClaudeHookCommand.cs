@@ -118,8 +118,8 @@ internal static class ClaudeHookCommand
                 return await SendRuntimeRequestAsync(LidGuardPipeCommands.Start, hookEventName, hookInput, timing: timing);
             }
 
-            if (hookEventName.Equals(ClaudeHookEventNames.Elicitation, StringComparison.Ordinal)) return await WriteClosedLidElicitationDecisionAsync();
-            if (hookEventName.Equals(ClaudeHookEventNames.PermissionRequest, StringComparison.Ordinal)) return await WriteClosedLidPermissionRequestDecisionAsync();
+            if (hookEventName.Equals(ClaudeHookEventNames.Elicitation, StringComparison.Ordinal)) return await WriteClosedLidElicitationDecisionAsync(hookInput);
+            if (hookEventName.Equals(ClaudeHookEventNames.PermissionRequest, StringComparison.Ordinal)) return await WriteClosedLidPermissionRequestDecisionAsync(hookInput);
             if (ClaudeHookEventNames.IsStopTrigger(hookEventName))
             {
                 var isProviderSessionEnd = IsProviderSessionEnd(hookInput);
@@ -189,18 +189,23 @@ internal static class ClaudeHookCommand
             }
         }
 
-        private Task<int> WriteClosedLidPermissionRequestDecisionAsync()
+        private Task<int> WriteClosedLidPermissionRequestDecisionAsync(ClaudeHookInput hookInput)
         {
             return WriteClosedLidDecisionAsync(
+                ClaudeHookEventNames.PermissionRequest,
+                hookInput,
                 response => $"LidGuard Claude hook skipped PermissionRequest decision because runtime status is unavailable: {response.Message}",
                 response => $"LidGuard Claude hook left PermissionRequest to Claude because {ClosedLidPolicyStatus.DescribeInactiveReason(response)}.",
                 response => $"LidGuard Claude hook handled closed-lid PermissionRequest with {response.Settings.ClosedLidPermissionRequestDecision}.",
-                response => ClaudeClosedLidPermissionRequestDecisionOutput.Write(response.Settings));
+                response => ClaudeClosedLidPermissionRequestDecisionOutput.Write(response.Settings),
+                true);
         }
 
-        private Task<int> WriteClosedLidElicitationDecisionAsync()
+        private Task<int> WriteClosedLidElicitationDecisionAsync(ClaudeHookInput hookInput)
         {
             return WriteClosedLidDecisionAsync(
+                ClaudeHookEventNames.Elicitation,
+                hookInput,
                 response => $"LidGuard Claude hook skipped Elicitation decision because runtime status is unavailable: {response.Message}",
                 response => $"LidGuard Claude hook left Elicitation to Claude because {ClosedLidPolicyStatus.DescribeInactiveReason(response)}.",
                 _ => "LidGuard Claude hook canceled closed-lid Elicitation.",

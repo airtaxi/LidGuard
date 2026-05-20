@@ -6,5 +6,6 @@ namespace LidGuard.Settings;
 public enum ClosedLidPermissionRequestDecision
 {
     Deny,
-    Allow
+    Allow,
+    Ask
 }

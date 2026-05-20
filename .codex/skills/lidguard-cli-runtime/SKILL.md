@@ -71,14 +71,15 @@ description: "LidGuard CLI, settings, permission commands, examples, and failure
 - Emergency Hibernation on high temperature: enabled by default.
 - Emergency Hibernation temperature mode: Average by default, with Low and High optional.
 - Emergency Hibernation temperature threshold: 93 Celsius by default, clamped to 70 through 110.
-- Closed-lid PermissionRequest decision: Deny by default, Allow optional.
+- Closed-lid PermissionRequest decision: Deny by default, with Allow and Ask optional. Ask marks the active session soft-locked with reason `closed_lid_permission_request_ask` and returns empty stdout so the provider's normal permission flow continues.
 - User interface culture: `auto` by default, with `en`, `ko`, or any `CultureInfo`-resolvable BCP 47 culture name optional.
 - Parent process watchdog: enabled.
 
 ## Provider Permission Hooks
 
-- PermissionRequest hooks only emit a structured allow/deny decision when the runtime reports `LidSwitchState = Closed` and `VisibleDisplayMonitorCount = 0`; otherwise they return empty stdout so the provider's default permission flow continues.
-- Claude and GitHub Copilot CLI closed-lid `PermissionRequest` outputs also set `interrupt: true`.
+- PermissionRequest hooks only emit a structured allow/deny decision when the runtime reports `LidSwitchState = Closed`, `VisibleDisplayMonitorCount = 0`, and Closed-lid PermissionRequest decision is Deny or Allow; otherwise they return empty stdout so the provider's default permission flow continues.
+- When Closed-lid PermissionRequest decision is Ask and the closed-lid policy is active, mark the session soft-locked with reason `closed_lid_permission_request_ask` before returning empty stdout. If soft-lock recording fails, keep stdout empty and rely on hook/runtime logs for diagnostics.
+- Claude and GitHub Copilot CLI structured closed-lid `PermissionRequest` allow/deny outputs also set `interrupt: true`.
 - Keep hook DTOs separate per provider even when another provider later uses a similar JSON shape.
 - Claude `Elicitation` hooks emit a structured `cancel` only when the runtime reports `LidSwitchState = Closed` and `VisibleDisplayMonitorCount = 0`; otherwise they return empty stdout so Claude's default elicitation flow continues.
 
@@ -158,6 +159,7 @@ lidguard settings --server-runtime-cleanup-delay-minutes off
 lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
 lidguard settings --post-session-end-webhook-url https://example.com/lidguard-session-ended
 lidguard settings --closed-lid-permission-request-decision allow
+lidguard settings --closed-lid-permission-request-decision ask
 lidguard settings --prevent-system-sleep true --prevent-display-sleep true --power-request-reason "LidGuard keeps agent sessions awake"
 lidguard status
 lidguard live-status

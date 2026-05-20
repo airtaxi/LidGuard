@@ -32,6 +32,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Refresh a session's last activity timestamp on start/update and provider activity such as new tool execution.
 - Clear that session's current soft-lock state on provider activity.
 - Do not refresh last activity when setting a soft-lock; soft-locking represents waiting rather than autonomous work.
+- Closed-lid PermissionRequest decision Ask marks the current provider session soft-locked with reason `closed_lid_permission_request_ask`; it is cleared by the same provider activity, transcript activity, start/update, stop/remove, or cleanup paths as other soft-locks.
 - When a session reaches the configured inactive session timeout, transition it to soft-locked with reason metadata and apply the same suspend-eligibility handling as other soft-locked sessions.
 - Do not auto-resolve watched processes from the working directory for any provider.
 - Preserve an existing watched process for the same active session when a later start/update does not provide a new watched process id and `WatchParentProcess` is still enabled.
@@ -44,6 +45,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 - Use the shared `AgentTranscriptMonitor` implementation for Codex, Claude, and GitHub Copilot CLI transcript JSONL monitoring.
 - Treat transcript length growth or `LastWriteTimeUtc` advancement as session activity and clear current soft-lock state through the same activity path used by tool events, unless a provider-specific detector reports a stop or soft-lock signal first.
+- If a provider runs in a web/desktop cloud environment where LidGuard cannot read the local transcript JSONL file, transcript length growth cannot clear soft-lock state; rely on observable tool/activity hooks, notification resolution hooks, stop/update paths, or cleanup instead.
 - For Codex, prefer hook-provided `transcript_path`; otherwise fall back to a unique `~/.codex/sessions` match by session id.
 - If the latest Codex transcript record is an `event_msg` whose payload type is `turn_aborted`, treat it as an interrupted Codex turn and route the session through the normal stop path instead of recording activity.
 - If recent Codex transcript records contain a pending `response_item` `function_call` named `request_user_input` without a matching `function_call_output` for the same `call_id`, mark the session soft-locked with reason `codex_transcript_request_user_input_pending`.
