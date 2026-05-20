@@ -39,7 +39,7 @@ internal static class WslHookSnippetCommand
         }
 
         var provider = GetProvider(commandName);
-        var hookCommandName = GetHookCommandName(provider);
+        var hookCommandName = WslCommandUtilities.GetHookCommandName(provider);
         var hookCommand = WslCommandUtilities.CreateWslLidGuardCommand(wslExecutablePath, hookCommandName);
 
         return provider switch
@@ -116,17 +116,6 @@ internal static class WslHookSnippetCommand
             LidGuardPipeCommands.WslClaudeHooks => AgentProvider.Claude,
             LidGuardPipeCommands.WslCopilotHooks => AgentProvider.GitHubCopilot,
             _ => AgentProvider.Unknown
-        };
-    }
-
-    private static string GetHookCommandName(AgentProvider provider)
-    {
-        return provider switch
-        {
-            AgentProvider.Codex => LidGuardPipeCommands.CodexHook,
-            AgentProvider.Claude => LidGuardPipeCommands.ClaudeHook,
-            AgentProvider.GitHubCopilot => LidGuardPipeCommands.CopilotHook,
-            _ => string.Empty
         };
     }
 

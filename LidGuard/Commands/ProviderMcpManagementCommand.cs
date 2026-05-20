@@ -148,21 +148,21 @@ internal static class ProviderMcpManagementCommand
         }
 
         Console.WriteLine(LocalizationService.GetString("ManagementProviderMcpInstallationTitle"));
-        WriteField("ManagementLabelConfig", "Config", configurationFilePath);
-        WriteField("ManagementLabelConfigExists", "Config exists", configurationFileExists);
-        WriteField("ManagementLabelServerName", "Server name", managedServerName);
-        WriteField("ManagementLabelInstalled", "Installed", installed);
-        WriteField("ManagementLabelManagedServerEntry", "Managed server entry", hasManagedServerEntry);
-        WriteField("ManagementLabelCommand", "Command", serverCommand);
-        WriteField("ManagementLabelArgs", "Args", serverArguments);
-        WriteField("ManagementLabelMatchesCurrentLidGuardExecutable", "Matches current LidGuard executable", matchesCurrentLidGuardExecutable);
-        WriteField("ManagementLabelContainsProviderMcpServerCommand", "Contains provider-mcp-server command", containsProviderMcpServerCommand);
-        WriteField("ManagementLabelProviderName", "Provider name", configuredProviderName);
-        WriteField("ManagementLabelMessage", "Message", CreateStatusMessage(configurationFilePath, configurationFileExists, hasManagedServerEntry, matchesCurrentLidGuardExecutable, containsProviderMcpServerCommand, managedServerName, message));
+        ManagementFieldWriter.WriteField("ManagementLabelConfig", "Config", configurationFilePath);
+        ManagementFieldWriter.WriteField("ManagementLabelConfigExists", "Config exists", configurationFileExists);
+        ManagementFieldWriter.WriteField("ManagementLabelServerName", "Server name", managedServerName);
+        ManagementFieldWriter.WriteField("ManagementLabelInstalled", "Installed", installed);
+        ManagementFieldWriter.WriteField("ManagementLabelManagedServerEntry", "Managed server entry", hasManagedServerEntry);
+        ManagementFieldWriter.WriteField("ManagementLabelCommand", "Command", serverCommand);
+        ManagementFieldWriter.WriteField("ManagementLabelArgs", "Args", serverArguments);
+        ManagementFieldWriter.WriteField("ManagementLabelMatchesCurrentLidGuardExecutable", "Matches current LidGuard executable", matchesCurrentLidGuardExecutable);
+        ManagementFieldWriter.WriteField("ManagementLabelContainsProviderMcpServerCommand", "Contains provider-mcp-server command", containsProviderMcpServerCommand);
+        ManagementFieldWriter.WriteField("ManagementLabelProviderName", "Provider name", configuredProviderName);
+        ManagementFieldWriter.WriteField("ManagementLabelMessage", "Message", CreateStatusMessage(configurationFilePath, configurationFileExists, hasManagedServerEntry, matchesCurrentLidGuardExecutable, containsProviderMcpServerCommand, managedServerName, message));
         return 0;
     }
 
-    private static JsonArray CreateProviderServerArguments(string providerName)
+    internal static JsonArray CreateProviderServerArguments(string providerName)
     {
         var argumentsNode = JsonSerializer.SerializeToNode(
             [ProviderMcpServerCommand.CommandName, "--provider-name", providerName],
@@ -170,7 +170,7 @@ internal static class ProviderMcpManagementCommand
         return argumentsNode as JsonArray ?? [];
     }
 
-    private static string CreateStatusMessage(
+    internal static string CreateStatusMessage(
         string configurationFilePath,
         bool configurationFileExists,
         bool hasManagedServerEntry,
@@ -190,13 +190,13 @@ internal static class ProviderMcpManagementCommand
         return LocalizationService.GetString("ManagementProviderMcpRegistered");
     }
 
-    private static string GetManagedServerName(IReadOnlyDictionary<string, string> options)
+    internal static string GetManagedServerName(IReadOnlyDictionary<string, string> options)
     {
         var configuredServerName = CommandOptionReader.GetOption(options, "server-name");
         return string.IsNullOrWhiteSpace(configuredServerName) ? DefaultManagedProviderMcpServerName : configuredServerName.Trim();
     }
 
-    private static bool TryGetConfiguredProviderName(JsonObject serverObject, out string providerName)
+    internal static bool TryGetConfiguredProviderName(JsonObject serverObject, out string providerName)
     {
         providerName = string.Empty;
         if (serverObject["args"] is not JsonArray jsonArray) return false;
@@ -218,9 +218,4 @@ internal static class ProviderMcpManagementCommand
         return false;
     }
 
-    private static void WriteField(string labelResourceName, string fallbackLabel, object value)
-    {
-        var displayValue = value is bool booleanValue ? LocalizationService.DisplayBoolean(booleanValue) : LocalizationService.DisplayOptionalValue(value?.ToString() ?? string.Empty);
-        Console.WriteLine(LocalizationService.GetFormattedString("ManagementField", LocalizationService.GetString(labelResourceName, fallbackLabel), displayValue));
-    }
 }

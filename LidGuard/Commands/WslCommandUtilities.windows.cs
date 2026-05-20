@@ -1,7 +1,9 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using LidGuard.Hooks;
+using LidGuard.Ipc;
 using LidGuard.Localization;
+using LidGuard.Sessions;
 
 namespace LidGuard.Commands;
 
@@ -9,6 +11,8 @@ internal static class WslCommandUtilities
 {
     public const string DistroOptionName = "distro";
     public const string WslExecutableName = "wsl.exe";
+
+    public readonly record struct WslContext(string DistroName, string WslExecutablePath);
 
     public static string GetDistroName(IReadOnlyDictionary<string, string> options)
         => CommandOptionReader.GetOption(options, DistroOptionName).Trim();
@@ -25,6 +29,17 @@ internal static class WslCommandUtilities
         message = LocalizationService.GetString("CommandRequiredOption", "The --{0} option is required.")
             .Replace("{0}", DistroOptionName, StringComparison.Ordinal);
         return false;
+    }
+
+    public static bool TryCreateContext(IReadOnlyDictionary<string, string> options, out WslContext context, out string message)
+    {
+        context = default;
+        if (!TryGetDistroName(options, out var distroName, out message)) return false;
+        if (!TryValidateWsl(distroName, out message)) return false;
+        if (!TryGetWslLidGuardExecutablePath(distroName, out var wslExecutablePath, out message)) return false;
+
+        context = new WslContext(distroName, wslExecutablePath);
+        return true;
     }
 
     public static bool TryValidateWsl(string distroName, out string message)
@@ -89,6 +104,17 @@ internal static class WslCommandUtilities
 
     public static string CreateWslLidGuardCommand(string wslExecutablePath, string commandName)
         => $"{QuoteBashWord(wslExecutablePath)} {commandName}";
+
+    public static string GetHookCommandName(AgentProvider provider)
+    {
+        return provider switch
+        {
+            AgentProvider.Codex => LidGuardPipeCommands.CodexHook,
+            AgentProvider.Claude => LidGuardPipeCommands.ClaudeHook,
+            AgentProvider.GitHubCopilot => LidGuardPipeCommands.CopilotHook,
+            _ => string.Empty
+        };
+    }
 
     public static bool ExecutableReferencesMatch(string executableReference, string expectedExecutableReference)
         => executableReference.Trim().Equals(expectedExecutableReference.Trim(), StringComparison.Ordinal);
@@ -193,20 +219,20 @@ internal static class WslCommandUtilities
         return $"{configurationFilePath}.{timestamp}.bak";
     }
 
-    public static string GetProviderCliExecutableName(LidGuard.Sessions.AgentProvider provider)
+    public static string GetProviderCliExecutableName(AgentProvider provider)
     {
         return provider switch
         {
-            LidGuard.Sessions.AgentProvider.Codex => "codex",
-            LidGuard.Sessions.AgentProvider.Claude => "claude",
-            LidGuard.Sessions.AgentProvider.GitHubCopilot => "copilot",
+            AgentProvider.Codex => "codex",
+            AgentProvider.Claude => "claude",
+            AgentProvider.GitHubCopilot => "copilot",
             _ => string.Empty
         };
     }
 
     public static bool TryResolveProviderCliDisplayText(
         string distroName,
-        LidGuard.Sessions.AgentProvider provider,
+        AgentProvider provider,
         out bool hasProviderCli,
         out string providerCliDisplayText)
     {

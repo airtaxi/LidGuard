@@ -4,7 +4,7 @@ using LidGuard.Localization;
 
 namespace LidGuard.Commands;
 
-internal static class McpConfigurationJsonUtilities
+internal static partial class McpConfigurationJsonUtilities
 {
     public static string DescribeJsonArray(JsonObject jsonObject, string propertyName)
     {

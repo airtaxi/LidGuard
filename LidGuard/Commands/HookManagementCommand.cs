@@ -283,92 +283,92 @@ internal static class HookManagementCommand
     private static void WriteCodexHookInspection(HookInstallationInspection inspection)
     {
         Console.WriteLine(LocalizationService.GetString("ManagementHookInstallationTitle"));
-        WriteField("ManagementLabelProvider", "Provider", inspection.Provider);
-        WriteField("ManagementLabelStatus", "Status", inspection.Status);
-        WriteField("ManagementLabelInstalled", "Installed", inspection.IsInstalled);
-        WriteField("ManagementLabelConfig", "Config", inspection.ConfigurationFilePath);
-        WriteField("ManagementLabelConfigExists", "Config exists", inspection.ConfigurationFileExists);
-        WriteField("ManagementLabelExecutable", "Executable", inspection.HookExecutablePath);
-        WriteField("ManagementLabelCommand", "Command", inspection.HookCommand);
-        WriteField("ManagementLabelHookLog", "Hook log", GetHookLogFilePath(inspection.Provider));
-        WriteField("ManagementLabelFeatureFlag", "Feature flag", inspection.HasCheck(HookInstallationCheck.HooksFeatureFlag));
-        WriteField("ManagementLabelManagedBlock", "Managed block", inspection.HasCheck(HookInstallationCheck.ManagedBlock));
-        WriteField("ManagementLabelUserPromptSubmitHook", "UserPromptSubmit hook", inspection.HasCheck(HookInstallationCheck.UserPromptSubmitHook));
-        WriteField("ManagementLabelStopHook", "Stop hook", inspection.HasCheck(HookInstallationCheck.StopHook));
-        WriteField("ManagementLabelPermissionRequestHook", "PermissionRequest hook", inspection.HasCheck(HookInstallationCheck.PermissionRequestHook));
-        WriteField("ManagementLabelRequiredStopHooks", "Required stop hooks", inspection.HasCheck(HookInstallationCheck.StopHook));
-        WriteField("ManagementLabelOptionalSessionEndHook", "Optional SessionEnd hook", inspection.HasCheck(HookInstallationCheck.SessionEndHook));
-        WriteField("ManagementLabelValidCommand", "Valid command", inspection.HasCheck(HookInstallationCheck.ValidHookCommand));
-        WriteField("ManagementLabelExpectedCommand", "Expected command", inspection.HasCheck(HookInstallationCheck.ExpectedHookCommand));
-        WriteField("ManagementLabelMessage", "Message", DisplayHookManagementMessage(inspection.Provider, inspection.Message));
+        ManagementFieldWriter.WriteField("ManagementLabelProvider", "Provider", inspection.Provider);
+        ManagementFieldWriter.WriteField("ManagementLabelStatus", "Status", inspection.Status);
+        ManagementFieldWriter.WriteField("ManagementLabelInstalled", "Installed", inspection.IsInstalled);
+        ManagementFieldWriter.WriteField("ManagementLabelConfig", "Config", inspection.ConfigurationFilePath);
+        ManagementFieldWriter.WriteField("ManagementLabelConfigExists", "Config exists", inspection.ConfigurationFileExists);
+        ManagementFieldWriter.WriteField("ManagementLabelExecutable", "Executable", inspection.HookExecutablePath);
+        ManagementFieldWriter.WriteField("ManagementLabelCommand", "Command", inspection.HookCommand);
+        ManagementFieldWriter.WriteField("ManagementLabelHookLog", "Hook log", GetHookLogFilePath(inspection.Provider));
+        ManagementFieldWriter.WriteField("ManagementLabelFeatureFlag", "Feature flag", inspection.HasCheck(HookInstallationCheck.HooksFeatureFlag));
+        ManagementFieldWriter.WriteField("ManagementLabelManagedBlock", "Managed block", inspection.HasCheck(HookInstallationCheck.ManagedBlock));
+        ManagementFieldWriter.WriteField("ManagementLabelUserPromptSubmitHook", "UserPromptSubmit hook", inspection.HasCheck(HookInstallationCheck.UserPromptSubmitHook));
+        ManagementFieldWriter.WriteField("ManagementLabelStopHook", "Stop hook", inspection.HasCheck(HookInstallationCheck.StopHook));
+        ManagementFieldWriter.WriteField("ManagementLabelPermissionRequestHook", "PermissionRequest hook", inspection.HasCheck(HookInstallationCheck.PermissionRequestHook));
+        ManagementFieldWriter.WriteField("ManagementLabelRequiredStopHooks", "Required stop hooks", inspection.HasCheck(HookInstallationCheck.StopHook));
+        ManagementFieldWriter.WriteField("ManagementLabelOptionalSessionEndHook", "Optional SessionEnd hook", inspection.HasCheck(HookInstallationCheck.SessionEndHook));
+        ManagementFieldWriter.WriteField("ManagementLabelValidCommand", "Valid command", inspection.HasCheck(HookInstallationCheck.ValidHookCommand));
+        ManagementFieldWriter.WriteField("ManagementLabelExpectedCommand", "Expected command", inspection.HasCheck(HookInstallationCheck.ExpectedHookCommand));
+        ManagementFieldWriter.WriteField("ManagementLabelMessage", "Message", DisplayHookManagementMessage(inspection.Provider, inspection.Message));
     }
 
     private static void WriteClaudeHookInspection(HookInstallationInspection inspection)
     {
         Console.WriteLine(LocalizationService.GetString("ManagementHookInstallationTitle"));
-        WriteField("ManagementLabelProvider", "Provider", inspection.Provider);
-        WriteField("ManagementLabelStatus", "Status", inspection.Status);
-        WriteField("ManagementLabelInstalled", "Installed", inspection.IsInstalled);
-        WriteField("ManagementLabelConfig", "Config", inspection.ConfigurationFilePath);
-        WriteField("ManagementLabelConfigExists", "Config exists", inspection.ConfigurationFileExists);
-        WriteField("ManagementLabelExecutable", "Executable", inspection.HookExecutablePath);
-        WriteField("ManagementLabelCommand", "Command", inspection.HookCommand);
-        WriteField("ManagementLabelHookLog", "Hook log", GetHookLogFilePath(inspection.Provider));
-        WriteField("ManagementLabelHooksObject", "Hooks object", inspection.HasCheck(HookInstallationCheck.HooksObject));
-        WriteField("ManagementLabelManagedHooks", "Managed hooks", inspection.HasCheck(HookInstallationCheck.ManagedHookEntries));
-        WriteField("ManagementLabelUserPromptSubmitHook", "UserPromptSubmit hook", inspection.HasCheck(HookInstallationCheck.UserPromptSubmitHook));
-        WriteField("ManagementLabelPreToolUseHook", "PreToolUse hook", inspection.HasCheck(HookInstallationCheck.PreToolUseHook));
-        WriteField("ManagementLabelPostToolUseHook", "PostToolUse hook", inspection.HasCheck(HookInstallationCheck.PostToolUseHook));
-        WriteField("ManagementLabelPostToolUseFailureHook", "PostToolUseFailure hook", inspection.HasCheck(HookInstallationCheck.PostToolUseFailureHook));
-        WriteField("ManagementLabelSubagentStartHook", "SubagentStart hook", inspection.HasCheck(HookInstallationCheck.SubagentStartHook));
-        WriteField("ManagementLabelSubagentStopHook", "SubagentStop hook", inspection.HasCheck(HookInstallationCheck.SubagentStopHook));
-        WriteField("ManagementLabelTaskCreatedHook", "TaskCreated hook", inspection.HasCheck(HookInstallationCheck.TaskCreatedHook));
-        WriteField("ManagementLabelTaskCompletedHook", "TaskCompleted hook", inspection.HasCheck(HookInstallationCheck.TaskCompletedHook));
-        WriteField("ManagementLabelStopHook", "Stop hook", inspection.HasCheck(HookInstallationCheck.StopHook));
-        WriteField("ManagementLabelStopFailureHook", "StopFailure hook", inspection.HasCheck(HookInstallationCheck.StopFailureHook));
-        WriteField("ManagementLabelElicitationHook", "Elicitation hook", inspection.HasCheck(HookInstallationCheck.ElicitationHook));
-        WriteField("ManagementLabelPermissionRequestHook", "PermissionRequest hook", inspection.HasCheck(HookInstallationCheck.PermissionRequestHook));
-        WriteField("ManagementLabelNotificationHook", "Notification hook", inspection.HasCheck(HookInstallationCheck.NotificationHook));
-        WriteField("ManagementLabelSessionEndHook", "SessionEnd hook", inspection.HasCheck(HookInstallationCheck.SessionEndHook));
-        WriteField("ManagementLabelAllStopHooks", "All stop hooks", HasClaudeAllStopHooks(inspection));
-        WriteField("ManagementLabelExpectedCommand", "Expected command", inspection.HasCheck(HookInstallationCheck.ExpectedHookCommand));
-        WriteField("ManagementLabelExpectedNotificationMatcher", "Expected notification matcher", inspection.HasCheck(HookInstallationCheck.ExpectedNotificationMatcher));
-        WriteField("ManagementLabelExpectedShell", "Expected shell", inspection.HasCheck(HookInstallationCheck.ExpectedHookShell));
-        WriteField("ManagementLabelMessage", "Message", DisplayHookManagementMessage(inspection.Provider, inspection.Message));
+        ManagementFieldWriter.WriteField("ManagementLabelProvider", "Provider", inspection.Provider);
+        ManagementFieldWriter.WriteField("ManagementLabelStatus", "Status", inspection.Status);
+        ManagementFieldWriter.WriteField("ManagementLabelInstalled", "Installed", inspection.IsInstalled);
+        ManagementFieldWriter.WriteField("ManagementLabelConfig", "Config", inspection.ConfigurationFilePath);
+        ManagementFieldWriter.WriteField("ManagementLabelConfigExists", "Config exists", inspection.ConfigurationFileExists);
+        ManagementFieldWriter.WriteField("ManagementLabelExecutable", "Executable", inspection.HookExecutablePath);
+        ManagementFieldWriter.WriteField("ManagementLabelCommand", "Command", inspection.HookCommand);
+        ManagementFieldWriter.WriteField("ManagementLabelHookLog", "Hook log", GetHookLogFilePath(inspection.Provider));
+        ManagementFieldWriter.WriteField("ManagementLabelHooksObject", "Hooks object", inspection.HasCheck(HookInstallationCheck.HooksObject));
+        ManagementFieldWriter.WriteField("ManagementLabelManagedHooks", "Managed hooks", inspection.HasCheck(HookInstallationCheck.ManagedHookEntries));
+        ManagementFieldWriter.WriteField("ManagementLabelUserPromptSubmitHook", "UserPromptSubmit hook", inspection.HasCheck(HookInstallationCheck.UserPromptSubmitHook));
+        ManagementFieldWriter.WriteField("ManagementLabelPreToolUseHook", "PreToolUse hook", inspection.HasCheck(HookInstallationCheck.PreToolUseHook));
+        ManagementFieldWriter.WriteField("ManagementLabelPostToolUseHook", "PostToolUse hook", inspection.HasCheck(HookInstallationCheck.PostToolUseHook));
+        ManagementFieldWriter.WriteField("ManagementLabelPostToolUseFailureHook", "PostToolUseFailure hook", inspection.HasCheck(HookInstallationCheck.PostToolUseFailureHook));
+        ManagementFieldWriter.WriteField("ManagementLabelSubagentStartHook", "SubagentStart hook", inspection.HasCheck(HookInstallationCheck.SubagentStartHook));
+        ManagementFieldWriter.WriteField("ManagementLabelSubagentStopHook", "SubagentStop hook", inspection.HasCheck(HookInstallationCheck.SubagentStopHook));
+        ManagementFieldWriter.WriteField("ManagementLabelTaskCreatedHook", "TaskCreated hook", inspection.HasCheck(HookInstallationCheck.TaskCreatedHook));
+        ManagementFieldWriter.WriteField("ManagementLabelTaskCompletedHook", "TaskCompleted hook", inspection.HasCheck(HookInstallationCheck.TaskCompletedHook));
+        ManagementFieldWriter.WriteField("ManagementLabelStopHook", "Stop hook", inspection.HasCheck(HookInstallationCheck.StopHook));
+        ManagementFieldWriter.WriteField("ManagementLabelStopFailureHook", "StopFailure hook", inspection.HasCheck(HookInstallationCheck.StopFailureHook));
+        ManagementFieldWriter.WriteField("ManagementLabelElicitationHook", "Elicitation hook", inspection.HasCheck(HookInstallationCheck.ElicitationHook));
+        ManagementFieldWriter.WriteField("ManagementLabelPermissionRequestHook", "PermissionRequest hook", inspection.HasCheck(HookInstallationCheck.PermissionRequestHook));
+        ManagementFieldWriter.WriteField("ManagementLabelNotificationHook", "Notification hook", inspection.HasCheck(HookInstallationCheck.NotificationHook));
+        ManagementFieldWriter.WriteField("ManagementLabelSessionEndHook", "SessionEnd hook", inspection.HasCheck(HookInstallationCheck.SessionEndHook));
+        ManagementFieldWriter.WriteField("ManagementLabelAllStopHooks", "All stop hooks", HasClaudeAllStopHooks(inspection));
+        ManagementFieldWriter.WriteField("ManagementLabelExpectedCommand", "Expected command", inspection.HasCheck(HookInstallationCheck.ExpectedHookCommand));
+        ManagementFieldWriter.WriteField("ManagementLabelExpectedNotificationMatcher", "Expected notification matcher", inspection.HasCheck(HookInstallationCheck.ExpectedNotificationMatcher));
+        ManagementFieldWriter.WriteField("ManagementLabelExpectedShell", "Expected shell", inspection.HasCheck(HookInstallationCheck.ExpectedHookShell));
+        ManagementFieldWriter.WriteField("ManagementLabelMessage", "Message", DisplayHookManagementMessage(inspection.Provider, inspection.Message));
     }
 
     private static void WriteGitHubCopilotHookInspection(HookInstallationInspection inspection)
     {
         Console.WriteLine(LocalizationService.GetString("ManagementHookInstallationTitle"));
-        WriteField("ManagementLabelProvider", "Provider", inspection.Provider);
-        WriteField("ManagementLabelStatus", "Status", inspection.Status);
-        WriteField("ManagementLabelInstalled", "Installed", inspection.IsInstalled);
-        WriteField("ManagementLabelConfig", "Config", inspection.ConfigurationFilePath);
-        WriteField("ManagementLabelConfigExists", "Config exists", inspection.ConfigurationFileExists);
-        WriteField("ManagementLabelExecutable", "Executable", inspection.HookExecutablePath);
-        WriteField("ManagementLabelCommand", "Command", inspection.HookCommand);
-        WriteField("ManagementLabelHookLog", "Hook log", GetHookLogFilePath(inspection.Provider));
-        WriteField("ManagementLabelHooksObject", "Hooks object", inspection.HasCheck(HookInstallationCheck.HooksObject));
-        WriteField("ManagementLabelManagedHooks", "Managed hooks", inspection.HasCheck(HookInstallationCheck.ManagedHookEntries));
-        WriteField("ManagementLabelSessionStartHook", "SessionStart hook", inspection.HasCheck(HookInstallationCheck.SessionStartHook));
-        WriteField("ManagementLabelSessionEndHook", "SessionEnd hook", inspection.HasCheck(HookInstallationCheck.SessionEndHook));
-        WriteField("ManagementLabelUserPromptSubmittedHook", "UserPromptSubmitted hook", inspection.HasCheck(HookInstallationCheck.UserPromptSubmittedHook));
-        WriteField("ManagementLabelPreToolUseHook", "PreToolUse hook", inspection.HasCheck(HookInstallationCheck.PreToolUseHook));
-        WriteField("ManagementLabelPostToolUseHook", "PostToolUse hook", inspection.HasCheck(HookInstallationCheck.PostToolUseHook));
-        WriteField("ManagementLabelPermissionRequestHook", "PermissionRequest hook", inspection.HasCheck(HookInstallationCheck.PermissionRequestHook));
-        WriteField("ManagementLabelAgentStopHook", "AgentStop hook", inspection.HasCheck(HookInstallationCheck.AgentStopHook));
-        WriteField("ManagementLabelSubagentStartHook", "SubagentStart hook", inspection.HasCheck(HookInstallationCheck.SubagentStartHook));
-        WriteField("ManagementLabelSubagentStopHook", "SubagentStop hook", inspection.HasCheck(HookInstallationCheck.SubagentStopHook));
-        WriteField("ManagementLabelErrorOccurredHook", "ErrorOccurred hook", inspection.HasCheck(HookInstallationCheck.ErrorOccurredHook));
-        WriteField("ManagementLabelNotificationHook", "Notification hook", inspection.HasCheck(HookInstallationCheck.NotificationHook));
-        WriteField("ManagementLabelExpectedCommands", "Expected commands", inspection.HasCheck(HookInstallationCheck.ExpectedHookCommands));
-        WriteField("ManagementLabelExpectedNotificationMatcher", "Expected notification matcher", inspection.HasCheck(HookInstallationCheck.ExpectedNotificationMatcher));
-        WriteField("ManagementLabelConflictingAgentStopHooks", "Conflicting agentStop hooks", inspection.HasCheck(HookInstallationCheck.ConflictingAgentStopHooks));
-        WriteField(
+        ManagementFieldWriter.WriteField("ManagementLabelProvider", "Provider", inspection.Provider);
+        ManagementFieldWriter.WriteField("ManagementLabelStatus", "Status", inspection.Status);
+        ManagementFieldWriter.WriteField("ManagementLabelInstalled", "Installed", inspection.IsInstalled);
+        ManagementFieldWriter.WriteField("ManagementLabelConfig", "Config", inspection.ConfigurationFilePath);
+        ManagementFieldWriter.WriteField("ManagementLabelConfigExists", "Config exists", inspection.ConfigurationFileExists);
+        ManagementFieldWriter.WriteField("ManagementLabelExecutable", "Executable", inspection.HookExecutablePath);
+        ManagementFieldWriter.WriteField("ManagementLabelCommand", "Command", inspection.HookCommand);
+        ManagementFieldWriter.WriteField("ManagementLabelHookLog", "Hook log", GetHookLogFilePath(inspection.Provider));
+        ManagementFieldWriter.WriteField("ManagementLabelHooksObject", "Hooks object", inspection.HasCheck(HookInstallationCheck.HooksObject));
+        ManagementFieldWriter.WriteField("ManagementLabelManagedHooks", "Managed hooks", inspection.HasCheck(HookInstallationCheck.ManagedHookEntries));
+        ManagementFieldWriter.WriteField("ManagementLabelSessionStartHook", "SessionStart hook", inspection.HasCheck(HookInstallationCheck.SessionStartHook));
+        ManagementFieldWriter.WriteField("ManagementLabelSessionEndHook", "SessionEnd hook", inspection.HasCheck(HookInstallationCheck.SessionEndHook));
+        ManagementFieldWriter.WriteField("ManagementLabelUserPromptSubmittedHook", "UserPromptSubmitted hook", inspection.HasCheck(HookInstallationCheck.UserPromptSubmittedHook));
+        ManagementFieldWriter.WriteField("ManagementLabelPreToolUseHook", "PreToolUse hook", inspection.HasCheck(HookInstallationCheck.PreToolUseHook));
+        ManagementFieldWriter.WriteField("ManagementLabelPostToolUseHook", "PostToolUse hook", inspection.HasCheck(HookInstallationCheck.PostToolUseHook));
+        ManagementFieldWriter.WriteField("ManagementLabelPermissionRequestHook", "PermissionRequest hook", inspection.HasCheck(HookInstallationCheck.PermissionRequestHook));
+        ManagementFieldWriter.WriteField("ManagementLabelAgentStopHook", "AgentStop hook", inspection.HasCheck(HookInstallationCheck.AgentStopHook));
+        ManagementFieldWriter.WriteField("ManagementLabelSubagentStartHook", "SubagentStart hook", inspection.HasCheck(HookInstallationCheck.SubagentStartHook));
+        ManagementFieldWriter.WriteField("ManagementLabelSubagentStopHook", "SubagentStop hook", inspection.HasCheck(HookInstallationCheck.SubagentStopHook));
+        ManagementFieldWriter.WriteField("ManagementLabelErrorOccurredHook", "ErrorOccurred hook", inspection.HasCheck(HookInstallationCheck.ErrorOccurredHook));
+        ManagementFieldWriter.WriteField("ManagementLabelNotificationHook", "Notification hook", inspection.HasCheck(HookInstallationCheck.NotificationHook));
+        ManagementFieldWriter.WriteField("ManagementLabelExpectedCommands", "Expected commands", inspection.HasCheck(HookInstallationCheck.ExpectedHookCommands));
+        ManagementFieldWriter.WriteField("ManagementLabelExpectedNotificationMatcher", "Expected notification matcher", inspection.HasCheck(HookInstallationCheck.ExpectedNotificationMatcher));
+        ManagementFieldWriter.WriteField("ManagementLabelConflictingAgentStopHooks", "Conflicting agentStop hooks", inspection.HasCheck(HookInstallationCheck.ConflictingAgentStopHooks));
+        ManagementFieldWriter.WriteField(
             "ManagementLabelConflictSources",
             "Conflict sources",
             inspection.ConflictingAgentStopHookSources.Count == 0 ? LocalizationService.GetString("TextDisplayNone") : string.Join(" | ", inspection.ConflictingAgentStopHookSources));
-        WriteField("ManagementLabelMessage", "Message", DisplayHookManagementMessage(inspection.Provider, inspection.Message));
+        ManagementFieldWriter.WriteField("ManagementLabelMessage", "Message", DisplayHookManagementMessage(inspection.Provider, inspection.Message));
     }
 
     private static bool HasClaudeAllStopHooks(HookInstallationInspection inspection)
@@ -398,20 +398,6 @@ internal static class HookManagementCommand
         if (message.StartsWith(hookExecutableMissingPrefix, StringComparison.Ordinal)) return LocalizationService.GetFormattedString("HookManagementHookExecutableDoesNotExist", message[hookExecutableMissingPrefix.Length..]);
         return message;
     }
-
-    private static void WriteField(string labelResourceName, string fallbackLabel, object value)
-    {
-        var displayValue = value switch
-        {
-            bool booleanValue => LocalizationService.DisplayBoolean(booleanValue),
-            HookInstallationStatus status => DisplayHookInstallationStatus(status),
-            _ => LocalizationService.DisplayOptionalValue(value?.ToString() ?? string.Empty)
-        };
-        Console.WriteLine(LocalizationService.GetFormattedString("ManagementField", LocalizationService.GetString(labelResourceName, fallbackLabel), displayValue));
-    }
-
-    private static string DisplayHookInstallationStatus(HookInstallationStatus status)
-        => LocalizationService.GetString($"DisplayHookInstallationStatus{status}", status.ToString());
 
     private static string GetHookLogFilePath(AgentProvider provider)
     {

@@ -1,5 +1,4 @@
 using LidGuard.Hooks;
-using LidGuard.Ipc;
 using LidGuard.Localization;
 using LidGuard.Sessions;
 
@@ -9,7 +8,7 @@ internal static class WslHookManagementCommand
 {
     public static int WriteHookStatus(IReadOnlyDictionary<string, string> options)
     {
-        if (!TryCreateContext(options, out var context, out var message))
+        if (!WslCommandUtilities.TryCreateContext(options, out var context, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -35,7 +34,7 @@ internal static class WslHookManagementCommand
 
     public static int InstallHook(IReadOnlyDictionary<string, string> options)
     {
-        if (!TryCreateContext(options, out var context, out var message))
+        if (!WslCommandUtilities.TryCreateContext(options, out var context, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -60,7 +59,7 @@ internal static class WslHookManagementCommand
 
     public static int RemoveHook(IReadOnlyDictionary<string, string> options)
     {
-        if (!TryCreateContext(options, out var context, out var message))
+        if (!WslCommandUtilities.TryCreateContext(options, out var context, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -83,7 +82,7 @@ internal static class WslHookManagementCommand
         return exitCode;
     }
 
-    private static int WriteProviderHookStatus(AgentProvider provider, IReadOnlyDictionary<string, string> options, WslHookContext context)
+    private static int WriteProviderHookStatus(AgentProvider provider, IReadOnlyDictionary<string, string> options, WslCommandUtilities.WslContext context)
     {
         if (!TryCreateInspection(provider, options, context, out var inspection, out var message))
         {
@@ -95,7 +94,7 @@ internal static class WslHookManagementCommand
         return 0;
     }
 
-    private static int InstallProviderHook(AgentProvider provider, IReadOnlyDictionary<string, string> options, WslHookContext context)
+    private static int InstallProviderHook(AgentProvider provider, IReadOnlyDictionary<string, string> options, WslCommandUtilities.WslContext context)
     {
         if (!TryCreateInspection(provider, options, context, out var currentInspection, out var message))
         {
@@ -155,7 +154,7 @@ internal static class WslHookManagementCommand
         return inspection.IsInstalled ? 0 : 1;
     }
 
-    private static int RemoveProviderHook(AgentProvider provider, IReadOnlyDictionary<string, string> options, WslHookContext context)
+    private static int RemoveProviderHook(AgentProvider provider, IReadOnlyDictionary<string, string> options, WslCommandUtilities.WslContext context)
     {
         if (!TryCreateInspection(provider, options, context, out var currentInspection, out var message))
         {
@@ -209,21 +208,10 @@ internal static class WslHookManagementCommand
         return 0;
     }
 
-    private static bool TryCreateContext(IReadOnlyDictionary<string, string> options, out WslHookContext context, out string message)
-    {
-        context = default;
-        if (!WslCommandUtilities.TryGetDistroName(options, out var distroName, out message)) return false;
-        if (!WslCommandUtilities.TryValidateWsl(distroName, out message)) return false;
-        if (!WslCommandUtilities.TryGetWslLidGuardExecutablePath(distroName, out var wslExecutablePath, out message)) return false;
-
-        context = new WslHookContext(distroName, wslExecutablePath);
-        return true;
-    }
-
     private static bool TryCreateInspection(
         AgentProvider provider,
         IReadOnlyDictionary<string, string> options,
-        WslHookContext context,
+        WslCommandUtilities.WslContext context,
         out HookInstallationInspection inspection,
         out string message)
     {
@@ -231,7 +219,7 @@ internal static class WslHookManagementCommand
         var configuredConfigurationFilePath = CommandOptionReader.GetOption(options, "config", "configuration", "configuration-file");
         if (!WslProviderConfigurationRoots.TryGetHookConfigurationFilePath(context.DistroName, provider, configuredConfigurationFilePath, out var configurationFilePath, out message)) return false;
 
-        var hookCommandName = GetHookCommandName(provider);
+        var hookCommandName = WslCommandUtilities.GetHookCommandName(provider);
         if (string.IsNullOrWhiteSpace(hookCommandName))
         {
             message = LocalizationService.GetString("ManagementUnsupportedHookManagement");
@@ -368,17 +356,6 @@ internal static class WslHookManagementCommand
         return content;
     }
 
-    private static string GetHookCommandName(AgentProvider provider)
-    {
-        return provider switch
-        {
-            AgentProvider.Codex => LidGuardPipeCommands.CodexHook,
-            AgentProvider.Claude => LidGuardPipeCommands.ClaudeHook,
-            AgentProvider.GitHubCopilot => LidGuardPipeCommands.CopilotHook,
-            _ => string.Empty
-        };
-    }
-
     private static bool TryCreateRemovedCodexContent(string originalContent, out string updatedContent, out bool changed, out string message)
     {
         updatedContent = CodexHookConfigTomlDocument.RemoveManagedHookBlock(originalContent);
@@ -413,5 +390,4 @@ internal static class WslHookManagementCommand
     private static string CreateWrittenNeedsAttentionMessage(AgentProvider provider)
         => $"{ManagedProviderSelection.GetProviderDisplayName(provider)} hook configuration was written but still needs attention.";
 
-    private readonly record struct WslHookContext(string DistroName, string WslExecutablePath);
 }
