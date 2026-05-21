@@ -316,13 +316,13 @@
     <value>취소됨</value>
   </data>
   <data name="StopFollowUpCancelButton" xml:space="preserve">
-    <value>답장 대기 취소</value>
+    <value>지금 절전/최대절전 진행</value>
   </data>
   <data name="StopFollowUpCancelHelp" xml:space="preserve">
-    <value>답장 없이 대기를 끝내고 LidGuard가 원래 절전 흐름을 계속 진행하게 합니다.</value>
+    <value>답장을 더 기다리지 않고 지금 바로 예정된 절전/최대절전 흐름을 시작합니다.</value>
   </data>
   <data name="StopFollowUpCancelSucceededMessage" xml:space="preserve">
-    <value>답장 대기를 취소했습니다.</value>
+    <value>절전/최대절전 흐름을 시작했습니다.</value>
   </data>
   <data name="StopFollowUpDeadlineLabel" xml:space="preserve">
     <value>답장 마감 시각</value>

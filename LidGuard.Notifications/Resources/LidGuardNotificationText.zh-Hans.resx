@@ -316,13 +316,13 @@
     <value>已取消</value>
   </data>
   <data name="StopFollowUpCancelButton" xml:space="preserve">
-    <value>取消回复等待</value>
+    <value>立即睡眠/休眠</value>
   </data>
   <data name="StopFollowUpCancelHelp" xml:space="preserve">
-    <value>不再等待回复，让 LidGuard 继续正常的睡眠流程。</value>
+    <value>不再等待回复，立即开始计划中的睡眠/休眠流程。</value>
   </data>
   <data name="StopFollowUpCancelSucceededMessage" xml:space="preserve">
-    <value>已取消回复等待。</value>
+    <value>已开始睡眠/休眠流程。</value>
   </data>
   <data name="StopFollowUpDeadlineLabel" xml:space="preserve">
     <value>回复截止时间</value>

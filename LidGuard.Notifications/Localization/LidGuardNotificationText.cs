@@ -65,9 +65,9 @@ internal static class LidGuardNotificationText
     public static string SignOutNavigation => Get(nameof(SignOutNavigation));
     public static string StartingPromptLabel => Get(nameof(StartingPromptLabel));
     public static string StartedLabel => Get(nameof(StartedLabel));
-    public static string StopFollowUpCancelButton => Get(nameof(StopFollowUpCancelButton), "Cancel reply wait");
-    public static string StopFollowUpCancelHelp => Get(nameof(StopFollowUpCancelHelp), "Canceling stops waiting for a reply and lets LidGuard continue the normal sleep flow.");
-    public static string StopFollowUpCancelSucceededMessage => Get(nameof(StopFollowUpCancelSucceededMessage), "Reply wait canceled.");
+    public static string StopFollowUpCancelButton => Get(nameof(StopFollowUpCancelButton), "Sleep/hibernate now");
+    public static string StopFollowUpCancelHelp => Get(nameof(StopFollowUpCancelHelp), "Stop waiting for a reply and start the planned sleep/hibernate flow now.");
+    public static string StopFollowUpCancelSucceededMessage => Get(nameof(StopFollowUpCancelSucceededMessage), "Sleep/hibernate flow started.");
     public static string StopFollowUpDeadlineLabel => Get(nameof(StopFollowUpDeadlineLabel), "Reply deadline");
     public static string StopFollowUpReplyButton => Get(nameof(StopFollowUpReplyButton), "Submit reply");
     public static string StopFollowUpReplyHelp => Get(nameof(StopFollowUpReplyHelp), "Replying here cancels the planned sleep and lets the agent continue.");

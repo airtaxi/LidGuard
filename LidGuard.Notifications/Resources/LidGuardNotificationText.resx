@@ -316,13 +316,13 @@
     <value>Canceled</value>
   </data>
   <data name="StopFollowUpCancelButton" xml:space="preserve">
-    <value>Cancel reply wait</value>
+    <value>Sleep/hibernate now</value>
   </data>
   <data name="StopFollowUpCancelHelp" xml:space="preserve">
-    <value>Canceling stops waiting for a reply and lets LidGuard continue the normal sleep flow.</value>
+    <value>Stop waiting for a reply and start the planned sleep/hibernate flow now.</value>
   </data>
   <data name="StopFollowUpCancelSucceededMessage" xml:space="preserve">
-    <value>Reply wait canceled.</value>
+    <value>Sleep/hibernate flow started.</value>
   </data>
   <data name="StopFollowUpDeadlineLabel" xml:space="preserve">
     <value>Reply deadline</value>

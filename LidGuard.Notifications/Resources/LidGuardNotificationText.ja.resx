@@ -316,13 +316,13 @@
     <value>キャンセル済み</value>
   </data>
   <data name="StopFollowUpCancelButton" xml:space="preserve">
-    <value>返信待ちをキャンセル</value>
+    <value>今すぐスリープ/休止へ</value>
   </data>
   <data name="StopFollowUpCancelHelp" xml:space="preserve">
-    <value>返信を待たずに待機を終了し、LidGuard が通常のスリープ処理を続行します。</value>
+    <value>返信を待たずに、予定されているスリープ/休止処理を今すぐ開始します。</value>
   </data>
   <data name="StopFollowUpCancelSucceededMessage" xml:space="preserve">
-    <value>返信待ちをキャンセルしました。</value>
+    <value>スリープ/休止処理を開始しました。</value>
   </data>
   <data name="StopFollowUpDeadlineLabel" xml:space="preserve">
     <value>返信期限</value>
