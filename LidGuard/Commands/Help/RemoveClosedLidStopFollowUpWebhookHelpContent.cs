@@ -13,7 +13,7 @@ internal static class RemoveClosedLidStopFollowUpWebhookHelpContent
             $"{documentContext.CommandDisplayName} {LidGuardPipeCommands.RemoveClosedLidStopFollowUpWebhook}",
             LocalizationService.GetString(
                 "Help_RemoveClosedLidStopFollowUpWebhook_Description",
-                "저장된 LidGuard 설정에서 closed-lid stop follow-up webhook URL을 제거합니다."),
+                "Remove the saved ask-before-sleep reply notification URL."),
             [],
             []);
 }

@@ -105,6 +105,15 @@
   <data name="SettingsClosedLidPermissionRequestDecision" xml:space="preserve">
     <value>  合盖权限请求处理方式：{0}</value>
   </data>
+  <data name="SettingsClosedLidStopFollowUpFeatureState" xml:space="preserve">
+    <value>  睡眠前回复提醒：{0}</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpWebhookUrl" xml:space="preserve">
+    <value>  睡眠前回复提醒 URL：{0}</value>
+  </data>
+  <data name="SettingsRepeatClosedLidStopFollowUp" xml:space="preserve">
+    <value>  回复后再次询问：{0}</value>
+  </data>
   <data name="SettingsEmergencyHibernationOnHighTemperature" xml:space="preserve">
     <value>  高温紧急休眠：{0}</value>
   </data>
@@ -119,6 +128,9 @@
   </data>
   <data name="SettingsNoPreSuspendWebhookConfigured" xml:space="preserve">
     <value>未配置睡眠（或休眠）前 Webhook URL。</value>
+  </data>
+  <data name="SettingsNoClosedLidStopFollowUpWebhookConfigured" xml:space="preserve">
+    <value>未配置睡眠前回复提醒 URL。</value>
   </data>
   <data name="SettingsPostSessionEndWebhookUrl" xml:space="preserve">
     <value>  会话完成 Webhook URL：{0}</value>
@@ -140,6 +152,9 @@
   </data>
   <data name="SettingsPreSuspendWebhookUrlRemoved" xml:space="preserve">
     <value>已移除睡眠（或休眠）前 Webhook URL。</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpWebhookUrlRemoved" xml:space="preserve">
+    <value>已移除睡眠前回复提醒 URL。</value>
   </data>
   <data name="SettingsPreventAwayModeSleep" xml:space="preserve">
     <value>  防止 Away mode 睡眠：{0}</value>
@@ -305,6 +320,9 @@
   </data>
   <data name="SettingsOptionPreSuspendWebhookRemovalCommand" xml:space="preserve">
     <value>如需移除睡眠（或休眠）前 Webhook URL，请使用 {0} {1} 命令。</value>
+  </data>
+  <data name="SettingsOptionClosedLidStopFollowUpWebhookRemovalCommand" xml:space="preserve">
+    <value>如需移除睡眠前回复提醒 URL，请使用 {0} {1} 命令。</value>
   </data>
   <data name="ManagementLabelManagedBlock" xml:space="preserve">
     <value>管理块</value>
@@ -816,6 +834,9 @@
   <data name="SettingsNameClosedLidPermissionRequestDecision" xml:space="preserve">
     <value>合盖权限请求处理方式</value>
   </data>
+  <data name="SettingsNameRepeatClosedLidStopFollowUp" xml:space="preserve">
+    <value>回复后再次询问</value>
+  </data>
   <data name="TextDisplayOff" xml:space="preserve">
     <value>关闭</value>
   </data>
@@ -1113,6 +1134,12 @@
   <data name="Help_Settings_ClosedLidPermissionRequestDecisionOption" xml:space="preserve">
     <value>当 LidGuard 检测到合盖时，选择合盖权限请求 hook 的响应方式。ask 会将会话设为 soft-lock，并保留提供者的常规权限请求流程。</value>
   </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpWebhookOption" xml:space="preserve">
+    <value>合盖时，如果工作准备结束，请设置在睡眠前发送回复提醒的 URL。URL 有效且睡眠等待时间大于 0 秒时才会生效。</value>
+  </data>
+  <data name="Help_Settings_RepeatClosedLidStopFollowUpOption" xml:space="preserve">
+    <value>设置在回复让工作继续后，下次该工作再次准备结束时是否再通知一次。默认值为 true。</value>
+  </data>
   <data name="Help_ProviderMcpRemove_ConfigOption" xml:space="preserve">
     <value>必填。要更新的 JSON 配置文件。</value>
   </data>
@@ -1145,6 +1172,9 @@
   </data>
   <data name="Help_RemovePostSessionEndWebhook_Description" xml:space="preserve">
     <value>清除已保存的会话完成 Webhook URL。</value>
+  </data>
+  <data name="Help_RemoveClosedLidStopFollowUpWebhook_Description" xml:space="preserve">
+    <value>清除已保存的睡眠前回复提醒 URL。</value>
   </data>
   <data name="Help_PreviewSystemSound_Description" xml:space="preserve">
     <value>使用已保存的临时音量设置，立即播放一个受支持的 SystemSound 名称。</value>
@@ -1739,6 +1769,9 @@
   </data>
   <data name="LiveStatusPendingSuspendLine" xml:space="preserve">
     <value>待执行睡眠/休眠：{0}</value>
+  </data>
+  <data name="LiveStatusStopFollowUpRepeatLine" xml:space="preserve">
+    <value>回复后再次询问：{0}</value>
   </data>
   <data name="LiveStatusNoRuntimeMessage" xml:space="preserve">
     <value>运行时消息：无</value>

@@ -75,12 +75,16 @@ internal static class LidGuardCommandConsole
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsPostSessionEndWebhookUrl", LocalizationService.DisplayOptionalValue(PostSessionEndWebhookConfiguration.GetDisplayValue(normalizedSettings.PostSessionEndWebhookUrl))));
         Console.WriteLine(LocalizationService.GetFormattedStringWithFallback(
             "SettingsClosedLidStopFollowUpWebhookUrl",
-            "  Closed-lid stop follow-up webhook URL: {0}",
+            "  Ask-before-sleep reply URL: {0}",
             LocalizationService.DisplayOptionalValue(ClosedLidStopFollowUpWebhookConfiguration.GetDisplayValue(normalizedSettings.ClosedLidStopFollowUpWebhookUrl))));
         Console.WriteLine(LocalizationService.GetFormattedStringWithFallback(
             "SettingsClosedLidStopFollowUpFeatureState",
-            "  Closed-lid stop follow-up 기능: {0}",
+            "  Ask-before-sleep replies: {0}",
             DisplayClosedLidStopFollowUpFeatureState(normalizedSettings)));
+        Console.WriteLine(LocalizationService.GetFormattedStringWithFallback(
+            "SettingsRepeatClosedLidStopFollowUp",
+            "  Ask again after reply: {0}",
+            LocalizationService.DisplayBoolean(normalizedSettings.RepeatClosedLidStopFollowUp)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsClosedLidPermissionRequestDecision", LocalizationService.DisplayClosedLidPermissionRequestDecision(normalizedSettings.ClosedLidPermissionRequestDecision)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsUserInterfaceCulture", UserInterfaceCultureConfiguration.GetDisplayValue(normalizedSettings.UserInterfaceCulture)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsReason", powerRequest.Reason));

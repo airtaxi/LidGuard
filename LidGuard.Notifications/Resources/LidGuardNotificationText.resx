@@ -160,7 +160,7 @@
     <value>Processed</value>
   </data>
   <data name="ClosedLidStopFollowUpWebhookCommandLabel" xml:space="preserve">
-    <value>Closed-lid Stop follow-up webhook</value>
+    <value>Ask-before-sleep reply webhook</value>
   </data>
   <data name="PostSessionEndWebhookCommandLabel" xml:space="preserve">
     <value>Post-session-end webhook</value>
@@ -298,7 +298,7 @@
     <value>Working directory</value>
   </data>
   <data name="DisplayWebhookEventTypeStopFollowUp" xml:space="preserve">
-    <value>Stop follow-up</value>
+    <value>Ask-before-sleep reply</value>
   </data>
   <data name="DisplayWebhookReasonAwaitingReply" xml:space="preserve">
     <value>Awaiting reply</value>
@@ -316,13 +316,13 @@
     <value>Canceled</value>
   </data>
   <data name="StopFollowUpCancelButton" xml:space="preserve">
-    <value>Cancel and continue stop</value>
+    <value>Cancel reply wait</value>
   </data>
   <data name="StopFollowUpCancelHelp" xml:space="preserve">
-    <value>Canceling stops waiting for a reply and lets LidGuard continue the normal stop and suspend flow.</value>
+    <value>Canceling stops waiting for a reply and lets LidGuard continue the normal sleep flow.</value>
   </data>
   <data name="StopFollowUpCancelSucceededMessage" xml:space="preserve">
-    <value>Follow-up wait canceled.</value>
+    <value>Reply wait canceled.</value>
   </data>
   <data name="StopFollowUpDeadlineLabel" xml:space="preserve">
     <value>Reply deadline</value>
@@ -331,7 +331,7 @@
     <value>Submit reply</value>
   </data>
   <data name="StopFollowUpReplyHelp" xml:space="preserve">
-    <value>Replying here cancels the pending suspend and lets the agent continue.</value>
+    <value>Replying here cancels the planned sleep and lets the agent continue.</value>
   </data>
   <data name="StopFollowUpReplyLabel" xml:space="preserve">
     <value>Reply</value>
@@ -346,18 +346,18 @@
     <value>Reply sent</value>
   </data>
   <data name="StopFollowUpSectionLabel" xml:space="preserve">
-    <value>Stop follow-up</value>
+    <value>Ask-before-sleep reply</value>
   </data>
   <data name="StopFollowUpStatusLabel" xml:space="preserve">
-    <value>Follow-up status</value>
+    <value>Reply status</value>
   </data>
   <data name="PushBodyStopFollowUp" xml:space="preserve">
-    <value>Replying here will cancel the pending suspend and let the agent continue.</value>
+    <value>Replying here will cancel the planned sleep and let the agent continue.</value>
   </data>
   <data name="PushStopFollowUpStatus" xml:space="preserve">
-    <value>is waiting for your reply before suspend</value>
+    <value>is waiting for your reply before sleep</value>
   </data>
   <data name="PushTitleStopFollowUp" xml:space="preserve">
-    <value>Reply needed before suspend</value>
+    <value>Reply needed before sleep</value>
   </data>
 </root>

@@ -27,7 +27,7 @@ internal static class LidGuardClosedLidStopFollowUpWebhookRemovalCommand
         var normalizedCurrentSettings = LidGuardSettings.Normalize(currentSettings);
         if (string.IsNullOrWhiteSpace(normalizedCurrentSettings.ClosedLidStopFollowUpWebhookUrl))
         {
-            Console.WriteLine(LocalizationService.GetString("SettingsNoClosedLidStopFollowUpWebhookConfigured", "설정된 closed-lid stop follow-up webhook이 없습니다."));
+            Console.WriteLine(LocalizationService.GetString("SettingsNoClosedLidStopFollowUpWebhookConfigured", "No ask-before-sleep reply notification URL is configured."));
             return 0;
         }
 
@@ -50,7 +50,7 @@ internal static class LidGuardClosedLidStopFollowUpWebhookRemovalCommand
         var outcome = updateResult.Value;
         Console.WriteLine(LocalizationService.GetFormattedString("ConsoleSettingsFile", LidGuardSettingsStore.GetDefaultSettingsFilePath()));
         LidGuardCommandConsole.WriteSettings(outcome.UpdatedStoredSettings);
-        Console.WriteLine(LocalizationService.GetString("SettingsClosedLidStopFollowUpWebhookUrlRemoved", "closed-lid stop follow-up webhook URL을 제거했습니다."));
+        Console.WriteLine(LocalizationService.GetString("SettingsClosedLidStopFollowUpWebhookUrlRemoved", "Removed the ask-before-sleep reply notification URL."));
 
         if (outcome.ManagedHookRefreshResult is not null)
             LidGuardSettingsUpdateCommand.WriteManagedHookRefreshResult(outcome.ManagedHookRefreshResult);

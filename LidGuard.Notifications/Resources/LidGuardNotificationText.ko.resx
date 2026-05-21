@@ -160,7 +160,7 @@
     <value>처리됨</value>
   </data>
   <data name="ClosedLidStopFollowUpWebhookCommandLabel" xml:space="preserve">
-    <value>덮개 닫힘 Stop 후속 답장 웹훅</value>
+    <value>절전 전 답장 알림 웹훅</value>
   </data>
   <data name="PostSessionEndWebhookCommandLabel" xml:space="preserve">
     <value>세션 종료 후 웹훅</value>
@@ -298,7 +298,7 @@
     <value>작업 디렉터리</value>
   </data>
   <data name="DisplayWebhookEventTypeStopFollowUp" xml:space="preserve">
-    <value>Stop 후속 답장</value>
+    <value>절전 전 답장</value>
   </data>
   <data name="DisplayWebhookReasonAwaitingReply" xml:space="preserve">
     <value>답장 대기 중</value>
@@ -316,13 +316,13 @@
     <value>취소됨</value>
   </data>
   <data name="StopFollowUpCancelButton" xml:space="preserve">
-    <value>대기 취소하고 Stop 진행</value>
+    <value>답장 대기 취소</value>
   </data>
   <data name="StopFollowUpCancelHelp" xml:space="preserve">
-    <value>답장 없이 대기를 끝내고 LidGuard가 기존 Stop 및 절전 흐름을 바로 진행하게 합니다.</value>
+    <value>답장 없이 대기를 끝내고 LidGuard가 원래 절전 흐름을 계속 진행하게 합니다.</value>
   </data>
   <data name="StopFollowUpCancelSucceededMessage" xml:space="preserve">
-    <value>후속 답장 대기를 취소했습니다.</value>
+    <value>답장 대기를 취소했습니다.</value>
   </data>
   <data name="StopFollowUpDeadlineLabel" xml:space="preserve">
     <value>답장 마감 시각</value>
@@ -331,7 +331,7 @@
     <value>답장 보내기</value>
   </data>
   <data name="StopFollowUpReplyHelp" xml:space="preserve">
-    <value>여기에 답장하면 pending suspend를 취소하고 에이전트가 작업을 이어갑니다.</value>
+    <value>여기에 답장하면 예정된 절전을 취소하고 에이전트가 작업을 이어갑니다.</value>
   </data>
   <data name="StopFollowUpReplyLabel" xml:space="preserve">
     <value>답장</value>
@@ -346,13 +346,13 @@
     <value>답장 보낸 시각</value>
   </data>
   <data name="StopFollowUpSectionLabel" xml:space="preserve">
-    <value>Stop 후속 답장</value>
+    <value>절전 전 답장</value>
   </data>
   <data name="StopFollowUpStatusLabel" xml:space="preserve">
-    <value>후속 답장 상태</value>
+    <value>답장 상태</value>
   </data>
   <data name="PushBodyStopFollowUp" xml:space="preserve">
-    <value>여기에 답장하면 pending suspend를 취소하고 에이전트가 작업을 이어갑니다.</value>
+    <value>여기에 답장하면 예정된 절전을 취소하고 에이전트가 작업을 이어갑니다.</value>
   </data>
   <data name="PushStopFollowUpStatus" xml:space="preserve">
     <value>가 절전 전에 답장을 기다리고 있습니다</value>

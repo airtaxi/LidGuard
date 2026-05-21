@@ -20,6 +20,7 @@ internal static class ClosedLidStopFollowUpWebhookConfiguration
             PreSuspendWebhookUrl = normalizedInputSettings.PreSuspendWebhookUrl,
             PostSessionEndWebhookUrl = normalizedInputSettings.PostSessionEndWebhookUrl,
             ClosedLidStopFollowUpWebhookUrl = closedLidStopFollowUpWebhookUrl,
+            RepeatClosedLidStopFollowUp = normalizedInputSettings.RepeatClosedLidStopFollowUp,
             ClosedLidPermissionRequestDecision = normalizedInputSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = normalizedInputSettings.WatchParentProcess,
             SessionTimeoutMinutes = normalizedInputSettings.SessionTimeoutMinutes,

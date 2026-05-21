@@ -56,6 +56,7 @@ internal static class PostStopSuspendSoundConfiguration
             PreSuspendWebhookUrl = normalizedInputSettings.PreSuspendWebhookUrl,
             PostSessionEndWebhookUrl = normalizedInputSettings.PostSessionEndWebhookUrl,
             ClosedLidStopFollowUpWebhookUrl = normalizedInputSettings.ClosedLidStopFollowUpWebhookUrl,
+            RepeatClosedLidStopFollowUp = normalizedInputSettings.RepeatClosedLidStopFollowUp,
             ClosedLidPermissionRequestDecision = normalizedInputSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = normalizedInputSettings.WatchParentProcess,
             SessionTimeoutMinutes = normalizedInputSettings.SessionTimeoutMinutes,

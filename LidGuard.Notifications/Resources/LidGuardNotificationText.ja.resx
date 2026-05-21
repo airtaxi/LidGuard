@@ -160,7 +160,7 @@
     <value>処理済み</value>
   </data>
   <data name="ClosedLidStopFollowUpWebhookCommandLabel" xml:space="preserve">
-    <value>閉じたフタの Stop フォローアップ Webhook</value>
+    <value>スリープ前の返信通知 Webhook</value>
   </data>
   <data name="PostSessionEndWebhookCommandLabel" xml:space="preserve">
     <value>セッション終了後の Webhook</value>
@@ -298,7 +298,7 @@
     <value>作業ディレクトリ</value>
   </data>
   <data name="DisplayWebhookEventTypeStopFollowUp" xml:space="preserve">
-    <value>Stop フォローアップ</value>
+    <value>スリープ前の返信</value>
   </data>
   <data name="DisplayWebhookReasonAwaitingReply" xml:space="preserve">
     <value>返信待ち</value>
@@ -316,13 +316,13 @@
     <value>キャンセル済み</value>
   </data>
   <data name="StopFollowUpCancelButton" xml:space="preserve">
-    <value>待機をキャンセルして Stop を続行</value>
+    <value>返信待ちをキャンセル</value>
   </data>
   <data name="StopFollowUpCancelHelp" xml:space="preserve">
-    <value>返信を待たずに待機を終了し、LidGuard が通常の Stop とスリープ処理を続行します。</value>
+    <value>返信を待たずに待機を終了し、LidGuard が通常のスリープ処理を続行します。</value>
   </data>
   <data name="StopFollowUpCancelSucceededMessage" xml:space="preserve">
-    <value>フォローアップ待機をキャンセルしました。</value>
+    <value>返信待ちをキャンセルしました。</value>
   </data>
   <data name="StopFollowUpDeadlineLabel" xml:space="preserve">
     <value>返信期限</value>
@@ -331,7 +331,7 @@
     <value>返信を送信</value>
   </data>
   <data name="StopFollowUpReplyHelp" xml:space="preserve">
-    <value>ここで返信すると保留中のスリープをキャンセルし、エージェントが作業を続行します。</value>
+    <value>ここで返信すると予定されているスリープをキャンセルし、エージェントが作業を続行します。</value>
   </data>
   <data name="StopFollowUpReplyLabel" xml:space="preserve">
     <value>返信</value>
@@ -346,13 +346,13 @@
     <value>返信送信時刻</value>
   </data>
   <data name="StopFollowUpSectionLabel" xml:space="preserve">
-    <value>Stop フォローアップ</value>
+    <value>スリープ前の返信</value>
   </data>
   <data name="StopFollowUpStatusLabel" xml:space="preserve">
-    <value>フォローアップ状態</value>
+    <value>返信状態</value>
   </data>
   <data name="PushBodyStopFollowUp" xml:space="preserve">
-    <value>ここで返信すると保留中のスリープをキャンセルし、エージェントが作業を続行します。</value>
+    <value>ここで返信すると予定されているスリープをキャンセルし、エージェントが作業を続行します。</value>
   </data>
   <data name="PushStopFollowUpStatus" xml:space="preserve">
     <value>はスリープ前の返信を待っています</value>

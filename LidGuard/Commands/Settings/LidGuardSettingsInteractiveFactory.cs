@@ -95,6 +95,13 @@ internal static class LidGuardSettingsInteractiveFactory
             out var closedLidPermissionRequestDecision,
             out message))
             return false;
+        if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting(
+            LocalizationService.GetString("SettingsNameRepeatClosedLidStopFollowUp", "Ask again after reply"),
+            normalizedStoredSettings.RepeatClosedLidStopFollowUp,
+            defaultSettings.RepeatClosedLidStopFollowUp,
+            out var repeatClosedLidStopFollowUp,
+            out message))
+            return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadUserInterfaceCultureSetting(
             LocalizationService.GetString("SettingsNameUserInterfaceCulture"),
             normalizedStoredSettings.UserInterfaceCulture,
@@ -121,6 +128,7 @@ internal static class LidGuardSettingsInteractiveFactory
             PreSuspendWebhookUrl = normalizedStoredSettings.PreSuspendWebhookUrl,
             PostSessionEndWebhookUrl = normalizedStoredSettings.PostSessionEndWebhookUrl,
             ClosedLidStopFollowUpWebhookUrl = normalizedStoredSettings.ClosedLidStopFollowUpWebhookUrl,
+            RepeatClosedLidStopFollowUp = repeatClosedLidStopFollowUp,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess,
             SessionTimeoutMinutes = sessionTimeoutMinutes,

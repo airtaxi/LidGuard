@@ -160,7 +160,7 @@
     <value>已处理</value>
   </data>
   <data name="ClosedLidStopFollowUpWebhookCommandLabel" xml:space="preserve">
-    <value>合盖 Stop 后续回复 Webhook</value>
+    <value>睡眠前回复提醒 Webhook</value>
   </data>
   <data name="PostSessionEndWebhookCommandLabel" xml:space="preserve">
     <value>会话结束后 Webhook</value>
@@ -298,7 +298,7 @@
     <value>工作目录</value>
   </data>
   <data name="DisplayWebhookEventTypeStopFollowUp" xml:space="preserve">
-    <value>Stop 后续回复</value>
+    <value>睡眠前回复</value>
   </data>
   <data name="DisplayWebhookReasonAwaitingReply" xml:space="preserve">
     <value>等待回复</value>
@@ -316,13 +316,13 @@
     <value>已取消</value>
   </data>
   <data name="StopFollowUpCancelButton" xml:space="preserve">
-    <value>取消等待并继续 Stop</value>
+    <value>取消回复等待</value>
   </data>
   <data name="StopFollowUpCancelHelp" xml:space="preserve">
-    <value>不再等待回复，让 LidGuard 继续正常的 Stop 和睡眠流程。</value>
+    <value>不再等待回复，让 LidGuard 继续正常的睡眠流程。</value>
   </data>
   <data name="StopFollowUpCancelSucceededMessage" xml:space="preserve">
-    <value>已取消后续回复等待。</value>
+    <value>已取消回复等待。</value>
   </data>
   <data name="StopFollowUpDeadlineLabel" xml:space="preserve">
     <value>回复截止时间</value>
@@ -331,7 +331,7 @@
     <value>发送回复</value>
   </data>
   <data name="StopFollowUpReplyHelp" xml:space="preserve">
-    <value>在这里回复会取消待处理的睡眠，并让代理继续工作。</value>
+    <value>在这里回复会取消计划中的睡眠，并让代理继续工作。</value>
   </data>
   <data name="StopFollowUpReplyLabel" xml:space="preserve">
     <value>回复</value>
@@ -346,13 +346,13 @@
     <value>回复发送时间</value>
   </data>
   <data name="StopFollowUpSectionLabel" xml:space="preserve">
-    <value>Stop 后续回复</value>
+    <value>睡眠前回复</value>
   </data>
   <data name="StopFollowUpStatusLabel" xml:space="preserve">
-    <value>后续回复状态</value>
+    <value>回复状态</value>
   </data>
   <data name="PushBodyStopFollowUp" xml:space="preserve">
-    <value>在这里回复会取消待处理的睡眠，并让代理继续工作。</value>
+    <value>在这里回复会取消计划中的睡眠，并让代理继续工作。</value>
   </data>
   <data name="PushStopFollowUpStatus" xml:space="preserve">
     <value>正在睡眠前等待你的回复</value>

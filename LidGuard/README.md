@@ -74,6 +74,7 @@ lidguard settings --server-runtime-cleanup-delay-minutes off
 lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
 lidguard settings --post-session-end-webhook-url https://example.com/lidguard-session-ended
 lidguard settings --closed-lid-stop-follow-up-webhook-url https://example.com/lidguard-follow-up
+lidguard settings --repeat-closed-lid-stop-follow-up true
 lidguard settings --closed-lid-permission-request-decision ask
 lidguard remove-pre-suspend-webhook
 lidguard remove-post-session-end-webhook
@@ -82,7 +83,11 @@ lidguard preview-system-sound Asterisk
 lidguard preview-current-sound
 ```
 
-Running `settings` with no options starts interactive editing. Session timeout defaults to 12 minutes; pass `--session-timeout-minutes off` to disable inactive session timeout soft-locking or pass a value of at least 1 to transition sessions to soft-locked after that many minutes since last activity. Server runtime cleanup delay defaults to 10 minutes after all sessions are gone and pending cleanup is finished; pass `--server-runtime-cleanup-delay-minutes 0` to exit immediately or `--server-runtime-cleanup-delay-minutes off` to keep the runtime alive. Closed-lid PermissionRequest decision accepts `deny`, `allow`, or `ask`; `ask` soft-locks the session and returns empty hook stdout so the provider's normal permission prompt continues. Closed-lid Stop follow-up replies reuse `post-stop-suspend-delay-seconds` as the reply wait window; the feature stays off unless `--closed-lid-stop-follow-up-webhook-url` is a valid HTTP/HTTPS URL and the delay is greater than 0. Changing that URL or the delay automatically refreshes installed managed hook timeouts for the current OS providers and best-effort WSL managed hook configs on Windows. Emergency Hibernation temperature mode defaults to `Average`, and you can change it to `Low`, `Average`, or `High`. The optional post-stop suspend sound volume override accepts `off` or 1 through 100 percent; when enabled, it temporarily sets the default output device master volume while the sound plays, then restores the previous volume and mute state. `preview-system-sound` and `preview-current-sound` use the saved override setting and wait until playback finishes. `preview-current-sound` prints setup guidance when no post-stop suspend sound is configured. Use `remove-pre-suspend-webhook`, `remove-post-session-end-webhook`, or `remove-closed-lid-stop-follow-up-webhook` to clear configured webhook URLs.
+Running `settings` with no options starts interactive editing. Session timeout defaults to 12 minutes; use `--session-timeout-minutes off` to disable it. Runtime auto-exit defaults to 10 minutes after all cleanup finishes; use `--server-runtime-cleanup-delay-minutes 0` to exit immediately or `off` to keep it running. Closed-lid PermissionRequest accepts `deny`, `allow`, or `ask`; `ask` pauses protection and lets the provider show its normal prompt.
+
+Ask-before-sleep replies are the "ask me before sleeping" flow. Set `--closed-lid-stop-follow-up-webhook-url` and keep `post-stop-suspend-delay-seconds` above 0. LidGuard waits during that delay, and if you reply, it keeps the agent session alive. `--repeat-closed-lid-stop-follow-up true` is the default: after your reply makes work continue, LidGuard can ask again the next time that work tries to finish. Set it to `false` if you only want LidGuard to ask the first time. Changing the reply URL or delay refreshes installed managed hook timeouts where LidGuard can do that safely.
+
+Emergency Hibernation temperature mode defaults to `Average`, and you can change it to `Low`, `Average`, or `High`. The optional post-stop suspend sound volume override accepts `off` or 1 through 100 percent; when enabled, it temporarily sets the default output device master volume while the sound plays, then restores the previous volume and mute state. `preview-system-sound` and `preview-current-sound` use the saved override setting and wait until playback finishes. Use `remove-pre-suspend-webhook`, `remove-post-session-end-webhook`, or `remove-closed-lid-stop-follow-up-webhook` to clear configured webhook URLs.
 
 ## Diagnostics
 

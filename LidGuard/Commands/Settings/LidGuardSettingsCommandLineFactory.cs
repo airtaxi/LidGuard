@@ -87,6 +87,7 @@ internal static class LidGuardSettingsCommandLineFactory
         if (!LidGuardSettingsValueParser.TryParsePreSuspendWebhookUrlOption(options, baseSettings.PreSuspendWebhookUrl, out var preSuspendWebhookUrl, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParsePostSessionEndWebhookUrlOption(options, baseSettings.PostSessionEndWebhookUrl, out var postSessionEndWebhookUrl, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParseClosedLidStopFollowUpWebhookUrlOption(options, baseSettings.ClosedLidStopFollowUpWebhookUrl, out var closedLidStopFollowUpWebhookUrl, out message)) return false;
+        if (!CommandOptionReader.TryParseBooleanOption(options, baseSettings.RepeatClosedLidStopFollowUp, out var repeatClosedLidStopFollowUp, out message, "repeat-closed-lid-stop-follow-up")) return false;
         if (!LidGuardSettingsValueParser.TryParseClosedLidPermissionRequestDecisionOption(options, baseSettings.ClosedLidPermissionRequestDecision, out var closedLidPermissionRequestDecision, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParseUserInterfaceCultureOption(options, baseSettings.UserInterfaceCulture, out var userInterfaceCulture, out message)) return false;
 
@@ -111,6 +112,7 @@ internal static class LidGuardSettingsCommandLineFactory
             PreSuspendWebhookUrl = preSuspendWebhookUrl,
             PostSessionEndWebhookUrl = postSessionEndWebhookUrl,
             ClosedLidStopFollowUpWebhookUrl = closedLidStopFollowUpWebhookUrl,
+            RepeatClosedLidStopFollowUp = repeatClosedLidStopFollowUp,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess,
             SessionTimeoutMinutes = sessionTimeoutMinutes,

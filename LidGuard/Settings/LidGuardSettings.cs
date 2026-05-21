@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using LidGuard.Power;
 
 namespace LidGuard.Settings;
@@ -44,6 +45,9 @@ public sealed class LidGuardSettings
     public string PostSessionEndWebhookUrl { get; init; } = string.Empty;
 
     public string ClosedLidStopFollowUpWebhookUrl { get; init; } = string.Empty;
+
+    [JsonPropertyName("repeatClosedLidStopFollowUp")]
+    public bool RepeatClosedLidStopFollowUp { get; init; } = true;
 
     public ClosedLidPermissionRequestDecision ClosedLidPermissionRequestDecision { get; init; } = ClosedLidPermissionRequestDecision.Deny;
 
@@ -119,6 +123,7 @@ public sealed class LidGuardSettings
             PreSuspendWebhookUrl = string.IsNullOrWhiteSpace(settings.PreSuspendWebhookUrl) ? string.Empty : settings.PreSuspendWebhookUrl.Trim(),
             PostSessionEndWebhookUrl = string.IsNullOrWhiteSpace(settings.PostSessionEndWebhookUrl) ? string.Empty : settings.PostSessionEndWebhookUrl.Trim(),
             ClosedLidStopFollowUpWebhookUrl = string.IsNullOrWhiteSpace(settings.ClosedLidStopFollowUpWebhookUrl) ? string.Empty : settings.ClosedLidStopFollowUpWebhookUrl.Trim(),
+            RepeatClosedLidStopFollowUp = settings.RepeatClosedLidStopFollowUp,
             ClosedLidPermissionRequestDecision = settings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settings.WatchParentProcess,
             SessionTimeoutMinutes = sessionTimeoutMinutes,

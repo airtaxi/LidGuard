@@ -105,6 +105,15 @@
   <data name="SettingsClosedLidPermissionRequestDecision" xml:space="preserve">
     <value>  Closed lid permission request decision: {0}</value>
   </data>
+  <data name="SettingsClosedLidStopFollowUpFeatureState" xml:space="preserve">
+    <value>  Ask-before-sleep replies: {0}</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpWebhookUrl" xml:space="preserve">
+    <value>  Ask-before-sleep reply URL: {0}</value>
+  </data>
+  <data name="SettingsRepeatClosedLidStopFollowUp" xml:space="preserve">
+    <value>  Ask again after reply: {0}</value>
+  </data>
   <data name="SettingsEmergencyHibernationOnHighTemperature" xml:space="preserve">
     <value>  Emergency hibernation on high temperature: {0}</value>
   </data>
@@ -119,6 +128,9 @@
   </data>
   <data name="SettingsNoPreSuspendWebhookConfigured" xml:space="preserve">
     <value>No before sleep/hibernate webhook URL is configured.</value>
+  </data>
+  <data name="SettingsNoClosedLidStopFollowUpWebhookConfigured" xml:space="preserve">
+    <value>No ask-before-sleep reply URL is configured.</value>
   </data>
   <data name="SettingsPostSessionEndWebhookUrl" xml:space="preserve">
     <value>  Session completion webhook URL: {0}</value>
@@ -140,6 +152,9 @@
   </data>
   <data name="SettingsPreSuspendWebhookUrlRemoved" xml:space="preserve">
     <value>Before sleep/hibernate webhook URL removed.</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpWebhookUrlRemoved" xml:space="preserve">
+    <value>Removed the ask-before-sleep reply URL.</value>
   </data>
   <data name="SettingsPreventAwayModeSleep" xml:space="preserve">
     <value>  Away Mode sleep prevention: {0}</value>
@@ -305,6 +320,9 @@
   </data>
   <data name="SettingsOptionPreSuspendWebhookRemovalCommand" xml:space="preserve">
     <value>Use {0} {1} to remove the before sleep/hibernate webhook URL.</value>
+  </data>
+  <data name="SettingsOptionClosedLidStopFollowUpWebhookRemovalCommand" xml:space="preserve">
+    <value>To remove the ask-before-sleep reply URL, use {0} {1}.</value>
   </data>
   <data name="ManagementLabelManagedBlock" xml:space="preserve">
     <value>Managed block</value>
@@ -816,6 +834,9 @@
   <data name="SettingsNameClosedLidPermissionRequestDecision" xml:space="preserve">
     <value>Closed lid permission request decision</value>
   </data>
+  <data name="SettingsNameRepeatClosedLidStopFollowUp" xml:space="preserve">
+    <value>Ask again after reply</value>
+  </data>
   <data name="TextDisplayOff" xml:space="preserve">
     <value>off</value>
   </data>
@@ -1113,6 +1134,12 @@
   <data name="Help_Settings_ClosedLidPermissionRequestDecisionOption" xml:space="preserve">
     <value>Choose how closed-lid PermissionRequest hooks respond when LidGuard reports the lid is closed. ask soft-locks the session and lets the provider's normal permission prompt continue.</value>
   </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpWebhookOption" xml:space="preserve">
+    <value>Set the URL for the alert LidGuard sends before sleeping while the lid is closed. It works when this URL is valid and the sleep delay is above 0.</value>
+  </data>
+  <data name="Help_Settings_RepeatClosedLidStopFollowUpOption" xml:space="preserve">
+    <value>After a reply keeps the work going, ask again next time the work tries to finish. Defaults to true.</value>
+  </data>
   <data name="Help_ProviderMcpRemove_ConfigOption" xml:space="preserve">
     <value>Required. JSON configuration file to update.</value>
   </data>
@@ -1145,6 +1172,9 @@
   </data>
   <data name="Help_RemovePostSessionEndWebhook_Description" xml:space="preserve">
     <value>Clear the saved session completion webhook URL.</value>
+  </data>
+  <data name="Help_RemoveClosedLidStopFollowUpWebhook_Description" xml:space="preserve">
+    <value>Remove the saved ask-before-sleep reply URL.</value>
   </data>
   <data name="Help_PreviewSystemSound_Description" xml:space="preserve">
     <value>Play one supported SystemSound name now, using the saved temporary volume setting.</value>
@@ -1738,7 +1768,10 @@
     <value>Active sessions: {0} | Lid: {1} | Visible monitors: {2}</value>
   </data>
   <data name="LiveStatusPendingSuspendLine" xml:space="preserve">
-    <value>Pending suspend: {0}</value>
+    <value>Planned sleep/hibernate: {0}</value>
+  </data>
+  <data name="LiveStatusStopFollowUpRepeatLine" xml:space="preserve">
+    <value>Ask again after reply: {0}</value>
   </data>
   <data name="LiveStatusNoRuntimeMessage" xml:space="preserve">
     <value>Runtime message: none</value>

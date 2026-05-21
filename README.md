@@ -21,7 +21,7 @@ Most keep-awake tools protect a process, a timer, or the whole machine. LidGuard
 - Optional lid-close protection so protected agent work can continue after the laptop closes, with automatic restoration of the original OS policy.
 - Windows-to-WSL hook and MCP setup, so providers running inside WSL can call the Windows LidGuard runtime without installing LidGuard inside the distro.
 - Automatic Sleep or Hibernate after protected sessions finish, helping avoid unnecessary battery drain.
-- Closed-lid Stop follow-up replies, so supported Stop hooks can pause session shutdown for a short reply window before suspend.
+- Ask-before-sleep replies, so LidGuard can ask before sleeping and keep the session alive when you reply.
 - Cross-platform power control for Windows, systemd/logind Linux, and macOS.
 - Safety controls such as SoftLock, inactive timeout, pre-suspend hooks, diagnostics, and emergency hibernation.
 
@@ -88,7 +88,7 @@ lidguard provider-mcp-install --config "C:\path\to\mcp.json" --provider-name "Ex
 
 After registering the server, give the model [ProviderMcpModelPrompt.md](ProviderMcpModelPrompt.md) as its provider/session instruction so it knows when to call `provider_start_session`, `provider_set_soft_lock`, `provider_clear_soft_lock`, and `provider_stop_session`.
 
-Provider MCP behavior is not guaranteed. Correct operation depends entirely on the model choosing to call the LidGuard MCP tools at the right times, and it does not expand LidGuard's operating system support beyond Windows, systemd/logind Linux, and macOS. Closed-lid Stop follow-up replies are not implemented for Provider MCP and are not supported there.
+Provider MCP behavior is not guaranteed. Correct operation depends entirely on the model choosing to call the LidGuard MCP tools at the right times, and it does not expand LidGuard's operating system support beyond Windows, systemd/logind Linux, and macOS. Ask-before-sleep replies are not implemented for Provider MCP and are not supported there.
 
 ## Current Support Status
 
@@ -102,11 +102,11 @@ LidGuard is currently officially tested with Codex on Windows. Linux, macOS, Cla
 - Lid-close handling: temporary Windows lid-action override, Linux `handle-lid-switch` inhibitor, macOS `pmset disablesleep`, and restoration of the user's original policy after protection ends or recovery runs.
 - Process and runtime cleanup: parent-process watching, orphan cleanup, inactive-session timeout SoftLocking, and automatic runtime exit after the configured cleanup delay once all sessions are gone.
 - Completion suspend flow: configurable Sleep or Hibernate, post-stop suspend delay in seconds, cancellation when sessions resume or the environment is no longer suspend-eligible, and recent suspend history retention.
-- Stop follow-up replies: optional closed-lid Stop hook reply waiting using the existing post-stop suspend delay, dedicated follow-up webhook URL, provider continuation on reply, managed hook timeout auto-refresh, and best-effort WSL managed hook timeout refresh on Windows.
+- Ask-before-sleep replies: optional notifications when a closed-lid session tries to finish. A reply keeps the session alive, and the default setting asks again if that continued work later tries to finish again.
 - Pre-suspend audio warning: optional off/system-sound/`.wav` warning sound before Sleep or Hibernate, plus an optional temporary master volume override from 1 through 100 percent that restores the previous volume and mute state afterward.
 - SoftLock and closed-lid permissions: provider waiting/input events and inactive timeouts can release keep-awake protection without removing the session. Closed-lid PermissionRequest can `deny`, `allow`, or `ask`; `ask` soft-locks the session and leaves the provider's normal prompt in control, while `allow` can approve permission-required work when the user may not be watching. The safer default is `deny`.
 - Emergency Hibernation: optional closed-lid high-temperature monitor with low, average, or high sensor aggregation, a configurable Celsius threshold, immediate Hibernate, and Sleep fallback if Hibernate fails.
-- Webhooks and notifications: `PreSuspend` webhook before Sleep/Hibernate, `PostSessionEnd` webhook after normal completion when suspend is not pending, `StopFollowUp` webhook with reply polling for supported closed-lid Stop hooks, and optional `LidGuard.Notifications` Web Push companion server.
+- Webhooks and notifications: before-sleep webhooks, normal-completion webhooks, ask-before-sleep reply notifications, and the optional `LidGuard.Notifications` Web Push companion server.
 - Diagnostics and logs: current lid state, visible monitor count, current temperature, live-status dashboard, suspend-history diagnostics, hook event logs, session execution logs, exception logs, and configurable suspend history count.
 - Platform setup and localization: Linux polkit helper commands, macOS sudoers helper commands, localized CLI output with `auto`, `en`, `ko`, or another culture name, and default settings/log storage under the platform local application data directory.
 - Packaging: .NET 10 NativeAOT global tool distribution for Windows, systemd/logind Linux, and macOS.
@@ -124,7 +124,7 @@ Closed-lid permission automation is also a supervision risk. If you configure Li
 
 SoftLock detection, provider hooks, process watchers, operating system behavior, CLI behavior, temperature sensors, permissions, firmware, and power policies can all fail or change in ways that prevent safety features from running as expected. Emergency hibernation and suspend flows are best-effort safeguards, not a substitute for checking the machine yourself.
 
-If you enable closed-lid Stop follow-up replies, the laptop may stay awake a little longer while LidGuard waits for a reply before suspend. That extra wake time increases heat risk, so use short delays and monitor the machine carefully.
+If you enable ask-before-sleep replies, the laptop intentionally stays awake during the reply window before suspend. That extra wake time increases heat risk, so use short delays and monitor the machine carefully.
 
 Managed hook cleanup uses the hook process ancestry to attach a watched parent process when possible, including Codex App `app-server`, Codex CLI, Claude Code, and GitHub Copilot CLI owners. Working directory is kept for status, logs, transcript fallback, and webhook metadata; it is not used to find a watched process. If the watched parent exits, LidGuard treats that as cancel cleanup rather than a provider-reported normal session end, suppressing `PostSessionEnd` and any new `PreSuspend` webhook that cleanup would otherwise schedule.
 

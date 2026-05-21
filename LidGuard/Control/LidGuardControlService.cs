@@ -364,6 +364,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             PreSuspendWebhookUrl = settingsPatch.PreSuspendWebhookUrl ?? normalizedBaseSettings.PreSuspendWebhookUrl,
             PostSessionEndWebhookUrl = settingsPatch.PostSessionEndWebhookUrl ?? normalizedBaseSettings.PostSessionEndWebhookUrl,
             ClosedLidStopFollowUpWebhookUrl = settingsPatch.ClosedLidStopFollowUpWebhookUrl ?? normalizedBaseSettings.ClosedLidStopFollowUpWebhookUrl,
+            RepeatClosedLidStopFollowUp = settingsPatch.RepeatClosedLidStopFollowUp ?? normalizedBaseSettings.RepeatClosedLidStopFollowUp,
             ClosedLidPermissionRequestDecision = settingsPatch.ClosedLidPermissionRequestDecision ?? normalizedBaseSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settingsPatch.WatchParentProcess ?? normalizedBaseSettings.WatchParentProcess,
             SessionTimeoutMinutes = settingsPatch.HasSessionTimeoutMinutes
@@ -498,6 +499,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         AppendChange(changes, previousStoredSettings.PreSuspendWebhookUrl, updatedStoredSettings.PreSuspendWebhookUrl, "preSuspendWebhookUrl");
         AppendChange(changes, previousStoredSettings.PostSessionEndWebhookUrl, updatedStoredSettings.PostSessionEndWebhookUrl, "postSessionEndWebhookUrl");
         AppendChange(changes, previousStoredSettings.ClosedLidStopFollowUpWebhookUrl, updatedStoredSettings.ClosedLidStopFollowUpWebhookUrl, "closedLidStopFollowUpWebhookUrl");
+        AppendChange(changes, previousStoredSettings.RepeatClosedLidStopFollowUp, updatedStoredSettings.RepeatClosedLidStopFollowUp, "repeatClosedLidStopFollowUp");
         AppendChange(changes, previousStoredSettings.ClosedLidPermissionRequestDecision, updatedStoredSettings.ClosedLidPermissionRequestDecision, "closedLidPermissionRequestDecision");
         AppendChange(changes, previousStoredSettings.SessionTimeoutMinutes, updatedStoredSettings.SessionTimeoutMinutes, "sessionTimeoutMinutes");
         AppendChange(changes, previousStoredSettings.ServerRuntimeCleanupDelayMinutes, updatedStoredSettings.ServerRuntimeCleanupDelayMinutes, "serverRuntimeCleanupDelayMinutes");

@@ -105,6 +105,15 @@
   <data name="SettingsClosedLidPermissionRequestDecision" xml:space="preserve">
     <value>  ふたが閉じているときの許可リクエスト応答: {0}</value>
   </data>
+  <data name="SettingsClosedLidStopFollowUpFeatureState" xml:space="preserve">
+    <value>  スリープ前の返信通知: {0}</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpWebhookUrl" xml:space="preserve">
+    <value>  スリープ前の返信通知 URL: {0}</value>
+  </data>
+  <data name="SettingsRepeatClosedLidStopFollowUp" xml:space="preserve">
+    <value>  返信後にもう一度確認する: {0}</value>
+  </data>
   <data name="SettingsEmergencyHibernationOnHighTemperature" xml:space="preserve">
     <value>  高温時の緊急休止: {0}</value>
   </data>
@@ -119,6 +128,9 @@
   </data>
   <data name="SettingsNoPreSuspendWebhookConfigured" xml:space="preserve">
     <value>スリープ/休止状態の前 Webhook URL は設定されていません。</value>
+  </data>
+  <data name="SettingsNoClosedLidStopFollowUpWebhookConfigured" xml:space="preserve">
+    <value>スリープ前の返信通知 URL は設定されていません。</value>
   </data>
   <data name="SettingsPostSessionEndWebhookUrl" xml:space="preserve">
     <value>  セッション完了 Webhook URL: {0}</value>
@@ -140,6 +152,9 @@
   </data>
   <data name="SettingsPreSuspendWebhookUrlRemoved" xml:space="preserve">
     <value>スリープ/休止状態の前 Webhook URL を削除しました。</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpWebhookUrlRemoved" xml:space="preserve">
+    <value>スリープ前の返信通知 URL を削除しました。</value>
   </data>
   <data name="SettingsPreventAwayModeSleep" xml:space="preserve">
     <value>  Away Mode のスリープ防止: {0}</value>
@@ -305,6 +320,9 @@
   </data>
   <data name="SettingsOptionPreSuspendWebhookRemovalCommand" xml:space="preserve">
     <value>スリープ/休止状態の前 Webhook URL を削除するには、{0} {1} を実行してください。</value>
+  </data>
+  <data name="SettingsOptionClosedLidStopFollowUpWebhookRemovalCommand" xml:space="preserve">
+    <value>スリープ前の返信通知 URL を削除するには、{0} {1} を実行してください。</value>
   </data>
   <data name="ManagementLabelManagedBlock" xml:space="preserve">
     <value>管理ブロック</value>
@@ -816,6 +834,9 @@
   <data name="SettingsNameClosedLidPermissionRequestDecision" xml:space="preserve">
     <value>ふたが閉じているときの許可リクエスト応答</value>
   </data>
+  <data name="SettingsNameRepeatClosedLidStopFollowUp" xml:space="preserve">
+    <value>返信後にもう一度確認する</value>
+  </data>
   <data name="TextDisplayOff" xml:space="preserve">
     <value>オフ</value>
   </data>
@@ -1113,6 +1134,12 @@
   <data name="Help_Settings_ClosedLidPermissionRequestDecisionOption" xml:space="preserve">
     <value>LidGuard がふたが閉じていると報告したときに、ふたが閉じている状態の PermissionRequest フックがどう応答するかを選びます。ask はセッションを soft-lock し、プロバイダー本来の権限プロンプトをそのまま続けます。</value>
   </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpWebhookOption" xml:space="preserve">
+    <value>ふたが閉じた状態で作業が終わろうとしたとき、スリープ前に返信通知を送る URL を設定します。URL が有効で、スリープまでの待機時間が 0 秒より大きいときに動作します。</value>
+  </data>
+  <data name="Help_Settings_RepeatClosedLidStopFollowUpOption" xml:space="preserve">
+    <value>返信で作業を再開したあと、その作業が次に終了しようとしたときにもう一度通知するかを設定します。既定値は true です。</value>
+  </data>
   <data name="Help_ProviderMcpRemove_ConfigOption" xml:space="preserve">
     <value>必須です。更新する JSON 構成ファイルです。</value>
   </data>
@@ -1145,6 +1172,9 @@
   </data>
   <data name="Help_RemovePostSessionEndWebhook_Description" xml:space="preserve">
     <value>保存されているセッション完了 Webhook URL を消去します。</value>
+  </data>
+  <data name="Help_RemoveClosedLidStopFollowUpWebhook_Description" xml:space="preserve">
+    <value>保存されているスリープ前の返信通知 URL を消去します。</value>
   </data>
   <data name="Help_PreviewSystemSound_Description" xml:space="preserve">
     <value>保存された一時ボリューム設定を使って、対応している SystemSound 名を 1 つ今すぐ再生します。</value>
@@ -1739,6 +1769,9 @@
   </data>
   <data name="LiveStatusPendingSuspendLine" xml:space="preserve">
     <value>保留中のスリープ: {0}</value>
+  </data>
+  <data name="LiveStatusStopFollowUpRepeatLine" xml:space="preserve">
+    <value>返信後にもう一度確認: {0}</value>
   </data>
   <data name="LiveStatusNoRuntimeMessage" xml:space="preserve">
     <value>ランタイム メッセージ: なし</value>

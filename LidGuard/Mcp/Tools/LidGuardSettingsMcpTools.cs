@@ -104,8 +104,10 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         string preSuspendWebhookUrl = null,
         [Description("Set the webhook URL LidGuard POSTs after a session completes normally when LidGuard is not about to sleep or hibernate. Pass an empty string to disable it. Omit to keep the current value.")]
         string postSessionEndWebhookUrl = null,
-        [Description("Set the webhook URL LidGuard POSTs when a closed-lid stop hook should wait for a follow-up reply before allowing the session to end. Pass an empty string to disable it. Omit to keep the current value.")]
+        [Description("Set the webhook URL for the closed-lid ask-me-before-sleeping notification. Pass an empty string to disable it. Omit to keep the current value.")]
         string closedLidStopFollowUpWebhookUrl = null,
+        [Description("Set whether LidGuard asks again after a reply keeps a closed-lid session working and the provider later tries to finish again. Omit to keep the current value.")]
+        bool? repeatClosedLidStopFollowUp = null,
         [Description("Set the PermissionRequest behavior while the lid is closed. Deny and Allow return structured hook decisions; Ask soft-locks the session and returns empty stdout so the provider asks normally. Omit to keep the current value.")]
         ClosedLidPermissionRequestDecision? closedLidPermissionRequestDecision = null,
         [Description("Set the reason text Windows shows for LidGuard's sleep prevention. Pass an empty string to restore LidGuard's default reason text. Omit to keep the current value.")]
@@ -175,6 +177,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
             PreSuspendWebhookUrl = preSuspendWebhookUrl,
             PostSessionEndWebhookUrl = postSessionEndWebhookUrl,
             ClosedLidStopFollowUpWebhookUrl = closedLidStopFollowUpWebhookUrl,
+            RepeatClosedLidStopFollowUp = repeatClosedLidStopFollowUp,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             PowerRequestReason = powerRequestReason
         };

@@ -72,7 +72,7 @@ internal static class LidGuardSettingsValueParser
         {
             message = LocalizationService.GetFormattedStringWithFallback(
                 "SettingsOptionClosedLidStopFollowUpWebhookRemovalCommand",
-                "closed-lid stop follow-up webhook URL을 제거하려면 {0} {1} 명령을 사용하세요.",
+                "To remove the ask-before-sleep reply notification URL, use {0} {1}.",
                 LidGuardCommandConsole.GetCommandDisplayName(),
                 LidGuardPipeCommands.RemoveClosedLidStopFollowUpWebhook);
             return false;

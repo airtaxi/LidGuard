@@ -146,7 +146,7 @@ internal static class LiveStatusCommand
         };
 
         var remainingHeight = screenHeight - screenLines.Count;
-        var runtimePanelHeight = Math.Min(7, Math.Max(0, remainingHeight));
+        var runtimePanelHeight = Math.Min(8, Math.Max(0, remainingHeight));
         AppendPanel(screenLines, Text("LiveStatusRuntimePanelTitle", "Runtime"), CreateRuntimePanelLines(snapshot, enableStyles), runtimePanelHeight, screenWidth, enableStyles);
 
         remainingHeight = screenHeight - screenLines.Count;
@@ -183,7 +183,11 @@ internal static class LiveStatusCommand
                 CreateActiveSessionCountText(response.ActiveSessionCount, enableStyles),
                 DisplayLidSwitchState(response, enableStyles),
                 CreateVisibleDisplayMonitorCountText(response, enableStyles)),
-            Format("LiveStatusPendingSuspendLine", "Pending suspend: {0}", pendingSuspend),
+            Format("LiveStatusPendingSuspendLine", "Planned sleep/hibernate: {0}", pendingSuspend),
+            Format(
+                "LiveStatusStopFollowUpRepeatLine",
+                "Ask again after reply: {0}",
+                LocalizationService.DisplayBoolean(response.Settings.RepeatClosedLidStopFollowUp)),
             string.IsNullOrWhiteSpace(responseMessage) ? Text("LiveStatusNoRuntimeMessage", "Runtime message: none") : Format("LiveStatusRuntimeMessageLine", "Runtime message: {0}", responseMessage)
         ];
     }
