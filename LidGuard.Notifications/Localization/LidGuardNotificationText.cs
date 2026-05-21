@@ -26,6 +26,7 @@ internal static class LidGuardNotificationText
     public static string BrowserNotSubscribed => Get(nameof(BrowserNotSubscribed));
     public static string BrowserSubscribed => Get(nameof(BrowserSubscribed));
     public static string BrowserUnsubscribed => Get(nameof(BrowserUnsubscribed));
+    public static string ClosedLidStopFollowUpWebhookCommandLabel => Get(nameof(ClosedLidStopFollowUpWebhookCommandLabel));
     public static string CommandExamplesTitle => Get(nameof(CommandExamplesTitle));
     public static string CopiedButton => Get(nameof(CopiedButton));
     public static string CopyButton => Get(nameof(CopyButton));

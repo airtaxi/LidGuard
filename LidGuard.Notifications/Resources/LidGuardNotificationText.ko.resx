@@ -159,6 +159,9 @@
   <data name="ProcessedLabel" xml:space="preserve">
     <value>처리됨</value>
   </data>
+  <data name="ClosedLidStopFollowUpWebhookCommandLabel" xml:space="preserve">
+    <value>덮개 닫힘 Stop 후속 답장 웹훅</value>
+  </data>
   <data name="PostSessionEndWebhookCommandLabel" xml:space="preserve">
     <value>세션 종료 후 웹훅</value>
   </data>

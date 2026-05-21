@@ -159,6 +159,9 @@
   <data name="ProcessedLabel" xml:space="preserve">
     <value>Processed</value>
   </data>
+  <data name="ClosedLidStopFollowUpWebhookCommandLabel" xml:space="preserve">
+    <value>Closed-lid Stop follow-up webhook</value>
+  </data>
   <data name="PostSessionEndWebhookCommandLabel" xml:space="preserve">
     <value>Post-session-end webhook</value>
   </data>

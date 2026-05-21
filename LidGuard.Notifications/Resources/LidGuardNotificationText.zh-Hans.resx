@@ -159,6 +159,9 @@
   <data name="ProcessedLabel" xml:space="preserve">
     <value>已处理</value>
   </data>
+  <data name="ClosedLidStopFollowUpWebhookCommandLabel" xml:space="preserve">
+    <value>合盖 Stop 后续回复 Webhook</value>
+  </data>
   <data name="PostSessionEndWebhookCommandLabel" xml:space="preserve">
     <value>会话结束后 Webhook</value>
   </data>

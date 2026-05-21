@@ -159,6 +159,9 @@
   <data name="ProcessedLabel" xml:space="preserve">
     <value>処理済み</value>
   </data>
+  <data name="ClosedLidStopFollowUpWebhookCommandLabel" xml:space="preserve">
+    <value>閉じたフタの Stop フォローアップ Webhook</value>
+  </data>
   <data name="PostSessionEndWebhookCommandLabel" xml:space="preserve">
     <value>セッション終了後の Webhook</value>
   </data>
