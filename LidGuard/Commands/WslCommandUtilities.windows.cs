@@ -15,7 +15,13 @@ internal static class WslCommandUtilities
     public readonly record struct WslContext(string DistroName, string WslExecutablePath);
 
     public static string GetDistroName(IReadOnlyDictionary<string, string> options)
-        => CommandOptionReader.GetOption(options, DistroOptionName).Trim();
+        => NormalizeDistroName(CommandOptionReader.GetOption(options, DistroOptionName));
+
+    public static string GetDistroDisplayName(string distroName)
+    {
+        var normalizedDistroName = NormalizeDistroName(distroName);
+        return string.IsNullOrWhiteSpace(normalizedDistroName) ? "default" : normalizedDistroName;
+    }
 
     public static bool TryGetDistroName(IReadOnlyDictionary<string, string> options, out string distroName, out string message)
     {
@@ -44,6 +50,7 @@ internal static class WslCommandUtilities
 
     public static bool TryValidateWsl(string distroName, out string message)
     {
+        distroName = NormalizeDistroName(distroName);
         message = string.Empty;
 
         var statusResult = RunWslProcess(["--status"]);
@@ -134,6 +141,7 @@ internal static class WslCommandUtilities
 
     public static WslCommandResult RunShell(string distroName, string script, IReadOnlyList<string> arguments, string standardInput = "")
     {
+        distroName = NormalizeDistroName(distroName);
         var processArguments = new List<string>();
         if (!string.IsNullOrWhiteSpace(distroName))
         {
@@ -264,11 +272,21 @@ internal static class WslCommandUtilities
             return false;
         }
 
-        distroNames = result.StandardOutput
+        distroNames = NormalizeWslConsoleText(result.StandardOutput)
             .Replace("\r\n", "\n", StringComparison.Ordinal)
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(NormalizeDistroName)
+            .Where(distroName => !string.IsNullOrWhiteSpace(distroName))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
         return true;
     }
+
+    private static string NormalizeDistroName(string distroName)
+        => NormalizeWslConsoleText(distroName).Trim();
+
+    private static string NormalizeWslConsoleText(string value)
+        => string.IsNullOrEmpty(value) ? string.Empty : value.Replace("\0", string.Empty, StringComparison.Ordinal);
 
     private static WslCommandResult RunWslProcess(IReadOnlyList<string> arguments, string standardInput = "")
     {
@@ -347,8 +365,15 @@ internal readonly record struct WslCommandResult(
 
     public string GetDisplayError()
     {
-        if (!string.IsNullOrWhiteSpace(StandardError)) return StandardError.Trim();
-        if (!string.IsNullOrWhiteSpace(StandardOutput)) return StandardOutput.Trim();
+        var standardError = NormalizeDisplayText(StandardError);
+        if (!string.IsNullOrWhiteSpace(standardError)) return standardError;
+
+        var standardOutput = NormalizeDisplayText(StandardOutput);
+        if (!string.IsNullOrWhiteSpace(standardOutput)) return standardOutput;
+
         return LocalizationService.GetString("TextDisplayNone");
     }
+
+    private static string NormalizeDisplayText(string value)
+        => string.IsNullOrEmpty(value) ? string.Empty : value.Replace("\0", string.Empty, StringComparison.Ordinal).Trim();
 }

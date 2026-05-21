@@ -148,6 +148,7 @@ Reference:
 - Windows WSL integration commands must install or inspect configuration inside the selected/default WSL distro while pointing hook, MCP, and Provider MCP commands back to the current Windows `lidguard.exe` through its `wslpath`-converted absolute path.
 - WSL hook commands are `wsl-hook-status`, `wsl-hook-install`, and `wsl-hook-remove` with `--provider codex|claude|copilot|all` and optional `--distro <name>`.
 - WSL hook snippet commands are `wsl-codex-hooks`, `wsl-claude-hooks`, and `wsl-copilot-hooks`; generated Claude and GitHub Copilot hook config must use the `bash` shell, not Windows `powershell`.
+- Settings-triggered automatic WSL managed hook refresh must normalize `wsl.exe --list --quiet` output before using distro names, including removing NUL characters from UTF-16LE-style output, and an empty distro name must mean the default WSL distro rather than a named empty distro.
 - WSL provider-specific MCP aliases are `wsl-codex-mcp-status/install/remove`, `wsl-claude-mcp-status/install/remove`, and `wsl-copilot-mcp-status/install/remove`. The generic selected-provider forms are `wsl-mcp-status/install/remove [codex|claude|copilot|all]`.
 - WSL generic Provider MCP direct JSON commands are `wsl-provider-mcp-status`, `wsl-provider-mcp-install`, and `wsl-provider-mcp-remove`, using WSL-side JSON config paths and a server entry that runs the Windows `lidguard.exe` WSL path.
 - WSL hook status must treat a managed hook that points at an older `lidguard.exe` version path as needing update, matching MCP refresh behavior.

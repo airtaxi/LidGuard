@@ -78,15 +78,16 @@ internal static class ManagedHookStatusMessageRefresh
 
         foreach (var distroName in distroNames)
         {
+            var distroDisplayName = WslCommandUtilities.GetDistroDisplayName(distroName);
             if (!WslCommandUtilities.TryValidateWsl(distroName, out var validationMessage))
             {
-                warningMessages.Add($"WSL {distroName}: {validationMessage}");
+                warningMessages.Add($"WSL {distroDisplayName}: {validationMessage}");
                 continue;
             }
 
             if (!WslCommandUtilities.TryGetWslLidGuardExecutablePath(distroName, out var wslExecutablePath, out var executableMessage))
             {
-                warningMessages.Add($"WSL {distroName}: {executableMessage}");
+                warningMessages.Add($"WSL {distroDisplayName}: {executableMessage}");
                 continue;
             }
 
@@ -103,7 +104,7 @@ internal static class ManagedHookStatusMessageRefresh
         List<string> changedProviderNames,
         List<string> warningMessages)
     {
-        var providerDisplayName = $"{ManagedProviderSelection.GetProviderDisplayName(provider)} (WSL {distroName})";
+        var providerDisplayName = $"{ManagedProviderSelection.GetProviderDisplayName(provider)} (WSL {WslCommandUtilities.GetDistroDisplayName(distroName)})";
         if (!WslProviderConfigurationRoots.TryGetHookConfigurationFilePath(distroName, provider, string.Empty, out var configurationFilePath, out var configurationMessage))
         {
             warningMessages.Add($"{providerDisplayName}: {configurationMessage}");
