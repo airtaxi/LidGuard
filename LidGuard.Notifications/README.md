@@ -77,6 +77,8 @@ dotnet user-secrets set "LidGuardNotifications:UserInterfaceCulture" "auto" --pr
 
 `DatabasePath` is optional. When omitted, the server uses `%LOCALAPPDATA%\LidGuard\Notifications\notifications.sqlite` on Windows.
 
+Dashboard access uses a short 15-minute authentication cookie. When `Keep me signed in` is checked, the server also stores a hashed refresh token in SQLite and keeps the refresh cookie valid for 14 days. Each authenticated page request rotates the refresh token and renews the short authentication cookie.
+
 `UserInterfaceCulture` is optional and defaults to `auto`. It accepts `en`, `ko`, or any `CultureInfo`-resolvable culture name. The `LIDGUARD_UI_CULTURE` environment variable overrides it.
 
 ## Environment Variable Configuration
@@ -101,7 +103,7 @@ $env:LIDGUARD_UI_CULTURE = "ko"
 dotnet run --project LidGuard.Notifications
 ```
 
-Open the displayed localhost URL, sign in with `AccessToken`, then subscribe the browser from the dashboard.
+Open the displayed localhost URL, sign in with `AccessToken`, keep or clear `Keep me signed in`, then subscribe the browser from the dashboard.
 
 ## Browser Subscribe And Unsubscribe
 

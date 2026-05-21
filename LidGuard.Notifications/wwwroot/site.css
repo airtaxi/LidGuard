@@ -208,6 +208,12 @@ input {
     padding: 9px 11px;
 }
 
+input[type="checkbox"] {
+    accent-color: var(--accent);
+    min-height: auto;
+    padding: 0;
+}
+
 input:focus-visible,
 select:focus-visible,
 button:focus-visible,
@@ -410,6 +416,19 @@ button:disabled {
 .field-error {
     color: var(--danger);
     margin: 0;
+}
+
+.checkbox-row {
+    align-items: center;
+    color: var(--muted);
+    display: inline-flex;
+    gap: 8px;
+    font-size: 0.94rem;
+    font-weight: 650;
+}
+
+.checkbox-row input {
+    flex: 0 0 auto;
 }
 
 .webhook-url {

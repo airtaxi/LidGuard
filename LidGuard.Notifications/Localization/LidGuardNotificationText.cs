@@ -56,6 +56,7 @@ internal static class LidGuardNotificationText
     public static string PreSuspendWebhookCommandLabel => Get(nameof(PreSuspendWebhookCommandLabel));
     public static string PublicBaseUrlNotConfigured => Get(nameof(PublicBaseUrlNotConfigured));
     public static string ReadyStatus => Get(nameof(ReadyStatus));
+    public static string RememberLoginLabel => Get(nameof(RememberLoginLabel));
     public static string ServiceWorkersUnavailable => Get(nameof(ServiceWorkersUnavailable));
     public static string SignInButton => Get(nameof(SignInButton));
     public static string SignOutNavigation => Get(nameof(SignOutNavigation));

@@ -9,6 +9,10 @@
         <h1>@LidGuardNotificationText.Brand</h1>
         <label asp-for="AccessToken">@LidGuardNotificationText.AccessTokenLabel</label>
         <input asp-for="AccessToken" type="password" autocomplete="current-password" autofocus />
+        <label class="checkbox-row" asp-for="RememberLogin">
+            <input asp-for="RememberLogin" type="checkbox" />
+            <span>@LidGuardNotificationText.RememberLoginLabel</span>
+        </label>
         @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
         {
             <p class="field-error" role="alert">@Model.ErrorMessage</p>

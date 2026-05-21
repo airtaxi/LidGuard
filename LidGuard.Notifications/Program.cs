@@ -3,7 +3,6 @@ using LidGuard.Notifications.Data;
 using LidGuard.Notifications.Localization;
 using LidGuard.Notifications.Security;
 using LidGuard.Notifications.Services;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
@@ -21,11 +20,14 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(options =>
     {
         options.Cookie.HttpOnly = true;
-        options.Cookie.Name = "LidGuard.Notifications";
+        options.Cookie.Name = DashboardAuthenticationConstants.AccessCookieName;
+        options.Cookie.Path = "/";
         options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.ExpireTimeSpan = DashboardAuthenticationConstants.AccessTokenLifetime;
         options.LoginPath = "/login";
         options.LogoutPath = "/logout";
-        options.SlidingExpiration = true;
+        options.SlidingExpiration = false;
     });
 builder.Services.AddAuthorization();
 builder.Services.AddLocalization();
@@ -37,10 +39,12 @@ builder.Services.AddRazorPages(options =>
 
 builder.Services.AddSingleton<SqliteConnectionFactory>();
 builder.Services.AddSingleton<NotificationDatabaseInitializer>();
+builder.Services.AddSingleton<AuthenticationRefreshTokenStore>();
 builder.Services.AddSingleton<PushSubscriptionStore>();
 builder.Services.AddSingleton<WebhookEventStore>();
 builder.Services.AddSingleton<NotificationDeliveryStore>();
 builder.Services.AddSingleton<WebhookEventProcessingSignal>();
+builder.Services.AddSingleton<DashboardAuthenticationService>();
 builder.Services.AddSingleton<WebPushClient>();
 builder.Services.AddSingleton<IWebPushNotificationSender, ClosureOpenSourceWebPushNotificationSender>();
 builder.Services.AddHostedService<NotificationDispatchService>();
@@ -61,14 +65,15 @@ app.UseRequestLocalization(LidGuardNotificationCulture.CreateRequestLocalization
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
+app.UseMiddleware<DashboardAuthenticationRefreshMiddleware>();
 app.UseAuthorization();
 
 app.MapRazorPages();
 LidGuardNotificationApiEndpoints.Map(app);
 
-app.MapPost("/logout", async (HttpContext httpContext) =>
+app.MapPost("/logout", async (HttpContext httpContext, DashboardAuthenticationService authenticationService) =>
 {
-    await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    await authenticationService.SignOutAsync(httpContext, httpContext.RequestAborted);
     return Results.Redirect("/login");
 }).RequireAuthorization();
 

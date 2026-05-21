@@ -77,6 +77,8 @@ dotnet user-secrets set "LidGuardNotifications:UserInterfaceCulture" "auto" --pr
 
 `DatabasePath`는 선택 사항입니다. 생략하면 서버는 Windows에서 `%LOCALAPPDATA%\LidGuard\Notifications\notifications.sqlite`를 사용합니다.
 
+Dashboard 접근에는 15분짜리 짧은 인증 쿠키를 사용합니다. `로그인 상태 기억`을 체크하면 서버가 해시된 refresh token을 SQLite에 저장하고 refresh cookie를 14일 동안 유지합니다. 인증된 페이지 요청마다 refresh token을 회전하고 짧은 인증 쿠키를 갱신합니다.
+
 `UserInterfaceCulture`는 선택 사항이며 기본값은 `auto`입니다. `en`, `ko`, 또는 `CultureInfo`로 해석 가능한 culture name을 받습니다. `LIDGUARD_UI_CULTURE` 환경 변수가 이 값을 덮어씁니다.
 
 ## 환경 변수 설정
@@ -101,7 +103,7 @@ $env:LIDGUARD_UI_CULTURE = "ko"
 dotnet run --project LidGuard.Notifications
 ```
 
-표시된 localhost URL을 열고 `AccessToken`으로 로그인한 뒤 dashboard에서 브라우저를 구독합니다.
+표시된 localhost URL을 열고 `AccessToken`으로 로그인하면서 `로그인 상태 기억`을 유지하거나 해제한 뒤 dashboard에서 브라우저를 구독합니다.
 
 ## 브라우저 구독과 구독 해제
 

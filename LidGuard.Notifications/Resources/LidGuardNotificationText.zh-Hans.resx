@@ -228,6 +228,9 @@
   <data name="ReadyStatus" xml:space="preserve">
     <value>已就绪。</value>
   </data>
+  <data name="RememberLoginLabel" xml:space="preserve">
+    <value>保持登录状态</value>
+  </data>
   <data name="RecentEvents" xml:space="preserve">
     <value>最近 {0} 条</value>
   </data>

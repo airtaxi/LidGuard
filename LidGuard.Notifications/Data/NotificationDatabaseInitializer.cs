@@ -90,8 +90,20 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
                 FOREIGN KEY (SubscriptionId) REFERENCES Subscriptions(Id) ON DELETE CASCADE
             );
             """,
+            """
+            CREATE TABLE IF NOT EXISTS AuthenticationRefreshTokens (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                TokenHash TEXT NOT NULL UNIQUE,
+                CreatedAtUtc TEXT NOT NULL,
+                ExpiresAtUtc TEXT NOT NULL,
+                LastUsedAtUtc TEXT NOT NULL,
+                RevokedAtUtc TEXT NULL
+            );
+            """,
             "CREATE INDEX IF NOT EXISTS IX_Subscriptions_IsActive ON Subscriptions(IsActive);",
             "CREATE INDEX IF NOT EXISTS IX_WebhookEvents_Status_Id ON WebhookEvents(Status, Id);",
-            "CREATE INDEX IF NOT EXISTS IX_NotificationDeliveries_WebhookEventId ON NotificationDeliveries(WebhookEventId);"
+            "CREATE INDEX IF NOT EXISTS IX_NotificationDeliveries_WebhookEventId ON NotificationDeliveries(WebhookEventId);",
+            "CREATE INDEX IF NOT EXISTS IX_AuthenticationRefreshTokens_TokenHash ON AuthenticationRefreshTokens(TokenHash);",
+            "CREATE INDEX IF NOT EXISTS IX_AuthenticationRefreshTokens_ExpiresAtUtc ON AuthenticationRefreshTokens(ExpiresAtUtc);"
         ];
 }

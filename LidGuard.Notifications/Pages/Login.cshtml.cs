@@ -1,19 +1,19 @@
-using System.Security.Claims;
 using LidGuard.Notifications.Configuration;
 using LidGuard.Notifications.Localization;
 using LidGuard.Notifications.Security;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Options;
 
 namespace LidGuard.Notifications.Pages;
 
-internal sealed class LoginModel(IOptions<LidGuardNotificationsOptions> options) : PageModel
+internal sealed class LoginModel(IOptions<LidGuardNotificationsOptions> options, DashboardAuthenticationService authenticationService) : PageModel
 {
     [BindProperty]
     public string AccessToken { get; set; } = string.Empty;
+
+    [BindProperty]
+    public bool RememberLogin { get; set; } = true;
 
     public string? ErrorMessage { get; private set; }
 
@@ -26,6 +26,8 @@ internal sealed class LoginModel(IOptions<LidGuardNotificationsOptions> options)
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
     {
+        if (User.Identity?.IsAuthenticated == true) return LocalRedirect(LocalRedirectPath.Normalize(returnUrl));
+
         if (string.IsNullOrWhiteSpace(AccessToken))
         {
             ErrorMessage = LidGuardNotificationText.AccessTokenRequired;
@@ -38,10 +40,7 @@ internal sealed class LoginModel(IOptions<LidGuardNotificationsOptions> options)
             return Page();
         }
 
-        var identity = new ClaimsIdentity(
-            [new Claim(ClaimTypes.Name, LidGuardNotificationText.Brand)],
-            CookieAuthenticationDefaults.AuthenticationScheme);
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+        await authenticationService.SignInAsync(HttpContext, RememberLogin, HttpContext.RequestAborted);
         return LocalRedirect(LocalRedirectPath.Normalize(returnUrl));
     }
 }
