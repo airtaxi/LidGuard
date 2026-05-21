@@ -27,3 +27,7 @@ Read `.codex/skills/lidguard-repo-workflow/SKILL.md` before any LidGuard work.
 Repository-local skills take precedence over global or external skills with the same name. If `.codex/skills/<name>/SKILL.md` exists, read and follow that local file instead of any global `<name>` skill.
 
 For C# work, read `.codex/skills/csharp-code-style/SKILL.md`; do not read the global `csharp-code-style` skill when this local copy exists.
+
+## User-Facing Writing
+
+For user-visible text such as help descriptions and the root `README`, write sentences that non-developers can understand easily, because the app's target audience also includes vibe coders.
