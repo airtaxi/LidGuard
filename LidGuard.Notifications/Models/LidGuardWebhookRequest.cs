@@ -30,8 +30,6 @@ internal sealed class LidGuardWebhookRequest
 
     public string? LastResponse { get; init; }
 
-    public string? LastAssistantMessage { get; init; }
-
     public int? ReplyWaitSeconds { get; init; }
 
     public DateTimeOffset? ReplyDeadlineUtc { get; init; }

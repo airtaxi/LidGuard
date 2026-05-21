@@ -16,7 +16,6 @@ internal sealed record PendingWebhookEvent(
     int? ActiveSessionCount,
     string? InputPromptPreview,
     string? LastResponse,
-    string? LastAssistantMessage,
     int? ReplyWaitSeconds,
     DateTimeOffset? ReplyDeadlineUtc,
     string? WorkingDirectory,

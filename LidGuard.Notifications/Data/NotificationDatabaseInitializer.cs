@@ -29,7 +29,6 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
         }
 
         await EnsureWebhookEventsColumnAsync(connection, columnNames, "UserInterfaceCulture", "TEXT NULL", cancellationToken);
-        await EnsureWebhookEventsColumnAsync(connection, columnNames, "LastAssistantMessage", "TEXT NULL", cancellationToken);
         await EnsureWebhookEventsColumnAsync(connection, columnNames, "ReplyWaitSeconds", "INTEGER NULL", cancellationToken);
         await EnsureWebhookEventsColumnAsync(connection, columnNames, "ReplyDeadlineUtc", "TEXT NULL", cancellationToken);
     }
@@ -70,7 +69,6 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
                 ActiveSessionCount INTEGER NULL,
                 InputPromptPreview TEXT NULL,
                 LastResponse TEXT NULL,
-                LastAssistantMessage TEXT NULL,
                 ReplyWaitSeconds INTEGER NULL,
                 ReplyDeadlineUtc TEXT NULL,
                 WorkingDirectory TEXT NULL,

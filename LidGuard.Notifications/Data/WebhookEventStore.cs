@@ -23,7 +23,6 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         int? activeSessionCount,
         string? inputPromptPreview,
         string? lastResponse,
-        string? lastAssistantMessage,
         int? replyWaitSeconds,
         DateTimeOffset? replyDeadlineUtc,
         string? workingDirectory,
@@ -50,7 +49,6 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                 ActiveSessionCount,
                 InputPromptPreview,
                 LastResponse,
-                LastAssistantMessage,
                 ReplyWaitSeconds,
                 ReplyDeadlineUtc,
                 WorkingDirectory,
@@ -73,7 +71,6 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                 $activeSessionCount,
                 $inputPromptPreview,
                 $lastResponse,
-                $lastAssistantMessage,
                 $replyWaitSeconds,
                 $replyDeadlineUtc,
                 $workingDirectory,
@@ -97,7 +94,6 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         command.Parameters.AddWithValue("$activeSessionCount", ToDatabaseValue(activeSessionCount));
         command.Parameters.AddWithValue("$inputPromptPreview", ToDatabaseValue(inputPromptPreview));
         command.Parameters.AddWithValue("$lastResponse", ToDatabaseValue(lastResponse));
-        command.Parameters.AddWithValue("$lastAssistantMessage", ToDatabaseValue(lastAssistantMessage));
         command.Parameters.AddWithValue("$replyWaitSeconds", ToDatabaseValue(replyWaitSeconds));
         command.Parameters.AddWithValue("$replyDeadlineUtc", ToDatabaseValue(replyDeadlineUtc));
         command.Parameters.AddWithValue("$workingDirectory", ToDatabaseValue(workingDirectory));
@@ -123,7 +119,6 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         int? activeSessionCount,
         string? inputPromptPreview,
         string? lastResponse,
-        string? lastAssistantMessage,
         int replyWaitSeconds,
         DateTimeOffset replyDeadlineUtc,
         string? workingDirectory,
@@ -154,7 +149,6 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
             activeSessionCount,
             inputPromptPreview,
             lastResponse,
-            lastAssistantMessage,
             replyWaitSeconds,
             replyDeadlineUtc,
             workingDirectory,
@@ -229,7 +223,6 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                     events.ActiveSessionCount,
                     events.InputPromptPreview,
                     events.LastResponse,
-                    events.LastAssistantMessage,
                     events.ReplyWaitSeconds,
                     events.ReplyDeadlineUtc,
                     events.WorkingDirectory,
@@ -269,16 +262,15 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                     reader.IsDBNull(12) ? null : reader.GetInt32(12),
                     reader.IsDBNull(13) ? null : reader.GetString(13),
                     reader.IsDBNull(14) ? null : reader.GetString(14),
-                    reader.IsDBNull(15) ? null : reader.GetString(15),
-                    reader.IsDBNull(16) ? null : reader.GetInt32(16),
-                    reader.IsDBNull(17) ? null : DateTimeOffset.Parse(reader.GetString(17), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                    reader.IsDBNull(15) ? null : reader.GetInt32(15),
+                    reader.IsDBNull(16) ? null : DateTimeOffset.Parse(reader.GetString(16), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                    reader.IsDBNull(17) ? null : reader.GetString(17),
                     reader.IsDBNull(18) ? null : reader.GetString(18),
                     reader.IsDBNull(19) ? null : reader.GetString(19),
                     reader.IsDBNull(20) ? null : reader.GetString(20),
                     reader.IsDBNull(21) ? null : reader.GetString(21),
-                    reader.IsDBNull(22) ? null : reader.GetString(22),
-                    DateTimeOffset.Parse(reader.GetString(23), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                    Convert.ToInt32(reader.GetValue(24), CultureInfo.InvariantCulture) + 1));
+                    DateTimeOffset.Parse(reader.GetString(22), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                    Convert.ToInt32(reader.GetValue(23), CultureInfo.InvariantCulture) + 1));
             }
         }
 
@@ -536,7 +528,6 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                 events.ActiveSessionCount,
                 events.InputPromptPreview,
                 events.LastResponse,
-                events.LastAssistantMessage,
                 events.ReplyWaitSeconds,
                 events.ReplyDeadlineUtc,
                 events.WorkingDirectory,
@@ -585,25 +576,24 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                 reader.IsDBNull(12) ? null : reader.GetInt32(12),
                 reader.IsDBNull(13) ? null : reader.GetString(13),
                 reader.IsDBNull(14) ? null : reader.GetString(14),
-                reader.IsDBNull(15) ? null : reader.GetString(15),
-                reader.IsDBNull(16) ? null : reader.GetInt32(16),
-                reader.IsDBNull(17) ? null : DateTimeOffset.Parse(reader.GetString(17), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                reader.IsDBNull(15) ? null : reader.GetInt32(15),
+                reader.IsDBNull(16) ? null : DateTimeOffset.Parse(reader.GetString(16), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                reader.IsDBNull(17) ? null : reader.GetString(17),
                 reader.IsDBNull(18) ? null : reader.GetString(18),
                 reader.IsDBNull(19) ? null : reader.GetString(19),
                 reader.IsDBNull(20) ? null : reader.GetString(20),
                 reader.IsDBNull(21) ? null : reader.GetString(21),
-                reader.IsDBNull(22) ? null : reader.GetString(22),
+                reader.IsDBNull(22) ? null : DateTimeOffset.Parse(reader.GetString(22), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
                 reader.IsDBNull(23) ? null : DateTimeOffset.Parse(reader.GetString(23), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                reader.IsDBNull(24) ? null : DateTimeOffset.Parse(reader.GetString(24), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                DateTimeOffset.Parse(reader.GetString(25), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                reader.IsDBNull(26) ? null : DateTimeOffset.Parse(reader.GetString(26), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                reader.GetString(27),
+                DateTimeOffset.Parse(reader.GetString(24), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                reader.IsDBNull(25) ? null : DateTimeOffset.Parse(reader.GetString(25), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                reader.GetString(26),
+                Convert.ToInt32(reader.GetValue(27), CultureInfo.InvariantCulture),
                 Convert.ToInt32(reader.GetValue(28), CultureInfo.InvariantCulture),
                 Convert.ToInt32(reader.GetValue(29), CultureInfo.InvariantCulture),
                 Convert.ToInt32(reader.GetValue(30), CultureInfo.InvariantCulture),
                 Convert.ToInt32(reader.GetValue(31), CultureInfo.InvariantCulture),
-                Convert.ToInt32(reader.GetValue(32), CultureInfo.InvariantCulture),
-                reader.IsDBNull(33) ? null : reader.GetString(33)));
+                reader.IsDBNull(32) ? null : reader.GetString(32)));
         }
 
         return events;
@@ -657,7 +647,6 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         int? activeSessionCount,
         string? inputPromptPreview,
         string? lastResponse,
-        string? lastAssistantMessage,
         int? replyWaitSeconds,
         DateTimeOffset? replyDeadlineUtc,
         string? workingDirectory,
@@ -684,7 +673,6 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                 ActiveSessionCount,
                 InputPromptPreview,
                 LastResponse,
-                LastAssistantMessage,
                 ReplyWaitSeconds,
                 ReplyDeadlineUtc,
                 WorkingDirectory,
@@ -707,7 +695,6 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                 $activeSessionCount,
                 $inputPromptPreview,
                 $lastResponse,
-                $lastAssistantMessage,
                 $replyWaitSeconds,
                 $replyDeadlineUtc,
                 $workingDirectory,
@@ -731,7 +718,6 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         command.Parameters.AddWithValue("$activeSessionCount", ToDatabaseValue(activeSessionCount));
         command.Parameters.AddWithValue("$inputPromptPreview", ToDatabaseValue(inputPromptPreview));
         command.Parameters.AddWithValue("$lastResponse", ToDatabaseValue(lastResponse));
-        command.Parameters.AddWithValue("$lastAssistantMessage", ToDatabaseValue(lastAssistantMessage));
         command.Parameters.AddWithValue("$replyWaitSeconds", ToDatabaseValue(replyWaitSeconds));
         command.Parameters.AddWithValue("$replyDeadlineUtc", ToDatabaseValue(replyDeadlineUtc));
         command.Parameters.AddWithValue("$workingDirectory", ToDatabaseValue(workingDirectory));

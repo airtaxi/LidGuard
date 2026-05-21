@@ -16,7 +16,6 @@ public sealed record WebhookEventSummary(
     int? ActiveSessionCount,
     string? InputPromptPreview,
     string? LastResponse,
-    string? LastAssistantMessage,
     int? ReplyWaitSeconds,
     DateTimeOffset? ReplyDeadlineUtc,
     string? WorkingDirectory,

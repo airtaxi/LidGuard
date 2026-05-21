@@ -178,13 +178,6 @@
                                 <span>@LidGuardNotificationText.LastErrorLabel</span>
                                 <strong>@(webhookEvent.LastError ?? "-")</strong>
                             </div>
-                            @if (!string.IsNullOrWhiteSpace(webhookEvent.LastAssistantMessage))
-                            {
-                                <div class="detail-item detail-item-wide">
-                                    <span>Last assistant message</span>
-                                    <pre class="response-body">@webhookEvent.LastAssistantMessage</pre>
-                                </div>
-                            }
                             @if (webhookEvent.StopFollowUpRepliedAtUtc is not null)
                             {
                                 var repliedAtUniversalTime = webhookEvent.StopFollowUpRepliedAtUtc.Value.ToUniversalTime();
