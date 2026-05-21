@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using LidGuard.Ipc;
 using LidGuard.Sessions;
 using LidGuard.Settings;
@@ -85,6 +86,9 @@ internal abstract class HookCommandBase<THookInput>
             InputPrompt = commandName == LidGuardPipeCommands.Start ? hookInput.Prompt : string.Empty,
             WorkingDirectory = GetWorkingDirectory(hookInput),
             TranscriptPath = hookInput.TranscriptPath,
+            CanReturnStopContinuation = commandName == LidGuardPipeCommands.Stop && CanReturnStopContinuation(hookEventName, hookInput),
+            StopHookAlreadyActive = commandName == LidGuardPipeCommands.Stop && IsStopHookAlreadyActive(hookInput),
+            LastAssistantMessage = commandName == LidGuardPipeCommands.Stop ? GetLastAssistantMessage(hookInput) : string.Empty,
             HasSettings = hasSettings,
             Settings = settings
         };
@@ -102,6 +106,12 @@ internal abstract class HookCommandBase<THookInput>
             commandName,
             response,
             timing?.CreateRuntimeResultDetails(runtimeClientDiagnostics) ?? string.Empty);
+        if (response.StopContinuationRequested)
+        {
+            WriteStopContinuationDecision(response.StopContinuationPrompt);
+            return 0;
+        }
+
         if (commandName == LidGuardPipeCommands.Stop && !hasPendingProviderWork) ClearSessionState(hookInput);
         return 0;
     }
@@ -182,6 +192,12 @@ internal abstract class HookCommandBase<THookInput>
     {
     }
 
+    protected virtual bool CanReturnStopContinuation(string hookEventName, THookInput hookInput) => false;
+
+    protected virtual string GetLastAssistantMessage(THookInput hookInput) => string.Empty;
+
+    protected virtual bool IsStopHookAlreadyActive(THookInput hookInput) => false;
+
     protected abstract void AppendMessage(string message);
 
     protected abstract void AppendRuntimeResult(
@@ -197,6 +213,15 @@ internal abstract class HookCommandBase<THookInput>
     {
         try { return Path.TrimEndingDirectorySeparator(Path.GetFullPath(workingDirectory)); }
         catch { return workingDirectory; }
+    }
+
+    private static void WriteStopContinuationDecision(string stopContinuationPrompt)
+    {
+        var output = new StopHookContinuationDecisionOutput
+        {
+            Reason = stopContinuationPrompt ?? string.Empty
+        };
+        Console.WriteLine(JsonSerializer.Serialize(output, LidGuardJsonSerializerContext.Default.StopHookContinuationDecisionOutput));
     }
 }
 

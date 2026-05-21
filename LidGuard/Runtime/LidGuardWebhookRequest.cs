@@ -58,6 +58,18 @@ internal sealed class LidGuardWebhookRequest
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string LastResponse { get; init; }
 
+    [JsonPropertyName("lastAssistantMessage")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string LastAssistantMessage { get; init; }
+
+    [JsonPropertyName("replyWaitSeconds")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? ReplyWaitSeconds { get; init; }
+
+    [JsonPropertyName("replyDeadlineUtc")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DateTimeOffset? ReplyDeadlineUtc { get; init; }
+
     [JsonPropertyName("workingDirectory")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string WorkingDirectory { get; init; }

@@ -120,6 +120,7 @@ internal static class LidGuardSettingsInteractiveFactory
             SuspendHistoryEntryCount = suspendHistoryEntryCount,
             PreSuspendWebhookUrl = normalizedStoredSettings.PreSuspendWebhookUrl,
             PostSessionEndWebhookUrl = normalizedStoredSettings.PostSessionEndWebhookUrl,
+            ClosedLidStopFollowUpWebhookUrl = normalizedStoredSettings.ClosedLidStopFollowUpWebhookUrl,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess,
             SessionTimeoutMinutes = sessionTimeoutMinutes,

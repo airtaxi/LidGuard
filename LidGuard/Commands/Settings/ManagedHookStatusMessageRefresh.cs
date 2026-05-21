@@ -1,9 +1,10 @@
 using LidGuard.Hooks;
+using LidGuard.Localization;
 using LidGuard.Sessions;
 
 namespace LidGuard.Commands;
 
-internal sealed class ManagedHookStatusMessageRefreshResult
+public sealed class ManagedHookStatusMessageRefreshResult
 {
     public IReadOnlyList<string> ChangedProviderNames { get; init; } = [];
 
@@ -12,7 +13,7 @@ internal sealed class ManagedHookStatusMessageRefreshResult
 
 internal static class ManagedHookStatusMessageRefresh
 {
-    private delegate bool TryRefreshManagedHookStatusMessages(
+    private delegate bool TryRefreshManagedHookConfiguration(
         string content,
         out string updatedContent,
         out bool changed,
@@ -23,9 +24,10 @@ internal static class ManagedHookStatusMessageRefresh
         var changedProviderNames = new List<string>();
         var warningMessages = new List<string>();
 
-        RefreshCodexHookStatusMessages(changedProviderNames, warningMessages);
-        RefreshClaudeHookStatusMessages(changedProviderNames, warningMessages);
-        RefreshGitHubCopilotHookStatusMessages(changedProviderNames, warningMessages);
+        RefreshCurrentPlatformHooks(changedProviderNames, warningMessages);
+#if LIDGUARD_WINDOWS
+        RefreshWslHooks(changedProviderNames, warningMessages);
+#endif
 
         return new ManagedHookStatusMessageRefreshResult
         {
@@ -34,68 +36,213 @@ internal static class ManagedHookStatusMessageRefresh
         };
     }
 
-    private static void RefreshCodexHookStatusMessages(List<string> changedProviderNames, List<string> warningMessages)
+    private static void RefreshCurrentPlatformHooks(List<string> changedProviderNames, List<string> warningMessages)
     {
-        var installer = new CodexHookInstaller();
-        var request = installer.CreateDefaultRequest(createBackup: false);
-        RefreshConfigurationFile(
-            ManagedProviderSelection.GetProviderDisplayName(AgentProvider.Codex),
-            request.ConfigurationFilePath,
-            CodexHookConfigTomlDocument.TryRefreshManagedHookStatusMessages,
-            changedProviderNames,
-            warningMessages);
+        RefreshCurrentPlatformHook(AgentProvider.Codex, new CodexHookInstaller(), changedProviderNames, warningMessages);
+        RefreshCurrentPlatformHook(AgentProvider.Claude, new ClaudeHookInstaller(), changedProviderNames, warningMessages);
+        RefreshCurrentPlatformHook(AgentProvider.GitHubCopilot, new GitHubCopilotHookInstaller(), changedProviderNames, warningMessages);
     }
 
-    private static void RefreshClaudeHookStatusMessages(List<string> changedProviderNames, List<string> warningMessages)
-    {
-        var installer = new ClaudeHookInstaller();
-        var request = installer.CreateDefaultRequest(createBackup: false);
-        RefreshConfigurationFile(
-            ManagedProviderSelection.GetProviderDisplayName(AgentProvider.Claude),
-            request.ConfigurationFilePath,
-            ClaudeHookSettingsJsonDocument.TryRefreshManagedHookStatusMessages,
-            changedProviderNames,
-            warningMessages);
-    }
-
-    private static void RefreshGitHubCopilotHookStatusMessages(List<string> changedProviderNames, List<string> warningMessages)
-    {
-        var installer = new GitHubCopilotHookInstaller();
-        var request = installer.CreateDefaultRequest(createBackup: false);
-        RefreshConfigurationFile(
-            ManagedProviderSelection.GetProviderDisplayName(AgentProvider.GitHubCopilot),
-            request.ConfigurationFilePath,
-            GitHubCopilotHookConfigurationJsonDocument.TryRefreshManagedHookStatusMessages,
-            changedProviderNames,
-            warningMessages);
-    }
-
-    private static void RefreshConfigurationFile(
-        string providerName,
-        string configurationFilePath,
-        TryRefreshManagedHookStatusMessages tryRefreshManagedHookStatusMessages,
+    private static void RefreshCurrentPlatformHook(
+        AgentProvider provider,
+        IHookInstaller installer,
         List<string> changedProviderNames,
         List<string> warningMessages)
     {
-        if (!File.Exists(configurationFilePath)) return;
+        var request = installer.CreateDefaultRequest(createBackup: false);
+        var providerDisplayName = ManagedProviderSelection.GetProviderDisplayName(provider);
+        if (!File.Exists(request.ConfigurationFilePath))
+        {
+            if (ShouldWarnMissingLocalConfigurationFile(request.ConfigurationFilePath))
+                warningMessages.Add($"{providerDisplayName}: {CreateMissingConfigurationWarning(provider)}");
+            return;
+        }
 
+        var hookCommand = HookCommandUtilities.CreateHookCommand(request.HookExecutablePath, request.HookCommandName);
+        RefreshConfigurationFile(
+            providerDisplayName,
+            request.ConfigurationFilePath,
+            CreateLocalRefreshDelegate(provider, hookCommand),
+            changedProviderNames,
+            warningMessages);
+    }
+
+#if LIDGUARD_WINDOWS
+    private static void RefreshWslHooks(List<string> changedProviderNames, List<string> warningMessages)
+    {
+        if (!WslCommandUtilities.TryListDistros(out var distroNames, out var listMessage))
+        {
+            warningMessages.Add($"WSL: {listMessage}");
+            return;
+        }
+
+        foreach (var distroName in distroNames)
+        {
+            if (!WslCommandUtilities.TryValidateWsl(distroName, out var validationMessage))
+            {
+                warningMessages.Add($"WSL {distroName}: {validationMessage}");
+                continue;
+            }
+
+            if (!WslCommandUtilities.TryGetWslLidGuardExecutablePath(distroName, out var wslExecutablePath, out var executableMessage))
+            {
+                warningMessages.Add($"WSL {distroName}: {executableMessage}");
+                continue;
+            }
+
+            RefreshWslHookForProvider(distroName, wslExecutablePath, AgentProvider.Codex, changedProviderNames, warningMessages);
+            RefreshWslHookForProvider(distroName, wslExecutablePath, AgentProvider.Claude, changedProviderNames, warningMessages);
+            RefreshWslHookForProvider(distroName, wslExecutablePath, AgentProvider.GitHubCopilot, changedProviderNames, warningMessages);
+        }
+    }
+
+    private static void RefreshWslHookForProvider(
+        string distroName,
+        string wslExecutablePath,
+        AgentProvider provider,
+        List<string> changedProviderNames,
+        List<string> warningMessages)
+    {
+        var providerDisplayName = $"{ManagedProviderSelection.GetProviderDisplayName(provider)} (WSL {distroName})";
+        if (!WslProviderConfigurationRoots.TryGetHookConfigurationFilePath(distroName, provider, string.Empty, out var configurationFilePath, out var configurationMessage))
+        {
+            warningMessages.Add($"{providerDisplayName}: {configurationMessage}");
+            return;
+        }
+
+        if (!WslCommandUtilities.FileExists(distroName, configurationFilePath))
+        {
+            if (WslManagedProviderSelection.TryHasHookProviderConfigurationRoot(distroName, provider))
+                warningMessages.Add($"{providerDisplayName}: {CreateMissingConfigurationWarning(provider)}");
+            return;
+        }
+
+        if (!WslCommandUtilities.TryReadTextFile(distroName, configurationFilePath, out var originalContent, out var readMessage))
+        {
+            warningMessages.Add($"{providerDisplayName}: {readMessage}");
+            return;
+        }
+
+        var hookCommandName = WslCommandUtilities.GetHookCommandName(provider);
+        var hookCommand = WslCommandUtilities.CreateWslLidGuardCommand(wslExecutablePath, hookCommandName);
+        var refreshDelegate = CreateWslRefreshDelegate(provider, hookCommand);
+        if (!refreshDelegate(originalContent, out var updatedContent, out var changed, out var refreshMessage))
+        {
+            warningMessages.Add($"{providerDisplayName}: {refreshMessage}");
+            return;
+        }
+
+        if (!changed) return;
+        if (!WslCommandUtilities.TryWriteTextFile(distroName, configurationFilePath, updatedContent, out var writeMessage))
+        {
+            warningMessages.Add($"{providerDisplayName}: {writeMessage}");
+            return;
+        }
+
+        changedProviderNames.Add(providerDisplayName);
+    }
+#endif
+
+    private static TryRefreshManagedHookConfiguration CreateLocalRefreshDelegate(AgentProvider provider, string hookCommand)
+    {
+        return provider switch
+        {
+            AgentProvider.Codex => (string content, out string updatedContent, out bool changed, out string message)
+                => CodexHookConfigTomlDocument.TryRefreshManagedHookConfiguration(content, hookCommand, true, out updatedContent, out changed, out message),
+            AgentProvider.Claude => (string content, out string updatedContent, out bool changed, out string message)
+                => ClaudeHookSettingsJsonDocument.TryRefreshManagedHooks(
+                    content,
+                    hookCommand,
+                    HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform(),
+                    true,
+                    out updatedContent,
+                    out changed,
+                    out message),
+            AgentProvider.GitHubCopilot => (string content, out string updatedContent, out bool changed, out string message)
+                => GitHubCopilotHookConfigurationJsonDocument.TryRefreshManagedHooks(
+                    content,
+                    GitHubCopilotHookConfigurationJsonDocument.CreateManagedHookCommands(hookCommand),
+                    HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform(),
+                    true,
+                    out updatedContent,
+                    out changed,
+                    out message),
+            _ => UnsupportedRefreshDelegate()
+        };
+    }
+
+#if LIDGUARD_WINDOWS
+    private static TryRefreshManagedHookConfiguration CreateWslRefreshDelegate(AgentProvider provider, string hookCommand)
+    {
+        return provider switch
+        {
+            AgentProvider.Codex => (string content, out string updatedContent, out bool changed, out string message)
+                => CodexHookConfigTomlDocument.TryRefreshManagedHookConfiguration(content, hookCommand, true, out updatedContent, out changed, out message),
+            AgentProvider.Claude => (string content, out string updatedContent, out bool changed, out string message)
+                => ClaudeHookSettingsJsonDocument.TryRefreshManagedHooks(
+                    content,
+                    hookCommand,
+                    HookCommandUtilities.BashShellName,
+                    true,
+                    out updatedContent,
+                    out changed,
+                    out message),
+            AgentProvider.GitHubCopilot => (string content, out string updatedContent, out bool changed, out string message)
+                => GitHubCopilotHookConfigurationJsonDocument.TryRefreshManagedHooks(
+                    content,
+                    GitHubCopilotHookConfigurationJsonDocument.CreateManagedHookCommands(hookCommand),
+                    HookCommandUtilities.BashShellName,
+                    true,
+                    out updatedContent,
+                    out changed,
+                    out message),
+            _ => UnsupportedRefreshDelegate()
+        };
+    }
+#endif
+
+    private static TryRefreshManagedHookConfiguration UnsupportedRefreshDelegate()
+        => (string content, out string updatedContent, out bool changed, out string message) =>
+        {
+            updatedContent = content;
+            changed = false;
+            message = LocalizationService.GetString("ManagementUnsupportedHookManagement");
+            return false;
+        };
+
+    private static void RefreshConfigurationFile(
+        string providerDisplayName,
+        string configurationFilePath,
+        TryRefreshManagedHookConfiguration tryRefreshManagedHookConfiguration,
+        List<string> changedProviderNames,
+        List<string> warningMessages)
+    {
         try
         {
             var originalContent = File.ReadAllText(configurationFilePath);
-            if (!tryRefreshManagedHookStatusMessages(originalContent, out var updatedContent, out var changed, out var message))
+            if (!tryRefreshManagedHookConfiguration(originalContent, out var updatedContent, out var changed, out var message))
             {
-                warningMessages.Add($"{providerName}: {message}");
+                warningMessages.Add($"{providerDisplayName}: {message}");
                 return;
             }
 
             if (!changed) return;
 
             File.WriteAllText(configurationFilePath, updatedContent);
-            changedProviderNames.Add(providerName);
+            changedProviderNames.Add(providerDisplayName);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException)
         {
-            warningMessages.Add($"{providerName}: {exception.Message}");
+            warningMessages.Add($"{providerDisplayName}: {exception.Message}");
         }
+    }
+
+    private static string CreateMissingConfigurationWarning(AgentProvider provider)
+        => $"{ManagedProviderSelection.GetProviderDisplayName(provider)} hook configuration file does not exist.";
+
+    private static bool ShouldWarnMissingLocalConfigurationFile(string configurationFilePath)
+    {
+        var configurationDirectoryPath = Path.GetDirectoryName(configurationFilePath);
+        return !string.IsNullOrWhiteSpace(configurationDirectoryPath) && Directory.Exists(configurationDirectoryPath);
     }
 }

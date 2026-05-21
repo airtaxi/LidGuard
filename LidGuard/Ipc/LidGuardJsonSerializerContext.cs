@@ -9,6 +9,7 @@ namespace LidGuard.Ipc;
 
 [JsonSerializable(typeof(ClaudeHookInput))]
 [JsonSerializable(typeof(CodexHookInput))]
+[JsonSerializable(typeof(StopHookContinuationDecisionOutput))]
 [JsonSerializable(typeof(LidGuardPipeRequest))]
 [JsonSerializable(typeof(LidGuardPipeResponse))]
 [JsonSerializable(typeof(LiveStatusHookEventLine))]

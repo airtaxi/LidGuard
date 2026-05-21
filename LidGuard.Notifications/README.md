@@ -122,6 +122,7 @@ Configure LidGuard with the server URL and webhook secret:
 ```powershell
 lidguard settings --pre-suspend-webhook-url https://host/api/webhooks/lidguard/{webhookSecret}
 lidguard settings --post-session-end-webhook-url https://host/api/webhooks/lidguard/{webhookSecret}
+lidguard settings --closed-lid-stop-follow-up-webhook-url https://host/api/webhooks/lidguard/{webhookSecret}
 ```
 
 Replace `{webhookSecret}` with the configured `WebhookSecret`. The webhook secret is for LidGuard only; it must not be the same value as the browser login `AccessToken`.
@@ -134,9 +135,12 @@ Use `curl` or PowerShell after at least one browser is subscribed:
 curl.exe -X POST "https://host/api/webhooks/lidguard/{webhookSecret}" -H "Content-Type: application/json" -d "{\"eventType\":\"PreSuspend\",\"reason\":\"SoftLocked\",\"userInterfaceCulture\":\"ko\",\"softLockedSessionCount\":2}"
 curl.exe -X POST "https://host/api/webhooks/lidguard/{webhookSecret}" -H "Content-Type: application/json" -d "{\"eventType\":\"PreSuspend\",\"reason\":\"Completed\",\"userInterfaceCulture\":\"ko\",\"provider\":\"Codex\",\"sessionIdentifier\":\"abc123\",\"startedAtUtc\":\"2026-05-02T00:00:00Z\",\"lastActivityAtUtc\":\"2026-05-02T00:03:00Z\",\"endedAtUtc\":\"2026-05-02T00:04:00Z\",\"endReason\":\"SessionEnd\",\"activeSessionCount\":0,\"inputPromptPreview\":\"Summarize the latest changes\",\"lastResponse\":\"Updated the webhook payload and notification UI before the configured suspend flow.\"}"
 curl.exe -X POST "https://host/api/webhooks/lidguard/{webhookSecret}" -H "Content-Type: application/json" -d "{\"eventType\":\"PostSessionEnd\",\"reason\":\"SessionEnded\",\"userInterfaceCulture\":\"en\",\"provider\":\"Codex\",\"sessionIdentifier\":\"abc123\",\"startedAtUtc\":\"2026-05-02T00:00:00Z\",\"lastActivityAtUtc\":\"2026-05-02T00:03:00Z\",\"endedAtUtc\":\"2026-05-02T00:04:00Z\",\"endReason\":\"SessionEnd\",\"activeSessionCount\":0,\"inputPromptPreview\":\"Summarize the latest changes\",\"lastResponse\":\"Updated the webhook payload and notification UI. The event list shows a short preview, and clicking the row details shows the full response.\"}"
+curl.exe -X POST "https://host/api/webhooks/lidguard/{webhookSecret}" -H "Content-Type: application/json" -d "{\"eventType\":\"StopFollowUp\",\"reason\":\"AwaitingReply\",\"userInterfaceCulture\":\"ko\",\"provider\":\"Codex\",\"sessionIdentifier\":\"abc123\",\"startedAtUtc\":\"2026-05-02T00:00:00Z\",\"lastActivityAtUtc\":\"2026-05-02T00:03:00Z\",\"endedAtUtc\":\"2026-05-02T00:04:00Z\",\"endReason\":\"Stop\",\"replyWaitSeconds\":10,\"replyDeadlineUtc\":\"2026-05-02T00:04:10Z\",\"lastAssistantMessage\":\"Need your reply before I suspend.\",\"lastResponse\":\"Need your reply before I suspend.\"}"
 ```
 
-The webhook endpoint records the event and immediately returns `202 Accepted`. The background service then sends notifications and records delivery results.
+The webhook endpoint records the event and immediately returns `202 Accepted`. For `StopFollowUp`, it also returns a JSON body with `followUpRequestIdentifier`, `replyPollUrl`, and `expiresAtUtc`. The background service then sends notifications and records delivery results.
+
+Authenticated dashboards can reply to a pending follow-up through `/events` or `POST /api/follow-ups/{publicIdentifier}/reply` with JSON like `{ "reply": "Keep going and update the changelog too." }`. They can also cancel the wait through `/events` or `POST /api/follow-ups/{publicIdentifier}/cancel`; the next poll returns `Canceled`, so LidGuard immediately continues the normal stop and suspend flow. LidGuard polls `GET /api/follow-ups/{publicIdentifier}/poll/{pollToken}` without authentication, so protect the poll token like a temporary secret. The server stores only the poll token hash in SQLite.
 
 ## Operations Checklist
 

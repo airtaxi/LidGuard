@@ -40,6 +40,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Back up optional lid action changes once and restore after the last active session stops.
 - While shared protection remains applied and the lid is closed, keep the Emergency Hibernation thermal monitor polling every 10 seconds and stop it automatically once protection is restored or disabled.
 - Keep multiple stop signals for the same session from causing repeated cleanup side effects.
+- Closed-lid Stop follow-up waiting reuses the pending suspend path: keep the Stop hook blocked only while the pending suspend cancellation token remains active. When a reply arrives, restore the session as active instead of treating the provider stop as final cleanup. When the notification server returns `Canceled`, stop waiting and let the existing stop/suspend path proceed immediately.
 
 ## Transcript Activity
 
@@ -71,6 +72,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 
 - If a post-session-end webhook URL is configured, POST JSON with a 5-second timeout after a provider-reported normal session end when that stop does not schedule suspend.
 - Also send `PostSessionEnd` when a scheduled suspend is canceled before the pre-suspend webhook is attempted.
+- Do not send `PostSessionEnd` when a closed-lid Stop follow-up reply resumes the session; that cancellation path is a continuation, not a normal completed session end.
 - All LidGuard webhook payloads include `userInterfaceCulture` with the effective concrete UI culture name. Resolve it from valid `LIDGUARD_UI_CULTURE`, then configured `UserInterfaceCulture`, then the captured process/default UI culture for `auto`; fall back to `en` for empty or invariant cultures.
 - Include `eventType = PostSessionEnd`, `reason = SessionEnded`, provider/session identity, UTC start/activity/end timestamps, end reason metadata, active session count, working directory, transcript path when available, one-line `inputPromptPreview` when available, and full `lastResponse` when available.
 - Normalize prompt previews by converting `\r\n` and `\r` to `\n`, replacing line breaks with spaces, and trimming overlong text to 50 characters with `...` using a word boundary when possible.

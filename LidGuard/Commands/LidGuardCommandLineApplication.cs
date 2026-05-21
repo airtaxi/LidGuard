@@ -97,6 +97,7 @@ internal static class LidGuardCommandLineApplication
             LidGuardPipeCommands.Stop => await SendStopAsync(options),
             LidGuardPipeCommands.RemovePreSuspendWebhook => await LidGuardSettingsCommand.SendRemovePreSuspendWebhookAsync(options, runtimePlatform),
             LidGuardPipeCommands.RemovePostSessionEndWebhook => await LidGuardSettingsCommand.SendRemovePostSessionEndWebhookAsync(options, runtimePlatform),
+            LidGuardPipeCommands.RemoveClosedLidStopFollowUpWebhook => await LidGuardSettingsCommand.SendRemoveClosedLidStopFollowUpWebhookAsync(options, runtimePlatform),
             LidGuardPipeCommands.RemoveSession => await SendRemoveSessionAsync(options),
             LidGuardPipeCommands.Status => await SendStatusAsync(),
             LidGuardPipeCommands.CleanupOrphans => await SendCleanupOrphansAsync(),
@@ -200,6 +201,7 @@ internal static class LidGuardCommandLineApplication
             or LidGuardPipeCommands.Stop
             or LidGuardPipeCommands.RemovePreSuspendWebhook
             or LidGuardPipeCommands.RemovePostSessionEndWebhook
+            or LidGuardPipeCommands.RemoveClosedLidStopFollowUpWebhook
             or LidGuardPipeCommands.RemoveSession
             or LidGuardPipeCommands.Status
             or LidGuardPipeCommands.CleanupOrphans

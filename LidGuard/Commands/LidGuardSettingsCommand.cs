@@ -14,6 +14,9 @@ internal static class LidGuardSettingsCommand
     public static Task<int> SendRemovePostSessionEndWebhookAsync(IReadOnlyDictionary<string, string> options, ILidGuardRuntimePlatform runtimePlatform)
         => LidGuardPostSessionEndWebhookRemovalCommand.SendRemovePostSessionEndWebhookAsync(options, runtimePlatform);
 
+    public static Task<int> SendRemoveClosedLidStopFollowUpWebhookAsync(IReadOnlyDictionary<string, string> options, ILidGuardRuntimePlatform runtimePlatform)
+        => LidGuardClosedLidStopFollowUpWebhookRemovalCommand.SendRemoveClosedLidStopFollowUpWebhookAsync(options, runtimePlatform);
+
     public static int PreviewCurrentSound(IReadOnlyDictionary<string, string> options, ILidGuardRuntimePlatform runtimePlatform)
         => LidGuardSettingsSoundPreviewCommand.PreviewCurrentSound(options, runtimePlatform);
 

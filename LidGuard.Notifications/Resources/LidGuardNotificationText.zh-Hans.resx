@@ -294,4 +294,67 @@
   <data name="WorkingDirectoryLabel" xml:space="preserve">
     <value>工作目录</value>
   </data>
+  <data name="DisplayWebhookEventTypeStopFollowUp" xml:space="preserve">
+    <value>Stop 后续回复</value>
+  </data>
+  <data name="DisplayWebhookReasonAwaitingReply" xml:space="preserve">
+    <value>等待回复</value>
+  </data>
+  <data name="DisplayStopFollowUpStatusPending" xml:space="preserve">
+    <value>等待中</value>
+  </data>
+  <data name="DisplayStopFollowUpStatusAnswered" xml:space="preserve">
+    <value>已回复</value>
+  </data>
+  <data name="DisplayStopFollowUpStatusExpired" xml:space="preserve">
+    <value>已过期</value>
+  </data>
+  <data name="DisplayStopFollowUpStatusCanceled" xml:space="preserve">
+    <value>已取消</value>
+  </data>
+  <data name="StopFollowUpCancelButton" xml:space="preserve">
+    <value>取消等待并继续 Stop</value>
+  </data>
+  <data name="StopFollowUpCancelHelp" xml:space="preserve">
+    <value>不再等待回复，让 LidGuard 继续正常的 Stop 和睡眠流程。</value>
+  </data>
+  <data name="StopFollowUpCancelSucceededMessage" xml:space="preserve">
+    <value>已取消后续回复等待。</value>
+  </data>
+  <data name="StopFollowUpDeadlineLabel" xml:space="preserve">
+    <value>回复截止时间</value>
+  </data>
+  <data name="StopFollowUpReplyButton" xml:space="preserve">
+    <value>发送回复</value>
+  </data>
+  <data name="StopFollowUpReplyHelp" xml:space="preserve">
+    <value>在这里回复会取消待处理的睡眠，并让代理继续工作。</value>
+  </data>
+  <data name="StopFollowUpReplyLabel" xml:space="preserve">
+    <value>回复</value>
+  </data>
+  <data name="StopFollowUpReplyPlaceholder" xml:space="preserve">
+    <value>告诉代理接下来要做什么</value>
+  </data>
+  <data name="StopFollowUpReplyRequiredMessage" xml:space="preserve">
+    <value>需要填写回复。</value>
+  </data>
+  <data name="StopFollowUpReplySentAtLabel" xml:space="preserve">
+    <value>回复发送时间</value>
+  </data>
+  <data name="StopFollowUpSectionLabel" xml:space="preserve">
+    <value>Stop 后续回复</value>
+  </data>
+  <data name="StopFollowUpStatusLabel" xml:space="preserve">
+    <value>后续回复状态</value>
+  </data>
+  <data name="PushBodyStopFollowUp" xml:space="preserve">
+    <value>在这里回复会取消待处理的睡眠，并让代理继续工作。</value>
+  </data>
+  <data name="PushStopFollowUpStatus" xml:space="preserve">
+    <value>正在睡眠前等待你的回复</value>
+  </data>
+  <data name="PushTitleStopFollowUp" xml:space="preserve">
+    <value>睡眠前需要回复</value>
+  </data>
 </root>

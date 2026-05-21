@@ -37,6 +37,12 @@ internal sealed class LidGuardPipeRequest
 
     public string TranscriptPath { get; init; } = string.Empty;
 
+    public bool CanReturnStopContinuation { get; init; }
+
+    public bool StopHookAlreadyActive { get; init; }
+
+    public string LastAssistantMessage { get; init; } = string.Empty;
+
     public bool HasSettings { get; init; }
 
     public LidGuardSettings Settings { get; init; } = LidGuardSettings.Default;

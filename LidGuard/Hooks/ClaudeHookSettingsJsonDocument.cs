@@ -182,6 +182,24 @@ public static class ClaudeHookSettingsJsonDocument
             && permissionRequestInspection.HasExpectedMatcher
             && notificationInspection.HasExpectedMatcher
             && sessionEndInspection.HasExpectedMatcher;
+        var hasExpectedHookTimeout = TryHasExpectedHookTimeouts(hooksObject, out parseMessage);
+        if (!string.IsNullOrWhiteSpace(parseMessage))
+        {
+            return new HookInstallationInspection
+            {
+                Provider = AgentProvider.Claude,
+                Status = HookInstallationStatus.Unknown,
+                ConfigurationFilePath = configurationFilePath,
+                HookExecutablePath = hookExecutablePath,
+                HookCommand = hookCommand,
+                ConfigurationFileExists = configurationFileExists,
+                Checks = new Dictionary<HookInstallationCheck, bool>
+                {
+                    [HookInstallationCheck.HooksObject] = true
+                },
+                Message = parseMessage
+            };
+        }
         var hasExpectedHookShell = userPromptSubmitInspection.HasExpectedShell
             && preToolUseInspection.HasExpectedShell
             && postToolUseInspection.HasExpectedShell
@@ -212,6 +230,7 @@ public static class ClaudeHookSettingsJsonDocument
             && sessionEndInspection.HasManagedHook
             && hasExpectedHookCommand
             && hasExpectedNotificationMatcher
+            && hasExpectedHookTimeout
             && hasExpectedHookShell;
         var status = isInstalled ? HookInstallationStatus.Installed : hasManagedHookEntries ? HookInstallationStatus.NeedsUpdate : HookInstallationStatus.NotInstalled;
         var message = isInstalled ? "Claude hook is installed." : hasManagedHookEntries ? "Claude hook is installed but needs update." : "Claude hook is not installed.";
@@ -303,6 +322,23 @@ public static class ClaudeHookSettingsJsonDocument
     }
 
     public static bool TryRefreshManagedHookStatusMessages(string content, out string updatedContent, out bool changed, out string message)
+        => TryRefreshManagedHooks(
+            content,
+            string.Empty,
+            string.Empty,
+            refreshCommand: false,
+            out updatedContent,
+            out changed,
+            out message);
+
+    public static bool TryRefreshManagedHooks(
+        string content,
+        string hookCommand,
+        string hookShellName,
+        bool refreshCommand,
+        out string updatedContent,
+        out bool changed,
+        out string message)
     {
         updatedContent = content;
         changed = false;
@@ -316,7 +352,20 @@ public static class ClaudeHookSettingsJsonDocument
 
         foreach (var hookDefinition in s_requiredHookDefinitions)
         {
-            if (!TryRefreshManagedHookStatusMessage(hooksObject, hookDefinition.HookEventName, hookDefinition.GetStatusMessage(), out var hookChanged, out message)) return false;
+            if (!TryRefreshManagedHook(
+                hooksObject,
+                hookDefinition.HookEventName,
+                hookCommand,
+                hookShellName,
+                hookDefinition.GetStatusMessage(),
+                hookDefinition.Matcher,
+                refreshCommand,
+                out var hookChanged,
+                out message))
+            {
+                return false;
+            }
+
             changed |= hookChanged;
         }
 
@@ -471,7 +520,7 @@ public static class ClaudeHookSettingsJsonDocument
             ["type"] = "command",
             ["command"] = hookCommand,
             ["shell"] = hookShellName,
-            ["timeout"] = 30,
+            ["timeout"] = GetExpectedTimeoutSeconds(),
             ["statusMessage"] = statusMessage
         };
     }
@@ -491,7 +540,7 @@ public static class ClaudeHookSettingsJsonDocument
         hookDefinitionObject["type"] = "command";
         hookDefinitionObject["command"] = hookCommand;
         hookDefinitionObject["shell"] = hookShellName;
-        hookDefinitionObject["timeout"] = 30;
+        hookDefinitionObject["timeout"] = GetExpectedTimeoutSeconds();
         hookDefinitionObject["statusMessage"] = statusMessage;
     }
 
@@ -500,6 +549,161 @@ public static class ClaudeHookSettingsJsonDocument
 
     private static bool HasExpectedHookShell(JsonObject hookDefinitionObject, string expectedHookShellName)
         => JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "shell").Equals(expectedHookShellName, StringComparison.OrdinalIgnoreCase);
+
+    private static int GetExpectedTimeoutSeconds() => ManagedHookTimeoutConfiguration.GetInstalledHookTimeoutSeconds();
+
+    private static bool TryHasExpectedHookTimeouts(JsonObject hooksObject, out string message)
+    {
+        message = string.Empty;
+        var expectedTimeoutSeconds = GetExpectedTimeoutSeconds();
+        foreach (var hookDefinition in s_requiredHookDefinitions)
+        {
+            if (!TryHasExpectedHookTimeout(hooksObject, hookDefinition.HookEventName, hookDefinition.Matcher, expectedTimeoutSeconds, out message))
+                return false;
+        }
+
+        return true;
+    }
+
+    private static bool TryHasExpectedHookTimeout(
+        JsonObject hooksObject,
+        string hookEventName,
+        string expectedMatcher,
+        int expectedTimeoutSeconds,
+        out string message)
+    {
+        message = string.Empty;
+        if (!hooksObject.TryGetPropertyValue(hookEventName, out var hookEventNode) || hookEventNode is null) return false;
+        if (hookEventNode is not JsonArray hookMatchers)
+        {
+            message = $"Claude hook event '{hookEventName}' must be a JSON array.";
+            return false;
+        }
+
+        foreach (var hookMatcherNode in hookMatchers)
+        {
+            if (hookMatcherNode is not JsonObject hookMatcherObject)
+            {
+                message = $"Claude hook matcher for '{hookEventName}' must be a JSON object.";
+                return false;
+            }
+
+            if (!MatcherEquals(JsonHookConfigurationDocument.GetStringProperty(hookMatcherObject, "matcher"), expectedMatcher)) continue;
+            if (hookMatcherObject["hooks"] is not JsonArray hookDefinitions)
+            {
+                message = $"Claude hook matcher for '{hookEventName}' must contain a hooks array.";
+                return false;
+            }
+
+            foreach (var hookDefinitionNode in hookDefinitions)
+            {
+                if (hookDefinitionNode is not JsonObject hookDefinitionObject)
+                {
+                    message = $"Claude hook definition for '{hookEventName}' must be a JSON object.";
+                    return false;
+                }
+
+                var command = JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "command");
+                if (!IsLidGuardClaudeHookCommand(command)) continue;
+                return HasSufficientTimeoutValue(hookDefinitionObject, expectedTimeoutSeconds);
+            }
+        }
+
+        return false;
+    }
+
+    private static bool TryRefreshManagedHook(
+        JsonObject hooksObject,
+        string hookEventName,
+        string hookCommand,
+        string hookShellName,
+        string statusMessage,
+        string matcher,
+        bool refreshCommand,
+        out bool changed,
+        out string message)
+    {
+        changed = false;
+        message = string.Empty;
+        if (!hooksObject.TryGetPropertyValue(hookEventName, out var hookEventNode) || hookEventNode is null) return true;
+        if (hookEventNode is not JsonArray hookMatchers)
+        {
+            message = $"Claude hook event '{hookEventName}' must be a JSON array.";
+            return false;
+        }
+
+        foreach (var hookMatcherNode in hookMatchers)
+        {
+            if (hookMatcherNode is not JsonObject hookMatcherObject)
+            {
+                message = $"Claude hook matcher for '{hookEventName}' must be a JSON object.";
+                return false;
+            }
+
+            if (hookMatcherObject["hooks"] is not JsonArray hookDefinitions)
+            {
+                message = $"Claude hook matcher for '{hookEventName}' must contain a hooks array.";
+                return false;
+            }
+
+            foreach (var hookDefinitionNode in hookDefinitions)
+            {
+                if (hookDefinitionNode is not JsonObject hookDefinitionObject)
+                {
+                    message = $"Claude hook definition for '{hookEventName}' must be a JSON object.";
+                    return false;
+                }
+
+                var command = JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "command");
+                if (!IsLidGuardClaudeHookCommand(command)) continue;
+
+                if (refreshCommand)
+                {
+                    if (!MatcherEquals(JsonHookConfigurationDocument.GetStringProperty(hookMatcherObject, "matcher"), matcher)
+                        || !HasExpectedHookCommand(hookDefinitionObject, hookCommand)
+                        || !HasExpectedHookShell(hookDefinitionObject, hookShellName)
+                        || !HasExpectedTimeoutValue(hookDefinitionObject, GetExpectedTimeoutSeconds())
+                        || !JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "statusMessage").Equals(statusMessage, StringComparison.Ordinal))
+                    {
+                        ReplaceManagedHookDefinition(hookMatcherObject, hookDefinitionObject, hookCommand, hookShellName, statusMessage, matcher);
+                        changed = true;
+                    }
+
+                    continue;
+                }
+
+                if (!HasExpectedTimeoutValue(hookDefinitionObject, GetExpectedTimeoutSeconds()))
+                {
+                    hookDefinitionObject["timeout"] = GetExpectedTimeoutSeconds();
+                    changed = true;
+                }
+
+                if (!JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "statusMessage").Equals(statusMessage, StringComparison.Ordinal))
+                {
+                    hookDefinitionObject["statusMessage"] = statusMessage;
+                    changed = true;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private static bool HasExpectedTimeoutValue(JsonObject hookDefinitionObject, int expectedTimeoutSeconds)
+        => hookDefinitionObject["timeout"] is JsonValue timeoutValue
+            && timeoutValue.TryGetValue<int>(out var timeoutSeconds)
+            && timeoutSeconds == expectedTimeoutSeconds;
+
+    private static bool HasSufficientTimeoutValue(JsonObject hookDefinitionObject, int expectedTimeoutSeconds)
+        => hookDefinitionObject["timeout"] is JsonValue timeoutValue
+            && timeoutValue.TryGetValue<int>(out var timeoutSeconds)
+            && timeoutSeconds >= expectedTimeoutSeconds;
+
+    private static bool MatcherEquals(string actualMatcher, string expectedMatcher)
+    {
+        if (string.IsNullOrWhiteSpace(expectedMatcher)) return string.IsNullOrWhiteSpace(actualMatcher);
+        return actualMatcher.Equals(expectedMatcher, StringComparison.Ordinal);
+    }
 
     private static bool IsLidGuardClaudeHookCommand(string command)
     {

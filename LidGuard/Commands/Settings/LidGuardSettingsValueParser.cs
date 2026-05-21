@@ -51,6 +51,39 @@ internal static class LidGuardSettingsValueParser
             out message);
     }
 
+    public static bool TryParseClosedLidStopFollowUpWebhookUrlOption(
+        IReadOnlyDictionary<string, string> options,
+        string defaultValue,
+        out string closedLidStopFollowUpWebhookUrl,
+        out string message)
+    {
+        closedLidStopFollowUpWebhookUrl = defaultValue;
+        message = string.Empty;
+        if (!CommandOptionReader.TryGetOption(
+            options,
+            out var closedLidStopFollowUpWebhookUrlText,
+            "closed-lid-stop-follow-up-webhook-url"))
+        {
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(closedLidStopFollowUpWebhookUrlText)
+            || closedLidStopFollowUpWebhookUrlText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
+        {
+            message = LocalizationService.GetFormattedStringWithFallback(
+                "SettingsOptionClosedLidStopFollowUpWebhookRemovalCommand",
+                "closed-lid stop follow-up webhook URL을 제거하려면 {0} {1} 명령을 사용하세요.",
+                LidGuardCommandConsole.GetCommandDisplayName(),
+                LidGuardPipeCommands.RemoveClosedLidStopFollowUpWebhook);
+            return false;
+        }
+
+        return ClosedLidStopFollowUpWebhookConfiguration.TryNormalizeConfiguredValue(
+            closedLidStopFollowUpWebhookUrlText,
+            out closedLidStopFollowUpWebhookUrl,
+            out message);
+    }
+
     public static bool TryParseClosedLidPermissionRequestDecisionOption(
         IReadOnlyDictionary<string, string> options,
         ClosedLidPermissionRequestDecision defaultValue,

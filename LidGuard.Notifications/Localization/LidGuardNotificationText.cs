@@ -5,8 +5,10 @@ namespace LidGuard.Notifications.Localization;
 
 internal static class LidGuardNotificationText
 {
+    private const string DisplayWebhookEventTypeStopFollowUpResourceName = "DisplayWebhookEventTypeStopFollowUp";
     private const string DisplayWebhookEventTypePreSuspendResourceName = "DisplayWebhookEventTypePreSuspend";
     private const string DisplayWebhookEventTypePostSessionEndResourceName = "DisplayWebhookEventTypePostSessionEnd";
+    private const string DisplayWebhookReasonAwaitingReplyResourceName = "DisplayWebhookReasonAwaitingReply";
     private const string DisplayWebhookReasonCompletedResourceName = "DisplayWebhookReasonCompleted";
     private const string DisplayWebhookReasonSoftLockedResourceName = "DisplayWebhookReasonSoftLocked";
     private const string DisplayWebhookReasonEmergencyHibernationResourceName = "DisplayWebhookReasonEmergencyHibernation";
@@ -62,6 +64,18 @@ internal static class LidGuardNotificationText
     public static string SignOutNavigation => Get(nameof(SignOutNavigation));
     public static string StartingPromptLabel => Get(nameof(StartingPromptLabel));
     public static string StartedLabel => Get(nameof(StartedLabel));
+    public static string StopFollowUpCancelButton => Get(nameof(StopFollowUpCancelButton), "Cancel and continue stop");
+    public static string StopFollowUpCancelHelp => Get(nameof(StopFollowUpCancelHelp), "Canceling stops waiting for a reply and lets LidGuard continue the normal stop and suspend flow.");
+    public static string StopFollowUpCancelSucceededMessage => Get(nameof(StopFollowUpCancelSucceededMessage), "Follow-up wait canceled.");
+    public static string StopFollowUpDeadlineLabel => Get(nameof(StopFollowUpDeadlineLabel), "Reply deadline");
+    public static string StopFollowUpReplyButton => Get(nameof(StopFollowUpReplyButton), "Submit reply");
+    public static string StopFollowUpReplyHelp => Get(nameof(StopFollowUpReplyHelp), "Replying here cancels the pending suspend and lets the agent continue.");
+    public static string StopFollowUpReplyLabel => Get(nameof(StopFollowUpReplyLabel), "Reply");
+    public static string StopFollowUpReplyPlaceholder => Get(nameof(StopFollowUpReplyPlaceholder), "Tell the agent what to do next");
+    public static string StopFollowUpReplyRequiredMessage => Get(nameof(StopFollowUpReplyRequiredMessage), "Reply is required.");
+    public static string StopFollowUpReplySentAtLabel => Get(nameof(StopFollowUpReplySentAtLabel), "Reply sent");
+    public static string StopFollowUpSectionLabel => Get(nameof(StopFollowUpSectionLabel), "Stop follow-up");
+    public static string StopFollowUpStatusLabel => Get(nameof(StopFollowUpStatusLabel), "Follow-up status");
     public static string SubscribeBrowserButton => Get(nameof(SubscribeBrowserButton));
     public static string SubscriptionFailed => Get(nameof(SubscriptionFailed));
     public static string ThemeDarkMode => Get(nameof(ThemeDarkMode));
@@ -110,6 +124,7 @@ internal static class LidGuardNotificationText
     public static string DisplayWebhookEventType(string eventType)
         => eventType switch
         {
+            LidGuardWebhookEventTypes.StopFollowUp => Get(DisplayWebhookEventTypeStopFollowUpResourceName, "Stop follow-up"),
             LidGuardWebhookEventTypes.PreSuspend => Get(DisplayWebhookEventTypePreSuspendResourceName),
             LidGuardWebhookEventTypes.PostSessionEnd => Get(DisplayWebhookEventTypePostSessionEndResourceName),
             _ => string.IsNullOrWhiteSpace(eventType) ? "-" : eventType
@@ -118,6 +133,7 @@ internal static class LidGuardNotificationText
     public static string DisplayWebhookReason(string reason)
         => reason switch
         {
+            LidGuardWebhookReasons.AwaitingReply => Get(DisplayWebhookReasonAwaitingReplyResourceName, "Awaiting reply"),
             LidGuardWebhookReasons.Completed => Get(DisplayWebhookReasonCompletedResourceName),
             LidGuardWebhookReasons.SoftLocked => Get(DisplayWebhookReasonSoftLockedResourceName),
             LidGuardWebhookReasons.EmergencyHibernation => Get(DisplayWebhookReasonEmergencyHibernationResourceName),
@@ -138,19 +154,34 @@ internal static class LidGuardNotificationText
     public static string PushBodyCompleted => Get(nameof(PushBodyCompleted));
     public static string PushBodyEmergencyHibernation => Get(nameof(PushBodyEmergencyHibernation));
     public static string PushBodyFallback => Get(nameof(PushBodyFallback));
+    public static string PushBodyStopFollowUp => Get(nameof(PushBodyStopFollowUp), "Replying here will cancel the pending suspend and let the agent continue.");
     public static string PushPostSessionEndStatus => Get(nameof(PushPostSessionEndStatus));
     public static string PushPreSuspendSessionEndStatus => Get(nameof(PushPreSuspendSessionEndStatus));
     public static string PushProviderFallback => Get(nameof(PushProviderFallback));
     public static string PushSessionFallback => Get(nameof(PushSessionFallback));
     public static string PushSoftLockedAll => Get(nameof(PushSoftLockedAll));
+    public static string PushStopFollowUpStatus => Get(nameof(PushStopFollowUpStatus), "is waiting for your reply before suspend");
     public static string PushTitleCompleted => Get(nameof(PushTitleCompleted));
     public static string PushTitleEmergencyHibernation => Get(nameof(PushTitleEmergencyHibernation));
     public static string PushTitleFallback => Get(nameof(PushTitleFallback));
     public static string PushTitlePostSessionEnd => Get(nameof(PushTitlePostSessionEnd));
+    public static string PushTitleStopFollowUp => Get(nameof(PushTitleStopFollowUp), "Reply needed before suspend");
     public static string PushTitleSoftLocked => Get(nameof(PushTitleSoftLocked));
 
     private static string Get(string name) => LocalizationService.GetString(name);
 
+    private static string Get(string name, string fallbackValue) => LocalizationService.GetString(name, fallbackValue);
+
     private static string Format(string name, params object[] arguments)
         => LocalizationService.GetFormattedString(name, arguments);
+
+    public static string DisplayStopFollowUpStatus(string status)
+        => status switch
+        {
+            StopFollowUpRequestStatuses.Pending => Get("DisplayStopFollowUpStatusPending", "Pending"),
+            StopFollowUpRequestStatuses.Answered => Get("DisplayStopFollowUpStatusAnswered", "Answered"),
+            StopFollowUpRequestStatuses.Expired => Get("DisplayStopFollowUpStatusExpired", "Expired"),
+            StopFollowUpRequestStatuses.Canceled => Get("DisplayStopFollowUpStatusCanceled", "Canceled"),
+            _ => string.IsNullOrWhiteSpace(status) ? "-" : status
+        };
 }

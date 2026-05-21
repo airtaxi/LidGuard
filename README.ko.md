@@ -21,6 +21,7 @@ LidGuard는 노트북 덮개를 닫은 뒤에도 오래 걸리는 로컬 AI 코�
 - 보호 중인 에이전트 작업이 노트북 덮개를 닫은 뒤에도 계속될 수 있도록 덮개 닫힘 동작을 임시로 바꾸고, 작업 종료 후 원래 OS 전원 정책으로 복원합니다.
 - Windows에서 WSL 내부의 hook과 MCP 설정을 설치해, WSL에서 실행되는 provider가 별도 LidGuard 바이너리 설치 없이 Windows LidGuard runtime을 호출할 수 있게 합니다.
 - 보호 중인 작업이 끝난 뒤 설정에 따라 절전 모드 또는 최대 절전 모드로 전환해 불필요한 배터리 소모를 줄이는 데 도움을 줍니다.
+- 닫힌 덮개 상태의 Stop hook에서 짧은 후속 답장 대기 시간을 두고, 답장이 오면 세션 종료를 막고 작업을 이어갈 수 있습니다.
 - Windows, systemd/logind 기반 Linux, macOS 전원 제어를 지원합니다.
 - SoftLock, 비활성 시간 제한, 절전 진입 전 Webhook, 진단 기능, 긴급 최대 절전 모드 같은 안전 장치를 제공합니다.
 
@@ -87,7 +88,7 @@ lidguard provider-mcp-install --config "C:\path\to\mcp.json" --provider-name "Ex
 
 서버를 등록한 뒤에는 모델이 `provider_start_session`, `provider_set_soft_lock`, `provider_clear_soft_lock`, `provider_stop_session`을 언제 호출해야 하는지 알 수 있도록 [ProviderMcpModelPrompt.md](ProviderMcpModelPrompt.md)를 지시문으로 전달하세요.
 
-이 연결 방식의 동작은 보장되지 않습니다. 올바른 동작은 모델이 적절한 시점에 LidGuard 도구를 호출하는지에 전적으로 달려 있으며, LidGuard의 운영체제 지원 범위를 Windows, systemd/logind 기반 Linux, macOS 밖으로 넓히지는 않습니다.
+이 연결 방식의 동작은 보장되지 않습니다. 올바른 동작은 모델이 적절한 시점에 LidGuard 도구를 호출하는지에 전적으로 달려 있으며, LidGuard의 운영체제 지원 범위를 Windows, systemd/logind 기반 Linux, macOS 밖으로 넓히지는 않습니다. closed-lid Stop 후속 답장 기능은 Provider MCP에는 구현되지 않았고 지원하지 않습니다.
 
 ## 현재 지원 상태
 
@@ -101,10 +102,11 @@ lidguard provider-mcp-install --config "C:\path\to\mcp.json" --provider-name "Ex
 - 덮개 닫힘 처리: Windows에서는 덮개를 닫아도 아무 동작을 하지 않도록 임시 변경하고, Linux와 macOS에서는 각 운영체제 방식으로 덮개 닫힘 절전을 막습니다. 보호가 끝나면 원래 설정으로 되돌립니다.
 - 작업 감시와 정리: AI 도구의 부모 프로세스를 감시하고, 이미 끝난 세션을 정리하며, 오래 활동이 없는 세션은 절전 방지를 풀 수 있습니다. 모든 세션이 끝난 뒤 LidGuard가 얼마 뒤 자동 종료될지도 정할 수 있습니다.
 - 작업 완료 후 절전: 작업이 끝났거나 더 이상 컴퓨터를 깨워 둘 필요가 없을 때 절전 모드와 최대 절전 모드 중 하나를 선택할 수 있습니다. 바로 전환할지, 몇 초 기다릴지, 조건이 바뀌면 취소할지도 처리합니다.
+- Stop 후속 답장 대기: 닫힌 덮개 상태의 지원되는 Stop hook에서 기존 post-stop suspend delay 동안 답장을 기다리고, 답장이 오면 세션 종료를 막고 작업을 재개합니다. 이 기능은 별도 webhook URL, managed hook timeout 자동 갱신, Windows의 WSL best-effort timeout 갱신을 포함합니다.
 - 절전 전 알림 소리: 절전 또는 최대 절전으로 들어가기 전에 소리를 끄거나, 기본 시스템 소리나 `.wav` 파일을 재생할 수 있습니다. 재생 중에만 임시로 음량을 1-100%로 바꾸고, 끝나면 이전 음량과 음소거 상태를 복원할 수 있습니다.
 - 사용자 입력 대기 상태: AI 도구가 사용자 입력을 기다리거나 일정 시간 활동이 없으면 세션은 남겨 둔 채 절전 방지만 풀 수 있습니다. 덮개가 닫힌 상태의 PermissionRequest는 `deny`, `allow`, `ask` 중에서 선택할 수 있습니다. `ask`는 세션을 soft-lock하고 provider의 일반 권한 요청 흐름을 유지하며, `allow`는 사용자가 화면을 보지 않는 동안 권한이 필요한 작업을 승인할 수 있습니다. 더 안전한 기본값은 `deny`입니다.
 - 고온 긴급 최대 절전: 덮개가 닫힌 상태에서 온도를 감시하다가 설정한 섭씨 온도에 도달하면 즉시 최대 절전을 요청할 수 있습니다. 온도는 낮은 값, 평균값, 높은 값 기준 중에서 고를 수 있고, 최대 절전이 실패하면 절전을 한 번 더 시도합니다.
-- 웹훅과 알림: 절전 직전 알림과 작업 완료 알림을 지정한 웹 주소로 보낼 수 있습니다. 선택 사항인 `LidGuard.Notifications` 서버를 쓰면 브라우저 푸시 알림으로 받을 수 있습니다.
+- 웹훅과 알림: 절전 직전 알림, 작업 완료 알림, 지원되는 닫힌 덮개 Stop hook용 `StopFollowUp` webhook과 reply polling을 지정한 웹 주소로 보낼 수 있습니다. 선택 사항인 `LidGuard.Notifications` 서버를 쓰면 브라우저 푸시 알림과 dashboard 답장 흐름으로 받을 수 있습니다.
 - 진단과 기록: 현재 덮개 상태, 보이는 모니터 수, 현재 온도, 실시간 상태 화면, 절전 요청 기록, 연결 이벤트 기록, 세션 실행 기록, 예외 기록을 확인할 수 있습니다. 절전 기록을 몇 개까지 보관할지도 정할 수 있습니다.
 - 플랫폼 설정과 언어: Linux 권한 설정 명령, macOS 권한 설정 명령, 명령줄 표시 언어 설정, 운영체제별 기본 설정/로그 저장 경로를 제공합니다.
 - 배포 방식: Windows, systemd/logind 기반 Linux, macOS용 .NET 10 전역 도구로 배포됩니다.
@@ -121,6 +123,8 @@ LidGuard는 전원 관리 보조 도구이며, 어떤 환경에서도 노트북�
 덮개가 닫힌 상태의 권한 요청을 자동 허용하도록 설정하는 것도 신중해야 합니다. 이 설정을 켜면 사용자가 화면을 보고 있지 않을 때도 권한이 필요한 AI 작업이 계속 진행될 수 있습니다. `ask`로 설정했더라도 로컬 transcript를 읽을 수 없는 cloud 또는 desktop provider 환경에서는 관측 가능한 activity/tool hook, 세션 갱신, 정리 경로로만 soft-lock이 풀릴 수 있습니다.
 
 사용자 입력 대기 감지, AI 도구 연결, 프로세스 감시, 운영체제 동작, 명령줄 동작, 온도 센서, 권한, 펌웨어, 전원 정책은 모두 예상과 다르게 실패하거나 변경될 수 있습니다. 고온 긴급 최대 절전과 절전 흐름은 최선의 안전장치일 뿐이며, 사용자가 직접 장치 상태를 확인하는 일을 대신하지 않습니다.
+
+closed-lid Stop 후속 답장 기능을 켜면 suspend 전에 답장을 기다리는 동안 노트북이 조금 더 오래 깨어 있을 수 있습니다. 이 추가 대기 시간은 과열 위험을 높일 수 있으므로 지연 시간을 짧게 유지하고 장치 상태를 직접 확인해야 합니다.
 
 Codex 연결 정리에는 별도 제한이 있습니다. Codex 앱은 같은 작업 폴더에 `process=none` 세션을 남길 수 있습니다. LidGuard는 확인된 Codex CLI 프로세스가 `app-server` 인수 없이 실행 중일 때만 작업 폴더 기준 감시 fallback을 사용하며, 이 정리 경로는 `process=none` Codex 세션을 제거하지 않습니다.
 

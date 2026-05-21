@@ -22,6 +22,12 @@ public sealed class CodexHookInput : IHookCommandInput
     [JsonPropertyName("prompt")]
     public string Prompt { get; init; } = string.Empty;
 
+    [JsonPropertyName("stop_hook_active")]
+    public bool StopHookActive { get; init; }
+
+    [JsonPropertyName("last_assistant_message")]
+    public string LastAssistantMessage { get; init; } = string.Empty;
+
     [JsonPropertyName("source")]
     public string Source { get; init; } = string.Empty;
 }

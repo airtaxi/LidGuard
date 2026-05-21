@@ -8,6 +8,9 @@
     --border-soft: #e8ecef;
     --button-secondary: #3f4d56;
     --danger: #b42318;
+    --danger-button: #b42318;
+    --danger-button-contrast: #ffffff;
+    --danger-button-hover: #971c13;
     --danger-soft: #fff0ed;
     --focus-ring: rgba(15, 118, 110, 0.24);
     --page-background: #f6f7f9;
@@ -37,6 +40,9 @@
     --border-soft: #293740;
     --button-secondary: #7f8c94;
     --danger: #ffb4a8;
+    --danger-button: #ffb4a8;
+    --danger-button-contrast: #2b0906;
+    --danger-button-hover: #ffd1ca;
     --danger-soft: #3c1c19;
     --focus-ring: rgba(98, 213, 199, 0.22);
     --page-background: #12171c;
@@ -62,6 +68,9 @@
         --border-soft: #293740;
         --button-secondary: #7f8c94;
         --danger: #ffb4a8;
+        --danger-button: #ffb4a8;
+        --danger-button-contrast: #2b0906;
+        --danger-button-hover: #ffd1ca;
         --danger-soft: #3c1c19;
         --focus-ring: rgba(98, 213, 199, 0.22);
         --page-background: #12171c;
@@ -294,6 +303,15 @@ button:hover:not(:disabled) {
 button.secondary {
     background: var(--button-secondary);
     color: #ffffff;
+}
+
+button.danger {
+    background: var(--danger-button);
+    color: var(--danger-button-contrast);
+}
+
+button.danger:hover:not(:disabled) {
+    background: var(--danger-button-hover);
 }
 
 button:disabled {

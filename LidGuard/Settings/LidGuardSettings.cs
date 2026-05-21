@@ -43,6 +43,8 @@ public sealed class LidGuardSettings
 
     public string PostSessionEndWebhookUrl { get; init; } = string.Empty;
 
+    public string ClosedLidStopFollowUpWebhookUrl { get; init; } = string.Empty;
+
     public ClosedLidPermissionRequestDecision ClosedLidPermissionRequestDecision { get; init; } = ClosedLidPermissionRequestDecision.Deny;
 
     public bool WatchParentProcess { get; init; } = true;
@@ -116,6 +118,7 @@ public sealed class LidGuardSettings
             SuspendHistoryEntryCount = suspendHistoryEntryCount,
             PreSuspendWebhookUrl = string.IsNullOrWhiteSpace(settings.PreSuspendWebhookUrl) ? string.Empty : settings.PreSuspendWebhookUrl.Trim(),
             PostSessionEndWebhookUrl = string.IsNullOrWhiteSpace(settings.PostSessionEndWebhookUrl) ? string.Empty : settings.PostSessionEndWebhookUrl.Trim(),
+            ClosedLidStopFollowUpWebhookUrl = string.IsNullOrWhiteSpace(settings.ClosedLidStopFollowUpWebhookUrl) ? string.Empty : settings.ClosedLidStopFollowUpWebhookUrl.Trim(),
             ClosedLidPermissionRequestDecision = settings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settings.WatchParentProcess,
             SessionTimeoutMinutes = sessionTimeoutMinutes,

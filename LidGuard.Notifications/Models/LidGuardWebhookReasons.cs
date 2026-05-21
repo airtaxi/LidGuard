@@ -2,10 +2,14 @@ namespace LidGuard.Notifications.Models;
 
 internal static class LidGuardWebhookReasons
 {
+    public const string AwaitingReply = nameof(AwaitingReply);
     public const string Completed = nameof(Completed);
     public const string SoftLocked = nameof(SoftLocked);
     public const string EmergencyHibernation = nameof(EmergencyHibernation);
     public const string SessionEnded = nameof(SessionEnded);
+
+    public static bool IsRecognizedStopFollowUpReason(string reason)
+        => string.Equals(reason, AwaitingReply, StringComparison.Ordinal);
 
     public static bool IsRecognizedPreSuspendReason(string reason)
         => string.Equals(reason, Completed, StringComparison.Ordinal)

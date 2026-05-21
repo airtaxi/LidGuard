@@ -33,6 +33,12 @@ internal sealed class LidGuardPipeResponse
 
     public string SuspendReasonCode { get; init; } = string.Empty;
 
+    public bool StopContinuationRequested { get; init; }
+
+    public string StopContinuationPrompt { get; init; } = string.Empty;
+
+    public string StopFollowUpStatus { get; init; } = string.Empty;
+
     public static LidGuardPipeResponse Success(
         string message,
         int activeSessionCount,
@@ -45,7 +51,10 @@ internal sealed class LidGuardPipeResponse
         bool suspendScheduled = false,
         SystemSuspendMode suspendMode = SystemSuspendMode.Sleep,
         int suspendDelaySeconds = 0,
-        string suspendReasonCode = "") => new()
+        string suspendReasonCode = "",
+        bool stopContinuationRequested = false,
+        string stopContinuationPrompt = "",
+        string stopFollowUpStatus = "") => new()
     {
         Succeeded = true,
         Message = message,
@@ -59,7 +68,10 @@ internal sealed class LidGuardPipeResponse
         SuspendScheduled = suspendScheduled,
         SuspendMode = suspendMode,
         SuspendDelaySeconds = suspendDelaySeconds,
-        SuspendReasonCode = suspendReasonCode ?? string.Empty
+        SuspendReasonCode = suspendReasonCode ?? string.Empty,
+        StopContinuationRequested = stopContinuationRequested,
+        StopContinuationPrompt = stopContinuationPrompt ?? string.Empty,
+        StopFollowUpStatus = stopFollowUpStatus ?? string.Empty
     };
 
     public static LidGuardPipeResponse Failure(

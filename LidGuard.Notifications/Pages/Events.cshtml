@@ -1,4 +1,5 @@
 @page
+@using LidGuard.Notifications.Data
 @using LidGuard.Notifications.Models
 @model EventsModel
 @{
@@ -10,6 +11,10 @@
         <h1>@LidGuardNotificationText.WebhookEventsHeading</h1>
         <span class="muted">@LidGuardNotificationText.RecentEvents(Model.Events.Count)</span>
     </div>
+    @if (!string.IsNullOrWhiteSpace(Model.EventMessage))
+    {
+        <p class="muted">@Model.EventMessage</p>
+    }
     @if (Model.Events.Count == 0)
     {
         <p class="muted">@LidGuardNotificationText.NoEventsRecorded</p>
@@ -28,8 +33,12 @@
                 if (!string.IsNullOrWhiteSpace(webhookEvent.Provider) && !string.IsNullOrWhiteSpace(webhookEvent.ProviderName)) providerDisplayText = $"{webhookEvent.Provider}:{webhookEvent.ProviderName}";
                 else if (!string.IsNullOrWhiteSpace(webhookEvent.Provider)) providerDisplayText = webhookEvent.Provider;
                 else if (!string.IsNullOrWhiteSpace(webhookEvent.ProviderName)) providerDisplayText = webhookEvent.ProviderName;
+                var followUpAnchorIdentifier = string.IsNullOrWhiteSpace(webhookEvent.StopFollowUpPublicIdentifier)
+                    ? $"event-{webhookEvent.WebhookEventIdentifier}"
+                    : $"followup-{webhookEvent.StopFollowUpPublicIdentifier}";
+                var isStopFollowUpEvent = webhookEvent.EventType == LidGuardWebhookEventTypes.StopFollowUp;
 
-                <article class="event-card">
+                <article class="event-card" id="@followUpAnchorIdentifier">
                     <div class="event-card-header">
                         <div>
                             <div class="event-title-row">
@@ -38,6 +47,10 @@
                                 @if (webhookEvent.SoftLockedSessionCount is not null)
                                 {
                                     <span class="reason-badge secondary">@LidGuardNotificationText.SoftLockedSessionCount(webhookEvent.SoftLockedSessionCount.Value)</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(webhookEvent.StopFollowUpStatus))
+                                {
+                                    <span class="reason-badge secondary">@LidGuardNotificationText.DisplayStopFollowUpStatus(webhookEvent.StopFollowUpStatus)</span>
                                 }
                             </div>
                             <div class="event-meta">
@@ -78,7 +91,61 @@
                                 <p>@lastResponsePreview</p>
                             }
                         </section>
+                        @if (isStopFollowUpEvent)
+                        {
+                            <section class="event-preview-block">
+                                <span class="preview-label">@LidGuardNotificationText.StopFollowUpSectionLabel</span>
+                                @if (string.Equals(webhookEvent.StopFollowUpStatus, StopFollowUpRequestStatuses.Pending, StringComparison.Ordinal))
+                                {
+                                    <p>@LidGuardNotificationText.StopFollowUpReplyHelp</p>
+                                }
+                                else if (!string.IsNullOrWhiteSpace(webhookEvent.StopFollowUpReplyText))
+                                {
+                                    <p>@webhookEvent.StopFollowUpReplyText</p>
+                                }
+                                else
+                                {
+                                    <p class="muted">@LidGuardNotificationText.DisplayStopFollowUpStatus(webhookEvent.StopFollowUpStatus ?? string.Empty)</p>
+                                }
+                            </section>
+                        }
                     </div>
+
+                    @if (isStopFollowUpEvent)
+                    {
+                        <section class="event-preview-block">
+                            <span class="preview-label">@LidGuardNotificationText.StopFollowUpStatusLabel</span>
+                            <p>@LidGuardNotificationText.DisplayStopFollowUpStatus(webhookEvent.StopFollowUpStatus ?? string.Empty)</p>
+                            @if (webhookEvent.ReplyDeadlineUtc is not null)
+                            {
+                                var replyDeadlineUniversalTime = webhookEvent.ReplyDeadlineUtc.Value.ToUniversalTime();
+                                var replyDeadlineDateTimeAttribute = replyDeadlineUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+                                var replyDeadlineFallbackText = replyDeadlineUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+                                <p><span class="preview-label">@LidGuardNotificationText.StopFollowUpDeadlineLabel</span> <time datetime="@replyDeadlineDateTimeAttribute" data-device-time="true">@replyDeadlineFallbackText</time></p>
+                            }
+                            @if (string.Equals(webhookEvent.StopFollowUpStatus, StopFollowUpRequestStatuses.Pending, StringComparison.Ordinal)
+                                && !string.IsNullOrWhiteSpace(webhookEvent.StopFollowUpPublicIdentifier))
+                            {
+                                <form method="post" asp-page-handler="Reply" class="event-disclosure">
+                                    <input type="hidden" name="publicIdentifier" value="@webhookEvent.StopFollowUpPublicIdentifier" />
+                                    <label class="preview-label" for="reply-@webhookEvent.StopFollowUpPublicIdentifier">@LidGuardNotificationText.StopFollowUpReplyLabel</label>
+                                    <textarea
+                                        id="reply-@webhookEvent.StopFollowUpPublicIdentifier"
+                                        name="reply"
+                                        rows="4"
+                                        placeholder="@LidGuardNotificationText.StopFollowUpReplyPlaceholder"></textarea>
+                                    <div>
+                                        <button type="submit">@LidGuardNotificationText.StopFollowUpReplyButton</button>
+                                    </div>
+                                </form>
+                                <form method="post" asp-page-handler="Cancel" class="event-disclosure">
+                                    <input type="hidden" name="publicIdentifier" value="@webhookEvent.StopFollowUpPublicIdentifier" />
+                                    <p class="muted">@LidGuardNotificationText.StopFollowUpCancelHelp</p>
+                                    <button type="submit" class="danger">@LidGuardNotificationText.StopFollowUpCancelButton</button>
+                                </form>
+                            }
+                        </section>
+                    }
 
                     <details class="event-disclosure">
                         <summary>@LidGuardNotificationText.DetailsLabel</summary>
@@ -111,6 +178,23 @@
                                 <span>@LidGuardNotificationText.LastErrorLabel</span>
                                 <strong>@(webhookEvent.LastError ?? "-")</strong>
                             </div>
+                            @if (!string.IsNullOrWhiteSpace(webhookEvent.LastAssistantMessage))
+                            {
+                                <div class="detail-item detail-item-wide">
+                                    <span>Last assistant message</span>
+                                    <pre class="response-body">@webhookEvent.LastAssistantMessage</pre>
+                                </div>
+                            }
+                            @if (webhookEvent.StopFollowUpRepliedAtUtc is not null)
+                            {
+                                var repliedAtUniversalTime = webhookEvent.StopFollowUpRepliedAtUtc.Value.ToUniversalTime();
+                                var repliedAtDateTimeAttribute = repliedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+                                var repliedAtFallbackText = repliedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+                                <div class="detail-item">
+                                    <span>@LidGuardNotificationText.StopFollowUpReplySentAtLabel</span>
+                                    <strong><time datetime="@repliedAtDateTimeAttribute" data-device-time="true">@repliedAtFallbackText</time></strong>
+                                </div>
+                            }
                             @if (webhookEvent.StartedAtUtc is not null)
                             {
                                 var startedAtUniversalTime = webhookEvent.StartedAtUtc.Value.ToUniversalTime();

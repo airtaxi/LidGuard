@@ -7,7 +7,7 @@ description: "LidGuard CLI, settings, permission commands, examples, and failure
 
 ## Command Routing
 
-- Parse `help`, `start`, `stop`, `remove-pre-suspend-webhook`, `remove-post-session-end-webhook`, `remove-session`, `status`, `live-status`, `settings`, `cleanup-orphans`, `current-lid-state`, `current-monitor-count`, `current-temperature`, `suspend-history`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `preview-current-sound`, `mcp-server`, and `provider-mcp-server`.
+- Parse `help`, `start`, `stop`, `remove-pre-suspend-webhook`, `remove-post-session-end-webhook`, `remove-closed-lid-stop-follow-up-webhook`, `remove-session`, `status`, `live-status`, `settings`, `cleanup-orphans`, `current-lid-state`, `current-monitor-count`, `current-temperature`, `suspend-history`, `claude-hook`, `claude-hooks`, `copilot-hook`, `copilot-hooks`, `codex-hook`, `codex-hooks`, `hook-status`, `hook-install`, `hook-remove`, `hook-events`, `mcp-status`, `mcp-install`, `mcp-remove`, `provider-mcp-status`, `provider-mcp-install`, `provider-mcp-remove`, `preview-system-sound`, `preview-current-sound`, `mcp-server`, and `provider-mcp-server`.
 - In Windows builds, additionally parse `wsl-hook-status`, `wsl-hook-install`, `wsl-hook-remove`, `wsl-codex-hooks`, `wsl-claude-hooks`, `wsl-copilot-hooks`, `wsl-mcp-status`, `wsl-mcp-install`, `wsl-mcp-remove`, `wsl-codex-mcp-status`, `wsl-codex-mcp-install`, `wsl-codex-mcp-remove`, `wsl-claude-mcp-status`, `wsl-claude-mcp-install`, `wsl-claude-mcp-remove`, `wsl-copilot-mcp-status`, `wsl-copilot-mcp-install`, `wsl-copilot-mcp-remove`, `wsl-provider-mcp-status`, `wsl-provider-mcp-install`, and `wsl-provider-mcp-remove`.
 - WSL management commands are Windows-only and must not appear in Linux or macOS routing or help output.
 - WSL management commands accept optional `--distro <name>`. When present, pass the distro through to `wsl.exe --distribution <name>`; when absent, do not pass a distro so WSL uses its default distro.
@@ -68,10 +68,13 @@ description: "LidGuard CLI, settings, permission commands, examples, and failure
 - Server runtime cleanup delay after all sessions are gone: 10 minutes by default, accepts `off` to disable automatic runtime exit, `0` for immediate exit, or a positive minute count to wait, and has no product-level maximum.
 - Pre-suspend webhook URL: off by default.
 - Post-session-end webhook URL: off by default.
+- Closed-lid Stop follow-up webhook URL: off by default.
 - Emergency Hibernation on high temperature: enabled by default.
 - Emergency Hibernation temperature mode: Average by default, with Low and High optional.
 - Emergency Hibernation temperature threshold: 93 Celsius by default, clamped to 70 through 110.
 - Closed-lid PermissionRequest decision: Deny by default, with Allow and Ask optional. Ask marks the active session soft-locked with reason `closed_lid_permission_request_ask` and returns empty stdout so the provider's normal permission flow continues.
+- Closed-lid Stop follow-up feature state is `off` when the follow-up URL is empty or `postStopSuspendDelaySeconds` is `0`, `configuration error` when the saved URL is invalid, and `on` only when the URL is valid and the delay is greater than `0`.
+- Managed hook timeout is `30` seconds when closed-lid Stop follow-up is off and `max(30, postStopSuspendDelaySeconds + 15)` when it is on; changing the delay or follow-up URL refreshes installed managed hook timeouts for current-OS managed providers and best-effort WSL managed hook configs on Windows.
 - User interface culture: `auto` by default, with `en`, `ko`, or any `CultureInfo`-resolvable BCP 47 culture name optional.
 - Parent process watchdog: enabled.
 
@@ -158,8 +161,10 @@ lidguard settings --server-runtime-cleanup-delay-minutes 0
 lidguard settings --server-runtime-cleanup-delay-minutes off
 lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
 lidguard settings --post-session-end-webhook-url https://example.com/lidguard-session-ended
+lidguard settings --closed-lid-stop-follow-up-webhook-url https://example.com/lidguard-follow-up
 lidguard settings --closed-lid-permission-request-decision allow
 lidguard settings --closed-lid-permission-request-decision ask
+lidguard remove-closed-lid-stop-follow-up-webhook
 lidguard settings --prevent-system-sleep true --prevent-display-sleep true --power-request-reason "LidGuard keeps agent sessions awake"
 lidguard status
 lidguard live-status

@@ -68,8 +68,13 @@ public static class CodexHookConfigTomlDocument
         var hasPermissionRequestHook = ContainsHookBlock(content, CodexHookEventNames.PermissionRequest);
         var hasSessionEndHook = ContainsHookBlock(content, CodexHookEventNames.SessionEnd);
         var hasExpectedHookCommand = HasAllRequiredHookCommands(contentUsedForRequiredHookInspection, command => command.Equals(hookCommand, StringComparison.Ordinal));
+        var hasExpectedTimeout = HasAllRequiredHookTimeouts(contentUsedForRequiredHookInspection, GetExpectedTimeoutSeconds());
         var hasValidHookCommand = HasAllRequiredHookCommands(contentUsedForRequiredHookInspection, IsLidGuardCodexHookCommand);
-        var isInstalled = hasHooksFeatureFlag && !hasDeprecatedCodexHooksFeatureFlag && hasValidHookCommand && hasExpectedHookCommand;
+        var isInstalled = hasHooksFeatureFlag
+            && !hasDeprecatedCodexHooksFeatureFlag
+            && hasValidHookCommand
+            && hasExpectedHookCommand
+            && hasExpectedTimeout;
         var status = isInstalled ? HookInstallationStatus.Installed : hasManagedHookEntries ? HookInstallationStatus.NeedsUpdate : HookInstallationStatus.NotInstalled;
         var message = isInstalled ? "Codex hook is installed." : hasManagedHookEntries ? "Codex hook is installed but needs update." : "Codex hook is not installed.";
 
@@ -122,10 +127,27 @@ public static class CodexHookConfigTomlDocument
     }
 
     public static bool TryRefreshManagedHookStatusMessages(string content, out string updatedContent, out bool changed, out string message)
+        => TryRefreshManagedHookConfiguration(
+            content,
+            string.Empty,
+            false,
+            out updatedContent,
+            out changed,
+            out message);
+
+    public static bool TryRefreshManagedHookConfiguration(
+        string content,
+        string hookCommand,
+        bool refreshCommand,
+        out string updatedContent,
+        out bool changed,
+        out string message)
     {
         updatedContent = content;
         changed = false;
         message = string.Empty;
+        var expectedTimeoutSeconds = GetExpectedTimeoutSeconds();
+        var tomlCommandLiteral = refreshCommand ? ToTomlStringLiteral(hookCommand) : string.Empty;
 
         var lines = new List<string>(SplitLines(content));
         for (var lineIndex = 0; lineIndex < lines.Count; lineIndex++)
@@ -137,6 +159,8 @@ public static class CodexHookConfigTomlDocument
             var hookBlockEndIndex = nextTableIndex < 0 ? lines.Count : nextTableIndex;
             if (!HookBlockContainsCommand(lines, lineIndex + 1, hookBlockEndIndex, IsLidGuardCodexHookCommand)) continue;
 
+            if (refreshCommand) changed |= UpsertTomlValueLine(lines, lineIndex + 1, hookBlockEndIndex, "command", tomlCommandLiteral);
+            changed |= UpsertTomlValueLine(lines, lineIndex + 1, hookBlockEndIndex, "timeout", expectedTimeoutSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture));
             changed |= UpsertStatusMessageLine(lines, lineIndex + 1, hookBlockEndIndex, statusMessage);
         }
 
@@ -234,7 +258,7 @@ public static class CodexHookConfigTomlDocument
             $"[[hooks.{hookEventName}.hooks]]",
             "type = \"command\"",
             $"command = {tomlCommandLiteral}",
-            "timeout = 30",
+            $"timeout = {GetExpectedTimeoutSeconds()}",
             $"statusMessage = {ToTomlStringLiteral(statusMessage)}"
         ];
 
@@ -263,6 +287,16 @@ public static class CodexHookConfigTomlDocument
         return true;
     }
 
+    private static bool HasAllRequiredHookTimeouts(string content, int expectedTimeoutSeconds)
+    {
+        foreach (var hookEventName in s_requiredHookEventNames)
+        {
+            if (!ContainsLidGuardHookWithSufficientTimeout(content, hookEventName, expectedTimeoutSeconds)) return false;
+        }
+
+        return true;
+    }
+
     private static bool ContainsHookCommand(string content, string hookEventName, Func<string, bool> commandPredicate)
     {
         var lines = SplitLines(content);
@@ -275,6 +309,30 @@ public static class CodexHookConfigTomlDocument
             for (var commandLineIndex = lineIndex + 1; commandLineIndex < commandLineEndIndex; commandLineIndex++)
             {
                 if (TryReadCommandValue(lines[commandLineIndex], out var command) && commandPredicate(command)) return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool ContainsLidGuardHookWithSufficientTimeout(string content, string hookEventName, int expectedTimeoutSeconds)
+    {
+        var lines = SplitLines(content);
+        for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
+        {
+            if (!IsHookCommandTableHeader(lines[lineIndex], hookEventName)) continue;
+
+            var nextTableIndex = FindNextTableIndex(lines, lineIndex + 1);
+            var commandLineEndIndex = nextTableIndex < 0 ? lines.Length : nextTableIndex;
+            if (!HookBlockContainsCommand(lines, lineIndex + 1, commandLineEndIndex, IsLidGuardCodexHookCommand)) continue;
+
+            for (var commandLineIndex = lineIndex + 1; commandLineIndex < commandLineEndIndex; commandLineIndex++)
+            {
+                if (TryReadIntegerValue(lines[commandLineIndex], "timeout", out var timeoutSeconds)
+                    && timeoutSeconds >= expectedTimeoutSeconds)
+                {
+                    return true;
+                }
             }
         }
 
@@ -475,24 +533,7 @@ public static class CodexHookConfigTomlDocument
 
     private static bool UpsertStatusMessageLine(List<string> lines, int startIndex, int endIndex, string statusMessage)
     {
-        var statusMessageLine = $"statusMessage = {ToTomlStringLiteral(statusMessage)}";
-        for (var lineIndex = startIndex; lineIndex < endIndex; lineIndex++)
-        {
-            if (!TryReadTomlKey(lines[lineIndex], out var key)) continue;
-            if (!key.Equals("statusMessage", StringComparison.Ordinal)) continue;
-
-            var updatedLine = GetLineIndentation(lines[lineIndex]) + statusMessageLine;
-            if (lines[lineIndex].Equals(updatedLine, StringComparison.Ordinal)) return false;
-
-            lines[lineIndex] = updatedLine;
-            return true;
-        }
-
-        var commandLineIndex = FindTomlKeyLineIndex(lines, startIndex, endIndex, "command");
-        var insertionIndex = commandLineIndex >= 0 ? commandLineIndex + 1 : endIndex;
-        var indentation = commandLineIndex >= 0 ? GetLineIndentation(lines[commandLineIndex]) : string.Empty;
-        lines.Insert(insertionIndex, indentation + statusMessageLine);
-        return true;
+        return UpsertTomlValueLine(lines, startIndex, endIndex, "statusMessage", ToTomlStringLiteral(statusMessage));
     }
 
     private static int FindTomlKeyLineIndex(IReadOnlyList<string> lines, int startIndex, int endIndex, string key)
@@ -521,6 +562,42 @@ public static class CodexHookConfigTomlDocument
         var characterIndex = 0;
         while (characterIndex < line.Length && char.IsWhiteSpace(line[characterIndex])) characterIndex++;
         return line[..characterIndex];
+    }
+
+    private static int GetExpectedTimeoutSeconds() => ManagedHookTimeoutConfiguration.GetInstalledHookTimeoutSeconds();
+
+    private static bool TryReadIntegerValue(string line, string key, out int value)
+    {
+        value = 0;
+        if (!TryReadTomlKey(line, out var candidateKey)) return false;
+        if (!candidateKey.Equals(key, StringComparison.Ordinal)) return false;
+
+        var trimmedLine = line.Trim();
+        var separatorIndex = trimmedLine.IndexOf('=');
+        if (separatorIndex < 0) return false;
+        return int.TryParse(trimmedLine[(separatorIndex + 1)..].Trim(), out value);
+    }
+
+    private static bool UpsertTomlValueLine(List<string> lines, int startIndex, int endIndex, string key, string value)
+    {
+        var targetLine = $"{key} = {value}";
+        for (var lineIndex = startIndex; lineIndex < endIndex; lineIndex++)
+        {
+            if (!TryReadTomlKey(lines[lineIndex], out var candidateKey)) continue;
+            if (!candidateKey.Equals(key, StringComparison.Ordinal)) continue;
+
+            var updatedLine = GetLineIndentation(lines[lineIndex]) + targetLine;
+            if (lines[lineIndex].Equals(updatedLine, StringComparison.Ordinal)) return false;
+
+            lines[lineIndex] = updatedLine;
+            return true;
+        }
+
+        var commandLineIndex = FindTomlKeyLineIndex(lines, startIndex, endIndex, "command");
+        var insertionIndex = commandLineIndex >= 0 ? commandLineIndex + 1 : endIndex;
+        var indentation = commandLineIndex >= 0 ? GetLineIndentation(lines[commandLineIndex]) : string.Empty;
+        lines.Insert(insertionIndex, indentation + targetLine);
+        return true;
     }
 
     private static string UnescapeTomlBasicString(string value)

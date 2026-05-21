@@ -5,6 +5,7 @@ using LidGuard.Sessions;
 using LidGuard.Settings;
 using LidGuard.Ipc;
 using LidGuard.Localization;
+using LidGuard.Commands;
 
 namespace LidGuard.Control;
 
@@ -243,9 +244,27 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
                 normalizedPostSessionEndWebhookUrl);
         }
 
+        if (settingsPatch.ClosedLidStopFollowUpWebhookUrl is not null)
+        {
+            if (!ClosedLidStopFollowUpWebhookConfiguration.TryNormalizeConfiguredValue(
+                settingsPatch.ClosedLidStopFollowUpWebhookUrl,
+                out var normalizedClosedLidStopFollowUpWebhookUrl,
+                out message))
+            {
+                return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
+            }
+
+            updatedStoredSettings = ClosedLidStopFollowUpWebhookConfiguration.WithClosedLidStopFollowUpWebhookUrl(
+                updatedStoredSettings,
+                normalizedClosedLidStopFollowUpWebhookUrl);
+        }
+
         updatedStoredSettings = LidGuardSettings.Normalize(updatedStoredSettings);
 
         if (!LidGuardSettingsStore.TrySave(updatedStoredSettings, out message)) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
+        var managedHookRefreshResult = ShouldRefreshManagedHooks(previousStoredSettings, updatedStoredSettings)
+            ? ManagedHookStatusMessageRefresh.RefreshInstalledManagedHooks()
+            : null;
 
         var response = await _runtimeClient.SendAsync(
             new LidGuardPipeRequest
@@ -265,6 +284,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             AppliedChanges = appliedChanges,
             PreviousStoredSettings = previousStoredSettings,
             UpdatedStoredSettings = updatedStoredSettings,
+            ManagedHookRefreshResult = managedHookRefreshResult,
             Snapshot = CreateSnapshot(updatedStoredSettings, response)
         });
     }
@@ -343,6 +363,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
                 : normalizedBaseSettings.SuspendHistoryEntryCount,
             PreSuspendWebhookUrl = settingsPatch.PreSuspendWebhookUrl ?? normalizedBaseSettings.PreSuspendWebhookUrl,
             PostSessionEndWebhookUrl = settingsPatch.PostSessionEndWebhookUrl ?? normalizedBaseSettings.PostSessionEndWebhookUrl,
+            ClosedLidStopFollowUpWebhookUrl = settingsPatch.ClosedLidStopFollowUpWebhookUrl ?? normalizedBaseSettings.ClosedLidStopFollowUpWebhookUrl,
             ClosedLidPermissionRequestDecision = settingsPatch.ClosedLidPermissionRequestDecision ?? normalizedBaseSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settingsPatch.WatchParentProcess ?? normalizedBaseSettings.WatchParentProcess,
             SessionTimeoutMinutes = settingsPatch.HasSessionTimeoutMinutes
@@ -476,6 +497,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         AppendChange(changes, previousStoredSettings.SuspendHistoryEntryCount, updatedStoredSettings.SuspendHistoryEntryCount, "suspendHistoryEntryCount");
         AppendChange(changes, previousStoredSettings.PreSuspendWebhookUrl, updatedStoredSettings.PreSuspendWebhookUrl, "preSuspendWebhookUrl");
         AppendChange(changes, previousStoredSettings.PostSessionEndWebhookUrl, updatedStoredSettings.PostSessionEndWebhookUrl, "postSessionEndWebhookUrl");
+        AppendChange(changes, previousStoredSettings.ClosedLidStopFollowUpWebhookUrl, updatedStoredSettings.ClosedLidStopFollowUpWebhookUrl, "closedLidStopFollowUpWebhookUrl");
         AppendChange(changes, previousStoredSettings.ClosedLidPermissionRequestDecision, updatedStoredSettings.ClosedLidPermissionRequestDecision, "closedLidPermissionRequestDecision");
         AppendChange(changes, previousStoredSettings.SessionTimeoutMinutes, updatedStoredSettings.SessionTimeoutMinutes, "sessionTimeoutMinutes");
         AppendChange(changes, previousStoredSettings.ServerRuntimeCleanupDelayMinutes, updatedStoredSettings.ServerRuntimeCleanupDelayMinutes, "serverRuntimeCleanupDelayMinutes");
@@ -491,5 +513,14 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
     {
         if (EqualityComparer<TValue>.Default.Equals(previousValue, updatedValue)) return;
         changes.Add(changeName);
+    }
+
+    private static bool ShouldRefreshManagedHooks(LidGuardSettings previousStoredSettings, LidGuardSettings updatedStoredSettings)
+    {
+        if (!previousStoredSettings.UserInterfaceCulture.Equals(updatedStoredSettings.UserInterfaceCulture, StringComparison.OrdinalIgnoreCase)) return true;
+        if (previousStoredSettings.PostStopSuspendDelaySeconds != updatedStoredSettings.PostStopSuspendDelaySeconds) return true;
+        return !previousStoredSettings.ClosedLidStopFollowUpWebhookUrl.Equals(
+            updatedStoredSettings.ClosedLidStopFollowUpWebhookUrl,
+            StringComparison.OrdinalIgnoreCase);
     }
 }

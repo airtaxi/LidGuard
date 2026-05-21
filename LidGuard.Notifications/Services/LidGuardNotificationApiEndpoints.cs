@@ -74,16 +74,63 @@ internal static class LidGuardNotificationApiEndpoints
             }
 
             var webhookRequest = await ReadJsonAsync(request, LidGuardNotificationsJsonSerializerContext.Default.LidGuardWebhookRequest, cancellationToken);
-            if (!TryValidateWebhook(webhookRequest, out var eventType, out var reason, out var softLockedSessionCount, out var errorMessage))
+            if (!TryValidateWebhook(
+                webhookRequest,
+                out var eventType,
+                out var reason,
+                out var softLockedSessionCount,
+                out var replyWaitSeconds,
+                out var replyDeadlineUtc,
+                out var errorMessage))
             {
                 await WriteTextAsync(response, errorMessage, StatusCodes.Status400BadRequest, cancellationToken);
+                return;
+            }
+
+            var normalizedUserInterfaceCulture = NormalizeWebhookUserInterfaceCulture(webhookRequest?.UserInterfaceCulture);
+            if (eventType.Equals(LidGuardWebhookEventTypes.StopFollowUp, StringComparison.Ordinal))
+            {
+                var stopFollowUpRequestAcceptedResult = await webhookEventStore.InsertStopFollowUpAsync(
+                    eventType,
+                    reason,
+                    normalizedUserInterfaceCulture,
+                    softLockedSessionCount,
+                    webhookRequest?.Provider?.Trim(),
+                    webhookRequest?.ProviderName?.Trim(),
+                    webhookRequest?.SessionIdentifier?.Trim(),
+                    webhookRequest?.StartedAtUtc,
+                    webhookRequest?.LastActivityAtUtc,
+                    webhookRequest?.EndedAtUtc,
+                    webhookRequest?.EndReason?.Trim(),
+                    webhookRequest?.ActiveSessionCount,
+                    webhookRequest?.InputPromptPreview?.Trim(),
+                    webhookRequest?.LastResponse?.Trim(),
+                    webhookRequest?.LastAssistantMessage?.Trim(),
+                    replyWaitSeconds!.Value,
+                    replyDeadlineUtc!.Value,
+                    webhookRequest?.WorkingDirectory?.Trim(),
+                    webhookRequest?.TranscriptPath?.Trim(),
+                    cancellationToken);
+                processingSignal.Signal();
+                var pollPath = $"/api/follow-ups/{stopFollowUpRequestAcceptedResult.PublicIdentifier}/poll/{stopFollowUpRequestAcceptedResult.PollToken}";
+                await WriteJsonAsync(
+                    response,
+                    new StopFollowUpWebhookAcceptedResponse
+                    {
+                        FollowUpRequestIdentifier = stopFollowUpRequestAcceptedResult.PublicIdentifier,
+                        ReplyPollUrl = pollPath,
+                        ExpiresAtUtc = stopFollowUpRequestAcceptedResult.ExpiresAtUtc
+                    },
+                    LidGuardNotificationsJsonSerializerContext.Default.StopFollowUpWebhookAcceptedResponse,
+                    StatusCodes.Status202Accepted,
+                    cancellationToken);
                 return;
             }
 
             await webhookEventStore.InsertAsync(
                 eventType,
                 reason,
-                NormalizeWebhookUserInterfaceCulture(webhookRequest?.UserInterfaceCulture),
+                normalizedUserInterfaceCulture,
                 softLockedSessionCount,
                 webhookRequest?.Provider?.Trim(),
                 webhookRequest?.ProviderName?.Trim(),
@@ -95,11 +142,90 @@ internal static class LidGuardNotificationApiEndpoints
                 webhookRequest?.ActiveSessionCount,
                 webhookRequest?.InputPromptPreview?.Trim(),
                 webhookRequest?.LastResponse?.Trim(),
+                webhookRequest?.LastAssistantMessage?.Trim(),
+                replyWaitSeconds,
+                replyDeadlineUtc,
                 webhookRequest?.WorkingDirectory?.Trim(),
                 webhookRequest?.TranscriptPath?.Trim(),
                 cancellationToken);
             processingSignal.Signal();
             response.StatusCode = StatusCodes.Status202Accepted;
+        });
+
+        app.MapPost("/api/follow-ups/{publicIdentifier}/reply", async (
+            string publicIdentifier,
+            HttpRequest request,
+            HttpResponse response,
+            WebhookEventStore webhookEventStore,
+            CancellationToken cancellationToken) =>
+        {
+            var replyRequest = await ReadJsonAsync(request, LidGuardNotificationsJsonSerializerContext.Default.StopFollowUpReplyRequest, cancellationToken);
+            var reply = replyRequest?.Reply?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(reply))
+            {
+                await WriteTextAsync(response, "reply is required.", StatusCodes.Status400BadRequest, cancellationToken);
+                return;
+            }
+
+            var submissionResult = await webhookEventStore.SubmitStopFollowUpReplyAsync(publicIdentifier, reply, cancellationToken);
+            if (submissionResult.Succeeded)
+            {
+                response.StatusCode = StatusCodes.Status204NoContent;
+                return;
+            }
+
+            var statusCode = submissionResult.Status switch
+            {
+                StopFollowUpRequestStatuses.Answered => StatusCodes.Status409Conflict,
+                StopFollowUpRequestStatuses.Expired => StatusCodes.Status410Gone,
+                StopFollowUpRequestStatuses.Canceled => StatusCodes.Status409Conflict,
+                _ => StatusCodes.Status404NotFound
+            };
+            await WriteTextAsync(response, submissionResult.Message, statusCode, cancellationToken);
+        }).RequireAuthorization();
+
+        app.MapPost("/api/follow-ups/{publicIdentifier}/cancel", async (
+            string publicIdentifier,
+            HttpResponse response,
+            WebhookEventStore webhookEventStore,
+            CancellationToken cancellationToken) =>
+        {
+            var cancellationResult = await webhookEventStore.CancelStopFollowUpAsync(publicIdentifier, cancellationToken);
+            if (cancellationResult.Succeeded)
+            {
+                response.StatusCode = StatusCodes.Status204NoContent;
+                return;
+            }
+
+            var statusCode = cancellationResult.Status switch
+            {
+                StopFollowUpRequestStatuses.Answered => StatusCodes.Status409Conflict,
+                StopFollowUpRequestStatuses.Expired => StatusCodes.Status410Gone,
+                _ => StatusCodes.Status404NotFound
+            };
+            await WriteTextAsync(response, cancellationResult.Message, statusCode, cancellationToken);
+        }).RequireAuthorization();
+
+        app.MapGet("/api/follow-ups/{publicIdentifier}/poll/{pollToken}", async (
+            string publicIdentifier,
+            string pollToken,
+            HttpResponse response,
+            WebhookEventStore webhookEventStore,
+            CancellationToken cancellationToken) =>
+        {
+            var pollResponse = await webhookEventStore.GetStopFollowUpPollResponseAsync(publicIdentifier, pollToken, cancellationToken);
+            if (pollResponse is null)
+            {
+                await WriteTextAsync(response, "Not found.", StatusCodes.Status404NotFound, cancellationToken);
+                return;
+            }
+
+            await WriteJsonAsync(
+                response,
+                pollResponse,
+                LidGuardNotificationsJsonSerializerContext.Default.StopFollowUpPollResponse,
+                StatusCodes.Status200OK,
+                cancellationToken);
         });
     }
 
@@ -163,15 +289,19 @@ internal static class LidGuardNotificationApiEndpoints
         out string eventType,
         out string reason,
         out int? softLockedSessionCount,
+        out int? replyWaitSeconds,
+        out DateTimeOffset? replyDeadlineUtc,
         out string errorMessage)
     {
         eventType = request?.EventType?.Trim() ?? string.Empty;
         reason = request?.Reason?.Trim() ?? string.Empty;
         softLockedSessionCount = request?.SoftLockedSessionCount;
+        replyWaitSeconds = request?.ReplyWaitSeconds;
+        replyDeadlineUtc = request?.ReplyDeadlineUtc;
 
         if (!LidGuardWebhookEventTypes.IsRecognized(eventType))
         {
-            errorMessage = "eventType is required and must be PreSuspend or PostSessionEnd.";
+            errorMessage = "eventType is required and must be StopFollowUp, PreSuspend, or PostSessionEnd.";
             return false;
         }
 
@@ -179,6 +309,42 @@ internal static class LidGuardNotificationApiEndpoints
         {
             errorMessage = "softLockedSessionCount must be zero or greater when supplied.";
             return false;
+        }
+
+        if (eventType.Equals(LidGuardWebhookEventTypes.StopFollowUp, StringComparison.Ordinal))
+        {
+            if (!LidGuardWebhookReasons.IsRecognizedStopFollowUpReason(reason))
+            {
+                errorMessage = "reason must be AwaitingReply for StopFollowUp events.";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request?.Provider))
+            {
+                errorMessage = "provider is required for StopFollowUp events.";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request?.SessionIdentifier))
+            {
+                errorMessage = "sessionIdentifier is required for StopFollowUp events.";
+                return false;
+            }
+
+            if (!replyWaitSeconds.HasValue || replyWaitSeconds.Value <= 0)
+            {
+                errorMessage = "replyWaitSeconds must be an integer greater than 0 for StopFollowUp events.";
+                return false;
+            }
+
+            if (!replyDeadlineUtc.HasValue)
+            {
+                errorMessage = "replyDeadlineUtc is required for StopFollowUp events.";
+                return false;
+            }
+
+            errorMessage = string.Empty;
+            return true;
         }
 
         if (eventType.Equals(LidGuardWebhookEventTypes.PreSuspend, StringComparison.Ordinal))

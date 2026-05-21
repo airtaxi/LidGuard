@@ -102,6 +102,13 @@ internal static class CodexHookCommand
             return hookInput.HookEventName;
         }
 
+        protected override bool CanReturnStopContinuation(string hookEventName, CodexHookInput hookInput)
+            => hookEventName.Equals(CodexHookEventNames.Stop, StringComparison.Ordinal);
+
+        protected override string GetLastAssistantMessage(CodexHookInput hookInput) => hookInput.LastAssistantMessage;
+
+        protected override bool IsStopHookAlreadyActive(CodexHookInput hookInput) => hookInput.StopHookActive;
+
         private static HookCommandInputParseResult<CodexHookInput> ParseHookInput(string hookInputJson)
         {
             try
@@ -156,13 +163,14 @@ internal static class CodexHookCommand
 
     private static void WriteHooksJsonHookBlock(string hookEventName, string jsonCommandLiteral, string statusMessage, bool hasTrailingComma)
     {
+        var timeoutSeconds = ManagedHookTimeoutConfiguration.GetInstalledHookTimeoutSeconds();
         Console.WriteLine($"    \"{hookEventName}\": [");
         Console.WriteLine("      {");
         Console.WriteLine("        \"hooks\": [");
         Console.WriteLine("          {");
         Console.WriteLine("            \"type\": \"command\",");
         Console.WriteLine($"            \"command\": {jsonCommandLiteral},");
-        Console.WriteLine("            \"timeout\": 30,");
+        Console.WriteLine($"            \"timeout\": {timeoutSeconds},");
         Console.WriteLine($"            \"statusMessage\": {CodexHookConfigTomlDocument.ToJsonStringLiteral(statusMessage)}");
         Console.WriteLine("          }");
         Console.WriteLine("        ]");

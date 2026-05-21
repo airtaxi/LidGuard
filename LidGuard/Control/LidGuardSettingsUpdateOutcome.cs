@@ -1,4 +1,5 @@
 using LidGuard.Settings;
+using LidGuard.Commands;
 
 namespace LidGuard.Control;
 
@@ -13,6 +14,8 @@ public sealed class LidGuardSettingsUpdateOutcome
     public LidGuardSettings PreviousStoredSettings { get; init; } = LidGuardSettings.Default;
 
     public LidGuardSettings UpdatedStoredSettings { get; init; } = LidGuardSettings.Default;
+
+    public ManagedHookStatusMessageRefreshResult ManagedHookRefreshResult { get; init; }
 
     public LidGuardControlSnapshot Snapshot { get; init; } = new();
 }

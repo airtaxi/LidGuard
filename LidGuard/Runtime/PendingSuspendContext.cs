@@ -12,4 +12,7 @@ internal readonly record struct PendingSuspendContext(
     bool IsProviderSessionEnd,
     bool SuppressWebhooks,
     string SessionEndReason,
-    DateTimeOffset? ProviderSessionEndedAt);
+    DateTimeOffset? ProviderSessionEndedAt,
+    string LastAssistantMessage,
+    bool CanReturnStopContinuation,
+    bool StopHookAlreadyActive);

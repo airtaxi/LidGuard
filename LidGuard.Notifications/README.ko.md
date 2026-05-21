@@ -122,6 +122,7 @@ Subscription은 endpoint 기준으로 upsert됩니다. 새 브라우저 구독�
 ```powershell
 lidguard settings --pre-suspend-webhook-url https://host/api/webhooks/lidguard/{webhookSecret}
 lidguard settings --post-session-end-webhook-url https://host/api/webhooks/lidguard/{webhookSecret}
+lidguard settings --closed-lid-stop-follow-up-webhook-url https://host/api/webhooks/lidguard/{webhookSecret}
 ```
 
 `{webhookSecret}`을 설정된 `WebhookSecret`으로 바꿉니다. Webhook secret은 LidGuard 전용입니다. 브라우저 로그인용 `AccessToken`과 같은 값이면 안 됩니다.
@@ -134,9 +135,12 @@ lidguard settings --post-session-end-webhook-url https://host/api/webhooks/lidgu
 curl.exe -X POST "https://host/api/webhooks/lidguard/{webhookSecret}" -H "Content-Type: application/json" -d "{\"eventType\":\"PreSuspend\",\"reason\":\"SoftLocked\",\"userInterfaceCulture\":\"ko\",\"softLockedSessionCount\":2}"
 curl.exe -X POST "https://host/api/webhooks/lidguard/{webhookSecret}" -H "Content-Type: application/json" -d "{\"eventType\":\"PreSuspend\",\"reason\":\"Completed\",\"userInterfaceCulture\":\"ko\",\"provider\":\"Codex\",\"sessionIdentifier\":\"abc123\",\"startedAtUtc\":\"2026-05-02T00:00:00Z\",\"lastActivityAtUtc\":\"2026-05-02T00:03:00Z\",\"endedAtUtc\":\"2026-05-02T00:04:00Z\",\"endReason\":\"SessionEnd\",\"activeSessionCount\":0,\"inputPromptPreview\":\"Summarize the latest changes\",\"lastResponse\":\"Updated the webhook payload and notification UI before the configured suspend flow.\"}"
 curl.exe -X POST "https://host/api/webhooks/lidguard/{webhookSecret}" -H "Content-Type: application/json" -d "{\"eventType\":\"PostSessionEnd\",\"reason\":\"SessionEnded\",\"userInterfaceCulture\":\"en\",\"provider\":\"Codex\",\"sessionIdentifier\":\"abc123\",\"startedAtUtc\":\"2026-05-02T00:00:00Z\",\"lastActivityAtUtc\":\"2026-05-02T00:03:00Z\",\"endedAtUtc\":\"2026-05-02T00:04:00Z\",\"endReason\":\"SessionEnd\",\"activeSessionCount\":0,\"inputPromptPreview\":\"Summarize the latest changes\",\"lastResponse\":\"Updated the webhook payload and notification UI. The event list shows a short preview, and clicking the row details shows the full response.\"}"
+curl.exe -X POST "https://host/api/webhooks/lidguard/{webhookSecret}" -H "Content-Type: application/json" -d "{\"eventType\":\"StopFollowUp\",\"reason\":\"AwaitingReply\",\"userInterfaceCulture\":\"ko\",\"provider\":\"Codex\",\"sessionIdentifier\":\"abc123\",\"startedAtUtc\":\"2026-05-02T00:00:00Z\",\"lastActivityAtUtc\":\"2026-05-02T00:03:00Z\",\"endedAtUtc\":\"2026-05-02T00:04:00Z\",\"endReason\":\"Stop\",\"replyWaitSeconds\":10,\"replyDeadlineUtc\":\"2026-05-02T00:04:10Z\",\"lastAssistantMessage\":\"Need your reply before I suspend.\",\"lastResponse\":\"Need your reply before I suspend.\"}"
 ```
 
-Webhook endpoint는 event를 기록하고 즉시 `202 Accepted`를 반환합니다. 이후 background service가 알림을 보내고 delivery 결과를 기록합니다.
+Webhook endpoint는 event를 기록하고 즉시 `202 Accepted`를 반환합니다. `StopFollowUp`일 때는 `followUpRequestIdentifier`, `replyPollUrl`, `expiresAtUtc`가 담긴 JSON 본문도 함께 반환합니다. 이후 background service가 알림을 보내고 delivery 결과를 기록합니다.
+
+인증된 dashboard에서는 `/events`에서 pending follow-up 카드에 답장할 수 있고, API로는 `POST /api/follow-ups/{publicIdentifier}/reply`에 `{ "reply": "..." }` JSON을 보낼 수 있습니다. 답장 없이 바로 Stop/절전 흐름을 진행하려면 `/events`에서 대기를 취소하거나 `POST /api/follow-ups/{publicIdentifier}/cancel`을 호출합니다. 다음 poll은 `Canceled`를 반환하므로 LidGuard가 즉시 기존 Stop 및 절전 흐름으로 내려갑니다. LidGuard runtime은 인증 없이 `GET /api/follow-ups/{publicIdentifier}/poll/{pollToken}`를 polling하므로, poll token은 일시적인 비밀 값처럼 다뤄야 합니다. 서버는 SQLite에 poll token hash만 저장합니다.
 
 ## 운영 체크리스트
 

@@ -174,6 +174,13 @@ internal static class ClaudeHookCommand
             return $"{hookInput.HookEventName}:{hookInput.Reason}";
         }
 
+        protected override bool CanReturnStopContinuation(string hookEventName, ClaudeHookInput hookInput)
+            => hookEventName.Equals(ClaudeHookEventNames.Stop, StringComparison.Ordinal);
+
+        protected override string GetLastAssistantMessage(ClaudeHookInput hookInput) => hookInput.LastAssistantMessage;
+
+        protected override bool IsStopHookAlreadyActive(ClaudeHookInput hookInput) => hookInput.StopHookActive;
+
         private static HookCommandInputParseResult<ClaudeHookInput> ParseHookInput(string hookInputJson)
         {
             try

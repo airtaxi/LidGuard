@@ -14,22 +14,24 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
 
-        await EnsureWebhookEventsUserInterfaceCultureColumnAsync(connection, cancellationToken);
+        await EnsureWebhookEventsColumnsAsync(connection, cancellationToken);
     }
 
-    private static async Task EnsureWebhookEventsUserInterfaceCultureColumnAsync(SqliteConnection connection, CancellationToken cancellationToken)
+    private static async Task EnsureWebhookEventsColumnsAsync(SqliteConnection connection, CancellationToken cancellationToken)
     {
+        var columnNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         using var inspectCommand = connection.CreateCommand();
         inspectCommand.CommandText = "PRAGMA table_info(WebhookEvents);";
         using var reader = await inspectCommand.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
         {
-            if (reader.GetString(1).Equals("UserInterfaceCulture", StringComparison.OrdinalIgnoreCase)) return;
+            columnNames.Add(reader.GetString(1));
         }
 
-        using var alterCommand = connection.CreateCommand();
-        alterCommand.CommandText = "ALTER TABLE WebhookEvents ADD COLUMN UserInterfaceCulture TEXT NULL;";
-        await alterCommand.ExecuteNonQueryAsync(cancellationToken);
+        await EnsureWebhookEventsColumnAsync(connection, columnNames, "UserInterfaceCulture", "TEXT NULL", cancellationToken);
+        await EnsureWebhookEventsColumnAsync(connection, columnNames, "LastAssistantMessage", "TEXT NULL", cancellationToken);
+        await EnsureWebhookEventsColumnAsync(connection, columnNames, "ReplyWaitSeconds", "INTEGER NULL", cancellationToken);
+        await EnsureWebhookEventsColumnAsync(connection, columnNames, "ReplyDeadlineUtc", "TEXT NULL", cancellationToken);
     }
 
     private static IReadOnlyList<string> CreateSchemaCommands()
@@ -68,6 +70,9 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
                 ActiveSessionCount INTEGER NULL,
                 InputPromptPreview TEXT NULL,
                 LastResponse TEXT NULL,
+                LastAssistantMessage TEXT NULL,
+                ReplyWaitSeconds INTEGER NULL,
+                ReplyDeadlineUtc TEXT NULL,
                 WorkingDirectory TEXT NULL,
                 TranscriptPath TEXT NULL,
                 ReceivedAtUtc TEXT NOT NULL,
@@ -100,10 +105,42 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
                 RevokedAtUtc TEXT NULL
             );
             """,
+            """
+            CREATE TABLE IF NOT EXISTS StopFollowUpRequests (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                WebhookEventId INTEGER NOT NULL UNIQUE,
+                PublicIdentifier TEXT NOT NULL UNIQUE,
+                PollTokenHash TEXT NOT NULL,
+                Status TEXT NOT NULL,
+                ReplyText TEXT NULL,
+                DeadlineAtUtc TEXT NOT NULL,
+                CreatedAtUtc TEXT NOT NULL,
+                RepliedAtUtc TEXT NULL,
+                ConsumedAtUtc TEXT NULL,
+                FOREIGN KEY (WebhookEventId) REFERENCES WebhookEvents(Id) ON DELETE CASCADE
+            );
+            """,
             "CREATE INDEX IF NOT EXISTS IX_Subscriptions_IsActive ON Subscriptions(IsActive);",
             "CREATE INDEX IF NOT EXISTS IX_WebhookEvents_Status_Id ON WebhookEvents(Status, Id);",
             "CREATE INDEX IF NOT EXISTS IX_NotificationDeliveries_WebhookEventId ON NotificationDeliveries(WebhookEventId);",
+            "CREATE INDEX IF NOT EXISTS IX_StopFollowUpRequests_PublicIdentifier ON StopFollowUpRequests(PublicIdentifier);",
+            "CREATE INDEX IF NOT EXISTS IX_StopFollowUpRequests_Status_DeadlineAtUtc ON StopFollowUpRequests(Status, DeadlineAtUtc);",
             "CREATE INDEX IF NOT EXISTS IX_AuthenticationRefreshTokens_TokenHash ON AuthenticationRefreshTokens(TokenHash);",
             "CREATE INDEX IF NOT EXISTS IX_AuthenticationRefreshTokens_ExpiresAtUtc ON AuthenticationRefreshTokens(ExpiresAtUtc);"
         ];
+
+    private static async Task EnsureWebhookEventsColumnAsync(
+        SqliteConnection connection,
+        ISet<string> existingColumnNames,
+        string columnName,
+        string columnDefinition,
+        CancellationToken cancellationToken)
+    {
+        if (existingColumnNames.Contains(columnName)) return;
+
+        using var alterCommand = connection.CreateCommand();
+        alterCommand.CommandText = $"ALTER TABLE WebhookEvents ADD COLUMN {columnName} {columnDefinition};";
+        await alterCommand.ExecuteNonQueryAsync(cancellationToken);
+        existingColumnNames.Add(columnName);
+    }
 }

@@ -31,8 +31,8 @@ Use this skill for repository shape, subsystem ownership, and architectural cons
   - Stores default settings JSON under the platform local application data directory, such as `%LOCALAPPDATA%\LidGuard\settings.json` on Windows, `~/.local/share/LidGuard/settings.json` on typical Linux desktops, or the .NET local application data path on macOS.
 - `LidGuard.Notifications`
   - .NET 10 ASP.NET Core Razor Pages app targeting `net10.0`.
-  - Receives LidGuard pre-suspend and post-session-end webhooks and sends browser Web Push notifications to subscribed clients.
-  - Stores subscriptions, webhook events, and delivery attempts in SQLite.
+  - Receives LidGuard pre-suspend, post-session-end, and Stop-follow-up webhooks and sends browser Web Push notifications to subscribed clients.
+  - Stores subscriptions, webhook events, Stop-follow-up reply state, and delivery attempts in SQLite.
   - Uses server-side VAPID settings; VAPID private keys and access tokens must never be committed.
 - `LidGuard.slnx`
   - Root solution file including `LidGuard` and `LidGuard.Notifications`.
@@ -49,7 +49,7 @@ Use this skill for repository shape, subsystem ownership, and architectural cons
 - `Ipc` owns pipe command names, request/response contracts, runtime client behavior, and status payloads.
 - `Control` owns runtime-facing control operations, settings patching, session removal outcomes, and control snapshots.
 - `Runtime` owns live session orchestration, transcript monitoring, Emergency Hibernation polling, post-stop suspend sound coordination, and suspend history storage.
-- `LidGuard.Notifications` owns webhook API endpoints, token login, subscription dashboard, webhook event history, SQLite persistence, Web Push sending, and background notification dispatch.
+- `LidGuard.Notifications` owns webhook API endpoints, token login, subscription dashboard, webhook event history, Stop-follow-up reply/poll flows, SQLite persistence, Web Push sending, and background notification dispatch.
 
 ## Design Constraints
 

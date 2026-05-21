@@ -71,6 +71,9 @@ public sealed class ClaudeHookInput : IHookCommandInput
     [JsonPropertyName("tool_use_id")]
     public string ToolUseIdentifier { get; init; } = string.Empty;
 
+    [JsonPropertyName("last_assistant_message")]
+    public string LastAssistantMessage { get; init; } = string.Empty;
+
     [JsonPropertyName("tool_input")]
     public JsonElement ToolInput { get; init; }
 

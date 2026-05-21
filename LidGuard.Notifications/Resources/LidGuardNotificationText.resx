@@ -294,4 +294,67 @@
   <data name="WorkingDirectoryLabel" xml:space="preserve">
     <value>Working directory</value>
   </data>
+  <data name="DisplayWebhookEventTypeStopFollowUp" xml:space="preserve">
+    <value>Stop follow-up</value>
+  </data>
+  <data name="DisplayWebhookReasonAwaitingReply" xml:space="preserve">
+    <value>Awaiting reply</value>
+  </data>
+  <data name="DisplayStopFollowUpStatusPending" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="DisplayStopFollowUpStatusAnswered" xml:space="preserve">
+    <value>Answered</value>
+  </data>
+  <data name="DisplayStopFollowUpStatusExpired" xml:space="preserve">
+    <value>Expired</value>
+  </data>
+  <data name="DisplayStopFollowUpStatusCanceled" xml:space="preserve">
+    <value>Canceled</value>
+  </data>
+  <data name="StopFollowUpCancelButton" xml:space="preserve">
+    <value>Cancel and continue stop</value>
+  </data>
+  <data name="StopFollowUpCancelHelp" xml:space="preserve">
+    <value>Canceling stops waiting for a reply and lets LidGuard continue the normal stop and suspend flow.</value>
+  </data>
+  <data name="StopFollowUpCancelSucceededMessage" xml:space="preserve">
+    <value>Follow-up wait canceled.</value>
+  </data>
+  <data name="StopFollowUpDeadlineLabel" xml:space="preserve">
+    <value>Reply deadline</value>
+  </data>
+  <data name="StopFollowUpReplyButton" xml:space="preserve">
+    <value>Submit reply</value>
+  </data>
+  <data name="StopFollowUpReplyHelp" xml:space="preserve">
+    <value>Replying here cancels the pending suspend and lets the agent continue.</value>
+  </data>
+  <data name="StopFollowUpReplyLabel" xml:space="preserve">
+    <value>Reply</value>
+  </data>
+  <data name="StopFollowUpReplyPlaceholder" xml:space="preserve">
+    <value>Tell the agent what to do next</value>
+  </data>
+  <data name="StopFollowUpReplyRequiredMessage" xml:space="preserve">
+    <value>Reply is required.</value>
+  </data>
+  <data name="StopFollowUpReplySentAtLabel" xml:space="preserve">
+    <value>Reply sent</value>
+  </data>
+  <data name="StopFollowUpSectionLabel" xml:space="preserve">
+    <value>Stop follow-up</value>
+  </data>
+  <data name="StopFollowUpStatusLabel" xml:space="preserve">
+    <value>Follow-up status</value>
+  </data>
+  <data name="PushBodyStopFollowUp" xml:space="preserve">
+    <value>Replying here will cancel the pending suspend and let the agent continue.</value>
+  </data>
+  <data name="PushStopFollowUpStatus" xml:space="preserve">
+    <value>is waiting for your reply before suspend</value>
+  </data>
+  <data name="PushTitleStopFollowUp" xml:space="preserve">
+    <value>Reply needed before suspend</value>
+  </data>
 </root>

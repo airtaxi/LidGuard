@@ -74,6 +74,7 @@ description: "LidGuard power, lid, suspend, and thermal behavior reference. Use 
 - Request macOS immediate sleep with `pmset sleepnow`; request hibernate with the temporary `hibernatemode 25` flow.
 - After the last active session stops, request suspend after the configured post-stop delay using the configured suspend mode only when the lid is closed and suspend eligibility visible display monitor count is `0`.
 - Treat a delay of `0` as immediate suspend.
+- When `closedLidStopFollowUpWebhookUrl` is valid and `postStopSuspendDelaySeconds > 0`, supported Stop hooks may keep the Stop hook open for up to that same delay while LidGuard polls for a follow-up reply; a reply cancels the pending suspend and resumes the session, while no reply falls through to the existing suspend flow without adding extra delay.
 - If a post-stop suspend sound is configured, wait for the delay first, send the pre-suspend webhook when configured, play the configured sound to completion, then re-check lid/session state before requesting suspend.
 - If a post-stop suspend sound volume override is configured, capture the default output device master volume and mute state immediately before playback, temporarily unmute as needed, set the configured master volume percent for playback, then restore the previous volume and mute state in the sound playback cleanup path.
 - If a pre-suspend webhook URL is configured, POST JSON with a 5-second timeout after the post-stop suspend delay and before post-stop suspend sound playback.
@@ -96,3 +97,4 @@ description: "LidGuard power, lid, suspend, and thermal behavior reference. Use 
 - If the hibernate request fails, immediately request Sleep as a best-effort fallback and record both suspend results.
 - Ignore the regular suspend mode, post-stop suspend delay, post-stop suspend sound, and sound volume override settings.
 - Do not let Emergency Hibernation webhook timeout or failure block the immediate hibernation request.
+- Emergency Hibernation takes priority over any pending closed-lid Stop follow-up wait and must cancel that wait before hibernate/Sleep fallback handling continues.

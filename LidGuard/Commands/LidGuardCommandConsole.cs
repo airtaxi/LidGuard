@@ -73,6 +73,14 @@ internal static class LidGuardCommandConsole
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsSuspendHistoryCount", LocalizationService.DisplaySuspendHistoryEntryCount(normalizedSettings.SuspendHistoryEntryCount)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsPreSuspendWebhookUrl", LocalizationService.DisplayOptionalValue(PreSuspendWebhookConfiguration.GetDisplayValue(normalizedSettings.PreSuspendWebhookUrl))));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsPostSessionEndWebhookUrl", LocalizationService.DisplayOptionalValue(PostSessionEndWebhookConfiguration.GetDisplayValue(normalizedSettings.PostSessionEndWebhookUrl))));
+        Console.WriteLine(LocalizationService.GetFormattedStringWithFallback(
+            "SettingsClosedLidStopFollowUpWebhookUrl",
+            "  Closed-lid stop follow-up webhook URL: {0}",
+            LocalizationService.DisplayOptionalValue(ClosedLidStopFollowUpWebhookConfiguration.GetDisplayValue(normalizedSettings.ClosedLidStopFollowUpWebhookUrl))));
+        Console.WriteLine(LocalizationService.GetFormattedStringWithFallback(
+            "SettingsClosedLidStopFollowUpFeatureState",
+            "  Closed-lid stop follow-up 기능: {0}",
+            DisplayClosedLidStopFollowUpFeatureState(normalizedSettings)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsClosedLidPermissionRequestDecision", LocalizationService.DisplayClosedLidPermissionRequestDecision(normalizedSettings.ClosedLidPermissionRequestDecision)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsUserInterfaceCulture", UserInterfaceCultureConfiguration.GetDisplayValue(normalizedSettings.UserInterfaceCulture)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsReason", powerRequest.Reason));
@@ -160,5 +168,15 @@ internal static class LidGuardCommandConsole
         if (!string.IsNullOrWhiteSpace(session.SoftLockReason)) details = $"{details}:{session.SoftLockReason}";
         if (session.SoftLockedAt is not null) details = $"{details}@{LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(session.SoftLockedAt.Value)}";
         return details;
+    }
+
+    private static string DisplayClosedLidStopFollowUpFeatureState(LidGuardSettings settings)
+    {
+        return ClosedLidStopFollowUpConfiguration.GetFeatureState(settings) switch
+        {
+            ClosedLidStopFollowUpConfiguration.FeatureStateOn => LocalizationService.GetString("DisplayClosedLidStopFollowUpFeatureStateOn", "켜짐"),
+            ClosedLidStopFollowUpConfiguration.FeatureStateConfigurationError => LocalizationService.GetString("DisplayClosedLidStopFollowUpFeatureStateConfigurationError", "구성 오류"),
+            _ => LocalizationService.GetString("DisplayClosedLidStopFollowUpFeatureStateOff", "꺼짐")
+        };
     }
 }

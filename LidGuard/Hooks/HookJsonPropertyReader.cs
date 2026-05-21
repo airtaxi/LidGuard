@@ -25,17 +25,27 @@ internal static class HookJsonPropertyReader
         return valueNode is JsonValue jsonValue && jsonValue.TryGetValue<string>(out var value) ? value : string.Empty;
     }
 
-    public static bool? GetNullableBooleanProperty(JsonElement jsonElement, string propertyName)
+    public static bool? GetNullableBooleanProperty(JsonElement jsonElement, string primaryPropertyName, string secondaryPropertyName = "")
     {
-        if (!jsonElement.TryGetProperty(propertyName, out var propertyValue)) return null;
-        if (propertyValue.ValueKind != JsonValueKind.True && propertyValue.ValueKind != JsonValueKind.False) return null;
-        return propertyValue.GetBoolean();
+        if (TryGetNullableBooleanProperty(jsonElement, primaryPropertyName, out var propertyValue)) return propertyValue;
+        if (!string.IsNullOrWhiteSpace(secondaryPropertyName) && TryGetNullableBooleanProperty(jsonElement, secondaryPropertyName, out propertyValue)) return propertyValue;
+
+        return null;
     }
 
     public static bool GetBooleanProperty(JsonObject jsonObject, string propertyName)
     {
         var valueNode = jsonObject[propertyName];
         return valueNode is JsonValue jsonValue && jsonValue.TryGetValue<bool>(out var value) && value;
+    }
+
+    private static bool TryGetNullableBooleanProperty(JsonElement jsonElement, string propertyName, out bool? value)
+    {
+        value = null;
+        if (!jsonElement.TryGetProperty(propertyName, out var propertyValue)) return false;
+        if (propertyValue.ValueKind != JsonValueKind.True && propertyValue.ValueKind != JsonValueKind.False) return false;
+        value = propertyValue.GetBoolean();
+        return true;
     }
 
     public static bool TryGetBooleanProperty(JsonElement jsonElement, string propertyName, out bool value)

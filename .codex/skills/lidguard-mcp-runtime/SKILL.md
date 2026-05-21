@@ -19,6 +19,7 @@ description: "LidGuard MCP runtime reference. Use when working on regular MCP se
 - Expose inactive session timeout through `sessionTimeoutMinutes`, accepting `off` or an enabled minute count of at least 1.
 - Expose server runtime cleanup delay through `serverRuntimeCleanupDelayMinutes`, accepting `off` to keep the runtime alive, `0` for immediate exit, or a positive minute count to wait.
 - Expose post-session-end webhook URL through `postSessionEndWebhookUrl`, accepting an empty string to clear it.
+- Expose closed-lid Stop follow-up webhook URL through `closedLidStopFollowUpWebhookUrl`, accepting an empty string to clear it.
 - Make `remove_session` manually remove active sessions by session identifier and optionally narrow removal to one provider and one MCP provider name.
 - Keep `set_session_soft_lock` and `clear_session_soft_lock` general-purpose by accepting provider and session identifier inputs, so non-MCP providers can also use MCP-driven soft-lock control when they can supply those values.
 - Use the same named-pipe client and settings store for MCP settings updates that the CLI uses.
@@ -41,6 +42,7 @@ description: "LidGuard MCP runtime reference. Use when working on regular MCP se
 - Remember that the tool itself cannot end the turn; the model still has to stop or hand back the conversation after calling it.
 - When resuming a previously soft-locked Provider MCP session after a user reply, call `provider_clear_soft_lock` with the earlier returned `sessionIdentifier` instead of starting a brand-new session.
 - Document Provider MCP behavior as best-effort rather than guaranteed, because correct behavior depends on the model calling tools at the right times.
+- Do not implement or promise closed-lid Stop follow-up continuation in Provider MCP; that behavior is limited to supported provider hook Stop events.
 
 ## Examples
 

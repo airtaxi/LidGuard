@@ -12,7 +12,6 @@ public static class GitHubCopilotHookConfigurationJsonDocument
     private const string CommandHookTypeName = "command";
     private const string HooksPropertyName = JsonHookConfigurationDocument.HooksPropertyName;
     private const int SupportedSchemaVersion = 1;
-    private const int TimeoutSeconds = 30;
     private const string VersionPropertyName = "version";
     private static readonly JsonSerializerOptions s_jsonSerializerOptions = new() { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All), WriteIndented = true };
     private static readonly (string HookEventName, Func<string> GetStatusMessage, string Matcher)[] s_requiredHookDefinitions =
@@ -216,6 +215,25 @@ public static class GitHubCopilotHookConfigurationJsonDocument
             }
         }
 
+        var hasExpectedHookTimeout = TryHasExpectedHookTimeouts(hooksObject, out parseMessage);
+        if (!string.IsNullOrWhiteSpace(parseMessage))
+        {
+            return new HookInstallationInspection
+            {
+                ConfigurationFileExists = configurationFileExists,
+                ConfigurationFilePath = configurationFilePath,
+                Checks = new Dictionary<HookInstallationCheck, bool>
+                {
+                    [HookInstallationCheck.HooksObject] = true
+                },
+                HookCommand = hookCommand,
+                HookExecutablePath = hookExecutablePath,
+                Message = parseMessage,
+                Provider = AgentProvider.GitHubCopilot,
+                Status = HookInstallationStatus.Unknown
+            };
+        }
+
         var isInstalled = hasSessionStartHook
             && hasSessionEndHook
             && hasUserPromptSubmittedHook
@@ -228,7 +246,8 @@ public static class GitHubCopilotHookConfigurationJsonDocument
             && hasErrorOccurredHook
             && hasNotificationHook
             && hasExpectedHookCommands
-            && hasExpectedNotificationMatcher;
+            && hasExpectedNotificationMatcher
+            && hasExpectedHookTimeout;
         var status = isInstalled ? HookInstallationStatus.Installed : hasManagedHookEntries ? HookInstallationStatus.NeedsUpdate : HookInstallationStatus.NotInstalled;
         var message = isInstalled
             ? "GitHub Copilot hook is installed."
@@ -326,6 +345,23 @@ public static class GitHubCopilotHookConfigurationJsonDocument
     }
 
     public static bool TryRefreshManagedHookStatusMessages(string content, out string updatedContent, out bool changed, out string message)
+        => TryRefreshManagedHooks(
+            content,
+            new Dictionary<string, string>(StringComparer.Ordinal),
+            string.Empty,
+            refreshCommand: false,
+            out updatedContent,
+            out changed,
+            out message);
+
+    public static bool TryRefreshManagedHooks(
+        string content,
+        IReadOnlyDictionary<string, string> hookCommandsByEvent,
+        string hookShellName,
+        bool refreshCommand,
+        out string updatedContent,
+        out bool changed,
+        out string message)
     {
         updatedContent = content;
         changed = false;
@@ -339,7 +375,20 @@ public static class GitHubCopilotHookConfigurationJsonDocument
 
         foreach (var hookDefinition in s_requiredHookDefinitions)
         {
-            if (!TryRefreshManagedHookStatusMessage(hooksObject, hookDefinition.HookEventName, hookDefinition.GetStatusMessage(), out var hookChanged, out message)) return false;
+            if (!TryRefreshManagedHook(
+                hooksObject,
+                hookDefinition.HookEventName,
+                hookCommandsByEvent,
+                hookShellName,
+                hookDefinition.GetStatusMessage(),
+                hookDefinition.Matcher,
+                refreshCommand,
+                out var hookChanged,
+                out message))
+            {
+                return false;
+            }
+
             changed |= hookChanged;
         }
 
@@ -371,7 +420,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
         {
             ["type"] = CommandHookTypeName,
             [hookShellName] = hookCommand,
-            ["timeoutSec"] = TimeoutSeconds,
+            ["timeoutSec"] = GetExpectedTimeoutSeconds(),
             ["statusMessage"] = statusMessage
         };
 
@@ -401,7 +450,9 @@ public static class GitHubCopilotHookConfigurationJsonDocument
         if (string.IsNullOrWhiteSpace(command)) return false;
         if (!command.Contains("lidguard", StringComparison.OrdinalIgnoreCase)) return false;
         if (!command.Contains("copilot-hook", StringComparison.OrdinalIgnoreCase)) return false;
-        return command.Contains($"--event {expectedHookEventName}", StringComparison.OrdinalIgnoreCase);
+        if (command.Contains($"--event {expectedHookEventName}", StringComparison.OrdinalIgnoreCase)) return true;
+        return expectedHookEventName.Equals(GitHubCopilotHookEventNames.AgentStop, StringComparison.Ordinal)
+            && command.Contains($"--event {GitHubCopilotHookEventNames.PascalCaseAgentStopAlias}", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool HasExpectedHookCommand(JsonObject hookDefinitionObject, string expectedHookCommand, string expectedHookShellName)
@@ -409,6 +460,8 @@ public static class GitHubCopilotHookConfigurationJsonDocument
         if (!JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "type").Equals(CommandHookTypeName, StringComparison.Ordinal)) return false;
         return JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, expectedHookShellName).Equals(expectedHookCommand, StringComparison.Ordinal);
     }
+
+    private static int GetExpectedTimeoutSeconds() => ManagedHookTimeoutConfiguration.GetInstalledHookTimeoutSeconds();
 
     private static bool RemoveManagedHook(JsonObject hooksObject, string hookEventName)
         => JsonHookConfigurationDocument.RemoveFlatManagedCommandHooks(
@@ -430,12 +483,133 @@ public static class GitHubCopilotHookConfigurationJsonDocument
             out changed,
             out message);
 
+    private static bool TryHasExpectedHookTimeouts(JsonObject hooksObject, out string message)
+    {
+        message = string.Empty;
+        var expectedTimeoutSeconds = GetExpectedTimeoutSeconds();
+        foreach (var hookDefinition in s_requiredHookDefinitions)
+        {
+            if (!TryHasExpectedHookTimeout(hooksObject, hookDefinition.HookEventName, expectedTimeoutSeconds, out message))
+                return false;
+        }
+
+        return true;
+    }
+
+    private static bool TryHasExpectedHookTimeout(JsonObject hooksObject, string hookEventName, int expectedTimeoutSeconds, out string message)
+    {
+        message = string.Empty;
+        foreach (var supportedHookEventName in GetSupportedEventNames(hookEventName))
+        {
+            if (!hooksObject.TryGetPropertyValue(supportedHookEventName, out var hookEventNode) || hookEventNode is null) continue;
+            if (hookEventNode is not JsonArray hookDefinitions)
+            {
+                message = $"GitHub Copilot hook event '{supportedHookEventName}' must be a JSON array.";
+                return false;
+            }
+
+            foreach (var hookDefinitionNode in hookDefinitions)
+            {
+                if (hookDefinitionNode is not JsonObject hookDefinitionObject)
+                {
+                    message = $"GitHub Copilot hook definition for '{supportedHookEventName}' must be a JSON object.";
+                    return false;
+                }
+
+                if (!IsLidGuardGitHubCopilotHookCommand(GetCommandString(hookDefinitionObject), hookEventName)) continue;
+                return HasSufficientTimeoutValue(hookDefinitionObject, expectedTimeoutSeconds);
+            }
+        }
+
+        return false;
+    }
+
+    private static bool TryRefreshManagedHook(
+        JsonObject hooksObject,
+        string hookEventName,
+        IReadOnlyDictionary<string, string> hookCommandsByEvent,
+        string hookShellName,
+        string statusMessage,
+        string matcher,
+        bool refreshCommand,
+        out bool changed,
+        out string message)
+    {
+        changed = false;
+        message = string.Empty;
+        foreach (var supportedHookEventName in GetSupportedEventNames(hookEventName))
+        {
+            if (!hooksObject.TryGetPropertyValue(supportedHookEventName, out var hookEventNode) || hookEventNode is null) continue;
+            if (hookEventNode is not JsonArray hookDefinitions)
+            {
+                message = $"GitHub Copilot hook event '{supportedHookEventName}' must be a JSON array.";
+                return false;
+            }
+
+            foreach (var hookDefinitionNode in hookDefinitions)
+            {
+                if (hookDefinitionNode is not JsonObject hookDefinitionObject)
+                {
+                    message = $"GitHub Copilot hook definition for '{supportedHookEventName}' must be a JSON object.";
+                    return false;
+                }
+
+                if (!IsLidGuardGitHubCopilotHookCommand(GetCommandString(hookDefinitionObject), hookEventName)) continue;
+                if (refreshCommand)
+                {
+                    if (!hookCommandsByEvent.TryGetValue(hookEventName, out var expectedHookCommand))
+                    {
+                        message = $"Missing hook command for '{hookEventName}'.";
+                        return false;
+                    }
+
+                    var actualMatcher = JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "matcher");
+                    var expectedMatcher = matcher ?? string.Empty;
+                    if (!HasExpectedHookCommand(hookDefinitionObject, expectedHookCommand, hookShellName)
+                        || !HasExpectedTimeoutValue(hookDefinitionObject, GetExpectedTimeoutSeconds())
+                        || !JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "statusMessage").Equals(statusMessage, StringComparison.Ordinal)
+                        || !actualMatcher.Equals(expectedMatcher, StringComparison.Ordinal))
+                    {
+                        ReplaceManagedHookDefinition(hookDefinitionObject, expectedHookCommand, hookShellName, statusMessage, matcher);
+                        changed = true;
+                    }
+
+                    continue;
+                }
+
+                if (!HasExpectedTimeoutValue(hookDefinitionObject, GetExpectedTimeoutSeconds()))
+                {
+                    hookDefinitionObject["timeoutSec"] = GetExpectedTimeoutSeconds();
+                    changed = true;
+                }
+
+                if (!JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "statusMessage").Equals(statusMessage, StringComparison.Ordinal))
+                {
+                    hookDefinitionObject["statusMessage"] = statusMessage;
+                    changed = true;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private static bool HasExpectedTimeoutValue(JsonObject hookDefinitionObject, int expectedTimeoutSeconds)
+        => hookDefinitionObject["timeoutSec"] is JsonValue timeoutValue
+            && timeoutValue.TryGetValue<int>(out var timeoutSeconds)
+            && timeoutSeconds == expectedTimeoutSeconds;
+
+    private static bool HasSufficientTimeoutValue(JsonObject hookDefinitionObject, int expectedTimeoutSeconds)
+        => hookDefinitionObject["timeoutSec"] is JsonValue timeoutValue
+            && timeoutValue.TryGetValue<int>(out var timeoutSeconds)
+            && timeoutSeconds >= expectedTimeoutSeconds;
+
     private static void ReplaceManagedHookDefinition(JsonObject hookDefinitionObject, string hookCommand, string hookShellName, string statusMessage, string matcher)
     {
         hookDefinitionObject.Clear();
         hookDefinitionObject["type"] = CommandHookTypeName;
         hookDefinitionObject[hookShellName] = hookCommand;
-        hookDefinitionObject["timeoutSec"] = TimeoutSeconds;
+        hookDefinitionObject["timeoutSec"] = GetExpectedTimeoutSeconds();
         hookDefinitionObject["statusMessage"] = statusMessage;
         if (!string.IsNullOrWhiteSpace(matcher)) hookDefinitionObject["matcher"] = matcher;
     }
@@ -521,22 +695,10 @@ public static class GitHubCopilotHookConfigurationJsonDocument
                 if (!IsLidGuardGitHubCopilotHookCommand(GetCommandString(hookDefinitionObject), hookEventName)) continue;
 
                 ReplaceManagedHookDefinition(hookDefinitionObject, hookCommand, hookShellName, statusMessage, matcher);
-                if (!compatibleHookEventName.Equals(hookEventName, StringComparison.Ordinal))
-                {
-                    hooksObject.Remove(compatibleHookEventName);
-                    hooksObject[hookEventName] = hookDefinitions;
-                }
-
                 return true;
             }
 
             JsonHookConfigurationDocument.AddJsonNode(hookDefinitions, CreateManagedHookDefinition(hookCommand, hookShellName, statusMessage, matcher));
-            if (!compatibleHookEventName.Equals(hookEventName, StringComparison.Ordinal))
-            {
-                hooksObject.Remove(compatibleHookEventName);
-                hooksObject[hookEventName] = hookDefinitions;
-            }
-
             return true;
         }
 

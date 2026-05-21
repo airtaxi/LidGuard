@@ -135,7 +135,7 @@ internal static class GitHubCopilotHookCommand
                 return await ReportActivityAsync(configuredHookEventName, hookInput, configuredHookEventName);
             }
 
-            if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.AgentStop, StringComparison.Ordinal)
+            if (GitHubCopilotHookEventNames.IsAgentStopEventName(configuredHookEventName)
                 || configuredHookEventName.Equals(GitHubCopilotHookEventNames.SessionEnd, StringComparison.Ordinal))
             {
                 if (GitHubCopilotHookWorkTracker.TryCreatePendingWorkReason(hookInput, GetSessionIdentifier(hookInput), out var pendingProviderWorkReason))
@@ -193,6 +193,13 @@ internal static class GitHubCopilotHookCommand
             if (string.IsNullOrWhiteSpace(detailedReason)) return hookEventName;
             return $"{hookEventName}:{detailedReason}";
         }
+
+        protected override bool CanReturnStopContinuation(string hookEventName, GitHubCopilotHookInput hookInput)
+            => GitHubCopilotHookEventNames.IsAgentStopEventName(hookEventName);
+
+        protected override string GetLastAssistantMessage(GitHubCopilotHookInput hookInput) => hookInput.LastAssistantMessage;
+
+        protected override bool IsStopHookAlreadyActive(GitHubCopilotHookInput hookInput) => hookInput.StopHookActive;
 
         private static HookCommandInputParseResult<GitHubCopilotHookInput> ParseHookInput(string hookInputJson)
         {

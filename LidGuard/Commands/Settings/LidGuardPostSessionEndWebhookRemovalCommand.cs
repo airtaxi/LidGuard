@@ -51,6 +51,8 @@ internal static class LidGuardPostSessionEndWebhookRemovalCommand
         Console.WriteLine(LocalizationService.GetFormattedString("ConsoleSettingsFile", LidGuardSettingsStore.GetDefaultSettingsFilePath()));
         LidGuardCommandConsole.WriteSettings(outcome.UpdatedStoredSettings);
         Console.WriteLine(LocalizationService.GetString("SettingsPostSessionEndWebhookUrlRemoved"));
+        if (outcome.ManagedHookRefreshResult is not null)
+            LidGuardSettingsUpdateCommand.WriteManagedHookRefreshResult(outcome.ManagedHookRefreshResult);
 
         if (outcome.Snapshot.RuntimeReachable)
         {

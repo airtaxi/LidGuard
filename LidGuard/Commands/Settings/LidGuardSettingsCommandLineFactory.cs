@@ -86,6 +86,7 @@ internal static class LidGuardSettingsCommandLineFactory
         if (CommandOptionReader.TryGetOption(options, out var postStopSuspendSoundText, "post-stop-suspend-sound")) postStopSuspendSound = postStopSuspendSoundText;
         if (!LidGuardSettingsValueParser.TryParsePreSuspendWebhookUrlOption(options, baseSettings.PreSuspendWebhookUrl, out var preSuspendWebhookUrl, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParsePostSessionEndWebhookUrlOption(options, baseSettings.PostSessionEndWebhookUrl, out var postSessionEndWebhookUrl, out message)) return false;
+        if (!LidGuardSettingsValueParser.TryParseClosedLidStopFollowUpWebhookUrlOption(options, baseSettings.ClosedLidStopFollowUpWebhookUrl, out var closedLidStopFollowUpWebhookUrl, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParseClosedLidPermissionRequestDecisionOption(options, baseSettings.ClosedLidPermissionRequestDecision, out var closedLidPermissionRequestDecision, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParseUserInterfaceCultureOption(options, baseSettings.UserInterfaceCulture, out var userInterfaceCulture, out message)) return false;
 
@@ -109,6 +110,7 @@ internal static class LidGuardSettingsCommandLineFactory
             SuspendHistoryEntryCount = suspendHistoryEntryCount,
             PreSuspendWebhookUrl = preSuspendWebhookUrl,
             PostSessionEndWebhookUrl = postSessionEndWebhookUrl,
+            ClosedLidStopFollowUpWebhookUrl = closedLidStopFollowUpWebhookUrl,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess,
             SessionTimeoutMinutes = sessionTimeoutMinutes,

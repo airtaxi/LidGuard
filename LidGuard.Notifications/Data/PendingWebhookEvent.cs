@@ -16,7 +16,13 @@ internal sealed record PendingWebhookEvent(
     int? ActiveSessionCount,
     string? InputPromptPreview,
     string? LastResponse,
+    string? LastAssistantMessage,
+    int? ReplyWaitSeconds,
+    DateTimeOffset? ReplyDeadlineUtc,
     string? WorkingDirectory,
     string? TranscriptPath,
+    string? StopFollowUpPublicIdentifier,
+    string? StopFollowUpStatus,
+    string? StopFollowUpReplyText,
     DateTimeOffset ReceivedAtUtc,
     int AttemptCount);

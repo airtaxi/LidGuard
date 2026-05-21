@@ -27,7 +27,7 @@ internal static class PushNotificationMessageFactory
 
     private static PushNotificationMessage CreateCore(PendingWebhookEvent webhookEvent, string publicBaseUrl)
     {
-        var notificationUrl = string.IsNullOrWhiteSpace(publicBaseUrl) ? "/events" : $"{publicBaseUrl.TrimEnd('/')}/events";
+        var notificationUrl = CreateNotificationUrl(webhookEvent, publicBaseUrl);
         return new PushNotificationMessage
         {
             Title = CreateTitle(webhookEvent),
@@ -50,6 +50,8 @@ internal static class PushNotificationMessageFactory
 
     private static string CreateTitle(PendingWebhookEvent webhookEvent)
     {
+        if (webhookEvent.EventType.Equals(LidGuardWebhookEventTypes.StopFollowUp, StringComparison.Ordinal))
+            return LidGuardNotificationText.PushTitleStopFollowUp;
         if (webhookEvent.EventType.Equals(LidGuardWebhookEventTypes.PostSessionEnd, StringComparison.Ordinal)) return LidGuardNotificationText.PushTitlePostSessionEnd;
 
         return webhookEvent.Reason switch
@@ -63,6 +65,8 @@ internal static class PushNotificationMessageFactory
 
     private static string CreateBody(PendingWebhookEvent webhookEvent)
     {
+        if (webhookEvent.EventType.Equals(LidGuardWebhookEventTypes.StopFollowUp, StringComparison.Ordinal))
+            return CreateStopFollowUpBody(webhookEvent);
         if (webhookEvent.EventType.Equals(LidGuardWebhookEventTypes.PostSessionEnd, StringComparison.Ordinal)) return CreatePostSessionEndBody(webhookEvent);
 
         return CreatePreSuspendBody(webhookEvent);
@@ -115,5 +119,16 @@ internal static class PushNotificationMessageFactory
         if (softLockedSessionCount is null) return LidGuardNotificationText.PushSoftLockedAll;
 
         return LidGuardNotificationText.PushSoftLockedSessionCount(softLockedSessionCount.Value);
+    }
+
+    private static string CreateStopFollowUpBody(PendingWebhookEvent webhookEvent)
+        => CreateSessionEndDetails(webhookEvent, LidGuardNotificationText.PushStopFollowUpStatus) + " " + LidGuardNotificationText.PushBodyStopFollowUp;
+
+    private static string CreateNotificationUrl(PendingWebhookEvent webhookEvent, string publicBaseUrl)
+    {
+        var baseEventsUrl = string.IsNullOrWhiteSpace(publicBaseUrl) ? "/events" : $"{publicBaseUrl.TrimEnd('/')}/events";
+        if (!webhookEvent.EventType.Equals(LidGuardWebhookEventTypes.StopFollowUp, StringComparison.Ordinal)) return baseEventsUrl;
+        if (string.IsNullOrWhiteSpace(webhookEvent.StopFollowUpPublicIdentifier)) return baseEventsUrl;
+        return $"{baseEventsUrl}#followup-{webhookEvent.StopFollowUpPublicIdentifier}";
     }
 }

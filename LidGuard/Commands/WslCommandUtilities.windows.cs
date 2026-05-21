@@ -247,6 +247,29 @@ internal static class WslCommandUtilities
         return hasProviderCli;
     }
 
+    public static bool TryListDistros(out IReadOnlyList<string> distroNames, out string message)
+    {
+        distroNames = [];
+        message = string.Empty;
+        var result = RunWslProcess(["--list", "--quiet"]);
+        if (result.StartFailed)
+        {
+            message = result.GetDisplayError();
+            return false;
+        }
+
+        if (result.ExitCode != 0)
+        {
+            message = result.GetDisplayError();
+            return false;
+        }
+
+        distroNames = result.StandardOutput
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return true;
+    }
+
     private static WslCommandResult RunWslProcess(IReadOnlyList<string> arguments, string standardInput = "")
     {
         try

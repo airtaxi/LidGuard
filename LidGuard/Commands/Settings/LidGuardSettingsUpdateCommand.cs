@@ -51,9 +51,9 @@ internal static class LidGuardSettingsUpdateCommand
             return 1;
         }
 
-        var shouldRefreshManagedHookStatusMessages = ShouldRefreshManagedHookStatusMessages(options, currentSettings, settings);
+        var shouldRefreshManagedHooks = ShouldRefreshManagedHooks(options, currentSettings, settings);
         LidGuardCulture.ApplyEffectiveCulture(settings);
-        var managedHookStatusMessageRefreshResult = shouldRefreshManagedHookStatusMessages
+        var managedHookStatusMessageRefreshResult = shouldRefreshManagedHooks
             ? ManagedHookStatusMessageRefresh.RefreshInstalledManagedHooks()
             : null;
 
@@ -67,7 +67,7 @@ internal static class LidGuardSettingsUpdateCommand
         var response = await new LidGuardRuntimeClient().SendAsync(request, false);
         Console.WriteLine(LocalizationService.GetFormattedString("ConsoleSettingsFile", LidGuardSettingsStore.GetDefaultSettingsFilePath()));
         LidGuardCommandConsole.WriteSettings(settings);
-        if (managedHookStatusMessageRefreshResult is not null) WriteManagedHookStatusMessageRefreshResult(managedHookStatusMessageRefreshResult);
+        if (managedHookStatusMessageRefreshResult is not null) WriteManagedHookRefreshResult(managedHookStatusMessageRefreshResult);
         if (isInteractiveSettings)
         {
             var commandDisplayName = LidGuardCommandConsole.GetCommandDisplayName();
@@ -94,19 +94,25 @@ internal static class LidGuardSettingsUpdateCommand
         return 1;
     }
 
-    private static bool ShouldRefreshManagedHookStatusMessages(
+    private static bool ShouldRefreshManagedHooks(
         IReadOnlyDictionary<string, string> options,
         LidGuardSettings currentSettings,
         LidGuardSettings settings)
     {
         if (CommandOptionReader.TryGetOption(options, out _, "ui-culture", "user-interface-culture")) return true;
+        if (CommandOptionReader.TryGetOption(options, out _, "post-stop-suspend-delay-seconds")) return true;
+        if (CommandOptionReader.TryGetOption(options, out _, "closed-lid-stop-follow-up-webhook-url")) return true;
 
         var normalizedCurrentSettings = LidGuardSettings.Normalize(currentSettings);
         var normalizedSettings = LidGuardSettings.Normalize(settings);
-        return !normalizedCurrentSettings.UserInterfaceCulture.Equals(normalizedSettings.UserInterfaceCulture, StringComparison.OrdinalIgnoreCase);
+        if (!normalizedCurrentSettings.UserInterfaceCulture.Equals(normalizedSettings.UserInterfaceCulture, StringComparison.OrdinalIgnoreCase)) return true;
+        if (normalizedCurrentSettings.PostStopSuspendDelaySeconds != normalizedSettings.PostStopSuspendDelaySeconds) return true;
+        return !normalizedCurrentSettings.ClosedLidStopFollowUpWebhookUrl.Equals(
+            normalizedSettings.ClosedLidStopFollowUpWebhookUrl,
+            StringComparison.OrdinalIgnoreCase);
     }
 
-    private static void WriteManagedHookStatusMessageRefreshResult(ManagedHookStatusMessageRefreshResult result)
+    internal static void WriteManagedHookRefreshResult(ManagedHookStatusMessageRefreshResult result)
     {
         var message = result.ChangedProviderNames.Count > 0
             ? LocalizationService.GetFormattedString("SettingsManagedHookStatusMessageRefreshChanged", string.Join(", ", result.ChangedProviderNames))
