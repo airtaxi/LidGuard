@@ -973,7 +973,7 @@
     <value>关闭临时音量更改，或指定在播放睡眠/休眠前提示音期间使用的默认输出音量。播放结束后会恢复之前的音量和静音状态。</value>
   </data>
   <data name="Help_Settings_PostStopSuspendDelayOption" xml:space="preserve">
-    <value>设置在会话结束后等待多久再进入睡眠或休眠，单位为秒。0 表示立即执行。</value>
+    <value>设置工作结束后的安全等待时间，让紧接着到来的下一条消息能先被接收，然后才开始睡眠/休眠或回复等待。</value>
   </data>
   <data name="Help_SuspendHistory_CountOption" xml:space="preserve">
     <value>可选的正整数显示条目数。默认值为已保存的睡眠/休眠历史保留数量；如果历史记录已关闭，则为 10。</value>
@@ -1135,7 +1135,10 @@
     <value>当 LidGuard 检测到合盖时，选择合盖权限请求 hook 的响应方式。ask 会将会话设为 soft-lock，并保留提供者的常规权限请求流程。</value>
   </data>
   <data name="Help_Settings_ClosedLidStopFollowUpWebhookOption" xml:space="preserve">
-    <value>合盖时，如果工作准备结束，请设置在睡眠前发送回复提醒的 URL。URL 有效且睡眠等待时间大于 0 秒时才会生效。</value>
+    <value>合盖时，如果工作准备结束，请设置在睡眠前发送回复提醒的 URL。URL 有效、回复等待时间至少 20 秒且 post-stop-suspend-delay-seconds 至少 10 秒时才会生效。</value>
+  </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpDelayOption" xml:space="preserve">
+    <value>设置发送睡眠前提醒后等待用户回复的时间。0 表示关闭；启用回复提醒时需要至少 20 秒。默认值为 180 秒。</value>
   </data>
   <data name="Help_Settings_RepeatClosedLidStopFollowUpOption" xml:space="preserve">
     <value>设置在回复让工作继续后，下次该工作再次准备结束时是否再通知一次。默认值为 true。</value>

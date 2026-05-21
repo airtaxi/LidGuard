@@ -169,6 +169,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
     {
         ArgumentNullException.ThrowIfNull(settingsPatch);
         if (settingsPatch.PostStopSuspendDelaySeconds < 0) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure("Post-stop suspend delay seconds must be a non-negative integer.");
+        if (settingsPatch.ClosedLidStopFollowUpDelaySeconds < 0) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure("Closed-lid stop follow-up delay seconds must be a non-negative integer.");
         if (settingsPatch.HasPostStopSuspendSoundVolumeOverridePercent
             && !PostStopSuspendSoundConfiguration.TryValidateVolumeOverridePercent(
                 settingsPatch.PostStopSuspendSoundVolumeOverridePercent,
@@ -305,6 +306,8 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
                 RuntimeMessageCode = response.MessageCode,
                 RuntimeMessageArguments = response.MessageArguments,
                 ActiveSessionCount = response.ActiveSessionCount,
+                ClosedLidStopFollowUpFeatureState = ClosedLidStopFollowUpConfiguration.GetFeatureState(normalizedStoredSettings),
+                ClosedLidStopFollowUpConfigurationIssues = CreateClosedLidStopFollowUpConfigurationIssueMessages(normalizedStoredSettings),
                 LidSwitchState = LidSwitchState.Unknown,
                 VisibleDisplayMonitorCount = response.VisibleDisplayMonitorCount,
                 Sessions = []
@@ -312,6 +315,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         }
 
         LidGuardCulture.ApplyEffectiveCulture(response.Settings);
+        var normalizedRuntimeSettings = LidGuardSettings.Normalize(response.Settings);
         return new LidGuardControlSnapshot
         {
             SettingsFilePath = LidGuardSettingsStore.GetDefaultSettingsFilePath(),
@@ -322,7 +326,9 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             RuntimeMessageCode = response.MessageCode,
             RuntimeMessageArguments = response.MessageArguments,
             HasRuntimeSettings = true,
-            RuntimeSettings = LidGuardSettings.Normalize(response.Settings),
+            RuntimeSettings = normalizedRuntimeSettings,
+            ClosedLidStopFollowUpFeatureState = ClosedLidStopFollowUpConfiguration.GetFeatureState(normalizedRuntimeSettings),
+            ClosedLidStopFollowUpConfigurationIssues = CreateClosedLidStopFollowUpConfigurationIssueMessages(normalizedRuntimeSettings),
             ActiveSessionCount = response.ActiveSessionCount,
             LidSwitchState = response.LidSwitchState,
             VisibleDisplayMonitorCount = response.VisibleDisplayMonitorCount,
@@ -364,6 +370,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             PreSuspendWebhookUrl = settingsPatch.PreSuspendWebhookUrl ?? normalizedBaseSettings.PreSuspendWebhookUrl,
             PostSessionEndWebhookUrl = settingsPatch.PostSessionEndWebhookUrl ?? normalizedBaseSettings.PostSessionEndWebhookUrl,
             ClosedLidStopFollowUpWebhookUrl = settingsPatch.ClosedLidStopFollowUpWebhookUrl ?? normalizedBaseSettings.ClosedLidStopFollowUpWebhookUrl,
+            ClosedLidStopFollowUpDelaySeconds = settingsPatch.ClosedLidStopFollowUpDelaySeconds ?? normalizedBaseSettings.ClosedLidStopFollowUpDelaySeconds,
             RepeatClosedLidStopFollowUp = settingsPatch.RepeatClosedLidStopFollowUp ?? normalizedBaseSettings.RepeatClosedLidStopFollowUp,
             ClosedLidPermissionRequestDecision = settingsPatch.ClosedLidPermissionRequestDecision ?? normalizedBaseSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settingsPatch.WatchParentProcess ?? normalizedBaseSettings.WatchParentProcess,
@@ -499,6 +506,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         AppendChange(changes, previousStoredSettings.PreSuspendWebhookUrl, updatedStoredSettings.PreSuspendWebhookUrl, "preSuspendWebhookUrl");
         AppendChange(changes, previousStoredSettings.PostSessionEndWebhookUrl, updatedStoredSettings.PostSessionEndWebhookUrl, "postSessionEndWebhookUrl");
         AppendChange(changes, previousStoredSettings.ClosedLidStopFollowUpWebhookUrl, updatedStoredSettings.ClosedLidStopFollowUpWebhookUrl, "closedLidStopFollowUpWebhookUrl");
+        AppendChange(changes, previousStoredSettings.ClosedLidStopFollowUpDelaySeconds, updatedStoredSettings.ClosedLidStopFollowUpDelaySeconds, "closedLidStopFollowUpDelaySeconds");
         AppendChange(changes, previousStoredSettings.RepeatClosedLidStopFollowUp, updatedStoredSettings.RepeatClosedLidStopFollowUp, "repeatClosedLidStopFollowUp");
         AppendChange(changes, previousStoredSettings.ClosedLidPermissionRequestDecision, updatedStoredSettings.ClosedLidPermissionRequestDecision, "closedLidPermissionRequestDecision");
         AppendChange(changes, previousStoredSettings.SessionTimeoutMinutes, updatedStoredSettings.SessionTimeoutMinutes, "sessionTimeoutMinutes");
@@ -511,6 +519,25 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         return [.. changes];
     }
 
+    private static string[] CreateClosedLidStopFollowUpConfigurationIssueMessages(LidGuardSettings settings)
+    {
+        var configurationIssues = ClosedLidStopFollowUpConfiguration.GetConfigurationIssues(settings);
+        if (configurationIssues.Length == 0) return [];
+
+        var messages = new List<string>();
+        foreach (var configurationIssue in configurationIssues)
+        {
+            messages.Add(configurationIssue.Issue switch
+            {
+                ClosedLidStopFollowUpConfigurationIssue.ReplyWaitTooShort => "The reply window is too short to notice the push notification and send a reply. Set it to 0 seconds to turn it off, or at least 20 seconds to use replies.",
+                ClosedLidStopFollowUpConfigurationIssue.PostStopDelayTooShort => "Sleep or reply waiting can start too early before immediately-following prompts are seen. Set postStopSuspendDelaySeconds to at least 10.",
+                _ => configurationIssue.Message
+            });
+        }
+
+        return [.. messages.Where(static message => !string.IsNullOrWhiteSpace(message))];
+    }
+
     private static void AppendChange<TValue>(List<string> changes, TValue previousValue, TValue updatedValue, string changeName)
     {
         if (EqualityComparer<TValue>.Default.Equals(previousValue, updatedValue)) return;
@@ -521,6 +548,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
     {
         if (!previousStoredSettings.UserInterfaceCulture.Equals(updatedStoredSettings.UserInterfaceCulture, StringComparison.OrdinalIgnoreCase)) return true;
         if (previousStoredSettings.PostStopSuspendDelaySeconds != updatedStoredSettings.PostStopSuspendDelaySeconds) return true;
+        if (previousStoredSettings.ClosedLidStopFollowUpDelaySeconds != updatedStoredSettings.ClosedLidStopFollowUpDelaySeconds) return true;
         return !previousStoredSettings.ClosedLidStopFollowUpWebhookUrl.Equals(
             updatedStoredSettings.ClosedLidStopFollowUpWebhookUrl,
             StringComparison.OrdinalIgnoreCase);

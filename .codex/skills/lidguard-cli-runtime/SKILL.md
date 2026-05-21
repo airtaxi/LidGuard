@@ -69,13 +69,14 @@ description: "LidGuard CLI, settings, permission commands, examples, and failure
 - Pre-suspend webhook URL: off by default.
 - Post-session-end webhook URL: off by default.
 - Ask-before-sleep reply webhook URL: off by default.
+- Ask-before-sleep reply wait: `closedLidStopFollowUpDelaySeconds`, default `180`; `0` disables reply waiting, and values `1` through `19` are configuration errors when a reply URL is configured because the user may not have enough time to notice the push notification and reply.
 - Repeat ask-before-sleep replies: enabled by default. In user-facing text, explain this simply as "after a reply keeps the work going, ask again the next time that work tries to finish."
 - Emergency Hibernation on high temperature: enabled by default.
 - Emergency Hibernation temperature mode: Average by default, with Low and High optional.
 - Emergency Hibernation temperature threshold: 93 Celsius by default, clamped to 70 through 110.
 - Closed-lid PermissionRequest decision: Deny by default, with Allow and Ask optional. Ask marks the active session soft-locked with reason `closed_lid_permission_request_ask` and returns empty stdout so the provider's normal permission flow continues.
-- Ask-before-sleep reply feature state is `off` when the reply URL is empty or `postStopSuspendDelaySeconds` is `0`, `configuration error` when the saved URL is invalid, and `on` only when the URL is valid and the delay is greater than `0`.
-- Managed hook timeout is `30` seconds when ask-before-sleep replies are off and `max(30, postStopSuspendDelaySeconds + 15)` when they are on; changing the delay or reply URL refreshes installed managed hook timeouts for current-OS managed providers and best-effort WSL managed hook configs on Windows.
+- Ask-before-sleep reply feature state is `off` when the reply URL is empty or `closedLidStopFollowUpDelaySeconds` is `0`, `configuration error` when the saved URL is invalid, `closedLidStopFollowUpDelaySeconds` is `1` through `19`, or `postStopSuspendDelaySeconds` is below `10` while reply waiting is enabled, and `on` only when the URL is valid, reply wait is at least `20`, and post-stop delay is at least `10`.
+- Managed hook timeout is `30` seconds when ask-before-sleep replies are off or in configuration error and `max(30, postStopSuspendDelaySeconds + closedLidStopFollowUpDelaySeconds + 15)` when they are on; changing either delay or the reply URL refreshes installed managed hook timeouts for current-OS managed providers and best-effort WSL managed hook configs on Windows.
 - User interface culture: `auto` by default, with `en`, `ko`, or any `CultureInfo`-resolvable BCP 47 culture name optional.
 - Parent process watchdog: enabled.
 
@@ -163,6 +164,7 @@ lidguard settings --server-runtime-cleanup-delay-minutes off
 lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
 lidguard settings --post-session-end-webhook-url https://example.com/lidguard-session-ended
 lidguard settings --closed-lid-stop-follow-up-webhook-url https://example.com/lidguard-follow-up
+lidguard settings --closed-lid-stop-follow-up-delay-seconds 180
 lidguard settings --repeat-closed-lid-stop-follow-up true
 lidguard settings --closed-lid-permission-request-decision allow
 lidguard settings --closed-lid-permission-request-decision ask

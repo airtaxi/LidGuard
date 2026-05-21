@@ -70,6 +70,12 @@ internal static class LidGuardSettingsCommandLineFactory
             return false;
         if (!LidGuardSettingsValueParser.TryParseSuspendModeOption(options, baseSettings.SuspendMode, out var suspendMode, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParsePostStopSuspendDelaySecondsOption(options, baseSettings.PostStopSuspendDelaySeconds, out var postStopSuspendDelaySeconds, out message)) return false;
+        if (!LidGuardSettingsValueParser.TryParseClosedLidStopFollowUpDelaySecondsOption(
+            options,
+            baseSettings.ClosedLidStopFollowUpDelaySeconds,
+            out var closedLidStopFollowUpDelaySeconds,
+            out message))
+            return false;
         if (!LidGuardSettingsValueParser.TryParsePostStopSuspendSoundVolumeOverridePercentOption(
             options,
             baseSettings.PostStopSuspendSoundVolumeOverridePercent,
@@ -112,6 +118,7 @@ internal static class LidGuardSettingsCommandLineFactory
             PreSuspendWebhookUrl = preSuspendWebhookUrl,
             PostSessionEndWebhookUrl = postSessionEndWebhookUrl,
             ClosedLidStopFollowUpWebhookUrl = closedLidStopFollowUpWebhookUrl,
+            ClosedLidStopFollowUpDelaySeconds = closedLidStopFollowUpDelaySeconds,
             RepeatClosedLidStopFollowUp = repeatClosedLidStopFollowUp,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess,

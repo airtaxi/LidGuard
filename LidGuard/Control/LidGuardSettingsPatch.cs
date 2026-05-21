@@ -51,6 +51,8 @@ public sealed class LidGuardSettingsPatch
 
     public string ClosedLidStopFollowUpWebhookUrl { get; init; }
 
+    public int? ClosedLidStopFollowUpDelaySeconds { get; init; }
+
     public bool? RepeatClosedLidStopFollowUp { get; init; }
 
     public ClosedLidPermissionRequestDecision? ClosedLidPermissionRequestDecision { get; init; }

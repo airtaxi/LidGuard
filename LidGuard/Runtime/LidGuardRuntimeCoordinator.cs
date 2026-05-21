@@ -388,6 +388,7 @@ internal sealed class LidGuardRuntimeCoordinator
             string.Empty,
             null,
             _sessionRegistry.ActiveSessionCount,
+            out _,
             out _);
         if (!successResponseWithSuspendPlan.Succeeded)
         {
@@ -629,6 +630,7 @@ internal sealed class LidGuardRuntimeCoordinator
             && string.Equals(firstSettings.PreSuspendWebhookUrl, secondSettings.PreSuspendWebhookUrl, StringComparison.Ordinal)
             && string.Equals(firstSettings.PostSessionEndWebhookUrl, secondSettings.PostSessionEndWebhookUrl, StringComparison.Ordinal)
             && string.Equals(firstSettings.ClosedLidStopFollowUpWebhookUrl, secondSettings.ClosedLidStopFollowUpWebhookUrl, StringComparison.Ordinal)
+            && firstSettings.ClosedLidStopFollowUpDelaySeconds == secondSettings.ClosedLidStopFollowUpDelaySeconds
             && firstSettings.RepeatClosedLidStopFollowUp == secondSettings.RepeatClosedLidStopFollowUp
             && firstSettings.ClosedLidPermissionRequestDecision == secondSettings.ClosedLidPermissionRequestDecision
             && firstSettings.WatchParentProcess == secondSettings.WatchParentProcess
@@ -1119,6 +1121,7 @@ internal sealed class LidGuardRuntimeCoordinator
             successMessageCode,
             successMessageArguments,
             _sessionRegistry.ActiveSessionCount,
+            out stopFollowUpAwaitContext,
             out var suspendScheduled);
         if (!successResponse.Succeeded)
         {
@@ -1128,14 +1131,6 @@ internal sealed class LidGuardRuntimeCoordinator
             return successResponse;
         }
 
-        if (suspendScheduled)
-            stopFollowUpAwaitContext = TryCreateStopFollowUpAwaitContextInsideGate(
-                runtimeRequest,
-                pendingSuspendContext,
-                stoppedSnapshot,
-                eventName,
-                successResponse,
-                _sessionRegistry.ActiveSessionCount);
         ReconfigureSessionTimeoutMonitorInsideGate();
         if (!suspendScheduled) QueuePostSessionEndWebhookIfRequired(request, stoppedSnapshot, eventName, commandName, _sessionRegistry.ActiveSessionCount);
         ReconfigureServerRuntimeCleanupInsideGate();
@@ -1192,21 +1187,17 @@ internal sealed class LidGuardRuntimeCoordinator
     }
 
     private StopFollowUpAwaitContext TryCreateStopFollowUpAwaitContextInsideGate(
-        LidGuardPipeRequest runtimeRequest,
         PendingSuspendContext pendingSuspendContext,
         LidGuardSessionSnapshot snapshot,
         string eventName,
         LidGuardPipeResponse scheduledResponse,
-        int activeSessionCount)
+        int activeSessionCount,
+        CancellationTokenSource pendingSuspendCancellationTokenSource)
     {
-        if (runtimeRequest is null) return null;
-        if (!runtimeRequest.CanReturnStopContinuation) return null;
-        if (runtimeRequest.StopHookAlreadyActive && !_settings.RepeatClosedLidStopFollowUp) return null;
-        if (_pendingSuspendCancellationTokenSource is null) return null;
-        if (_settings.PostStopSuspendDelaySeconds <= 0) return null;
+        if (!pendingSuspendContext.CanReturnStopContinuation) return null;
+        if (pendingSuspendContext.StopHookAlreadyActive && !_settings.RepeatClosedLidStopFollowUp) return null;
         if (!ClosedLidStopFollowUpConfiguration.IsEnabled(_settings, out var followUpWebhookUrl)) return null;
 
-        _pendingStopFollowUpStatus = StopFollowUpStatuses.AwaitingReply;
         return new StopFollowUpAwaitContext(
             pendingSuspendContext,
             snapshot,
@@ -1214,37 +1205,48 @@ internal sealed class LidGuardRuntimeCoordinator
             scheduledResponse,
             activeSessionCount,
             followUpWebhookUrl,
-            _settings.PostStopSuspendDelaySeconds,
-            DateTimeOffset.UtcNow.AddSeconds(_settings.PostStopSuspendDelaySeconds),
-            _pendingSuspendCancellationTokenSource);
+            _settings.ClosedLidStopFollowUpDelaySeconds,
+            pendingSuspendCancellationTokenSource,
+            new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously),
+            new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously));
     }
 
     private async Task<LidGuardPipeResponse> AwaitStopFollowUpReplyAsync(
         StopFollowUpAwaitContext stopFollowUpAwaitContext,
         CancellationToken cancellationToken)
     {
-        string userInterfaceCulture;
-        await _gate.WaitAsync(CancellationToken.None);
-        try
-        {
-            userInterfaceCulture = LidGuardCulture.ResolveEffectiveCultureName(_settings);
-        }
-        finally
-        {
-            _gate.Release();
-        }
-
         using var followUpCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
             cancellationToken,
             stopFollowUpAwaitContext.PendingSuspendCancellationTokenSource.Token);
         try
         {
+            var canStartFollowUp = await stopFollowUpAwaitContext.FollowUpStartReadySource.Task.WaitAsync(followUpCancellationTokenSource.Token);
+            if (!canStartFollowUp)
+            {
+                await CompleteStopFollowUpAwaitAsync();
+                return CreateStopFollowUpResponse(stopFollowUpAwaitContext.ScheduledResponse, StopFollowUpStatuses.Canceled);
+            }
+
+            string userInterfaceCulture;
+            DateTimeOffset replyDeadlineUtc;
+            await _gate.WaitAsync(followUpCancellationTokenSource.Token);
+            try
+            {
+                _pendingStopFollowUpStatus = StopFollowUpStatuses.AwaitingReply;
+                userInterfaceCulture = LidGuardCulture.ResolveEffectiveCultureName(_settings);
+                replyDeadlineUtc = DateTimeOffset.UtcNow.AddSeconds(stopFollowUpAwaitContext.ReplyWaitSeconds);
+            }
+            finally
+            {
+                _gate.Release();
+            }
+
             var stopFollowUpWebhookRequest = CreateStopFollowUpWebhookRequest(
                 stopFollowUpAwaitContext.PendingSuspendContext,
                 stopFollowUpAwaitContext.Snapshot,
                 stopFollowUpAwaitContext.ActiveSessionCount,
                 stopFollowUpAwaitContext.ReplyWaitSeconds,
-                stopFollowUpAwaitContext.ReplyDeadlineUtc,
+                replyDeadlineUtc,
                 userInterfaceCulture);
             var startResult = await StopFollowUpWebhookClient.StartAsync(
                 stopFollowUpAwaitContext.FollowUpWebhookUrl,
@@ -1253,7 +1255,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 s_stopFollowUpWebhookTimeout);
             if (!startResult.Succeeded)
             {
-                await CompleteStopFollowUpAwaitAsync();
+                await ContinueSuspendAfterStopFollowUpAwaitAsync(stopFollowUpAwaitContext);
                 await AppendStopFollowUpFailureAsync(stopFollowUpAwaitContext, StopFollowUpStatuses.WebhookFailed, startResult.Message);
                 return CreateStopFollowUpResponse(stopFollowUpAwaitContext.ScheduledResponse, StopFollowUpStatuses.WebhookFailed);
             }
@@ -1264,12 +1266,11 @@ internal sealed class LidGuardRuntimeCoordinator
                 out var replyPollUri,
                 out var pollUriMessage))
             {
-                await CompleteStopFollowUpAwaitAsync();
+                await ContinueSuspendAfterStopFollowUpAwaitAsync(stopFollowUpAwaitContext);
                 await AppendStopFollowUpFailureAsync(stopFollowUpAwaitContext, StopFollowUpStatuses.PollFailed, pollUriMessage);
                 return CreateStopFollowUpResponse(stopFollowUpAwaitContext.ScheduledResponse, StopFollowUpStatuses.PollFailed);
             }
 
-            var replyDeadlineUtc = stopFollowUpAwaitContext.ReplyDeadlineUtc;
             if (startResult.Value.ExpiresAtUtc is not null && startResult.Value.ExpiresAtUtc.Value < replyDeadlineUtc)
                 replyDeadlineUtc = startResult.Value.ExpiresAtUtc.Value;
 
@@ -1281,7 +1282,7 @@ internal sealed class LidGuardRuntimeCoordinator
                     s_stopFollowUpWebhookTimeout);
                 if (!pollResult.Succeeded)
                 {
-                    await CompleteStopFollowUpAwaitAsync();
+                    await ContinueSuspendAfterStopFollowUpAwaitAsync(stopFollowUpAwaitContext);
                     await AppendStopFollowUpFailureAsync(stopFollowUpAwaitContext, StopFollowUpStatuses.PollFailed, pollResult.Message);
                     return CreateStopFollowUpResponse(stopFollowUpAwaitContext.ScheduledResponse, StopFollowUpStatuses.PollFailed);
                 }
@@ -1292,7 +1293,7 @@ internal sealed class LidGuardRuntimeCoordinator
                     var reply = pollResult.Value.Reply?.Trim() ?? string.Empty;
                     if (string.IsNullOrWhiteSpace(reply))
                     {
-                        await CompleteStopFollowUpAwaitAsync();
+                        await ContinueSuspendAfterStopFollowUpAwaitAsync(stopFollowUpAwaitContext);
                         await AppendStopFollowUpFailureAsync(stopFollowUpAwaitContext, StopFollowUpStatuses.PollFailed, "The closed-lid stop follow-up poll returned an empty reply.");
                         return CreateStopFollowUpResponse(stopFollowUpAwaitContext.ScheduledResponse, StopFollowUpStatuses.PollFailed);
                     }
@@ -1302,7 +1303,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
                 if (pollStatus.Equals("Expired", StringComparison.Ordinal))
                 {
-                    await CompleteStopFollowUpAwaitAsync();
+                    await ContinueSuspendAfterStopFollowUpAwaitAsync(stopFollowUpAwaitContext);
                     return CreateStopFollowUpResponse(stopFollowUpAwaitContext.ScheduledResponse, StopFollowUpStatuses.TimedOut);
                 }
 
@@ -1314,7 +1315,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
                 if (!pollStatus.Equals("Pending", StringComparison.Ordinal))
                 {
-                    await CompleteStopFollowUpAwaitAsync();
+                    await ContinueSuspendAfterStopFollowUpAwaitAsync(stopFollowUpAwaitContext);
                     await AppendStopFollowUpFailureAsync(stopFollowUpAwaitContext, StopFollowUpStatuses.PollFailed, $"The closed-lid stop follow-up poll returned an unknown status '{pollStatus}'.");
                     return CreateStopFollowUpResponse(stopFollowUpAwaitContext.ScheduledResponse, StopFollowUpStatuses.PollFailed);
                 }
@@ -1322,13 +1323,18 @@ internal sealed class LidGuardRuntimeCoordinator
                 await Task.Delay(s_stopFollowUpPollInterval, followUpCancellationTokenSource.Token);
             }
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            await ContinueSuspendAfterStopFollowUpAwaitAsync(stopFollowUpAwaitContext);
+            throw;
+        }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             await CompleteStopFollowUpAwaitAsync();
             return CreateStopFollowUpResponse(stopFollowUpAwaitContext.ScheduledResponse, StopFollowUpStatuses.Canceled);
         }
 
-        await CompleteStopFollowUpAwaitAsync();
+        await ContinueSuspendAfterStopFollowUpAwaitAsync(stopFollowUpAwaitContext);
         return CreateStopFollowUpResponse(stopFollowUpAwaitContext.ScheduledResponse, StopFollowUpStatuses.TimedOut);
     }
 
@@ -1367,7 +1373,8 @@ internal sealed class LidGuardRuntimeCoordinator
                 CreateSuspendWebhookReason(stopFollowUpAwaitContext.ActiveSessionCount),
                 stopFollowUpAwaitContext.ActiveSessionCount,
                 0,
-                immediatePendingSuspendCancellationTokenSource);
+                immediatePendingSuspendCancellationTokenSource,
+                null);
             return response;
         }
         finally
@@ -1434,8 +1441,10 @@ internal sealed class LidGuardRuntimeCoordinator
         string successMessageCode,
         string[] successMessageArguments,
         int activeSessionCount,
+        out StopFollowUpAwaitContext stopFollowUpAwaitContext,
         out bool suspendScheduled)
     {
+        stopFollowUpAwaitContext = null;
         suspendScheduled = false;
         var closedLidPolicyApplicability = EvaluateClosedLidPolicyApplicability("suspend");
         if (!closedLidPolicyApplicability.IsApplicable)
@@ -1463,6 +1472,13 @@ internal sealed class LidGuardRuntimeCoordinator
         var pendingSuspendCancellationTokenSource = new CancellationTokenSource();
         _pendingSuspendCancellationTokenSource = pendingSuspendCancellationTokenSource;
         _pendingStopFollowUpStatus = string.Empty;
+        stopFollowUpAwaitContext = TryCreateStopFollowUpAwaitContextInsideGate(
+            pendingSuspendContext,
+            snapshot,
+            eventName,
+            scheduledResponse,
+            activeSessionCount,
+            pendingSuspendCancellationTokenSource);
         _ = SuspendAfterDelayAsync(
             pendingSuspendContext,
             snapshot,
@@ -1470,7 +1486,8 @@ internal sealed class LidGuardRuntimeCoordinator
             CreateSuspendWebhookReason(activeSessionCount),
             activeSessionCount,
             postStopSuspendDelaySeconds,
-            pendingSuspendCancellationTokenSource);
+            pendingSuspendCancellationTokenSource,
+            stopFollowUpAwaitContext);
         var suspendReasonCode = activeSessionCount == 0
             ? LidGuardPipeResponseMessageCodes.SuspendReasonCompleted
             : LidGuardPipeResponseMessageCodes.SuspendReasonSoftLocked;
@@ -1491,7 +1508,8 @@ internal sealed class LidGuardRuntimeCoordinator
         SuspendWebhookReason suspendWebhookReason,
         int suspendTriggerSessionCount,
         int postStopSuspendDelaySeconds,
-        CancellationTokenSource pendingSuspendCancellationTokenSource)
+        CancellationTokenSource pendingSuspendCancellationTokenSource,
+        StopFollowUpAwaitContext stopFollowUpAwaitContext)
     {
         var preSuspendWebhookAttempted = false;
         try
@@ -1505,6 +1523,7 @@ internal sealed class LidGuardRuntimeCoordinator
             {
                 if (HasSessionsKeepingProtectionAppliedInsideGate())
                 {
+                    CancelStopFollowUpBeforeStart(stopFollowUpAwaitContext);
                     var canceledResponse = CreateSuccessResponse("Skipped pending suspend because a session became active before suspend ran.");
                     LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-suspend-canceled", pendingSuspendContext, canceledResponse, snapshot);
                     QueuePostSessionEndWebhookForCanceledSuspendInsideGate(pendingSuspendContext, snapshot, eventName, _sessionRegistry.ActiveSessionCount);
@@ -1514,6 +1533,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 var closedLidPolicyApplicability = EvaluateClosedLidPolicyApplicability("suspend");
                 if (!closedLidPolicyApplicability.IsApplicable)
                 {
+                    CancelStopFollowUpBeforeStart(stopFollowUpAwaitContext);
                     var releaseResult = ReleaseProtectionIfNoSessionRequiresItInsideGate(
                         eventName,
                         pendingSuspendContext,
@@ -1534,11 +1554,15 @@ internal sealed class LidGuardRuntimeCoordinator
 
                 postStopSuspendSound = _settings.PostStopSuspendSound;
                 postStopSuspendSoundVolumeOverridePercent = _settings.PostStopSuspendSoundVolumeOverridePercent;
+                SignalStopFollowUpStartReady(stopFollowUpAwaitContext);
             }
             finally
             {
                 _gate.Release();
             }
+
+            if (stopFollowUpAwaitContext is not null)
+                await stopFollowUpAwaitContext.FollowUpCompletedSource.Task.WaitAsync(pendingSuspendCancellationTokenSource.Token);
 
             preSuspendWebhookAttempted = true;
             await SendPreSuspendWebhookAsync(
@@ -2010,6 +2034,29 @@ internal sealed class LidGuardRuntimeCoordinator
             _gate.Release();
         }
     }
+
+    private async Task ContinueSuspendAfterStopFollowUpAwaitAsync(StopFollowUpAwaitContext stopFollowUpAwaitContext)
+    {
+        await _gate.WaitAsync(CancellationToken.None);
+        try
+        {
+            _pendingStopFollowUpStatus = string.Empty;
+            var pendingSuspendStillMatches = ReferenceEquals(
+                _pendingSuspendCancellationTokenSource,
+                stopFollowUpAwaitContext.PendingSuspendCancellationTokenSource);
+            if (pendingSuspendStillMatches && !stopFollowUpAwaitContext.PendingSuspendCancellationTokenSource.IsCancellationRequested) stopFollowUpAwaitContext.FollowUpCompletedSource.TrySetResult();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    private static void CancelStopFollowUpBeforeStart(StopFollowUpAwaitContext stopFollowUpAwaitContext)
+        => stopFollowUpAwaitContext?.FollowUpStartReadySource.TrySetResult(false);
+
+    private static void SignalStopFollowUpStartReady(StopFollowUpAwaitContext stopFollowUpAwaitContext)
+        => stopFollowUpAwaitContext?.FollowUpStartReadySource.TrySetResult(true);
 
     private async Task<bool> ShouldSuppressPostSessionEndWebhookOnPendingSuspendCancellationAsync(CancellationTokenSource pendingSuspendCancellationTokenSource)
     {
@@ -3094,8 +3141,9 @@ internal sealed class LidGuardRuntimeCoordinator
         int ActiveSessionCount,
         string FollowUpWebhookUrl,
         int ReplyWaitSeconds,
-        DateTimeOffset ReplyDeadlineUtc,
-        CancellationTokenSource PendingSuspendCancellationTokenSource);
+        CancellationTokenSource PendingSuspendCancellationTokenSource,
+        TaskCompletionSource<bool> FollowUpStartReadySource,
+        TaskCompletionSource FollowUpCompletedSource);
 
     private readonly record struct ClosedLidPolicyApplicability(
         bool IsApplicable,

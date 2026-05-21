@@ -31,7 +31,7 @@ internal static class SettingsHelpContent
         powerRequestOptions += " [--prevent-away-mode-sleep <bool>]";
 #endif
 
-        return $"{commandDisplayName} settings [--reset <bool>] [--change-lid-action <bool>] {powerRequestOptions} [--prevent-display-sleep <bool>] [--watch-parent-process <bool>] [--session-timeout-minutes off|<minutes>] [--server-runtime-cleanup-delay-minutes off|0|<minutes>] [--emergency-hibernation-on-high-temperature <bool>] [--emergency-hibernation-temperature-mode low|average|high] [--emergency-hibernation-temperature-celsius <number>] [--suspend-mode sleep|hibernate] [--post-stop-suspend-delay-seconds <number>] [--post-stop-suspend-sound off|<system-sound>|<wav-path>] [--post-stop-suspend-sound-volume-override-percent off|<1-100>] [--suspend-history-count off|<count>] [--pre-suspend-webhook-url <http-or-https-url>] [--post-session-end-webhook-url <http-or-https-url>] [--closed-lid-stop-follow-up-webhook-url <http-or-https-url>] [--repeat-closed-lid-stop-follow-up <bool>] [--closed-lid-permission-request-decision deny|allow|ask] [--ui-culture auto|en|ko|ja|zh-Hans|zh-Hant|<culture-name>] [--power-request-reason <text>]";
+        return $"{commandDisplayName} settings [--reset <bool>] [--change-lid-action <bool>] {powerRequestOptions} [--prevent-display-sleep <bool>] [--watch-parent-process <bool>] [--session-timeout-minutes off|<minutes>] [--server-runtime-cleanup-delay-minutes off|0|<minutes>] [--emergency-hibernation-on-high-temperature <bool>] [--emergency-hibernation-temperature-mode low|average|high] [--emergency-hibernation-temperature-celsius <number>] [--suspend-mode sleep|hibernate] [--post-stop-suspend-delay-seconds <number>] [--post-stop-suspend-sound off|<system-sound>|<wav-path>] [--post-stop-suspend-sound-volume-override-percent off|<1-100>] [--suspend-history-count off|<count>] [--pre-suspend-webhook-url <http-or-https-url>] [--post-session-end-webhook-url <http-or-https-url>] [--closed-lid-stop-follow-up-webhook-url <http-or-https-url>] [--closed-lid-stop-follow-up-delay-seconds <number>] [--repeat-closed-lid-stop-follow-up <bool>] [--closed-lid-permission-request-decision deny|allow|ask] [--ui-culture auto|en|ko|ja|zh-Hans|zh-Hant|<culture-name>] [--power-request-reason <text>]";
     }
 
     private static IReadOnlyList<LidGuardHelpOption> CreateOptions(string supportedPostStopSuspendSystemSounds)
@@ -64,7 +64,12 @@ internal static class SettingsHelpContent
                 "--closed-lid-stop-follow-up-webhook-url <http-or-https-url>",
                 LocalizationService.GetString(
                     "Help_Settings_ClosedLidStopFollowUpWebhookOption",
-                    "Set the reply notification URL for the ask-me-before-sleeping flow. It works when the URL is valid and post-stop-suspend-delay-seconds is greater than 0.")),
+                    "Set the reply notification URL for the ask-me-before-sleeping flow. It works when the URL is valid, the reply wait is at least 20 seconds, and post-stop-suspend-delay-seconds is at least 10.")),
+            new LidGuardHelpOption(
+                "--closed-lid-stop-follow-up-delay-seconds <number>",
+                LocalizationService.GetString(
+                    "Help_Settings_ClosedLidStopFollowUpDelayOption",
+                    "Set how long LidGuard waits for a reply after sending the ask-before-sleeping notification. Use 0 to turn the reply notification off; use 20 or more when it is on. Defaults to 180.")),
             new LidGuardHelpOption(
                 "--repeat-closed-lid-stop-follow-up <bool>",
                 LocalizationService.GetString(

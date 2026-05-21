@@ -183,6 +183,27 @@ internal static class LidGuardSettingsValueParser
         return false;
     }
 
+    public static bool TryParseClosedLidStopFollowUpDelaySecondsOption(
+        IReadOnlyDictionary<string, string> options,
+        int defaultValue,
+        out int closedLidStopFollowUpDelaySeconds,
+        out string message)
+    {
+        closedLidStopFollowUpDelaySeconds = defaultValue;
+        message = string.Empty;
+        if (!CommandOptionReader.TryGetOption(options, out var closedLidStopFollowUpDelaySecondsText, "closed-lid-stop-follow-up-delay-seconds")) return true;
+        if (int.TryParse(closedLidStopFollowUpDelaySecondsText.Trim(), out closedLidStopFollowUpDelaySeconds)
+            && closedLidStopFollowUpDelaySeconds >= 0)
+        {
+            return true;
+        }
+
+        message = LocalizationService.GetString(
+            "SettingsOptionClosedLidStopFollowUpDelaySecondsValidation",
+            "The closed-lid-stop-follow-up-delay-seconds option must be a non-negative integer.");
+        return false;
+    }
+
     public static bool TryParsePostStopSuspendSoundVolumeOverridePercentOption(
         IReadOnlyDictionary<string, string> options,
         int? defaultValue,

@@ -5,6 +5,7 @@ using LidGuard.Localization;
 using LidGuard.Power;
 using LidGuard.Runtime;
 using LidGuard.Sessions;
+using LidGuard.Settings;
 
 namespace LidGuard.Commands;
 
@@ -146,7 +147,7 @@ internal static class LiveStatusCommand
         };
 
         var remainingHeight = screenHeight - screenLines.Count;
-        var runtimePanelHeight = Math.Min(8, Math.Max(0, remainingHeight));
+        var runtimePanelHeight = Math.Min(10, Math.Max(0, remainingHeight));
         AppendPanel(screenLines, Text("LiveStatusRuntimePanelTitle", "Runtime"), CreateRuntimePanelLines(snapshot, enableStyles), runtimePanelHeight, screenWidth, enableStyles);
 
         remainingHeight = screenHeight - screenLines.Count;
@@ -185,6 +186,14 @@ internal static class LiveStatusCommand
                 CreateVisibleDisplayMonitorCountText(response, enableStyles)),
             Format("LiveStatusPendingSuspendLine", "Planned sleep/hibernate: {0}", pendingSuspend),
             Format(
+                "LiveStatusStopFollowUpFeatureStateLine",
+                "Ask-before-sleep replies: {0}",
+                CreateClosedLidStopFollowUpFeatureStateText(response.Settings, enableStyles)),
+            Format(
+                "LiveStatusStopFollowUpDelayLine",
+                "Reply wait: {0}",
+                CreateClosedLidStopFollowUpDelayText(response.Settings)),
+            Format(
                 "LiveStatusStopFollowUpRepeatLine",
                 "Ask again after reply: {0}",
                 LocalizationService.DisplayBoolean(response.Settings.RepeatClosedLidStopFollowUp)),
@@ -198,6 +207,31 @@ internal static class LiveStatusCommand
         if (response.RuntimeUnavailable) return StyleFailure(Text("LiveStatusNotRunning", "not running"), enableStyles);
 
         return StyleFailure(Text("LiveStatusError", "error"), enableStyles);
+    }
+
+    private static string CreateClosedLidStopFollowUpFeatureStateText(LidGuardSettings settings, bool enableStyles)
+    {
+        var featureState = ClosedLidStopFollowUpConfiguration.GetFeatureState(settings);
+        var featureStateText = featureState switch
+        {
+            ClosedLidStopFollowUpConfiguration.FeatureStateOn => Text("DisplayClosedLidStopFollowUpFeatureStateOn", "on"),
+            ClosedLidStopFollowUpConfiguration.FeatureStateConfigurationError => Text("DisplayClosedLidStopFollowUpFeatureStateConfigurationError", "configuration error"),
+            _ => Text("DisplayClosedLidStopFollowUpFeatureStateOff", "off")
+        };
+
+        return featureState == ClosedLidStopFollowUpConfiguration.FeatureStateConfigurationError
+            ? StyleFailure(featureStateText, enableStyles)
+            : featureState == ClosedLidStopFollowUpConfiguration.FeatureStateOn
+                ? StyleSuccess(featureStateText, enableStyles)
+                : StyleMuted(featureStateText, enableStyles);
+    }
+
+    private static string CreateClosedLidStopFollowUpDelayText(LidGuardSettings settings)
+    {
+        var normalizedSettings = LidGuardSettings.Normalize(settings);
+        return normalizedSettings.ClosedLidStopFollowUpDelaySeconds == 0
+            ? Text("TextDisplayOff", "off")
+            : Format("LiveStatusDelaySeconds", "{0} second(s)", normalizedSettings.ClosedLidStopFollowUpDelaySeconds);
     }
 
     private static string CreateActiveSessionCountText(int activeSessionCount, bool enableStyles)

@@ -24,6 +24,10 @@ public sealed class LidGuardControlSnapshot
 
     public LidGuardSettings RuntimeSettings { get; init; } = LidGuardSettings.Default;
 
+    public string ClosedLidStopFollowUpFeatureState { get; init; } = string.Empty;
+
+    public string[] ClosedLidStopFollowUpConfigurationIssues { get; init; } = [];
+
     public int ActiveSessionCount { get; init; }
 
     public LidSwitchState LidSwitchState { get; init; } = LidSwitchState.Unknown;

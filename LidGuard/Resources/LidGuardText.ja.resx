@@ -973,7 +973,7 @@
     <value>一時的なボリューム変更を無効にするか、スリープ/休止状態の警告音の再生中に使う既定の出力ボリュームを設定します。再生後、LidGuard は以前のボリュームとミュート状態を復元します。</value>
   </data>
   <data name="Help_Settings_PostStopSuspendDelayOption" xml:space="preserve">
-    <value>セッション終了後、スリープまたは休止状態に入るまでの待ち時間を秒単位で設定します。0 を指定するとすぐにスリープまたは休止状態に入ります。</value>
+    <value>作業終了直後に続けて届くメッセージを先に受け取れるよう、スリープ/休止状態または返信待ちを始める前の安全待機時間を設定します。</value>
   </data>
   <data name="Help_SuspendHistory_CountOption" xml:space="preserve">
     <value>表示する件数を指定する任意の正の数です。既定値は保存されている suspend-history-count の値で、記録がオフのときは 10 です。</value>
@@ -1135,7 +1135,10 @@
     <value>LidGuard がふたが閉じていると報告したときに、ふたが閉じている状態の PermissionRequest フックがどう応答するかを選びます。ask はセッションを soft-lock し、プロバイダー本来の権限プロンプトをそのまま続けます。</value>
   </data>
   <data name="Help_Settings_ClosedLidStopFollowUpWebhookOption" xml:space="preserve">
-    <value>ふたが閉じた状態で作業が終わろうとしたとき、スリープ前に返信通知を送る URL を設定します。URL が有効で、スリープまでの待機時間が 0 秒より大きいときに動作します。</value>
+    <value>ふたが閉じた状態で作業が終わろうとしたとき、スリープ前に返信通知を送る URL を設定します。URL が有効で、返信待ちが 20 秒以上、post-stop-suspend-delay-seconds が 10 秒以上のときに動作します。</value>
+  </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpDelayOption" xml:space="preserve">
+    <value>スリープ前の通知を送ったあと、ユーザーの返信を待つ時間を設定します。0 で無効化し、使用する場合は 20 秒以上が必要です。既定値は 180 秒です。</value>
   </data>
   <data name="Help_Settings_RepeatClosedLidStopFollowUpOption" xml:space="preserve">
     <value>返信で作業を再開したあと、その作業が次に終了しようとしたときにもう一度通知するかを設定します。既定値は true です。</value>

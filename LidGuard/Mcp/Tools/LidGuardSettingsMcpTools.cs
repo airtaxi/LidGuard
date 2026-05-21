@@ -92,7 +92,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         int? emergencyHibernationTemperatureCelsius = null,
         [Description("Set whether LidGuard requests sleep or hibernate after the last session stops while the lid is closed. Omit to keep the current value.")]
         SystemSuspendMode? suspendMode = null,
-        [Description("Set the delay before sleep or hibernate after the last session stops while the lid is closed. Use 0 for immediate sleep or hibernate. Omit to keep the current value.")]
+        [Description("Set the safety delay before sleep/hibernate or ask-before-sleep reply waiting can begin after the last session stops, so immediately-following prompts can arrive first. Use 0 for immediate sleep or hibernate when reply waiting is off. Omit to keep the current value.")]
         int? postStopSuspendDelaySeconds = null,
         [Description("Set the sleep or hibernate warning sound. Use off or an empty string to disable it. Supported system sound names are Asterisk, Beep, Exclamation, Hand, and Question. You can also pass a path to a playable .wav file. Omit to keep the current value.")]
         string postStopSuspendSound = null,
@@ -106,6 +106,8 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         string postSessionEndWebhookUrl = null,
         [Description("Set the webhook URL for the closed-lid ask-me-before-sleeping notification. Pass an empty string to disable it. Omit to keep the current value.")]
         string closedLidStopFollowUpWebhookUrl = null,
+        [Description("Set how many seconds LidGuard waits for a reply after sending the closed-lid ask-me-before-sleeping notification. Use 0 to disable reply waiting, or 20 or more when it is enabled. Defaults to 180. Omit to keep the current value.")]
+        int? closedLidStopFollowUpDelaySeconds = null,
         [Description("Set whether LidGuard asks again after a reply keeps a closed-lid session working and the provider later tries to finish again. Omit to keep the current value.")]
         bool? repeatClosedLidStopFollowUp = null,
         [Description("Set the PermissionRequest behavior while the lid is closed. Deny and Allow return structured hook decisions; Ask soft-locks the session and returns empty stdout so the provider asks normally. Omit to keep the current value.")]
@@ -177,6 +179,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
             PreSuspendWebhookUrl = preSuspendWebhookUrl,
             PostSessionEndWebhookUrl = postSessionEndWebhookUrl,
             ClosedLidStopFollowUpWebhookUrl = closedLidStopFollowUpWebhookUrl,
+            ClosedLidStopFollowUpDelaySeconds = closedLidStopFollowUpDelaySeconds,
             RepeatClosedLidStopFollowUp = repeatClosedLidStopFollowUp,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             PowerRequestReason = powerRequestReason
@@ -376,9 +379,18 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
 
     private static string CreateStatusSummary(LidGuardControlSnapshot snapshot)
     {
-        if (snapshot.RuntimeReachable) return $"Stored settings loaded. Runtime reachable with {snapshot.ActiveSessionCount} active session(s).";
-        if (snapshot.RuntimeUnavailable) return "Stored settings loaded. LidGuard is not running.";
-        return $"Stored settings loaded. Runtime status query failed: {snapshot.RuntimeMessage}";
+        var followUpSummary = CreateClosedLidStopFollowUpSummary(snapshot);
+        if (snapshot.RuntimeReachable) return $"Stored settings loaded. Runtime reachable with {snapshot.ActiveSessionCount} active session(s). {followUpSummary}";
+        if (snapshot.RuntimeUnavailable) return $"Stored settings loaded. LidGuard is not running. {followUpSummary}";
+        return $"Stored settings loaded. Runtime status query failed: {snapshot.RuntimeMessage} {followUpSummary}";
+    }
+
+    private static string CreateClosedLidStopFollowUpSummary(LidGuardControlSnapshot snapshot)
+    {
+        if (snapshot.ClosedLidStopFollowUpConfigurationIssues.Length == 0)
+            return $"Closed-lid follow-up state: {snapshot.ClosedLidStopFollowUpFeatureState}.";
+
+        return $"Closed-lid follow-up state: {snapshot.ClosedLidStopFollowUpFeatureState}. Issue(s): {string.Join("; ", snapshot.ClosedLidStopFollowUpConfigurationIssues)}";
     }
 
     private static string CreateSessionListSummary(LidGuardControlSnapshot snapshot)

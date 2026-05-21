@@ -88,6 +88,13 @@ internal static class LidGuardSettingsInteractiveFactory
             out var suspendHistoryEntryCount,
             out message))
             return false;
+        if (!LidGuardSettingsInteractivePromptReader.TryReadNonNegativeIntegerSetting(
+            LocalizationService.GetString("SettingsNameClosedLidStopFollowUpDelaySeconds", "Ask-before-sleep reply wait seconds"),
+            normalizedStoredSettings.ClosedLidStopFollowUpDelaySeconds,
+            defaultSettings.ClosedLidStopFollowUpDelaySeconds,
+            out var closedLidStopFollowUpDelaySeconds,
+            out message))
+            return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadClosedLidPermissionRequestDecisionSetting(
             LocalizationService.GetString("SettingsNameClosedLidPermissionRequestDecision"),
             normalizedStoredSettings.ClosedLidPermissionRequestDecision,
@@ -128,6 +135,7 @@ internal static class LidGuardSettingsInteractiveFactory
             PreSuspendWebhookUrl = normalizedStoredSettings.PreSuspendWebhookUrl,
             PostSessionEndWebhookUrl = normalizedStoredSettings.PostSessionEndWebhookUrl,
             ClosedLidStopFollowUpWebhookUrl = normalizedStoredSettings.ClosedLidStopFollowUpWebhookUrl,
+            ClosedLidStopFollowUpDelaySeconds = closedLidStopFollowUpDelaySeconds,
             RepeatClosedLidStopFollowUp = repeatClosedLidStopFollowUp,
             ClosedLidPermissionRequestDecision = closedLidPermissionRequestDecision,
             WatchParentProcess = watchParentProcess,

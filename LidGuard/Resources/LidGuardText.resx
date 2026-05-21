@@ -111,6 +111,12 @@
   <data name="SettingsClosedLidStopFollowUpWebhookUrl" xml:space="preserve">
     <value>  Ask-before-sleep reply URL: {0}</value>
   </data>
+  <data name="SettingsClosedLidStopFollowUpDelaySeconds" xml:space="preserve">
+    <value>  Ask-before-sleep reply wait (seconds): {0}</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpConfigurationIssue" xml:space="preserve">
+    <value>    Setup issue: {0}</value>
+  </data>
   <data name="SettingsRepeatClosedLidStopFollowUp" xml:space="preserve">
     <value>  Ask again after reply: {0}</value>
   </data>
@@ -139,7 +145,7 @@
     <value>Session completion webhook URL removed.</value>
   </data>
   <data name="SettingsPostStopSuspendDelaySeconds" xml:space="preserve">
-    <value>  Delay before sleep/hibernate after sessions stop (seconds): {0}</value>
+    <value>  Safety delay after work ends (seconds): {0}</value>
   </data>
   <data name="SettingsPostStopSuspendSound" xml:space="preserve">
     <value>  Sleep/hibernate warning sound: {0}</value>
@@ -236,6 +242,9 @@
   </data>
   <data name="SettingsOptionPostStopSuspendDelaySecondsValidation" xml:space="preserve">
     <value>The post-stop-suspend-delay-seconds option must be a non-negative integer.</value>
+  </data>
+  <data name="SettingsOptionClosedLidStopFollowUpDelaySecondsValidation" xml:space="preserve">
+    <value>The closed-lid-stop-follow-up-delay-seconds option must be a non-negative integer.</value>
   </data>
   <data name="ManagementContainsMcpServerCommand" xml:space="preserve">
     <value>  Contains mcp-server command: {0}</value>
@@ -738,6 +747,9 @@
   <data name="SettingsNamePostStopSuspendDelaySeconds" xml:space="preserve">
     <value>Post-stop suspend delay seconds</value>
   </data>
+  <data name="SettingsNameClosedLidStopFollowUpDelaySeconds" xml:space="preserve">
+    <value>Ask-before-sleep reply wait seconds</value>
+  </data>
   <data name="SettingsInteractiveGuidanceChangeReason" xml:space="preserve">
     <value>To change Reason, run: {0} settings --power-request-reason &lt;text&gt;</value>
   </data>
@@ -836,6 +848,21 @@
   </data>
   <data name="SettingsNameRepeatClosedLidStopFollowUp" xml:space="preserve">
     <value>Ask again after reply</value>
+  </data>
+  <data name="DisplayClosedLidStopFollowUpFeatureStateOn" xml:space="preserve">
+    <value>on</value>
+  </data>
+  <data name="DisplayClosedLidStopFollowUpFeatureStateOff" xml:space="preserve">
+    <value>off</value>
+  </data>
+  <data name="DisplayClosedLidStopFollowUpFeatureStateConfigurationError" xml:space="preserve">
+    <value>configuration error</value>
+  </data>
+  <data name="ClosedLidStopFollowUpConfigurationIssueReplyWaitTooShort" xml:space="preserve">
+    <value>The reply window is too short to notice the push notification and send a reply. Set it to 0 seconds to turn it off, or at least 20 seconds to use replies.</value>
+  </data>
+  <data name="ClosedLidStopFollowUpConfigurationIssuePostStopDelayTooShort" xml:space="preserve">
+    <value>Sleep or reply waiting can start too early before immediately-following prompts are seen. Set post-stop-suspend-delay-seconds to at least 10.</value>
   </data>
   <data name="TextDisplayOff" xml:space="preserve">
     <value>off</value>
@@ -973,7 +1000,7 @@
     <value>Disable the temporary volume change, or set the default output volume while the sleep or hibernate warning sound plays. LidGuard restores the previous volume and mute state afterward.</value>
   </data>
   <data name="Help_Settings_PostStopSuspendDelayOption" xml:space="preserve">
-    <value>Set the delay before sleep or hibernate after sessions end. Use 0 for immediate sleep or hibernate.</value>
+    <value>Set the safety delay after work ends so immediately-following prompts can arrive before sleep/hibernate or reply waiting starts. Use 0 only when reply waiting is off.</value>
   </data>
   <data name="Help_SuspendHistory_CountOption" xml:space="preserve">
     <value>Optional positive entry count to display. Defaults to the saved suspend-history-count value, or 10 when recording is off.</value>
@@ -1135,7 +1162,10 @@
     <value>Choose how closed-lid PermissionRequest hooks respond when LidGuard reports the lid is closed. ask soft-locks the session and lets the provider's normal permission prompt continue.</value>
   </data>
   <data name="Help_Settings_ClosedLidStopFollowUpWebhookOption" xml:space="preserve">
-    <value>Set the URL for the alert LidGuard sends before sleeping while the lid is closed. It works when this URL is valid and the sleep delay is above 0.</value>
+    <value>Set the URL for the alert LidGuard sends before sleeping while the lid is closed. It works when this URL is valid, the reply wait is at least 20 seconds, and post-stop-suspend-delay-seconds is at least 10.</value>
+  </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpDelayOption" xml:space="preserve">
+    <value>Set how long LidGuard waits for a reply after sending the ask-before-sleeping notification. Use 0 to turn the reply notification off; use 20 or more when it is on. Defaults to 180.</value>
   </data>
   <data name="Help_Settings_RepeatClosedLidStopFollowUpOption" xml:space="preserve">
     <value>After a reply keeps the work going, ask again next time the work tries to finish. Defaults to true.</value>

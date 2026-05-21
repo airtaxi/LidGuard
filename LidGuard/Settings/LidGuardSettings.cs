@@ -16,6 +16,7 @@ public sealed class LidGuardSettings
     public const int DefaultSessionTimeoutMinutes = 12;
     public const int MinimumServerRuntimeCleanupDelayMinutes = 0;
     public const int DefaultServerRuntimeCleanupDelayMinutes = 10;
+    public const int DefaultClosedLidStopFollowUpDelaySeconds = 180;
     public const string DefaultUserInterfaceCulture = "auto";
 
     public static LidGuardSettings Default { get; } = new();
@@ -45,6 +46,9 @@ public sealed class LidGuardSettings
     public string PostSessionEndWebhookUrl { get; init; } = string.Empty;
 
     public string ClosedLidStopFollowUpWebhookUrl { get; init; } = string.Empty;
+
+    [JsonPropertyName("closedLidStopFollowUpDelaySeconds")]
+    public int ClosedLidStopFollowUpDelaySeconds { get; init; } = DefaultClosedLidStopFollowUpDelaySeconds;
 
     [JsonPropertyName("repeatClosedLidStopFollowUp")]
     public bool RepeatClosedLidStopFollowUp { get; init; } = true;
@@ -123,6 +127,7 @@ public sealed class LidGuardSettings
             PreSuspendWebhookUrl = string.IsNullOrWhiteSpace(settings.PreSuspendWebhookUrl) ? string.Empty : settings.PreSuspendWebhookUrl.Trim(),
             PostSessionEndWebhookUrl = string.IsNullOrWhiteSpace(settings.PostSessionEndWebhookUrl) ? string.Empty : settings.PostSessionEndWebhookUrl.Trim(),
             ClosedLidStopFollowUpWebhookUrl = string.IsNullOrWhiteSpace(settings.ClosedLidStopFollowUpWebhookUrl) ? string.Empty : settings.ClosedLidStopFollowUpWebhookUrl.Trim(),
+            ClosedLidStopFollowUpDelaySeconds = Math.Max(0, settings.ClosedLidStopFollowUpDelaySeconds),
             RepeatClosedLidStopFollowUp = settings.RepeatClosedLidStopFollowUp,
             ClosedLidPermissionRequestDecision = settings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settings.WatchParentProcess,

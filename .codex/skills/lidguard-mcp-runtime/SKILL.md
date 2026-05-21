@@ -20,6 +20,7 @@ description: "LidGuard MCP runtime reference. Use when working on regular MCP se
 - Expose server runtime cleanup delay through `serverRuntimeCleanupDelayMinutes`, accepting `off` to keep the runtime alive, `0` for immediate exit, or a positive minute count to wait.
 - Expose post-session-end webhook URL through `postSessionEndWebhookUrl`, accepting an empty string to clear it.
 - Expose the ask-before-sleep reply webhook URL through `closedLidStopFollowUpWebhookUrl`, accepting an empty string to clear it.
+- Expose ask-before-sleep reply wait through `closedLidStopFollowUpDelaySeconds`, defaulting to `180`; `0` disables reply waiting, and values `1` through `19` are saved but become configuration errors when the URL is configured.
 - Expose repeated ask-before-sleep reply behavior through `repeatClosedLidStopFollowUp`, defaulting to `true`.
 - Make `remove_session` manually remove active sessions by session identifier and optionally narrow removal to one provider and one MCP provider name.
 - Keep `set_session_soft_lock` and `clear_session_soft_lock` general-purpose by accepting provider and session identifier inputs, so non-MCP providers can also use MCP-driven soft-lock control when they can supply those values.
