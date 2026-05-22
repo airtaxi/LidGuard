@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="LidGuard icon">
+  <defs>
+    <linearGradient id="appIconBackground" x1="128" y1="72" x2="896" y2="952" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#182638"/>
+      <stop offset="0.52" stop-color="#0d1722"/>
+      <stop offset="1" stop-color="#122a34"/>
+    </linearGradient>
+    <linearGradient id="ringTop" x1="172" y1="158" x2="852" y2="158" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7fc242"/>
+      <stop offset="1" stop-color="#70b83b"/>
+    </linearGradient>
+    <linearGradient id="ringBottom" x1="118" y1="764" x2="906" y2="764" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1797a4"/>
+      <stop offset="1" stop-color="#0c8c9b"/>
+    </linearGradient>
+    <linearGradient id="sleepDisc" x1="341" y1="195" x2="683" y2="195" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#80c841"/>
+      <stop offset="1" stop-color="#6eb63c"/>
+    </linearGradient>
+    <linearGradient id="powerDisc" x1="341" y1="834" x2="683" y2="834" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#149ca8"/>
+      <stop offset="1" stop-color="#087f8f"/>
+    </linearGradient>
+    <linearGradient id="lidFace" x1="168" y1="300" x2="856" y2="594" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#253949"/>
+      <stop offset="0.48" stop-color="#112432"/>
+      <stop offset="1" stop-color="#213545"/>
+    </linearGradient>
+    <linearGradient id="lidEdge" x1="124" y1="282" x2="900" y2="548" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#708395"/>
+      <stop offset="0.5" stop-color="#2d4151"/>
+      <stop offset="1" stop-color="#5b6e80"/>
+    </linearGradient>
+    <linearGradient id="baseTop" x1="132" y1="570" x2="892" y2="728" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#cdd8e2"/>
+      <stop offset="0.5" stop-color="#8999a8"/>
+      <stop offset="1" stop-color="#dbe5ec"/>
+    </linearGradient>
+    <linearGradient id="shieldFill" x1="344" y1="542" x2="680" y2="542" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#78c943"/>
+      <stop offset="0.49" stop-color="#78c943"/>
+      <stop offset="0.5" stop-color="#18a1a5"/>
+      <stop offset="1" stop-color="#067f8e"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#0b1822" flood-opacity="0.28"/>
+    </filter>
+    <filter id="smallShadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#0b1822" flood-opacity="0.3"/>
+    </filter>
+    <clipPath id="shieldClip">
+      <path d="M512 342L672 406C666 573 624 671 512 735C400 671 358 573 352 406L512 342Z"/>
+    </clipPath>
+    <clipPath id="sleepSymbolClip">
+      <path d="M341 276A171 171 0 0 1 683 276Z"/>
+    </clipPath>
+  </defs>
+
+  <rect width="1024" height="1024" rx="224" ry="224" fill="url(#appIconBackground)"/>
+  <circle cx="512" cy="512" r="450" fill="none" stroke="#223341" stroke-width="6"/>
+
+  <path d="M82 512A430 430 0 0 1 942 512" fill="none" stroke="url(#ringTop)" stroke-width="38" stroke-linecap="round"/>
+  <path d="M942 512A430 430 0 0 1 82 512" fill="none" stroke="url(#ringBottom)" stroke-width="38" stroke-linecap="round"/>
+
+  <path d="M341 276A171 171 0 0 1 683 276Z" fill="url(#sleepDisc)"/>
+  <path d="M341 731A171 188 0 0 0 683 731Z" fill="url(#powerDisc)"/>
+
+  <g clip-path="url(#sleepSymbolClip)">
+    <path d="M539 146C501 154 473 188 473 228C473 274 510 312 557 312C565 312 573 311 581 309C565 329 540 342 512 342C463 342 423 302 423 253C423 201 468 158 539 146Z" fill="#ffffff"/>
+    <path d="M559 160L568 182L590 191L568 200L559 222L550 200L528 191L550 182Z" fill="#ffffff"/>
+    <path d="M596 214L606 239L631 249L606 259L596 284L586 259L561 249L586 239Z" fill="#ffffff"/>
+  </g>
+  <path d="M512 769V827" fill="none" stroke="#ffffff" stroke-width="18" stroke-linecap="round"/>
+  <path d="M483 802A47 47 0 1 0 541 802" fill="none" stroke="#ffffff" stroke-width="18" stroke-linecap="round"/>
+
+  <g filter="url(#softShadow)">
+    <path d="M127 322C119 301 134 284 158 284H866C890 284 905 301 897 322L820 520C811 545 793 558 765 558H259C231 558 213 545 204 520Z" fill="url(#lidEdge)"/>
+    <path d="M151 327C146 314 156 304 172 304H852C868 304 878 314 873 327L799 512C792 530 779 538 759 538H265C245 538 232 530 225 512Z" fill="url(#lidFace)"/>
+    <path d="M247 558H777C800 558 817 570 830 589L872 652C892 681 872 721 837 721H187C152 721 132 681 152 652L194 589C207 570 224 558 247 558Z" fill="url(#baseTop)" stroke="#8f9ead" stroke-width="4" stroke-linejoin="round" opacity="0.96"/>
+    <path d="M278 588H746C760 588 770 596 776 608L800 640C811 656 798 666 778 666H246C226 666 213 656 224 640L248 608C254 596 264 588 278 588Z" fill="#1a2d3b" opacity="0.94"/>
+    <g opacity="0.34" stroke-linecap="round">
+      <path d="M290 612H452" stroke="#91a4b1" stroke-width="7"/>
+      <path d="M280 637H452" stroke="#6f8797" stroke-width="7"/>
+      <path d="M572 612H734" stroke="#91a4b1" stroke-width="7"/>
+      <path d="M572 637H744" stroke="#6f8797" stroke-width="7"/>
+    </g>
+  </g>
+
+  <g filter="url(#smallShadow)" transform="translate(0 -30)">
+    <path d="M512 330L688 400C684 584 636 694 512 764C388 694 340 584 336 400Z" fill="#ffffff"/>
+    <path d="M512 354L666 416C659 570 620 662 512 724C404 662 365 570 358 416Z" fill="url(#shieldFill)"/>
+    <path d="M512 354L666 416C659 570 620 662 512 724Z" fill="#007c8c" opacity="0.12"/>
+    <path d="M512 354V724" stroke="#ffffff" stroke-width="3" opacity="0.24"/>
+    <g clip-path="url(#shieldClip)" opacity="0.18">
+      <path d="M364 416C413 388 464 371 512 354V724C435 672 391 596 372 484Z" fill="#b6eb60"/>
+      <path d="M512 354C560 371 611 388 660 416C641 596 589 675 512 724Z" fill="#00394c"/>
+    </g>
+    <path d="M472 520V502C472 480 490 462 512 462C534 462 552 480 552 502V520H580V502C580 464 550 434 512 434C474 434 444 464 444 502V520Z" fill="#ffffff"/>
+    <rect x="434" y="514" width="156" height="118" rx="16" fill="#ffffff"/>
+    <circle cx="512" cy="562" r="17" fill="#0b7380"/>
+    <path d="M504 576H520V608H504Z" fill="#0b7380"/>
+  </g>
+</svg>
