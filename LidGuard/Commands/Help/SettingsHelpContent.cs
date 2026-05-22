@@ -63,18 +63,15 @@ internal static class SettingsHelpContent
             new LidGuardHelpOption(
                 "--closed-lid-stop-follow-up-webhook-url <http-or-https-url>",
                 LocalizationService.GetString(
-                    "Help_Settings_ClosedLidStopFollowUpWebhookOption",
-                    "Set the reply notification URL for the ask-me-before-sleeping flow. It works when the URL is valid, the reply wait is at least 20 seconds, and post-stop-suspend-delay-seconds is at least 10.")),
+                    "Help_Settings_ClosedLidStopFollowUpWebhookOption")),
             new LidGuardHelpOption(
                 "--closed-lid-stop-follow-up-delay-seconds <number>",
                 LocalizationService.GetString(
-                    "Help_Settings_ClosedLidStopFollowUpDelayOption",
-                    "Set how long LidGuard waits for a reply after sending the ask-before-sleeping notification. Use 0 to turn the reply notification off; use 20 or more when it is on. Defaults to 180.")),
+                    "Help_Settings_ClosedLidStopFollowUpDelayOption")),
             new LidGuardHelpOption(
                 "--repeat-closed-lid-stop-follow-up <bool>",
                 LocalizationService.GetString(
-                    "Help_Settings_RepeatClosedLidStopFollowUpOption",
-                    "After a reply keeps the work going, ask again the next time that work tries to finish. Defaults to true.")),
+                    "Help_Settings_RepeatClosedLidStopFollowUpOption")),
             new LidGuardHelpOption("--closed-lid-permission-request-decision deny|allow|ask", LocalizationService.GetString("Help_Settings_ClosedLidPermissionRequestDecisionOption")),
             new LidGuardHelpOption("--ui-culture auto|en|ko|ja|zh-Hans|zh-Hant|<culture-name>", LocalizationService.GetString("Help_Settings_UserInterfaceCultureOption")),
             new LidGuardHelpOption("--power-request-reason <text>", LocalizationService.GetString("Help_Settings_PowerRequestReasonOption"))

@@ -10,7 +10,7 @@ internal static class WslHookStatusHelpContent
             context,
             LidGuardPipeCommands.WslHookStatus,
             "wsl-hook-status",
-            LocalizationService.GetString("Help_WslHookStatus_Description", "Show LidGuard hook status inside a WSL distro."));
+            LocalizationService.GetString("Help_WslHookStatus_Description"));
 }
 
 internal static class WslHookInstallHelpContent
@@ -20,7 +20,7 @@ internal static class WslHookInstallHelpContent
             context,
             LidGuardPipeCommands.WslHookInstall,
             "wsl-hook-install",
-            LocalizationService.GetString("Help_WslHookInstall_Description", "Install LidGuard-managed hooks inside a WSL distro."));
+            LocalizationService.GetString("Help_WslHookInstall_Description"));
 }
 
 internal static class WslHookRemoveHelpContent
@@ -30,7 +30,7 @@ internal static class WslHookRemoveHelpContent
             context,
             LidGuardPipeCommands.WslHookRemove,
             "wsl-hook-remove",
-            LocalizationService.GetString("Help_WslHookRemove_Description", "Remove LidGuard-managed hooks from a WSL distro."));
+            LocalizationService.GetString("Help_WslHookRemove_Description"));
 }
 
 internal static class WslCodexHooksHelpContent
@@ -41,7 +41,7 @@ internal static class WslCodexHooksHelpContent
             LidGuardPipeCommands.WslCodexHooks,
             "wsl-codex-hooks",
             "[config-toml|toml|hooks-json|json]",
-            LocalizationService.GetString("Help_WslCodexHooks_Description", "Print a Codex hook snippet that runs Windows LidGuard from WSL."),
+            LocalizationService.GetString("Help_WslCodexHooks_Description"),
             LocalizationService.GetString("Help_CodexHooks_FormatOption"));
 }
 
@@ -53,7 +53,7 @@ internal static class WslClaudeHooksHelpContent
             LidGuardPipeCommands.WslClaudeHooks,
             "wsl-claude-hooks",
             "[settings-json|json|hooks-json]",
-            LocalizationService.GetString("Help_WslClaudeHooks_Description", "Print a Claude hook snippet that runs Windows LidGuard from WSL."),
+            LocalizationService.GetString("Help_WslClaudeHooks_Description"),
             LocalizationService.GetString("Help_ClaudeHooks_FormatOption"));
 }
 
@@ -65,7 +65,7 @@ internal static class WslCopilotHooksHelpContent
             LidGuardPipeCommands.WslCopilotHooks,
             "wsl-copilot-hooks",
             "[config-json|json|hooks-json]",
-            LocalizationService.GetString("Help_WslCopilotHooks_Description", "Print a GitHub Copilot hook snippet that runs Windows LidGuard from WSL."),
+            LocalizationService.GetString("Help_WslCopilotHooks_Description"),
             LocalizationService.GetString("Help_CopilotHooks_FormatOption"));
 }
 
@@ -76,7 +76,7 @@ internal static class WslMcpStatusHelpContent
             context,
             LidGuardPipeCommands.WslMcpStatus,
             "wsl-mcp-status",
-            LocalizationService.GetString("Help_WslMcpStatus_Description", "Show LidGuard MCP server status inside a WSL distro."));
+            LocalizationService.GetString("Help_WslMcpStatus_Description"));
 }
 
 internal static class WslMcpInstallHelpContent
@@ -86,7 +86,7 @@ internal static class WslMcpInstallHelpContent
             context,
             LidGuardPipeCommands.WslMcpInstall,
             "wsl-mcp-install",
-            LocalizationService.GetString("Help_WslMcpInstall_Description", "Install the LidGuard MCP server inside a WSL distro."));
+            LocalizationService.GetString("Help_WslMcpInstall_Description"));
 }
 
 internal static class WslMcpRemoveHelpContent
@@ -96,7 +96,7 @@ internal static class WslMcpRemoveHelpContent
             context,
             LidGuardPipeCommands.WslMcpRemove,
             "wsl-mcp-remove",
-            LocalizationService.GetString("Help_WslMcpRemove_Description", "Remove the LidGuard MCP server from a WSL distro."));
+            LocalizationService.GetString("Help_WslMcpRemove_Description"));
 }
 
 internal static class WslProviderMcpStatusHelpContent
@@ -107,7 +107,7 @@ internal static class WslProviderMcpStatusHelpContent
             LidGuardPipeCommands.WslProviderMcpStatus,
             "wsl-provider-mcp-status",
             "--config <json-path> [--server-name <name>]",
-            LocalizationService.GetString("Help_WslProviderMcpStatus_Description", "Show generic Provider MCP server status inside a WSL distro."),
+            LocalizationService.GetString("Help_WslProviderMcpStatus_Description"),
             false);
 }
 
@@ -119,7 +119,7 @@ internal static class WslProviderMcpInstallHelpContent
             LidGuardPipeCommands.WslProviderMcpInstall,
             "wsl-provider-mcp-install",
             "--config <json-path> --provider-name <name> [--server-name <name>]",
-            LocalizationService.GetString("Help_WslProviderMcpInstall_Description", "Install a generic Provider MCP server inside a WSL distro."),
+            LocalizationService.GetString("Help_WslProviderMcpInstall_Description"),
             true);
 }
 
@@ -131,7 +131,7 @@ internal static class WslProviderMcpRemoveHelpContent
             LidGuardPipeCommands.WslProviderMcpRemove,
             "wsl-provider-mcp-remove",
             "--config <json-path> [--server-name <name>]",
-            LocalizationService.GetString("Help_WslProviderMcpRemove_Description", "Remove a generic Provider MCP server from a WSL distro."),
+            LocalizationService.GetString("Help_WslProviderMcpRemove_Description"),
             false);
 }
 
@@ -224,13 +224,13 @@ internal static class WslHelpContentFactory
     }
 
     private static LidGuardHelpOption CreateDistroOption()
-        => new("--distro <name>", LocalizationService.GetString("Help_Wsl_DistroOption", "Use a specific WSL distro instead of the default distro."));
+        => new("--distro <name>", LocalizationService.GetString("Help_Wsl_DistroOption"));
 
     private static IReadOnlyList<string> CreateWslNotes()
         =>
         [
-            LocalizationService.GetString("Help_Wsl_WindowsOnlyNote", "This command is available only in Windows builds."),
-            LocalizationService.GetString("Help_Wsl_CommandNote", "The generated WSL config runs the current Windows lidguard.exe through its WSL path.")
+            LocalizationService.GetString("Help_Wsl_WindowsOnlyNote"),
+            LocalizationService.GetString("Help_Wsl_CommandNote")
         ];
 
     private static IReadOnlyList<string> CreateProviderMcpAliases(string synopsisCommandName)

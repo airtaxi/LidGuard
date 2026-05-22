@@ -87,7 +87,7 @@ internal static partial class McpConfigurationJsonUtilities
 
             if (rootNode is not JsonObject existingRootObject)
             {
-                message = LocalizationService.GetString("McpConfigurationRootNotObject", "Configuration root is not a JSON object.");
+                message = LocalizationService.GetString("McpConfigurationRootNotObject");
                 return false;
             }
 
@@ -95,20 +95,20 @@ internal static partial class McpConfigurationJsonUtilities
         }
         catch (JsonException exception)
         {
-            message = LocalizationService.GetString("McpConfigurationJsonInvalid", "Configuration JSON is invalid: {0}")
+            message = LocalizationService.GetString("McpConfigurationJsonInvalid")
                 .Replace("{0}", exception.Message, StringComparison.Ordinal);
             return false;
         }
 
         if (rootObject["mcpServers"] is not JsonObject mcpServersObject)
         {
-            message = LocalizationService.GetString("McpConfigurationServersObjectNotFound", "The mcpServers object was not found.");
+            message = LocalizationService.GetString("McpConfigurationServersObjectNotFound");
             return false;
         }
 
         if (mcpServersObject[managedServerName] is not JsonObject existingServerObject)
         {
-            message = LocalizationService.GetString("McpConfigurationNamedServerNotFound", "No MCP server named '{0}' was found.")
+            message = LocalizationService.GetString("McpConfigurationNamedServerNotFound")
                 .Replace("{0}", managedServerName, StringComparison.Ordinal);
             return false;
         }
@@ -130,7 +130,7 @@ internal static partial class McpConfigurationJsonUtilities
         {
             if (createIfMissing) return true;
 
-            message = LocalizationService.GetString("McpConfigurationFileDoesNotExist", "Configuration file does not exist: {0}")
+            message = LocalizationService.GetString("McpConfigurationFileDoesNotExist")
                 .Replace("{0}", configurationFilePath, StringComparison.Ordinal);
             return false;
         }
@@ -157,12 +157,12 @@ internal static partial class McpConfigurationJsonUtilities
                 return true;
             }
 
-            message = LocalizationService.GetString("McpConfigurationRootNotObject", "Configuration root is not a JSON object.");
+            message = LocalizationService.GetString("McpConfigurationRootNotObject");
             return false;
         }
         catch (JsonException exception)
         {
-            message = LocalizationService.GetString("McpConfigurationJsonInvalid", "Configuration JSON is invalid: {0}")
+            message = LocalizationService.GetString("McpConfigurationJsonInvalid")
                 .Replace("{0}", exception.Message, StringComparison.Ordinal);
             return false;
         }

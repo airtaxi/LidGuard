@@ -28,7 +28,7 @@ internal static class ProviderMcpManagementCommand
 
         if (!HookCommandUtilities.HookExecutableExists(managedExecutableReference))
         {
-            Console.Error.WriteLine(LocalizationService.GetString("ManagementLidGuardExecutableMissing", "LidGuard executable or command does not exist: {0}").Replace("{0}", managedExecutableReference, StringComparison.Ordinal));
+            Console.Error.WriteLine(LocalizationService.GetString("ManagementLidGuardExecutableMissing").Replace("{0}", managedExecutableReference, StringComparison.Ordinal));
             return 1;
         }
 
@@ -85,7 +85,7 @@ internal static class ProviderMcpManagementCommand
 
         if (!McpConfigurationJsonUtilities.TryGetMcpServersObject(rootObject, out var mcpServersObject))
         {
-            Console.WriteLine(LocalizationService.GetString("ManagementMcpServersObjectNotFound", "The mcpServers object was not found in {0}.").Replace("{0}", configurationFilePath, StringComparison.Ordinal));
+            Console.WriteLine(LocalizationService.GetString("ManagementMcpServersObjectNotFound").Replace("{0}", configurationFilePath, StringComparison.Ordinal));
             Console.WriteLine(LocalizationService.GetFormattedString("ManagementNoProviderMcpServerNamedRemoved", managedServerName));
             return 0;
         }
@@ -148,17 +148,17 @@ internal static class ProviderMcpManagementCommand
         }
 
         Console.WriteLine(LocalizationService.GetString("ManagementProviderMcpInstallationTitle"));
-        ManagementFieldWriter.WriteField("ManagementLabelConfig", "Config", configurationFilePath);
-        ManagementFieldWriter.WriteField("ManagementLabelConfigExists", "Config exists", configurationFileExists);
-        ManagementFieldWriter.WriteField("ManagementLabelServerName", "Server name", managedServerName);
-        ManagementFieldWriter.WriteField("ManagementLabelInstalled", "Installed", installed);
-        ManagementFieldWriter.WriteField("ManagementLabelManagedServerEntry", "Managed server entry", hasManagedServerEntry);
-        ManagementFieldWriter.WriteField("ManagementLabelCommand", "Command", serverCommand);
-        ManagementFieldWriter.WriteField("ManagementLabelArgs", "Args", serverArguments);
-        ManagementFieldWriter.WriteField("ManagementLabelMatchesCurrentLidGuardExecutable", "Matches current LidGuard executable", matchesCurrentLidGuardExecutable);
-        ManagementFieldWriter.WriteField("ManagementLabelContainsProviderMcpServerCommand", "Contains provider-mcp-server command", containsProviderMcpServerCommand);
-        ManagementFieldWriter.WriteField("ManagementLabelProviderName", "Provider name", configuredProviderName);
-        ManagementFieldWriter.WriteField("ManagementLabelMessage", "Message", CreateStatusMessage(configurationFilePath, configurationFileExists, hasManagedServerEntry, matchesCurrentLidGuardExecutable, containsProviderMcpServerCommand, managedServerName, message));
+        ManagementFieldWriter.WriteField("ManagementLabelConfig", configurationFilePath);
+        ManagementFieldWriter.WriteField("ManagementLabelConfigExists", configurationFileExists);
+        ManagementFieldWriter.WriteField("ManagementLabelServerName", managedServerName);
+        ManagementFieldWriter.WriteField("ManagementLabelInstalled", installed);
+        ManagementFieldWriter.WriteField("ManagementLabelManagedServerEntry", hasManagedServerEntry);
+        ManagementFieldWriter.WriteField("ManagementLabelCommand", serverCommand);
+        ManagementFieldWriter.WriteField("ManagementLabelArgs", serverArguments);
+        ManagementFieldWriter.WriteField("ManagementLabelMatchesCurrentLidGuardExecutable", matchesCurrentLidGuardExecutable);
+        ManagementFieldWriter.WriteField("ManagementLabelContainsProviderMcpServerCommand", containsProviderMcpServerCommand);
+        ManagementFieldWriter.WriteField("ManagementLabelProviderName", configuredProviderName);
+        ManagementFieldWriter.WriteField("ManagementLabelMessage", CreateStatusMessage(configurationFilePath, configurationFileExists, hasManagedServerEntry, matchesCurrentLidGuardExecutable, containsProviderMcpServerCommand, managedServerName, message));
         return 0;
     }
 
@@ -182,9 +182,9 @@ internal static class ProviderMcpManagementCommand
         if (!configurationFileExists) return LocalizationService.GetFormattedString("ManagementConfigurationFileDoesNotExist", configurationFilePath);
         if (!string.IsNullOrWhiteSpace(message)) return message;
         if (!hasManagedServerEntry) return LocalizationService.GetString("ManagementNoProviderMcpServerEntryFound");
-        if (!matchesCurrentLidGuardExecutable) return LocalizationService.GetString("ManagementProviderMcpServerDoesNotPointAtCurrentExecutable", "The provider MCP server '{0}' exists but does not point at the current LidGuard executable.")
+        if (!matchesCurrentLidGuardExecutable) return LocalizationService.GetString("ManagementProviderMcpServerDoesNotPointAtCurrentExecutable")
             .Replace("{0}", managedServerName, StringComparison.Ordinal);
-        if (!containsProviderMcpServerCommand) return LocalizationService.GetString("ManagementProviderMcpServerDoesNotPointAtManagedCommand", "The provider MCP server '{0}' exists but does not point at '{1}'.")
+        if (!containsProviderMcpServerCommand) return LocalizationService.GetString("ManagementProviderMcpServerDoesNotPointAtManagedCommand")
             .Replace("{0}", managedServerName, StringComparison.Ordinal)
             .Replace("{1}", ProviderMcpServerCommand.CommandName, StringComparison.Ordinal);
         return LocalizationService.GetString("ManagementProviderMcpRegistered");

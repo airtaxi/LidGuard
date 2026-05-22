@@ -10,31 +10,26 @@ internal static class LocalizationService
 {
     private static readonly ResourceManager s_resourceManager = new("LidGuard.Resources.LidGuardText", typeof(LocalizationService).Assembly);
 
-    public static string GetString(string resourceName) => GetString(resourceName, resourceName);
-
-    public static string GetString(string resourceName, string fallbackValue)
+    public static string GetString(string resourceName)
     {
         var localizedString = s_resourceManager.GetString(resourceName, CultureInfo.CurrentUICulture);
-        return string.IsNullOrWhiteSpace(localizedString) ? fallbackValue : localizedString;
+        return string.IsNullOrWhiteSpace(localizedString) ? resourceName : localizedString;
     }
 
     public static string GetFormattedString(string resourceName, params object[] arguments)
         => string.Format(CultureInfo.CurrentCulture, GetString(resourceName), arguments);
 
-    public static string GetFormattedStringWithFallback(string resourceName, string fallbackValue, params object[] arguments)
-        => string.Format(CultureInfo.CurrentCulture, GetString(resourceName, fallbackValue), arguments);
-
     public static string DisplayBoolean(bool value)
         => value ? GetString("TextDisplayBooleanTrue") : GetString("TextDisplayBooleanFalse");
 
     public static string DisplayClosedLidPermissionRequestDecision(ClosedLidPermissionRequestDecision value)
-        => GetString($"DisplayClosedLidPermissionRequestDecision{value}", value.ToString());
+        => GetString($"DisplayClosedLidPermissionRequestDecision{value}");
 
     public static string DisplayEmergencyHibernationTemperatureMode(EmergencyHibernationTemperatureMode value)
-        => GetString($"DisplayEmergencyHibernationTemperatureMode{value}", value.ToString());
+        => GetString($"DisplayEmergencyHibernationTemperatureMode{value}");
 
     public static string DisplayLidSwitchState(LidSwitchState value)
-        => GetString($"DisplayLidSwitchState{value}", value.ToString());
+        => GetString($"DisplayLidSwitchState{value}");
 
     public static string DisplayMinuteCount(int? value)
         => value is null ? GetString("TextDisplayOff") : GetFormattedString("DisplayMinuteCount", value.Value);
@@ -48,10 +43,10 @@ internal static class LocalizationService
     }
 
     public static string DisplaySessionSoftLockState(LidGuardSessionSoftLockState value)
-        => GetString($"DisplaySessionSoftLockState{value}", value.ToString());
+        => GetString($"DisplaySessionSoftLockState{value}");
 
     public static string DisplaySuspendMode(SystemSuspendMode value)
-        => GetString($"DisplaySuspendMode{value}", value.ToString());
+        => GetString($"DisplaySuspendMode{value}");
 
     public static string DisplaySuspendHistoryEntryCount(int? value)
         => value is null ? GetString("TextDisplayOff") : GetFormattedString("DisplaySuspendHistoryEntryCount", value.Value);

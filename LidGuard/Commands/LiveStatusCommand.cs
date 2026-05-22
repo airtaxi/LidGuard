@@ -142,24 +142,24 @@ internal static class LiveStatusCommand
         var screenHeight = Math.Max(1, terminalSize.Height);
         var screenLines = new List<string>
         {
-            FitLine(StyleStrong(Text("LiveStatusTitle", "LidGuard live-status"), enableStyles), screenWidth),
-            FitLine(Text("LiveStatusExitHint", "Updates every second and reconnects while unavailable. Press q, Escape, or Ctrl+C to exit."), screenWidth)
+            FitLine(StyleStrong(Text("LiveStatusTitle"), enableStyles), screenWidth),
+            FitLine(Text("LiveStatusExitHint"), screenWidth)
         };
 
         var remainingHeight = screenHeight - screenLines.Count;
         var runtimePanelHeight = Math.Min(10, Math.Max(0, remainingHeight));
-        AppendPanel(screenLines, Text("LiveStatusRuntimePanelTitle", "Runtime"), CreateRuntimePanelLines(snapshot, enableStyles), runtimePanelHeight, screenWidth, enableStyles);
+        AppendPanel(screenLines, Text("LiveStatusRuntimePanelTitle"), CreateRuntimePanelLines(snapshot, enableStyles), runtimePanelHeight, screenWidth, enableStyles);
 
         remainingHeight = screenHeight - screenLines.Count;
         var sessionPanelHeight = Math.Min(Math.Max(4, snapshot.Response.Sessions.Length + 3), Math.Max(0, remainingHeight / 3));
-        AppendPanel(screenLines, Text("LiveStatusSessionsPanelTitle", "Sessions"), CreateSessionPanelLines(snapshot.Response, enableStyles), sessionPanelHeight, screenWidth, enableStyles);
+        AppendPanel(screenLines, Text("LiveStatusSessionsPanelTitle"), CreateSessionPanelLines(snapshot.Response, enableStyles), sessionPanelHeight, screenWidth, enableStyles);
 
         remainingHeight = screenHeight - screenLines.Count;
         var hookPanelHeight = Math.Min(10, Math.Max(0, remainingHeight / 2));
-        AppendPanel(screenLines, Text("LiveStatusHookPanelTitle", "Hook events"), CreateHookPanelLines(snapshot, enableStyles), hookPanelHeight, screenWidth, enableStyles);
+        AppendPanel(screenLines, Text("LiveStatusHookPanelTitle"), CreateHookPanelLines(snapshot, enableStyles), hookPanelHeight, screenWidth, enableStyles);
 
         remainingHeight = screenHeight - screenLines.Count;
-        AppendPanel(screenLines, Text("LiveStatusFlowPanelTitle", "Runtime flow"), CreateFlowPanelLines(snapshot, enableStyles), remainingHeight, screenWidth, enableStyles);
+        AppendPanel(screenLines, Text("LiveStatusFlowPanelTitle"), CreateFlowPanelLines(snapshot, enableStyles), remainingHeight, screenWidth, enableStyles);
 
         while (screenLines.Count < screenHeight) screenLines.Add(new string(' ', screenWidth));
         if (screenLines.Count > screenHeight) screenLines = screenLines.Take(screenHeight).ToList();
@@ -173,40 +173,36 @@ internal static class LiveStatusCommand
         var responseMessage = LidGuardRuntimeResponseLocalizer.Localize(response);
         var pendingSuspend = response.SuspendScheduled
             ? StyleWarning(CreatePendingSuspendText(response), enableStyles)
-            : StyleMuted(Text("LiveStatusNone", "none"), enableStyles);
+            : StyleMuted(Text("LiveStatusNone"), enableStyles);
 
         return
         [
-            Format("LiveStatusRuntimeStateLine", "State: {0} | Last update: {1}", runtimeState, StyleMuted(FormatCompactTimestamp(snapshot.UpdatedAt), enableStyles)),
+            Format("LiveStatusRuntimeStateLine", runtimeState, StyleMuted(FormatCompactTimestamp(snapshot.UpdatedAt), enableStyles)),
             Format(
                 "LiveStatusRuntimeCountsLine",
-                "Active sessions: {0} | Lid: {1} | Visible monitors: {2}",
                 CreateActiveSessionCountText(response.ActiveSessionCount, enableStyles),
                 DisplayLidSwitchState(response, enableStyles),
                 CreateVisibleDisplayMonitorCountText(response, enableStyles)),
-            Format("LiveStatusPendingSuspendLine", "Planned sleep/hibernate: {0}", pendingSuspend),
+            Format("LiveStatusPendingSuspendLine", pendingSuspend),
             Format(
                 "LiveStatusStopFollowUpFeatureStateLine",
-                "Ask-before-sleep replies: {0}",
                 CreateClosedLidStopFollowUpFeatureStateText(response.Settings, enableStyles)),
             Format(
                 "LiveStatusStopFollowUpDelayLine",
-                "Reply wait: {0}",
                 CreateClosedLidStopFollowUpDelayText(response.Settings)),
             Format(
                 "LiveStatusStopFollowUpRepeatLine",
-                "Ask again after reply: {0}",
                 LocalizationService.DisplayBoolean(response.Settings.RepeatClosedLidStopFollowUp)),
-            string.IsNullOrWhiteSpace(responseMessage) ? Text("LiveStatusNoRuntimeMessage", "Runtime message: none") : Format("LiveStatusRuntimeMessageLine", "Runtime message: {0}", responseMessage)
+            string.IsNullOrWhiteSpace(responseMessage) ? Text("LiveStatusNoRuntimeMessage") : Format("LiveStatusRuntimeMessageLine", responseMessage)
         ];
     }
 
     private static string CreateRuntimeStateText(LidGuardPipeResponse response, bool enableStyles)
     {
-        if (response.Succeeded) return StyleSuccess(Text("LiveStatusRunning", "running"), enableStyles);
-        if (response.RuntimeUnavailable) return StyleFailure(Text("LiveStatusNotRunning", "not running"), enableStyles);
+        if (response.Succeeded) return StyleSuccess(Text("LiveStatusRunning"), enableStyles);
+        if (response.RuntimeUnavailable) return StyleFailure(Text("LiveStatusNotRunning"), enableStyles);
 
-        return StyleFailure(Text("LiveStatusError", "error"), enableStyles);
+        return StyleFailure(Text("LiveStatusError"), enableStyles);
     }
 
     private static string CreateClosedLidStopFollowUpFeatureStateText(LidGuardSettings settings, bool enableStyles)
@@ -214,9 +210,9 @@ internal static class LiveStatusCommand
         var featureState = ClosedLidStopFollowUpConfiguration.GetFeatureState(settings);
         var featureStateText = featureState switch
         {
-            ClosedLidStopFollowUpConfiguration.FeatureStateOn => Text("DisplayClosedLidStopFollowUpFeatureStateOn", "on"),
-            ClosedLidStopFollowUpConfiguration.FeatureStateConfigurationError => Text("DisplayClosedLidStopFollowUpFeatureStateConfigurationError", "configuration error"),
-            _ => Text("DisplayClosedLidStopFollowUpFeatureStateOff", "off")
+            ClosedLidStopFollowUpConfiguration.FeatureStateOn => Text("DisplayClosedLidStopFollowUpFeatureStateOn"),
+            ClosedLidStopFollowUpConfiguration.FeatureStateConfigurationError => Text("DisplayClosedLidStopFollowUpFeatureStateConfigurationError"),
+            _ => Text("DisplayClosedLidStopFollowUpFeatureStateOff")
         };
 
         return featureState == ClosedLidStopFollowUpConfiguration.FeatureStateConfigurationError
@@ -230,8 +226,8 @@ internal static class LiveStatusCommand
     {
         var normalizedSettings = LidGuardSettings.Normalize(settings);
         return normalizedSettings.ClosedLidStopFollowUpDelaySeconds == 0
-            ? Text("TextDisplayOff", "off")
-            : Format("LiveStatusDelaySeconds", "{0} second(s)", normalizedSettings.ClosedLidStopFollowUpDelaySeconds);
+            ? Text("TextDisplayOff")
+            : Format("LiveStatusDelaySeconds", normalizedSettings.ClosedLidStopFollowUpDelaySeconds);
     }
 
     private static string CreateActiveSessionCountText(int activeSessionCount, bool enableStyles)
@@ -250,7 +246,7 @@ internal static class LiveStatusCommand
 
     private static IReadOnlyList<string> CreateSessionPanelLines(LidGuardPipeResponse response, bool enableStyles)
     {
-        if (response.Sessions.Length == 0) return [StyleMuted(Text("LiveStatusNoSessions", "No active sessions."), enableStyles)];
+        if (response.Sessions.Length == 0) return [StyleMuted(Text("LiveStatusNoSessions"), enableStyles)];
 
         var sessionLines = new List<string>();
         foreach (var session in response.Sessions.OrderBy(static session => session.Provider).ThenBy(static session => session.SessionIdentifier, StringComparer.OrdinalIgnoreCase))
@@ -259,7 +255,6 @@ internal static class LiveStatusCommand
             var processText = session.WatchedProcessIdentifier > 0 ? session.WatchedProcessIdentifier.ToString(CultureInfo.InvariantCulture) : LocalizationService.GetString("SessionProcessNone");
             sessionLines.Add(Format(
                 "LiveStatusSessionLine",
-                "{0} session={1} process={2} softLock={3} started={4} last={5} workingDirectory={6}",
                 providerDisplayText,
                 StyleCyan(DisplayValue(session.SessionIdentifier), enableStyles),
                 processText,
@@ -274,7 +269,7 @@ internal static class LiveStatusCommand
 
     private static IReadOnlyList<string> CreateHookPanelLines(LiveStatusSnapshot snapshot, bool enableStyles)
     {
-        if (snapshot.HookEventLines.Length == 0) return [StyleMuted(Text("LiveStatusNoHookEvents", "No recent received/runtime-result hook events."), enableStyles)];
+        if (snapshot.HookEventLines.Length == 0) return [StyleMuted(Text("LiveStatusNoHookEvents"), enableStyles)];
 
         return snapshot.HookEventLines
             .Take(HookEventDisplayLineCount)
@@ -300,7 +295,7 @@ internal static class LiveStatusCommand
             .Take(FlowEventDisplayLineCount)
             .Select(static flowEventLine => flowEventLine.Line)
             .ToArray();
-        return displayLines.Length == 0 ? [StyleMuted(Text("LiveStatusNoFlowEvents", "No recent runtime flow events."), enableStyles)] : displayLines;
+        return displayLines.Length == 0 ? [StyleMuted(Text("LiveStatusNoFlowEvents"), enableStyles)] : displayLines;
     }
 
     private static bool IsRuntimeFlowEvent(LidGuardRuntimeSessionLogEntry runtimeLogEntry)
@@ -318,17 +313,17 @@ internal static class LiveStatusCommand
         var lineBuilder = new StringBuilder();
         lineBuilder.Append(StyleMuted(FormatCompactTimestamp(runtimeLogEntry.Timestamp), enableStyles));
         lineBuilder.Append(' ');
-        lineBuilder.Append(StyleCyan(Text("LiveStatusRuntimeFlowPrefix", "runtime"), enableStyles));
+        lineBuilder.Append(StyleCyan(Text("LiveStatusRuntimeFlowPrefix"), enableStyles));
         lineBuilder.Append(" event=");
         lineBuilder.Append(DisplayValue(runtimeLogEntry.EventName));
         lineBuilder.Append(" command=");
         lineBuilder.Append(DisplayValue(runtimeLogEntry.Command));
         lineBuilder.Append(' ');
-        lineBuilder.Append(Text("LiveStatusSucceededLabel", "succeeded"));
+        lineBuilder.Append(Text("LiveStatusSucceededLabel"));
         lineBuilder.Append('=');
         lineBuilder.Append(CreateSucceededText(runtimeLogEntry.Succeeded, enableStyles));
         lineBuilder.Append(' ');
-        lineBuilder.Append(Text("LiveStatusActiveSessionsShortLabel", "active"));
+        lineBuilder.Append(Text("LiveStatusActiveSessionsShortLabel"));
         lineBuilder.Append('=');
         lineBuilder.Append(runtimeLogEntry.ActiveSessionCount.ToString(CultureInfo.InvariantCulture));
 
@@ -336,7 +331,7 @@ internal static class LiveStatusCommand
         if (!string.IsNullOrWhiteSpace(sessionText))
         {
             lineBuilder.Append(' ');
-            lineBuilder.Append(Text("LiveStatusSessionShortLabel", "session"));
+            lineBuilder.Append(Text("LiveStatusSessionShortLabel"));
             lineBuilder.Append('=');
             lineBuilder.Append(sessionText);
         }
@@ -344,7 +339,7 @@ internal static class LiveStatusCommand
         if (!string.IsNullOrWhiteSpace(runtimeLogEntry.Message))
         {
             lineBuilder.Append(' ');
-            lineBuilder.Append(Text("LiveStatusMessageShortLabel", "message"));
+            lineBuilder.Append(Text("LiveStatusMessageShortLabel"));
             lineBuilder.Append('=');
             lineBuilder.Append(runtimeLogEntry.Message);
         }
@@ -357,7 +352,7 @@ internal static class LiveStatusCommand
         var lineBuilder = new StringBuilder();
         lineBuilder.Append(StyleMuted(FormatCompactTimestamp(suspendHistoryEntry.RecordedAt), enableStyles));
         lineBuilder.Append(' ');
-        lineBuilder.Append(StyleCyan(Text("LiveStatusSuspendHistoryPrefix", "history"), enableStyles));
+        lineBuilder.Append(StyleCyan(Text("LiveStatusSuspendHistoryPrefix"), enableStyles));
         lineBuilder.Append(" event=");
         lineBuilder.Append(DisplayValue(suspendHistoryEntry.EventName));
         lineBuilder.Append(" mode=");
@@ -365,11 +360,11 @@ internal static class LiveStatusCommand
         lineBuilder.Append(" reason=");
         lineBuilder.Append(DisplaySuspendWebhookReason(suspendHistoryEntry.Reason));
         lineBuilder.Append(' ');
-        lineBuilder.Append(Text("LiveStatusSucceededLabel", "succeeded"));
+        lineBuilder.Append(Text("LiveStatusSucceededLabel"));
         lineBuilder.Append('=');
         lineBuilder.Append(CreateSucceededText(suspendHistoryEntry.Succeeded, enableStyles));
         lineBuilder.Append(' ');
-        lineBuilder.Append(Text("LiveStatusActiveSessionsShortLabel", "active"));
+        lineBuilder.Append(Text("LiveStatusActiveSessionsShortLabel"));
         lineBuilder.Append('=');
         lineBuilder.Append(suspendHistoryEntry.ActiveSessionCount.ToString(CultureInfo.InvariantCulture));
 
@@ -377,7 +372,7 @@ internal static class LiveStatusCommand
         if (!string.IsNullOrWhiteSpace(sessionText))
         {
             lineBuilder.Append(' ');
-            lineBuilder.Append(Text("LiveStatusSessionShortLabel", "session"));
+            lineBuilder.Append(Text("LiveStatusSessionShortLabel"));
             lineBuilder.Append('=');
             lineBuilder.Append(sessionText);
         }
@@ -392,7 +387,7 @@ internal static class LiveStatusCommand
         if (!string.IsNullOrWhiteSpace(suspendHistoryEntry.Message))
         {
             lineBuilder.Append(' ');
-            lineBuilder.Append(Text("LiveStatusMessageShortLabel", "message"));
+            lineBuilder.Append(Text("LiveStatusMessageShortLabel"));
             lineBuilder.Append('=');
             lineBuilder.Append(suspendHistoryEntry.Message);
         }
@@ -411,11 +406,10 @@ internal static class LiveStatusCommand
     private static string CreatePendingSuspendText(LidGuardPipeResponse response)
     {
         var suspendDelayText = response.SuspendDelaySeconds == 0
-            ? Text("LiveStatusImmediate", "immediate")
-            : Format("LiveStatusDelaySeconds", "{0} second(s)", response.SuspendDelaySeconds);
+            ? Text("LiveStatusImmediate")
+            : Format("LiveStatusDelaySeconds", response.SuspendDelaySeconds);
         return Format(
             "LiveStatusPendingSuspendDetails",
-            "{0}, delay={1}, reason={2}",
             LocalizationService.DisplaySuspendMode(response.SuspendMode),
             suspendDelayText,
             DisplaySuspendReason(response.SuspendReasonCode));
@@ -423,14 +417,14 @@ internal static class LiveStatusCommand
 
     private static string DisplaySuspendReason(string suspendReasonCode)
     {
-        if (suspendReasonCode == LidGuardPipeResponseMessageCodes.SuspendReasonSoftLocked) return Text("LiveStatusSuspendReasonSoftLocked", "soft-locked");
-        if (suspendReasonCode == LidGuardPipeResponseMessageCodes.SuspendReasonCompleted) return Text("LiveStatusSuspendReasonCompleted", "completed");
+        if (suspendReasonCode == LidGuardPipeResponseMessageCodes.SuspendReasonSoftLocked) return Text("LiveStatusSuspendReasonSoftLocked");
+        if (suspendReasonCode == LidGuardPipeResponseMessageCodes.SuspendReasonCompleted) return Text("LiveStatusSuspendReasonCompleted");
 
         return DisplayValue(suspendReasonCode);
     }
 
     private static string DisplaySuspendWebhookReason(SuspendWebhookReason reason)
-        => LocalizationService.GetString($"DisplaySuspendWebhookReason{reason}", reason.ToString());
+        => LocalizationService.GetString($"DisplaySuspendWebhookReason{reason}");
 
     private static string DisplayLidSwitchState(LidGuardPipeResponse response, bool enableStyles)
     {
@@ -481,7 +475,7 @@ internal static class LiveStatusCommand
 
         var contentCapacity = Math.Max(0, maximumHeight - 2);
         var visibleContentLines = contentLines.Take(contentCapacity).ToList();
-        if (contentLines.Count > contentCapacity && contentCapacity > 0) visibleContentLines[^1] = Format("LiveStatusMoreEntries", "... {0} more", contentLines.Count - contentCapacity + 1);
+        if (contentLines.Count > contentCapacity && contentCapacity > 0) visibleContentLines[^1] = Format("LiveStatusMoreEntries", contentLines.Count - contentCapacity + 1);
 
         foreach (var contentLine in visibleContentLines) screenLines.Add(CreatePanelContentLine(contentLine, screenWidth));
         if (maximumHeight > 1) screenLines.Add(FitLine(CreatePanelBorder(string.Empty, screenWidth, enableStyles), screenWidth));
@@ -817,11 +811,11 @@ internal static class LiveStatusCommand
     private static string DisplayValue(string value)
         => string.IsNullOrWhiteSpace(value) ? LocalizationService.GetString("TextDisplayNone") : value.Trim();
 
-    private static string Text(string resourceName, string fallbackValue)
-        => LocalizationService.GetString(resourceName, fallbackValue);
+    private static string Text(string resourceName)
+        => LocalizationService.GetString(resourceName);
 
-    private static string Format(string resourceName, string fallbackValue, params object[] arguments)
-        => string.Format(CultureInfo.CurrentCulture, Text(resourceName, fallbackValue), arguments);
+    private static string Format(string resourceName, params object[] arguments)
+        => string.Format(CultureInfo.CurrentCulture, Text(resourceName), arguments);
 
     private sealed record LiveStatusFlowEventLine(DateTimeOffset Timestamp, string Line);
 

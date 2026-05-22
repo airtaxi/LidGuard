@@ -47,7 +47,7 @@ internal static class WslMcpManagementCommand
 
     private static int WriteMcpStatus(string providerText, string distroName, string wslExecutablePath)
     {
-        if (!TrySelectMcpProviders(providerText, LocalizationService.GetString("ManagementPromptMcpStatus", "Show MCP server status for provider"), distroName, out var providers, out var message))
+        if (!TrySelectMcpProviders(providerText, LocalizationService.GetString("ManagementPromptMcpStatus"), distroName, out var providers, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -71,7 +71,7 @@ internal static class WslMcpManagementCommand
 
     private static int InstallMcp(string providerText, string distroName, string wslExecutablePath)
     {
-        if (!TrySelectMcpProviders(providerText, LocalizationService.GetString("ManagementPromptMcpInstall", "Install MCP server for provider"), distroName, out var providers, out var message))
+        if (!TrySelectMcpProviders(providerText, LocalizationService.GetString("ManagementPromptMcpInstall"), distroName, out var providers, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -93,7 +93,7 @@ internal static class WslMcpManagementCommand
 
     private static int RemoveMcp(string providerText, string distroName, string wslExecutablePath)
     {
-        if (!TrySelectMcpProviders(providerText, LocalizationService.GetString("ManagementPromptMcpRemove", "Remove MCP server for provider"), distroName, out var providers, out var message))
+        if (!TrySelectMcpProviders(providerText, LocalizationService.GetString("ManagementPromptMcpRemove"), distroName, out var providers, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -120,14 +120,14 @@ internal static class WslMcpManagementCommand
         if (inspectionResult.ShouldRefreshManagedMcpServer)
         {
             Console.WriteLine(
-                LocalizationService.GetString("ManagementExistingMcpServerRefreshing", "Existing managed LidGuard MCP server found for {0}. Refreshing registration.")
+                LocalizationService.GetString("ManagementExistingMcpServerRefreshing")
                     .Replace("{0}", ManagedProviderSelection.GetProviderDisplayName(provider), StringComparison.Ordinal));
 
             var removeExitCode = RemoveProviderMcp(provider, distroName);
             if (removeExitCode != 0)
             {
                 Console.Error.WriteLine(
-                    LocalizationService.GetString("ManagementSkippingMcpInstallAfterRemoveFailure", "Skipping {0} MCP install because removing the existing managed registration failed.")
+                    LocalizationService.GetString("ManagementSkippingMcpInstallAfterRemoveFailure")
                         .Replace("{0}", ManagedProviderSelection.GetProviderDisplayName(provider), StringComparison.Ordinal));
                 return removeExitCode;
             }
@@ -175,7 +175,7 @@ internal static class WslMcpManagementCommand
         {
             if (!WslCommandUtilities.TryReadTextFile(distroName, configurationFilePath, out var configurationContent, out message))
             {
-                message = LocalizationService.GetString("McpConfigurationJsonInvalid", "Configuration JSON is invalid: {0}")
+                message = LocalizationService.GetString("McpConfigurationJsonInvalid")
                     .Replace("{0}", message, StringComparison.Ordinal);
             }
             else if (McpConfigurationTomlUtilities.TryGetCodexMcpServerSectionContent(configurationContent, out var sectionContent))
@@ -236,7 +236,7 @@ internal static class WslMcpManagementCommand
         {
             if (!WslCommandUtilities.TryReadTextFile(distroName, configurationFilePath, out var configurationContent, out message))
             {
-                message = LocalizationService.GetString("McpConfigurationJsonInvalid", "Configuration JSON is invalid: {0}")
+                message = LocalizationService.GetString("McpConfigurationJsonInvalid")
                     .Replace("{0}", message, StringComparison.Ordinal);
             }
             else if (McpConfigurationJsonUtilities.TryGetJsonMcpServerEntry(configurationContent, McpConfigurationTomlUtilities.ManagedMcpServerName, out var serverObject, out message))
@@ -352,7 +352,7 @@ internal static class WslMcpManagementCommand
             var optionName = argument[2..];
             if (string.IsNullOrWhiteSpace(optionName))
             {
-                message = LocalizationService.GetString("CommandOptionNameRequired", "An option name is required after --.");
+                message = LocalizationService.GetString("CommandOptionNameRequired");
                 return false;
             }
 
@@ -364,7 +364,7 @@ internal static class WslMcpManagementCommand
 
             if (argumentIndex + 1 >= commandLineArguments.Length || commandLineArguments[argumentIndex + 1].StartsWith("--", StringComparison.Ordinal))
             {
-                message = LocalizationService.GetString("CommandRequiredOption", "The --{0} option is required.")
+                message = LocalizationService.GetString("CommandRequiredOption")
                     .Replace("{0}", optionName, StringComparison.Ordinal);
                 return false;
             }

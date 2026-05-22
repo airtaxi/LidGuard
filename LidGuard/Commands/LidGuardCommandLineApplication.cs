@@ -456,16 +456,14 @@ internal static class LidGuardCommandLineApplication
         {
             Console.WriteLine(
                 LocalizationService.GetString(
-                    "ConsoleCurrentTemperatureUnavailable",
-                    "Current recognized system temperature is unavailable from this platform's thermal-zone information using {0} mode.")
+                    "ConsoleCurrentTemperatureUnavailable")
                     .Replace("{0}", LocalizationService.DisplayEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode), StringComparison.Ordinal));
             return 0;
         }
 
         Console.WriteLine(
             LocalizationService.GetString(
-                "ConsoleCurrentTemperature",
-                "Current recognized system temperature using {0} mode: {1} Celsius")
+                "ConsoleCurrentTemperature")
                 .Replace("{0}", LocalizationService.DisplayEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode), StringComparison.Ordinal)
                 .Replace("{1}", currentTemperatureCelsius.Value.ToString(), StringComparison.Ordinal));
         return 0;
@@ -530,8 +528,7 @@ internal static class LidGuardCommandLineApplication
         if (LidGuardSettingsCommand.TryParseEmergencyHibernationTemperatureMode(temperatureModeText, out emergencyHibernationTemperatureMode)) return true;
 
         message = LocalizationService.GetString(
-            "ConsoleCurrentTemperatureModeValidation",
-            "The temperature mode must be default, low, average, or high.");
+            "ConsoleCurrentTemperatureModeValidation");
         return false;
     }
 

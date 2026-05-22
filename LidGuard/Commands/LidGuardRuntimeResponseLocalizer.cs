@@ -22,23 +22,23 @@ internal static class LidGuardRuntimeResponseLocalizer
 
         return messageCode switch
         {
-            LidGuardPipeResponseMessageCodes.CleanupOrphansCompleted => Format("RuntimeResponseCleanupOrphansCompleted", "Cleaned {0} orphan session(s).", Argument(messageArguments, 0)),
-            LidGuardPipeResponseMessageCodes.FailedToStartRuntime => Get("RuntimeResponseFailedToStartRuntime", "Failed to start the LidGuard runtime."),
-            LidGuardPipeResponseMessageCodes.RuntimeIsRunning => Get("RuntimeResponseRuntimeIsRunning", "LidGuard runtime is running."),
+            LidGuardPipeResponseMessageCodes.CleanupOrphansCompleted => Format("RuntimeResponseCleanupOrphansCompleted", Argument(messageArguments, 0)),
+            LidGuardPipeResponseMessageCodes.FailedToStartRuntime => Get("RuntimeResponseFailedToStartRuntime"),
+            LidGuardPipeResponseMessageCodes.RuntimeIsRunning => Get("RuntimeResponseRuntimeIsRunning"),
             LidGuardPipeResponseMessageCodes.RuntimeNotRunning => LocalizationService.GetString("ConsoleRuntimeNotRunning"),
             LidGuardPipeResponseMessageCodes.SettingsRuntimeUpdated => LocalizationService.GetString("SettingsRuntimeUpdated"),
-            LidGuardPipeResponseMessageCodes.SessionAlreadyStopped => Format("RuntimeResponseSessionAlreadyStopped", "Session {0} is already stopped.", Argument(messageArguments, 0)),
-            LidGuardPipeResponseMessageCodes.SessionIdAlreadyStopped => Format("RuntimeResponseSessionIdAlreadyStopped", "Session id {0} is already stopped.", Argument(messageArguments, 0)),
-            LidGuardPipeResponseMessageCodes.SessionIdAlreadyStoppedForProvider => Format("RuntimeResponseSessionIdAlreadyStoppedForProvider", "Session id {0} is already stopped for {1}.", Argument(messageArguments, 0), Argument(messageArguments, 1)),
-            LidGuardPipeResponseMessageCodes.SessionRemoved => Format("RuntimeResponseSessionRemoved", "Removed {0}.", Argument(messageArguments, 0)),
-            LidGuardPipeResponseMessageCodes.SessionRemovedAll => Format("RuntimeResponseSessionRemovedAll", "Removed all {0} active session(s).", Argument(messageArguments, 0)),
-            LidGuardPipeResponseMessageCodes.SessionRemovedMatchingProviderSessionId => Format("RuntimeResponseSessionRemovedMatchingProviderSessionId", "Removed {0} session(s) matching {1} session id \"{2}\".", Argument(messageArguments, 0), Argument(messageArguments, 1), Argument(messageArguments, 2)),
-            LidGuardPipeResponseMessageCodes.SessionRemovedMatchingSessionId => Format("RuntimeResponseSessionRemovedMatchingSessionId", "Removed {0} session(s) matching session id \"{1}\".", Argument(messageArguments, 0), Argument(messageArguments, 1)),
-            LidGuardPipeResponseMessageCodes.SessionRemoveNoActiveSessions => Get("RuntimeResponseSessionRemoveNoActiveSessions", "There are no active sessions to remove."),
+            LidGuardPipeResponseMessageCodes.SessionAlreadyStopped => Format("RuntimeResponseSessionAlreadyStopped", Argument(messageArguments, 0)),
+            LidGuardPipeResponseMessageCodes.SessionIdAlreadyStopped => Format("RuntimeResponseSessionIdAlreadyStopped", Argument(messageArguments, 0)),
+            LidGuardPipeResponseMessageCodes.SessionIdAlreadyStoppedForProvider => Format("RuntimeResponseSessionIdAlreadyStoppedForProvider", Argument(messageArguments, 0), Argument(messageArguments, 1)),
+            LidGuardPipeResponseMessageCodes.SessionRemoved => Format("RuntimeResponseSessionRemoved", Argument(messageArguments, 0)),
+            LidGuardPipeResponseMessageCodes.SessionRemovedAll => Format("RuntimeResponseSessionRemovedAll", Argument(messageArguments, 0)),
+            LidGuardPipeResponseMessageCodes.SessionRemovedMatchingProviderSessionId => Format("RuntimeResponseSessionRemovedMatchingProviderSessionId", Argument(messageArguments, 0), Argument(messageArguments, 1), Argument(messageArguments, 2)),
+            LidGuardPipeResponseMessageCodes.SessionRemovedMatchingSessionId => Format("RuntimeResponseSessionRemovedMatchingSessionId", Argument(messageArguments, 0), Argument(messageArguments, 1)),
+            LidGuardPipeResponseMessageCodes.SessionRemoveNoActiveSessions => Get("RuntimeResponseSessionRemoveNoActiveSessions"),
             LidGuardPipeResponseMessageCodes.SessionStarted => LocalizeSessionStarted(messageArguments),
-            LidGuardPipeResponseMessageCodes.SessionStopped => Format("RuntimeResponseSessionStopped", "Stopped {0}.", Argument(messageArguments, 0)),
-            LidGuardPipeResponseMessageCodes.WatchedProcessExited => Format("RuntimeResponseWatchedProcessExited", "Watched process exited for {0}.", Argument(messageArguments, 0)),
-            LidGuardPipeResponseMessageCodes.WatchedProcessOrphanCleaned => Format("RuntimeResponseWatchedProcessOrphanCleaned", "Cleaned orphan session {0}.", Argument(messageArguments, 0)),
+            LidGuardPipeResponseMessageCodes.SessionStopped => Format("RuntimeResponseSessionStopped", Argument(messageArguments, 0)),
+            LidGuardPipeResponseMessageCodes.WatchedProcessExited => Format("RuntimeResponseWatchedProcessExited", Argument(messageArguments, 0)),
+            LidGuardPipeResponseMessageCodes.WatchedProcessOrphanCleaned => Format("RuntimeResponseWatchedProcessOrphanCleaned", Argument(messageArguments, 0)),
             _ => fallbackMessage
         };
     }
@@ -50,8 +50,8 @@ internal static class LidGuardRuntimeResponseLocalizer
         var processIdentifier = Argument(messageArguments, 2);
         return watcherStatusKind switch
         {
-            LidGuardPipeResponseMessageCodes.WatcherStatusWatchedProcess => Format("RuntimeResponseSessionStartedWatchedProcess", "Started {0}. Watching process {1}.", sessionKey, processIdentifier),
-            _ => Format("RuntimeResponseSessionStartedNoWatchedProcess", "Started {0}. No watched process was resolved; a stop hook is required.", sessionKey)
+            LidGuardPipeResponseMessageCodes.WatcherStatusWatchedProcess => Format("RuntimeResponseSessionStartedWatchedProcess", sessionKey, processIdentifier),
+            _ => Format("RuntimeResponseSessionStartedNoWatchedProcess", sessionKey)
         };
     }
 
@@ -59,12 +59,12 @@ internal static class LidGuardRuntimeResponseLocalizer
     {
         var suspendMode = LocalizationService.DisplaySuspendMode(response.SuspendMode);
         var suspendDelay = response.SuspendDelaySeconds == 0
-            ? Get("RuntimeResponseSuspendDelayImmediate", "immediately")
-            : Format("RuntimeResponseSuspendDelaySeconds", "in {0} second(s)", response.SuspendDelaySeconds);
+            ? Get("RuntimeResponseSuspendDelayImmediate")
+            : Format("RuntimeResponseSuspendDelaySeconds", response.SuspendDelaySeconds);
         var suspendReason = response.SuspendReasonCode == LidGuardPipeResponseMessageCodes.SuspendReasonSoftLocked
-            ? Get("RuntimeResponseSuspendReasonSoftLocked", "because the lid is closed, no suspend-blocking visible display monitors remain, and all remaining sessions are soft-locked.")
-            : Get("RuntimeResponseSuspendReasonCompleted", "because the lid is closed, no suspend-blocking visible display monitors remain, and the last session stopped.");
-        return Format("RuntimeResponseSuspendScheduled", "Scheduled {0} {1} {2}", suspendMode, suspendDelay, suspendReason);
+            ? Get("RuntimeResponseSuspendReasonSoftLocked")
+            : Get("RuntimeResponseSuspendReasonCompleted");
+        return Format("RuntimeResponseSuspendScheduled", suspendMode, suspendDelay, suspendReason);
     }
 
     private static string Argument(string[] messageArguments, int argumentIndex)
@@ -73,9 +73,9 @@ internal static class LidGuardRuntimeResponseLocalizer
         return messageArguments[argumentIndex] ?? string.Empty;
     }
 
-    private static string Get(string resourceName, string fallbackValue)
-        => LocalizationService.GetString(resourceName, fallbackValue);
+    private static string Get(string resourceName)
+        => LocalizationService.GetString(resourceName);
 
-    private static string Format(string resourceName, string fallbackValue, params object[] arguments)
-        => string.Format(CultureInfo.CurrentCulture, Get(resourceName, fallbackValue), arguments);
+    private static string Format(string resourceName, params object[] arguments)
+        => string.Format(CultureInfo.CurrentCulture, Get(resourceName), arguments);
 }

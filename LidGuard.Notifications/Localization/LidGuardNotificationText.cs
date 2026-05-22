@@ -65,18 +65,18 @@ internal static class LidGuardNotificationText
     public static string SignOutNavigation => Get(nameof(SignOutNavigation));
     public static string StartingPromptLabel => Get(nameof(StartingPromptLabel));
     public static string StartedLabel => Get(nameof(StartedLabel));
-    public static string StopFollowUpCancelButton => Get(nameof(StopFollowUpCancelButton), "Sleep/hibernate now");
-    public static string StopFollowUpCancelHelp => Get(nameof(StopFollowUpCancelHelp), "Stop waiting for a reply and start the planned sleep/hibernate flow now.");
-    public static string StopFollowUpCancelSucceededMessage => Get(nameof(StopFollowUpCancelSucceededMessage), "Sleep/hibernate flow started.");
-    public static string StopFollowUpDeadlineLabel => Get(nameof(StopFollowUpDeadlineLabel), "Reply deadline");
-    public static string StopFollowUpReplyButton => Get(nameof(StopFollowUpReplyButton), "Submit reply");
-    public static string StopFollowUpReplyHelp => Get(nameof(StopFollowUpReplyHelp), "Replying here cancels the planned sleep and lets the agent continue.");
-    public static string StopFollowUpReplyLabel => Get(nameof(StopFollowUpReplyLabel), "Reply");
-    public static string StopFollowUpReplyPlaceholder => Get(nameof(StopFollowUpReplyPlaceholder), "Tell the agent what to do next");
-    public static string StopFollowUpReplyRequiredMessage => Get(nameof(StopFollowUpReplyRequiredMessage), "Reply is required.");
-    public static string StopFollowUpReplySentAtLabel => Get(nameof(StopFollowUpReplySentAtLabel), "Reply sent");
-    public static string StopFollowUpSectionLabel => Get(nameof(StopFollowUpSectionLabel), "Ask-before-sleep reply");
-    public static string StopFollowUpStatusLabel => Get(nameof(StopFollowUpStatusLabel), "Reply status");
+    public static string StopFollowUpCancelButton => Get(nameof(StopFollowUpCancelButton));
+    public static string StopFollowUpCancelHelp => Get(nameof(StopFollowUpCancelHelp));
+    public static string StopFollowUpCancelSucceededMessage => Get(nameof(StopFollowUpCancelSucceededMessage));
+    public static string StopFollowUpDeadlineLabel => Get(nameof(StopFollowUpDeadlineLabel));
+    public static string StopFollowUpReplyButton => Get(nameof(StopFollowUpReplyButton));
+    public static string StopFollowUpReplyHelp => Get(nameof(StopFollowUpReplyHelp));
+    public static string StopFollowUpReplyLabel => Get(nameof(StopFollowUpReplyLabel));
+    public static string StopFollowUpReplyPlaceholder => Get(nameof(StopFollowUpReplyPlaceholder));
+    public static string StopFollowUpReplyRequiredMessage => Get(nameof(StopFollowUpReplyRequiredMessage));
+    public static string StopFollowUpReplySentAtLabel => Get(nameof(StopFollowUpReplySentAtLabel));
+    public static string StopFollowUpSectionLabel => Get(nameof(StopFollowUpSectionLabel));
+    public static string StopFollowUpStatusLabel => Get(nameof(StopFollowUpStatusLabel));
     public static string SubscribeBrowserButton => Get(nameof(SubscribeBrowserButton));
     public static string SubscriptionFailed => Get(nameof(SubscriptionFailed));
     public static string ThemeDarkMode => Get(nameof(ThemeDarkMode));
@@ -125,7 +125,7 @@ internal static class LidGuardNotificationText
     public static string DisplayWebhookEventType(string eventType)
         => eventType switch
         {
-            LidGuardWebhookEventTypes.StopFollowUp => Get(DisplayWebhookEventTypeStopFollowUpResourceName, "Ask-before-sleep reply"),
+            LidGuardWebhookEventTypes.StopFollowUp => Get(DisplayWebhookEventTypeStopFollowUpResourceName),
             LidGuardWebhookEventTypes.PreSuspend => Get(DisplayWebhookEventTypePreSuspendResourceName),
             LidGuardWebhookEventTypes.PostSessionEnd => Get(DisplayWebhookEventTypePostSessionEndResourceName),
             _ => string.IsNullOrWhiteSpace(eventType) ? "-" : eventType
@@ -134,7 +134,7 @@ internal static class LidGuardNotificationText
     public static string DisplayWebhookReason(string reason)
         => reason switch
         {
-            LidGuardWebhookReasons.AwaitingReply => Get(DisplayWebhookReasonAwaitingReplyResourceName, "Awaiting reply"),
+            LidGuardWebhookReasons.AwaitingReply => Get(DisplayWebhookReasonAwaitingReplyResourceName),
             LidGuardWebhookReasons.Completed => Get(DisplayWebhookReasonCompletedResourceName),
             LidGuardWebhookReasons.SoftLocked => Get(DisplayWebhookReasonSoftLockedResourceName),
             LidGuardWebhookReasons.EmergencyHibernation => Get(DisplayWebhookReasonEmergencyHibernationResourceName),
@@ -155,23 +155,21 @@ internal static class LidGuardNotificationText
     public static string PushBodyCompleted => Get(nameof(PushBodyCompleted));
     public static string PushBodyEmergencyHibernation => Get(nameof(PushBodyEmergencyHibernation));
     public static string PushBodyFallback => Get(nameof(PushBodyFallback));
-    public static string PushBodyStopFollowUp => Get(nameof(PushBodyStopFollowUp), "Replying here will cancel the planned sleep and let the agent continue.");
+    public static string PushBodyStopFollowUp => Get(nameof(PushBodyStopFollowUp));
     public static string PushPostSessionEndStatus => Get(nameof(PushPostSessionEndStatus));
     public static string PushPreSuspendSessionEndStatus => Get(nameof(PushPreSuspendSessionEndStatus));
     public static string PushProviderFallback => Get(nameof(PushProviderFallback));
     public static string PushSessionFallback => Get(nameof(PushSessionFallback));
     public static string PushSoftLockedAll => Get(nameof(PushSoftLockedAll));
-    public static string PushStopFollowUpStatus => Get(nameof(PushStopFollowUpStatus), "is waiting for your reply before sleep");
+    public static string PushStopFollowUpStatus => Get(nameof(PushStopFollowUpStatus));
     public static string PushTitleCompleted => Get(nameof(PushTitleCompleted));
     public static string PushTitleEmergencyHibernation => Get(nameof(PushTitleEmergencyHibernation));
     public static string PushTitleFallback => Get(nameof(PushTitleFallback));
     public static string PushTitlePostSessionEnd => Get(nameof(PushTitlePostSessionEnd));
-    public static string PushTitleStopFollowUp => Get(nameof(PushTitleStopFollowUp), "Reply needed before sleep");
+    public static string PushTitleStopFollowUp => Get(nameof(PushTitleStopFollowUp));
     public static string PushTitleSoftLocked => Get(nameof(PushTitleSoftLocked));
 
     private static string Get(string name) => LocalizationService.GetString(name);
-
-    private static string Get(string name, string fallbackValue) => LocalizationService.GetString(name, fallbackValue);
 
     private static string Format(string name, params object[] arguments)
         => LocalizationService.GetFormattedString(name, arguments);
@@ -179,10 +177,10 @@ internal static class LidGuardNotificationText
     public static string DisplayStopFollowUpStatus(string status)
         => status switch
         {
-            StopFollowUpRequestStatuses.Pending => Get("DisplayStopFollowUpStatusPending", "Pending"),
-            StopFollowUpRequestStatuses.Answered => Get("DisplayStopFollowUpStatusAnswered", "Answered"),
-            StopFollowUpRequestStatuses.Expired => Get("DisplayStopFollowUpStatusExpired", "Expired"),
-            StopFollowUpRequestStatuses.Canceled => Get("DisplayStopFollowUpStatusCanceled", "Canceled"),
+            StopFollowUpRequestStatuses.Pending => Get("DisplayStopFollowUpStatusPending"),
+            StopFollowUpRequestStatuses.Answered => Get("DisplayStopFollowUpStatusAnswered"),
+            StopFollowUpRequestStatuses.Expired => Get("DisplayStopFollowUpStatusExpired"),
+            StopFollowUpRequestStatuses.Canceled => Get("DisplayStopFollowUpStatusCanceled"),
             _ => string.IsNullOrWhiteSpace(status) ? "-" : status
         };
 }

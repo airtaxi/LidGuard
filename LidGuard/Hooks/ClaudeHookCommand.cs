@@ -20,8 +20,7 @@ internal static class ClaudeHookCommand
         if (string.IsNullOrWhiteSpace(executablePath))
         {
             Console.Error.WriteLine(LocalizationService.GetString(
-                "HookCommandDefaultExecutableNotResolved",
-                "A default LidGuard hook executable or command name could not be resolved."));
+                "HookCommandDefaultExecutableNotResolved"));
             return 1;
         }
 
@@ -44,9 +43,8 @@ internal static class ClaudeHookCommand
             return 0;
         }
 
-        Console.Error.WriteLine(LocalizationService.GetFormattedStringWithFallback(
+        Console.Error.WriteLine(LocalizationService.GetFormattedString(
             "HookCommandUnsupportedSnippetFormat",
-            "Unsupported {0} hook snippet format. Use {1}.",
             "Claude",
             "settings-json or hooks-json"));
         return 1;

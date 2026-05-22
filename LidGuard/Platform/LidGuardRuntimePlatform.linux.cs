@@ -12,7 +12,7 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
     public bool IsSupported => OperatingSystem.IsLinux();
 
     public string UnsupportedMessage
-        => LocalizationService.GetString("PlatformUnsupportedLinux", "LidGuard Linux support requires a systemd/logind environment.");
+        => LocalizationService.GetString("PlatformUnsupportedLinux");
 
     public LidGuardOperationResult<LidGuardRuntimeServiceSet> CreateRuntimeServiceSet()
     {

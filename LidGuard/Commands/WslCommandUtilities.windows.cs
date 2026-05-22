@@ -32,7 +32,7 @@ internal static class WslCommandUtilities
             return true;
         }
 
-        message = LocalizationService.GetString("CommandRequiredOption", "The --{0} option is required.")
+        message = LocalizationService.GetString("CommandRequiredOption")
             .Replace("{0}", DistroOptionName, StringComparison.Ordinal);
         return false;
     }
@@ -56,13 +56,13 @@ internal static class WslCommandUtilities
         var statusResult = RunWslProcess(["--status"]);
         if (statusResult.StartFailed)
         {
-            message = LocalizationService.GetString("WslExecutableNotFound", "wsl.exe could not be started. Install WSL before using WSL integration commands.");
+            message = LocalizationService.GetString("WslExecutableNotFound");
             return false;
         }
 
         if (statusResult.ExitCode != 0)
         {
-            message = LocalizationService.GetString("WslStatusFailed", "WSL is not available: {0}")
+            message = LocalizationService.GetString("WslStatusFailed")
                 .Replace("{0}", statusResult.GetDisplayError(), StringComparison.Ordinal);
             return false;
         }
@@ -81,9 +81,9 @@ internal static class WslCommandUtilities
         if (distroResult.ExitCode == 0) return true;
 
         message = string.IsNullOrWhiteSpace(distroName)
-            ? LocalizationService.GetString("WslDefaultDistroUnavailable", "The default WSL distro is not available: {0}")
+            ? LocalizationService.GetString("WslDefaultDistroUnavailable")
                 .Replace("{0}", distroResult.GetDisplayError(), StringComparison.Ordinal)
-            : LocalizationService.GetString("WslNamedDistroUnavailable", "The WSL distro '{0}' is not available: {1}")
+            : LocalizationService.GetString("WslNamedDistroUnavailable")
                 .Replace("{0}", distroName, StringComparison.Ordinal)
                 .Replace("{1}", distroResult.GetDisplayError(), StringComparison.Ordinal);
         return false;
@@ -97,7 +97,7 @@ internal static class WslCommandUtilities
         var result = RunShell(distroName, "wslpath -a \"$1\"", [windowsExecutablePath]);
         if (result.ExitCode != 0)
         {
-            message = LocalizationService.GetString("WslPathConversionFailed", "Failed to convert the LidGuard executable path with wslpath: {0}")
+            message = LocalizationService.GetString("WslPathConversionFailed")
                 .Replace("{0}", result.GetDisplayError(), StringComparison.Ordinal);
             return false;
         }
@@ -105,7 +105,7 @@ internal static class WslCommandUtilities
         wslExecutablePath = result.StandardOutput.Trim();
         if (!string.IsNullOrWhiteSpace(wslExecutablePath)) return true;
 
-        message = LocalizationService.GetString("WslPathConversionEmpty", "wslpath returned an empty LidGuard executable path.");
+        message = LocalizationService.GetString("WslPathConversionEmpty");
         return false;
     }
 
@@ -350,7 +350,7 @@ internal static class WslCommandUtilities
             return true;
         }
 
-        message = LocalizationService.GetString("WslLidGuardExecutableNotResolved", "A Windows lidguard.exe path could not be resolved for WSL integration.");
+        message = LocalizationService.GetString("WslLidGuardExecutableNotResolved");
         return false;
     }
 }

@@ -14,7 +14,7 @@ internal static class WslHookManagementCommand
             return 1;
         }
 
-        if (!TrySelectHookProviders(options, LocalizationService.GetString("ManagementPromptHookStatus", "Show hook status for provider"), true, context.DistroName, out var providers, out message))
+        if (!TrySelectHookProviders(options, LocalizationService.GetString("ManagementPromptHookStatus"), true, context.DistroName, out var providers, out message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -40,7 +40,7 @@ internal static class WslHookManagementCommand
             return 1;
         }
 
-        if (!TrySelectHookProviders(options, LocalizationService.GetString("ManagementPromptHookInstall", "Install hooks for provider"), true, context.DistroName, out var providers, out message))
+        if (!TrySelectHookProviders(options, LocalizationService.GetString("ManagementPromptHookInstall"), true, context.DistroName, out var providers, out message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -65,7 +65,7 @@ internal static class WslHookManagementCommand
             return 1;
         }
 
-        if (!TrySelectHookProviders(options, LocalizationService.GetString("ManagementPromptHookRemove", "Remove hooks for provider"), true, context.DistroName, out var providers, out message))
+        if (!TrySelectHookProviders(options, LocalizationService.GetString("ManagementPromptHookRemove"), true, context.DistroName, out var providers, out message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -323,7 +323,7 @@ internal static class WslHookManagementCommand
         if (!ManagedProviderSelection.TrySelectProviders(options, prompt, out var selectedProviders, out message)) return false;
         if (rejectSharedConfigurationFile && selectedProviders.Count > 1 && !string.IsNullOrWhiteSpace(CommandOptionReader.GetOption(options, "config", "configuration", "configuration-file")))
         {
-            message = LocalizationService.GetString("ManagementConfigCannotBeUsedWithAllProviders", "The config option cannot be used with all providers because each provider has a different configuration file.");
+            message = LocalizationService.GetString("ManagementConfigCannotBeUsedWithAllProviders");
             return false;
         }
 
@@ -343,9 +343,8 @@ internal static class WslHookManagementCommand
 
     private static bool ShouldSkipInstall(HookInstallationInspection inspection, out string message)
     {
-        message = LocalizationService.GetFormattedStringWithFallback(
+        message = LocalizationService.GetFormattedString(
             "HookManagementAlreadyInstalledOutsideManagedBlock",
-            "{0} hook is already installed outside the LidGuard managed block.",
             ManagedProviderSelection.GetProviderDisplayName(inspection.Provider));
         return inspection.Provider == AgentProvider.Codex && inspection.IsInstalled && !inspection.HasCheck(HookInstallationCheck.ManagedBlock);
     }

@@ -70,9 +70,8 @@ internal static class LidGuardSettingsValueParser
         if (string.IsNullOrWhiteSpace(closedLidStopFollowUpWebhookUrlText)
             || closedLidStopFollowUpWebhookUrlText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
         {
-            message = LocalizationService.GetFormattedStringWithFallback(
+            message = LocalizationService.GetFormattedString(
                 "SettingsOptionClosedLidStopFollowUpWebhookRemovalCommand",
-                "To remove the ask-before-sleep reply notification URL, use {0} {1}.",
                 LidGuardCommandConsole.GetCommandDisplayName(),
                 LidGuardPipeCommands.RemoveClosedLidStopFollowUpWebhook);
             return false;
@@ -199,8 +198,7 @@ internal static class LidGuardSettingsValueParser
         }
 
         message = LocalizationService.GetString(
-            "SettingsOptionClosedLidStopFollowUpDelaySecondsValidation",
-            "The closed-lid-stop-follow-up-delay-seconds option must be a non-negative integer.");
+            "SettingsOptionClosedLidStopFollowUpDelaySecondsValidation");
         return false;
     }
 

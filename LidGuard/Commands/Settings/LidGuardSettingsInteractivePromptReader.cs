@@ -39,7 +39,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             settingName,
             LocalizationService.DisplaySuspendMode(storedValue),
             LocalizationService.DisplaySuspendMode(defaultValue),
-            LocalizationService.GetString("SettingsInteractiveSuspendModeDetails", "candidates: Sleep, Hibernate"));
+            LocalizationService.GetString("SettingsInteractiveSuspendModeDetails"));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
@@ -74,7 +74,7 @@ internal static class LidGuardSettingsInteractivePromptReader
     {
         value = storedValue;
         message = string.Empty;
-        WriteInteractiveSettingPrompt(settingName, storedValue.ToString(), defaultValue.ToString(), LocalizationService.GetString("SettingsInteractiveImmediateDetails", "0 = immediate"));
+        WriteInteractiveSettingPrompt(settingName, storedValue.ToString(), defaultValue.ToString(), LocalizationService.GetString("SettingsInteractiveImmediateDetails"));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
@@ -305,7 +305,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             settingName,
             LocalizationService.DisplayEmergencyHibernationTemperatureMode(storedValue),
             LocalizationService.DisplayEmergencyHibernationTemperatureMode(defaultValue),
-            LocalizationService.GetString("SettingsInteractiveEmergencyHibernationTemperatureModeDetails", "candidates: Low, Average, High"));
+            LocalizationService.GetString("SettingsInteractiveEmergencyHibernationTemperatureModeDetails"));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
@@ -363,7 +363,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             settingName,
             LocalizationService.DisplayClosedLidPermissionRequestDecision(storedValue),
             LocalizationService.DisplayClosedLidPermissionRequestDecision(defaultValue),
-            LocalizationService.GetString("SettingsInteractiveClosedLidPermissionRequestDecisionDetails", "candidates: Deny, Allow, Ask"));
+            LocalizationService.GetString("SettingsInteractiveClosedLidPermissionRequestDecisionDetails"));
 
         var valueText = Console.ReadLine();
         if (valueText is null)
@@ -389,7 +389,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             settingName,
             storedValue,
             defaultValue,
-            LocalizationService.GetString("SettingsInteractiveUserInterfaceCultureDetails", "auto, en, ko, ja, zh-Hans, zh-Hant, or a culture name such as ko-KR"));
+            LocalizationService.GetString("SettingsInteractiveUserInterfaceCultureDetails"));
 
         var valueText = Console.ReadLine();
         if (valueText is null)

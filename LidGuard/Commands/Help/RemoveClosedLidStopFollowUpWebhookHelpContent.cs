@@ -12,8 +12,7 @@ internal static class RemoveClosedLidStopFollowUpWebhookHelpContent
             LidGuardHelpSectionTitles.SettingsAndSuspend,
             $"{documentContext.CommandDisplayName} {LidGuardPipeCommands.RemoveClosedLidStopFollowUpWebhook}",
             LocalizationService.GetString(
-                "Help_RemoveClosedLidStopFollowUpWebhook_Description",
-                "Remove the saved ask-before-sleep reply notification URL."),
+                "Help_RemoveClosedLidStopFollowUpWebhook_Description"),
             [],
             []);
 }

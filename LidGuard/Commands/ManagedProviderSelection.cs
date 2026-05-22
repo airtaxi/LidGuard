@@ -137,7 +137,7 @@ internal static class ManagedProviderSelection
         if (providerText is null)
         {
             providers = [];
-            message = LocalizationService.GetString("ManagementProviderSelectionInputEnded", "Input ended before a provider was selected.");
+            message = LocalizationService.GetString("ManagementProviderSelectionInputEnded");
             return false;
         }
 

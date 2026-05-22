@@ -56,9 +56,8 @@ public sealed class CodexHookInstaller : HookInstallerBase
 
     protected override bool ShouldSkipInstall(HookInstallationInspection currentInspection, out string message)
     {
-        message = LocalizationService.GetFormattedStringWithFallback(
+        message = LocalizationService.GetFormattedString(
             "HookManagementAlreadyInstalledOutsideManagedBlock",
-            "{0} hook is already installed outside the LidGuard managed block.",
             ProviderDisplayName);
         return currentInspection.IsInstalled && !currentInspection.HasCheck(HookInstallationCheck.ManagedBlock);
     }

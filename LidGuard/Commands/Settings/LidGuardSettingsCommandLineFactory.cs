@@ -25,8 +25,7 @@ internal static class LidGuardSettingsCommandLineFactory
         if (CommandOptionReader.TryGetOption(options, out _, "prevent-away-mode-sleep", "away-mode-required"))
         {
             message = LocalizationService.GetString(
-                "SettingsOptionPreventAwayModeSleepUnsupported",
-                "The prevent-away-mode-sleep option is only supported on Windows. Use prevent-system-sleep on this platform.");
+                "SettingsOptionPreventAwayModeSleepUnsupported");
             return false;
         }
 

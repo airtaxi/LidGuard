@@ -89,7 +89,7 @@ internal static class LidGuardSettingsInteractiveFactory
             out message))
             return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadNonNegativeIntegerSetting(
-            LocalizationService.GetString("SettingsNameClosedLidStopFollowUpDelaySeconds", "Ask-before-sleep reply wait seconds"),
+            LocalizationService.GetString("SettingsNameClosedLidStopFollowUpDelaySeconds"),
             normalizedStoredSettings.ClosedLidStopFollowUpDelaySeconds,
             defaultSettings.ClosedLidStopFollowUpDelaySeconds,
             out var closedLidStopFollowUpDelaySeconds,
@@ -103,7 +103,7 @@ internal static class LidGuardSettingsInteractiveFactory
             out message))
             return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting(
-            LocalizationService.GetString("SettingsNameRepeatClosedLidStopFollowUp", "Ask again after reply"),
+            LocalizationService.GetString("SettingsNameRepeatClosedLidStopFollowUp"),
             normalizedStoredSettings.RepeatClosedLidStopFollowUp,
             defaultSettings.RepeatClosedLidStopFollowUp,
             out var repeatClosedLidStopFollowUp,

@@ -26,7 +26,7 @@ internal static class MacOSPermissionCommand
     {
         if (arguments.Length == 0)
         {
-            Console.Error.WriteLine(Format("PermissionSubcommandRequired", "A subcommand is required. Use: {0} status|check|install|remove", CommandName));
+            Console.Error.WriteLine(Format("PermissionSubcommandRequired", CommandName));
             return 1;
         }
 
@@ -53,36 +53,36 @@ internal static class MacOSPermissionCommand
         var targetUserName = GetTargetUserName();
         var ruleInspection = InspectRule(targetUserName);
 
-        Console.WriteLine(Get("MacOSPermissionStatusTitle", "macOS permission status:"));
-        WriteField("PermissionLabelUser", "User", targetUserName);
-        WriteField("MacOSPermissionLabelSudoersPath", "Sudoers path", RuleFilePath);
-        WriteField("MacOSPermissionLabelSudoersRule", "Sudoers rule", DescribeRuleStatus(ruleInspection));
-        WriteField("MacOSPermissionLabelPrivilegedPmsetUsability", "Privileged pmset usability", DescribePrivilegedPmsetUsability());
-        WriteField("MacOSPermissionLabelCaffeinate", "caffeinate", DescribeExecutableAvailability("caffeinate"));
-        WriteField("MacOSPermissionLabelPmset", "pmset", DescribeExecutableAvailability("pmset"));
-        WriteField("MacOSPermissionLabelPowermetrics", "powermetrics", DescribeExecutableAvailability("powermetrics"));
-        WriteField("MacOSPermissionLabelIoreg", "ioreg", DescribeExecutableAvailability("ioreg"));
-        WriteField("MacOSPermissionLabelSystemProfiler", "system_profiler", DescribeExecutableAvailability("system_profiler"));
-        WriteField("MacOSPermissionLabelSleepDisabled", "SleepDisabled", DescribeSleepDisabled());
-        WriteField("MacOSPermissionLabelHibernateMode", "hibernatemode", DescribeHibernateMode());
+        Console.WriteLine(Get("MacOSPermissionStatusTitle"));
+        WriteField("PermissionLabelUser", targetUserName);
+        WriteField("MacOSPermissionLabelSudoersPath", RuleFilePath);
+        WriteField("MacOSPermissionLabelSudoersRule", DescribeRuleStatus(ruleInspection));
+        WriteField("MacOSPermissionLabelPrivilegedPmsetUsability", DescribePrivilegedPmsetUsability());
+        WriteField("MacOSPermissionLabelCaffeinate", DescribeExecutableAvailability("caffeinate"));
+        WriteField("MacOSPermissionLabelPmset", DescribeExecutableAvailability("pmset"));
+        WriteField("MacOSPermissionLabelPowermetrics", DescribeExecutableAvailability("powermetrics"));
+        WriteField("MacOSPermissionLabelIoreg", DescribeExecutableAvailability("ioreg"));
+        WriteField("MacOSPermissionLabelSystemProfiler", DescribeExecutableAvailability("system_profiler"));
+        WriteField("MacOSPermissionLabelSleepDisabled", DescribeSleepDisabled());
+        WriteField("MacOSPermissionLabelHibernateMode", DescribeHibernateMode());
         return 0;
     }
 
     private static int RunCheck()
     {
         var succeeded = true;
-        Console.WriteLine(Get("MacOSPermissionCheckTitle", "macOS permission check:"));
+        Console.WriteLine(Get("MacOSPermissionCheckTitle"));
 
         var assertionResult = CaffeinateAssertion.TryAcquire(["-i"]);
         if (assertionResult.Succeeded)
         {
             assertionResult.Value.Dispose();
-            WriteCheckLine("MacOSPermissionCheckCaffeinateAcquireRelease", "caffeinate acquire/release", Get("PermissionResultOk", "ok"));
+            WriteCheckLine("MacOSPermissionCheckCaffeinateAcquireRelease", Get("PermissionResultOk"));
         }
         else
         {
             succeeded = false;
-            WriteCheckLine("MacOSPermissionCheckCaffeinateAcquireRelease", "caffeinate acquire/release", Format("PermissionResultFailed", "failed - {0}", assertionResult.Message));
+            WriteCheckLine("MacOSPermissionCheckCaffeinateAcquireRelease", Format("PermissionResultFailed", assertionResult.Message));
         }
 
         succeeded &= WritePmsetReadCheck();
@@ -107,13 +107,13 @@ internal static class MacOSPermissionCommand
             var ruleInspection = InspectRule(targetUserName);
             if (!ruleInspection.InspectionSucceeded)
             {
-                Console.Error.WriteLine(Format("MacOSPermissionInspectSudoersRuleFailed", "Failed to inspect existing sudoers rule: {0}", ruleInspection.Message));
+                Console.Error.WriteLine(Format("MacOSPermissionInspectSudoersRuleFailed", ruleInspection.Message));
                 return 1;
             }
 
             if (ruleInspection.Exists && !ruleInspection.IsManaged)
             {
-                Console.Error.WriteLine(Format("MacOSPermissionRefusingOverwriteUnmanagedSudoersRule", "Refusing to overwrite unmanaged sudoers file: {0}", RuleFilePath));
+                Console.Error.WriteLine(Format("MacOSPermissionRefusingOverwriteUnmanagedSudoersRule", RuleFilePath));
                 return 1;
             }
 
@@ -122,19 +122,19 @@ internal static class MacOSPermissionCommand
                 Directory.CreateDirectory(Path.GetDirectoryName(RuleFilePath) ?? "/private/etc/sudoers.d");
                 File.WriteAllText(RuleFilePath, ruleContent);
                 if (OperatingSystem.IsMacOS()) File.SetUnixFileMode(RuleFilePath, UnixFileMode.UserRead | UnixFileMode.GroupRead);
-                Console.WriteLine(Format("MacOSPermissionSudoersRuleInstalled", "Installed LidGuard sudoers rule for user {0}: {1}", targetUserName, RuleFilePath));
+                Console.WriteLine(Format("MacOSPermissionSudoersRuleInstalled", targetUserName, RuleFilePath));
                 return 0;
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
-                Console.Error.WriteLine(Format("MacOSPermissionInstallSudoersRuleFailed", "Failed to install sudoers rule: {0}", exception.Message));
+                Console.Error.WriteLine(Format("MacOSPermissionInstallSudoersRuleFailed", exception.Message));
                 return 1;
             }
         }
 
         if (!MacOSCommandPathResolver.TryFindExecutable("sudo", out var sudoExecutablePath))
         {
-            Console.Error.WriteLine(Get("PermissionSudoNotFound", "sudo was not found on PATH. Run this command as root or install sudo."));
+            Console.Error.WriteLine(Get("PermissionSudoNotFound"));
             return 1;
         }
 
@@ -161,12 +161,12 @@ internal static class MacOSPermissionCommand
                 return 1;
             }
 
-            Console.WriteLine(Format("MacOSPermissionSudoersRuleInstalled", "Installed LidGuard sudoers rule for user {0}: {1}", targetUserName, RuleFilePath));
+            Console.WriteLine(Format("MacOSPermissionSudoersRuleInstalled", targetUserName, RuleFilePath));
             return 0;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            Console.Error.WriteLine(Format("MacOSPermissionPrepareSudoersRuleFailed", "Failed to prepare sudoers rule: {0}", exception.Message));
+            Console.Error.WriteLine(Format("MacOSPermissionPrepareSudoersRuleFailed", exception.Message));
             return 1;
         }
         finally
@@ -183,38 +183,38 @@ internal static class MacOSPermissionCommand
             var ruleInspection = InspectRule(targetUserName);
             if (!ruleInspection.InspectionSucceeded)
             {
-                Console.Error.WriteLine(Format("MacOSPermissionInspectSudoersRuleFailed", "Failed to inspect existing sudoers rule: {0}", ruleInspection.Message));
+                Console.Error.WriteLine(Format("MacOSPermissionInspectSudoersRuleFailed", ruleInspection.Message));
                 return 1;
             }
 
             if (!ruleInspection.Exists)
             {
-                Console.WriteLine(Format("MacOSPermissionSudoersRuleNotInstalled", "LidGuard sudoers rule is not installed: {0}", RuleFilePath));
+                Console.WriteLine(Format("MacOSPermissionSudoersRuleNotInstalled", RuleFilePath));
                 return 0;
             }
 
             if (!ruleInspection.IsManaged)
             {
-                Console.Error.WriteLine(Format("MacOSPermissionRefusingRemoveUnmanagedSudoersRule", "Refusing to remove unmanaged sudoers file: {0}", RuleFilePath));
+                Console.Error.WriteLine(Format("MacOSPermissionRefusingRemoveUnmanagedSudoersRule", RuleFilePath));
                 return 1;
             }
 
             try
             {
                 File.Delete(RuleFilePath);
-                Console.WriteLine(Format("MacOSPermissionSudoersRuleRemoved", "Removed LidGuard sudoers rule: {0}", RuleFilePath));
+                Console.WriteLine(Format("MacOSPermissionSudoersRuleRemoved", RuleFilePath));
                 return 0;
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
-                Console.Error.WriteLine(Format("MacOSPermissionRemoveSudoersRuleFailed", "Failed to remove sudoers rule: {0}", exception.Message));
+                Console.Error.WriteLine(Format("MacOSPermissionRemoveSudoersRuleFailed", exception.Message));
                 return 1;
             }
         }
 
         if (!MacOSCommandPathResolver.TryFindExecutable("sudo", out var sudoExecutablePath))
         {
-            Console.Error.WriteLine(Get("PermissionSudoNotFound", "sudo was not found on PATH. Run this command as root or install sudo."));
+            Console.Error.WriteLine(Get("PermissionSudoNotFound"));
             return 1;
         }
 
@@ -232,7 +232,7 @@ internal static class MacOSPermissionCommand
             TimeSpan.FromMinutes(2));
         if (removeResult.Started && removeResult.ExitCode == 2)
         {
-            Console.WriteLine(Format("MacOSPermissionSudoersRuleNotInstalled", "LidGuard sudoers rule is not installed: {0}", RuleFilePath));
+            Console.WriteLine(Format("MacOSPermissionSudoersRuleNotInstalled", RuleFilePath));
             return 0;
         }
 
@@ -242,7 +242,7 @@ internal static class MacOSPermissionCommand
             return 1;
         }
 
-        Console.WriteLine(Format("MacOSPermissionSudoersRuleRemoved", "Removed LidGuard sudoers rule: {0}", RuleFilePath));
+        Console.WriteLine(Format("MacOSPermissionSudoersRuleRemoved", RuleFilePath));
         return 0;
     }
 
@@ -250,18 +250,18 @@ internal static class MacOSPermissionCommand
     {
         if (!MacOSCommandPathResolver.TryFindExecutable("pmset", out var pmsetPath))
         {
-            WriteCheckLine("MacOSPermissionCheckPmsetRead", "pmset -g", Format("PermissionResultFailed", "failed - {0}", Format("PermissionExecutableNotFound", "{0} was not found on PATH.", "pmset")));
+            WriteCheckLine("MacOSPermissionCheckPmsetRead", Format("PermissionResultFailed", Format("PermissionExecutableNotFound", "pmset")));
             return false;
         }
 
         var commandResult = MacOSCommandRunner.Run(pmsetPath, ["-g"], s_checkCommandTimeout);
         if (commandResult.Succeeded)
         {
-            WriteCheckLine("MacOSPermissionCheckPmsetRead", "pmset -g", Get("PermissionResultOk", "ok"));
+            WriteCheckLine("MacOSPermissionCheckPmsetRead", Get("PermissionResultOk"));
             return true;
         }
 
-        WriteCheckLine("MacOSPermissionCheckPmsetRead", "pmset -g", Format("PermissionResultFailed", "failed - {0}", commandResult.CreateFailureMessage("pmset -g")));
+        WriteCheckLine("MacOSPermissionCheckPmsetRead", Format("PermissionResultFailed", commandResult.CreateFailureMessage("pmset -g")));
         return false;
     }
 
@@ -270,18 +270,18 @@ internal static class MacOSPermissionCommand
         var readResult = MacOSPowerSettings.ReadSleepDisabled();
         if (!readResult.Succeeded)
         {
-            WriteCheckLine("MacOSPermissionCheckPrivilegedPmsetDisableSleep", "privileged pmset disablesleep", Format("PermissionResultUnavailable", "unavailable - {0}", readResult.Message));
+            WriteCheckLine("MacOSPermissionCheckPrivilegedPmsetDisableSleep", Format("PermissionResultUnavailable", readResult.Message));
             return false;
         }
 
         var writeResult = MacOSPowerSettings.SetSleepDisabled(readResult.Value);
         if (writeResult.Succeeded)
         {
-            WriteCheckLine("MacOSPermissionCheckPrivilegedPmsetDisableSleep", "privileged pmset disablesleep", Get("PermissionResultOk", "ok"));
+            WriteCheckLine("MacOSPermissionCheckPrivilegedPmsetDisableSleep", Get("PermissionResultOk"));
             return true;
         }
 
-        WriteCheckLine("MacOSPermissionCheckPrivilegedPmsetDisableSleep", "privileged pmset disablesleep", Format("PermissionResultFailed", "failed - {0}", writeResult.Message));
+        WriteCheckLine("MacOSPermissionCheckPrivilegedPmsetDisableSleep", Format("PermissionResultFailed", writeResult.Message));
         return false;
     }
 
@@ -290,24 +290,24 @@ internal static class MacOSPermissionCommand
         var readResult = MacOSPowerSettings.ReadHibernateMode();
         if (!readResult.Succeeded)
         {
-            WriteCheckLine("MacOSPermissionCheckPrivilegedPmsetHibernateMode", "privileged pmset hibernatemode", Format("PermissionResultUnavailable", "unavailable - {0}", readResult.Message));
+            WriteCheckLine("MacOSPermissionCheckPrivilegedPmsetHibernateMode", Format("PermissionResultUnavailable", readResult.Message));
             return false;
         }
 
         if (!MacOSPowerSettings.IsSupportedHibernateMode(readResult.Value))
         {
-            WriteCheckLine("MacOSPermissionCheckPrivilegedPmsetHibernateMode", "privileged pmset hibernatemode", Format("MacOSPermissionUnsupportedHibernateModeValue", "unavailable - unsupported current value {0}", readResult.Value));
+            WriteCheckLine("MacOSPermissionCheckPrivilegedPmsetHibernateMode", Format("MacOSPermissionUnsupportedHibernateModeValue", readResult.Value));
             return false;
         }
 
         var writeResult = MacOSPowerSettings.SetHibernateMode(readResult.Value);
         if (writeResult.Succeeded)
         {
-            WriteCheckLine("MacOSPermissionCheckPrivilegedPmsetHibernateMode", "privileged pmset hibernatemode", Get("PermissionResultOk", "ok"));
+            WriteCheckLine("MacOSPermissionCheckPrivilegedPmsetHibernateMode", Get("PermissionResultOk"));
             return true;
         }
 
-        WriteCheckLine("MacOSPermissionCheckPrivilegedPmsetHibernateMode", "privileged pmset hibernatemode", Format("PermissionResultFailed", "failed - {0}", writeResult.Message));
+        WriteCheckLine("MacOSPermissionCheckPrivilegedPmsetHibernateMode", Format("PermissionResultFailed", writeResult.Message));
         return false;
     }
 
@@ -319,38 +319,38 @@ internal static class MacOSPermissionCommand
             s_checkCommandTimeout);
         if (commandResult.Succeeded)
         {
-            WriteCheckLine("MacOSPermissionCheckPrivilegedPowermetricsSmcSample", "privileged powermetrics SMC sample", Get("PermissionResultOk", "ok"));
+            WriteCheckLine("MacOSPermissionCheckPrivilegedPowermetricsSmcSample", Get("PermissionResultOk"));
             return true;
         }
 
-        WriteCheckLine("MacOSPermissionCheckPrivilegedPowermetricsSmcSample", "privileged powermetrics SMC sample", Format("PermissionResultUnavailable", "unavailable - {0}", commandResult.CreateFailureMessage("powermetrics --samplers smc")));
+        WriteCheckLine("MacOSPermissionCheckPrivilegedPowermetricsSmcSample", Format("PermissionResultUnavailable", commandResult.CreateFailureMessage("powermetrics --samplers smc")));
         return false;
     }
 
     private static string DescribeExecutableAvailability(string commandName)
         => MacOSCommandPathResolver.TryFindExecutable(commandName, out var executablePath)
-            ? Format("PermissionExecutableAvailable", "available ({0})", executablePath)
-            : Get("PermissionExecutableMissing", "missing");
+            ? Format("PermissionExecutableAvailable", executablePath)
+            : Get("PermissionExecutableMissing");
 
     private static string DescribeSleepDisabled()
     {
         var readResult = MacOSPowerSettings.ReadSleepDisabled();
-        return readResult.Succeeded ? (readResult.Value ? "1" : "0") : Format("PermissionResultUnavailableParenthesized", "unavailable ({0})", readResult.Message);
+        return readResult.Succeeded ? (readResult.Value ? "1" : "0") : Format("PermissionResultUnavailableParenthesized", readResult.Message);
     }
 
     private static string DescribeHibernateMode()
     {
         var readResult = MacOSPowerSettings.ReadHibernateMode();
-        return readResult.Succeeded ? readResult.Value.ToString() : Format("PermissionResultUnavailableParenthesized", "unavailable ({0})", readResult.Message);
+        return readResult.Succeeded ? readResult.Value.ToString() : Format("PermissionResultUnavailableParenthesized", readResult.Message);
     }
 
     private static string DescribePrivilegedPmsetUsability()
     {
         var readResult = MacOSPowerSettings.ReadSleepDisabled();
-        if (!readResult.Succeeded) return Format("PermissionResultUnavailableParenthesized", "unavailable ({0})", readResult.Message);
+        if (!readResult.Succeeded) return Format("PermissionResultUnavailableParenthesized", readResult.Message);
 
         var writeResult = MacOSPowerSettings.SetSleepDisabled(readResult.Value);
-        return writeResult.Succeeded ? Get("PermissionResultOk", "ok") : Format("PermissionResultFailedParenthesized", "failed ({0})", writeResult.Message);
+        return writeResult.Succeeded ? Get("PermissionResultOk") : Format("PermissionResultFailedParenthesized", writeResult.Message);
     }
 
     private static RuleInspection InspectRule(string targetUserName)
@@ -368,12 +368,12 @@ internal static class MacOSPermissionCommand
 
     private static string DescribeRuleStatus(RuleInspection ruleInspection)
     {
-        if (!ruleInspection.InspectionSucceeded) return Format("MacOSPermissionRuleContentInspectionUnavailable", "content inspection unavailable ({0})", ruleInspection.Message);
-        if (!ruleInspection.Exists) return Get("PermissionRuleNotInstalled", "not installed");
-        if (!ruleInspection.IsManaged) return Get("PermissionRulePresentUnmanaged", "present but not managed by LidGuard");
+        if (!ruleInspection.InspectionSucceeded) return Format("MacOSPermissionRuleContentInspectionUnavailable", ruleInspection.Message);
+        if (!ruleInspection.Exists) return Get("PermissionRuleNotInstalled");
+        if (!ruleInspection.IsManaged) return Get("PermissionRulePresentUnmanaged");
         return ruleInspection.IsForCurrentUser
-            ? Get("PermissionRuleInstalledForCurrentUser", "installed for current user")
-            : Get("PermissionRuleInstalledForAnotherUser", "installed for another user");
+            ? Get("PermissionRuleInstalledForCurrentUser")
+            : Get("PermissionRuleInstalledForAnotherUser");
     }
 
     private static RuleContentReadResult ReadRuleContentDirect()
@@ -423,7 +423,7 @@ internal static class MacOSPermissionCommand
         message = string.Empty;
         if (!MacOSCommandPathResolver.TryFindExecutable("visudo", out var visudoPath))
         {
-            message = Get("MacOSPermissionVisudoNotFound", "visudo was not found on PATH. Refusing to install an unvalidated sudoers rule.");
+            message = Get("MacOSPermissionVisudoNotFound");
             return false;
         }
 
@@ -439,7 +439,7 @@ internal static class MacOSPermissionCommand
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            message = Format("MacOSPermissionPrepareSudoersValidationFileFailed", "Failed to prepare sudoers validation file: {0}", exception.Message);
+            message = Format("MacOSPermissionPrepareSudoersValidationFileFailed", exception.Message);
             return false;
         }
         finally
@@ -460,7 +460,7 @@ internal static class MacOSPermissionCommand
             : MacOSCommandResult.Failure("whoami was not found.");
         return userResult.Succeeded && !string.IsNullOrWhiteSpace(userResult.StandardOutput)
             ? userResult.StandardOutput.Trim()
-            : Get("PermissionUnknownUser", "unknown");
+            : Get("PermissionUnknownUser");
     }
 
     private static bool IsRootUser()
@@ -473,8 +473,8 @@ internal static class MacOSPermissionCommand
 
     private static int WriteUnknownSubcommand(string subcommand)
     {
-        Console.Error.WriteLine(Format("PermissionUnknownSubcommand", "Unknown {0} subcommand: {1}", CommandName, subcommand));
-        Console.Error.WriteLine(Format("PermissionSubcommandUsage", "Use: {0} status|check|install|remove", CommandName));
+        Console.Error.WriteLine(Format("PermissionUnknownSubcommand", CommandName, subcommand));
+        Console.Error.WriteLine(Format("PermissionSubcommandUsage", CommandName));
         return 1;
     }
 
@@ -483,17 +483,17 @@ internal static class MacOSPermissionCommand
             || argument.Equals("-h", StringComparison.OrdinalIgnoreCase)
             || argument.Equals("/?", StringComparison.OrdinalIgnoreCase);
 
-    private static void WriteField(string labelResourceName, string fallbackLabel, string value)
-        => Console.WriteLine(Format("ManagementField", "{0}: {1}", Get(labelResourceName, fallbackLabel), value));
+    private static void WriteField(string labelResourceName, string value)
+        => Console.WriteLine(Format("ManagementField", Get(labelResourceName), value));
 
-    private static void WriteCheckLine(string labelResourceName, string fallbackLabel, string value)
-        => Console.WriteLine(Format("ManagementField", "{0}: {1}", Get(labelResourceName, fallbackLabel), value));
+    private static void WriteCheckLine(string labelResourceName, string value)
+        => Console.WriteLine(Format("ManagementField", Get(labelResourceName), value));
 
-    private static string Get(string resourceName, string fallbackValue)
-        => LocalizationService.GetString(resourceName, fallbackValue);
+    private static string Get(string resourceName)
+        => LocalizationService.GetString(resourceName);
 
-    private static string Format(string resourceName, string fallbackValue, params object[] arguments)
-        => string.Format(System.Globalization.CultureInfo.CurrentCulture, Get(resourceName, fallbackValue), arguments);
+    private static string Format(string resourceName, params object[] arguments)
+        => string.Format(System.Globalization.CultureInfo.CurrentCulture, Get(resourceName), arguments);
 
     private static void TryDeleteTemporaryFile(string temporaryRuleFilePath)
     {

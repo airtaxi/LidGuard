@@ -9,7 +9,7 @@ internal static class McpManagementCommand
 {
     public static int WriteMcpStatus(string providerText)
     {
-        if (!ManagedProviderSelection.TrySelectProviders(providerText, LocalizationService.GetString("ManagementPromptMcpStatus", "Show MCP server status for provider"), out var selectedProviders, out var message))
+        if (!ManagedProviderSelection.TrySelectProviders(providerText, LocalizationService.GetString("ManagementPromptMcpStatus"), out var selectedProviders, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -42,7 +42,7 @@ internal static class McpManagementCommand
 
     public static int InstallMcp(string providerText)
     {
-        if (!ManagedProviderSelection.TrySelectProviders(providerText, LocalizationService.GetString("ManagementPromptMcpInstall", "Install MCP server for provider"), out var selectedProviders, out var message))
+        if (!ManagedProviderSelection.TrySelectProviders(providerText, LocalizationService.GetString("ManagementPromptMcpInstall"), out var selectedProviders, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -60,7 +60,7 @@ internal static class McpManagementCommand
         var managedExecutableReference = HookCommandUtilities.GetDefaultMcpExecutableReference();
         if (!HookCommandUtilities.HookExecutableExists(managedExecutableReference))
         {
-            Console.Error.WriteLine(LocalizationService.GetString("ManagementLidGuardExecutableMissing", "LidGuard executable or command does not exist: {0}").Replace("{0}", managedExecutableReference, StringComparison.Ordinal));
+            Console.Error.WriteLine(LocalizationService.GetString("ManagementLidGuardExecutableMissing").Replace("{0}", managedExecutableReference, StringComparison.Ordinal));
             return 1;
         }
 
@@ -80,7 +80,7 @@ internal static class McpManagementCommand
 
     public static int RemoveMcp(string providerText)
     {
-        if (!ManagedProviderSelection.TrySelectProviders(providerText, LocalizationService.GetString("ManagementPromptMcpRemove", "Remove MCP server for provider"), out var selectedProviders, out var message))
+        if (!ManagedProviderSelection.TrySelectProviders(providerText, LocalizationService.GetString("ManagementPromptMcpRemove"), out var selectedProviders, out var message))
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -137,14 +137,14 @@ internal static class McpManagementCommand
         if (inspectionResult.ShouldRefreshManagedMcpServer)
         {
             Console.WriteLine(
-                LocalizationService.GetString("ManagementExistingMcpServerRefreshing", "Existing managed LidGuard MCP server found for {0}. Refreshing registration.")
+                LocalizationService.GetString("ManagementExistingMcpServerRefreshing")
                     .Replace("{0}", ManagedProviderSelection.GetProviderDisplayName(provider), StringComparison.Ordinal));
 
             var removeExitCode = RemoveProviderMcp(provider);
             if (removeExitCode != 0)
             {
                 Console.Error.WriteLine(
-                    LocalizationService.GetString("ManagementSkippingMcpInstallAfterRemoveFailure", "Skipping {0} MCP install because removing the existing managed registration failed.")
+                    LocalizationService.GetString("ManagementSkippingMcpInstallAfterRemoveFailure")
                         .Replace("{0}", ManagedProviderSelection.GetProviderDisplayName(provider), StringComparison.Ordinal));
                 return removeExitCode;
             }

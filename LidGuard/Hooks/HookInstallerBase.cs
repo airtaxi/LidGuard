@@ -12,7 +12,7 @@ public abstract class HookInstallerBase : IHookInstaller
     protected abstract string DefaultHookCommandName { get; }
 
     protected virtual string ConfigurationMissingMessage
-        => Format("HookManagementConfigurationFileDoesNotExist", "{0} configuration file does not exist.", ProviderDisplayName);
+        => Format("HookManagementConfigurationFileDoesNotExist", ProviderDisplayName);
 
     public HookInstallationInspection Inspect(HookInstallationRequest request)
     {
@@ -41,7 +41,7 @@ public abstract class HookInstallerBase : IHookInstaller
             var missingExecutableInspection = Inspect(normalizedRequest);
             return HookInstallationResult.Failure(
                 missingExecutableInspection,
-                Format("HookManagementHookExecutableDoesNotExist", "Hook executable or command does not exist: {0}", normalizedRequest.HookExecutablePath));
+                Format("HookManagementHookExecutableDoesNotExist", normalizedRequest.HookExecutablePath));
         }
 
         var hookCommand = HookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);
@@ -169,29 +169,29 @@ public abstract class HookInstallerBase : IHookInstaller
     }
 
     private string CreateAlreadyInstalledMessage()
-        => Format("HookManagementAlreadyInstalled", "{0} hook is already installed.", ProviderDisplayName);
+        => Format("HookManagementAlreadyInstalled", ProviderDisplayName);
 
     private string CreateInstalledMessage()
-        => Format("HookManagementInstalled", "{0} hook installed.", ProviderDisplayName);
+        => Format("HookManagementInstalled", ProviderDisplayName);
 
     private string CreateWrittenNeedsAttentionMessage()
-        => Format("HookManagementWrittenNeedsAttention", "{0} hook configuration was written but still needs attention.", ProviderDisplayName);
+        => Format("HookManagementWrittenNeedsAttention", ProviderDisplayName);
 
     private string CreateNotInstalledMessage()
-        => Format("HookManagementNotInstalled", "{0} hook is not installed.", ProviderDisplayName);
+        => Format("HookManagementNotInstalled", ProviderDisplayName);
 
     private string CreateNoManagedHookFoundMessage()
-        => Format("HookManagementNoManagedHookFound", "No LidGuard-managed {0} hook was found.", ProviderDisplayName);
+        => Format("HookManagementNoManagedHookFound", ProviderDisplayName);
 
     private string CreateRemovedMessage()
-        => Format("HookManagementRemoved", "{0} hook removed.", ProviderDisplayName);
+        => Format("HookManagementRemoved", ProviderDisplayName);
 
     private string CreateUnsupportedInstallationMessage()
-        => Format("HookManagementUnsupportedInstallation", "Only {0} hook installation is implemented.", ProviderDisplayName);
+        => Format("HookManagementUnsupportedInstallation", ProviderDisplayName);
 
     private string CreateUnsupportedRemovalMessage()
-        => Format("HookManagementUnsupportedRemoval", "Only {0} hook removal is implemented.", ProviderDisplayName);
+        => Format("HookManagementUnsupportedRemoval", ProviderDisplayName);
 
-    private static string Format(string resourceName, string fallbackValue, params object[] arguments)
-        => LocalizationService.GetFormattedStringWithFallback(resourceName, fallbackValue, arguments);
+    private static string Format(string resourceName, params object[] arguments)
+        => LocalizationService.GetFormattedString(resourceName, arguments);
 }

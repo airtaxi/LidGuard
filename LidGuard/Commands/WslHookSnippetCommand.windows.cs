@@ -86,7 +86,7 @@ internal static class WslHookSnippetCommand
             var optionName = argument[2..];
             if (string.IsNullOrWhiteSpace(optionName))
             {
-                message = LocalizationService.GetString("CommandOptionNameRequired", "An option name is required after --.");
+                message = LocalizationService.GetString("CommandOptionNameRequired");
                 return false;
             }
 

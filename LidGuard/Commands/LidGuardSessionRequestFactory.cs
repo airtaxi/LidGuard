@@ -24,8 +24,7 @@ internal static class LidGuardSessionRequestFactory
         if (!AgentProviderOptionParser.TryParseProvider(providerText, out var provider))
         {
             message = LocalizationService.GetString(
-                "SessionRequestProviderRequired",
-                "A provider is required. Use codex, claude, copilot, custom, mcp, or unknown.");
+                "SessionRequestProviderRequired");
             return false;
         }
 
@@ -36,8 +35,7 @@ internal static class LidGuardSessionRequestFactory
         if (provider == AgentProvider.Mcp && string.IsNullOrWhiteSpace(providerName))
         {
             message = LocalizationService.GetString(
-                "SessionRequestProviderNameRequiredForMcp",
-                "The --provider-name option is required when --provider mcp is used.");
+                "SessionRequestProviderNameRequiredForMcp");
             return false;
         }
 
@@ -72,24 +70,21 @@ internal static class LidGuardSessionRequestFactory
             if (CommandOptionReader.TryGetOption(options, out _, "session", "session-id", "session-identifier"))
             {
                 message = LocalizationService.GetString(
-                    "SessionRequestAllCannotCombineWithSession",
-                    "The --all option cannot be combined with --session.");
+                    "SessionRequestAllCannotCombineWithSession");
                 return false;
             }
 
             if (CommandOptionReader.TryGetOption(options, out _, "provider"))
             {
                 message = LocalizationService.GetString(
-                    "SessionRequestAllCannotCombineWithProvider",
-                    "The --all option cannot be combined with --provider.");
+                    "SessionRequestAllCannotCombineWithProvider");
                 return false;
             }
 
             if (CommandOptionReader.TryGetOption(options, out _, "provider-name"))
             {
                 message = LocalizationService.GetString(
-                    "SessionRequestAllCannotCombineWithProviderName",
-                    "The --all option cannot be combined with --provider-name.");
+                    "SessionRequestAllCannotCombineWithProviderName");
                 return false;
             }
 
@@ -104,7 +99,7 @@ internal static class LidGuardSessionRequestFactory
         var sessionIdentifier = CommandOptionReader.GetOption(options, "session", "session-id", "session-identifier");
         if (string.IsNullOrWhiteSpace(sessionIdentifier))
         {
-            message = LocalizationService.GetString("SessionRequestSessionIdentifierRequired", "A session identifier is required.");
+            message = LocalizationService.GetString("SessionRequestSessionIdentifierRequired");
             return false;
         }
 
@@ -113,8 +108,7 @@ internal static class LidGuardSessionRequestFactory
         if (providerWasSpecified && !AgentProviderOptionParser.TryParseProvider(providerText, out provider))
         {
             message = LocalizationService.GetString(
-                "SessionRequestUnsupportedProvider",
-                "Unsupported provider. Use codex, claude, copilot, custom, mcp, or unknown.");
+                "SessionRequestUnsupportedProvider");
             return false;
         }
 
@@ -145,8 +139,7 @@ internal static class LidGuardSessionRequestFactory
         if (int.TryParse(watchedProcessText, out watchedProcessIdentifier) && watchedProcessIdentifier >= 0) return true;
 
         message = LocalizationService.GetString(
-            "SessionRequestWatchedProcessIdentifierValidation",
-            "The watched process identifier must be a non-negative integer.");
+            "SessionRequestWatchedProcessIdentifierValidation");
         return false;
     }
 

@@ -34,32 +34,32 @@ internal readonly record struct ManagedMcpInspectionResult(
         if (!configurationFileExists) return LocalizationService.GetFormattedString("ManagementConfigurationFileDoesNotExist", configurationFilePath);
         if (!string.IsNullOrWhiteSpace(parseMessage)) return parseMessage;
         if (!hasServerEntry) return LocalizationService.GetFormattedString("ManagementNoMcpServerNamedFound", McpConfigurationTomlUtilities.ManagedMcpServerName);
-        if (!matchesCurrentLidGuardExecutable) return LocalizationService.GetString("ManagementMcpServerDoesNotPointAtCurrentExecutable", "The MCP server '{0}' exists but does not point at the current LidGuard executable.")
+        if (!matchesCurrentLidGuardExecutable) return LocalizationService.GetString("ManagementMcpServerDoesNotPointAtCurrentExecutable")
             .Replace("{0}", McpConfigurationTomlUtilities.ManagedMcpServerName, StringComparison.Ordinal);
-        if (!containsExpectedServerCommand) return LocalizationService.GetString("ManagementMcpServerDoesNotPointAtManagedCommand", "The MCP server '{0}' exists but does not point at '{1}'.")
+        if (!containsExpectedServerCommand) return LocalizationService.GetString("ManagementMcpServerDoesNotPointAtManagedCommand")
             .Replace("{0}", McpConfigurationTomlUtilities.ManagedMcpServerName, StringComparison.Ordinal)
             .Replace("{1}", LidGuardMcpServerCommand.CommandName, StringComparison.Ordinal);
-        return LocalizationService.GetString("ManagementLidGuardMcpServerRegistered", "LidGuard MCP server is registered.");
+        return LocalizationService.GetString("ManagementLidGuardMcpServerRegistered");
     }
 
     public static int WriteProviderMcpStatus(ManagedMcpInspectionResult inspectionResult)
     {
         Console.WriteLine(LocalizationService.GetString("ManagementMcpInstallationTitle"));
-        ManagementFieldWriter.WriteField("ManagementLabelProvider", "Provider", inspectionResult.Provider);
-        ManagementFieldWriter.WriteField("ManagementLabelInstalled", "Installed", inspectionResult.IsManagedMcpServerInstalled);
-        ManagementFieldWriter.WriteField("ManagementLabelConfig", "Config", inspectionResult.ConfigurationFilePath);
-        ManagementFieldWriter.WriteField("ManagementLabelConfigExists", "Config exists", inspectionResult.ConfigurationFileExists);
-        ManagementFieldWriter.WriteField("ManagementLabelCliAvailable", "CLI available", inspectionResult.HasProviderCli);
-        ManagementFieldWriter.WriteField("ManagementLabelCli", "CLI", inspectionResult.ProviderCliDisplayText);
-        ManagementFieldWriter.WriteField("ManagementLabelServerName", "Server name", McpConfigurationTomlUtilities.ManagedMcpServerName);
-        ManagementFieldWriter.WriteField("ManagementLabelManagedServerEntry", "Managed server entry", inspectionResult.HasNamedServerEntry);
-        ManagementFieldWriter.WriteField("ManagementLabelTransport", "Transport", inspectionResult.ServerType);
-        ManagementFieldWriter.WriteField("ManagementLabelCommand", "Command", inspectionResult.ServerCommand);
-        ManagementFieldWriter.WriteField("ManagementLabelArgs", "Args", inspectionResult.ServerArguments);
-        ManagementFieldWriter.WriteField("ManagementLabelUrl", "Url", inspectionResult.ServerUrl);
-        ManagementFieldWriter.WriteField("ManagementLabelMatchesCurrentLidGuardExecutable", "Matches current LidGuard executable", inspectionResult.MatchesCurrentLidGuardExecutable);
-        ManagementFieldWriter.WriteField("ManagementLabelContainsMcpServerCommand", "Contains mcp-server command", inspectionResult.ContainsExpectedServerCommand);
-        ManagementFieldWriter.WriteField("ManagementLabelMessage", "Message", inspectionResult.Message);
+        ManagementFieldWriter.WriteField("ManagementLabelProvider", inspectionResult.Provider);
+        ManagementFieldWriter.WriteField("ManagementLabelInstalled", inspectionResult.IsManagedMcpServerInstalled);
+        ManagementFieldWriter.WriteField("ManagementLabelConfig", inspectionResult.ConfigurationFilePath);
+        ManagementFieldWriter.WriteField("ManagementLabelConfigExists", inspectionResult.ConfigurationFileExists);
+        ManagementFieldWriter.WriteField("ManagementLabelCliAvailable", inspectionResult.HasProviderCli);
+        ManagementFieldWriter.WriteField("ManagementLabelCli", inspectionResult.ProviderCliDisplayText);
+        ManagementFieldWriter.WriteField("ManagementLabelServerName", McpConfigurationTomlUtilities.ManagedMcpServerName);
+        ManagementFieldWriter.WriteField("ManagementLabelManagedServerEntry", inspectionResult.HasNamedServerEntry);
+        ManagementFieldWriter.WriteField("ManagementLabelTransport", inspectionResult.ServerType);
+        ManagementFieldWriter.WriteField("ManagementLabelCommand", inspectionResult.ServerCommand);
+        ManagementFieldWriter.WriteField("ManagementLabelArgs", inspectionResult.ServerArguments);
+        ManagementFieldWriter.WriteField("ManagementLabelUrl", inspectionResult.ServerUrl);
+        ManagementFieldWriter.WriteField("ManagementLabelMatchesCurrentLidGuardExecutable", inspectionResult.MatchesCurrentLidGuardExecutable);
+        ManagementFieldWriter.WriteField("ManagementLabelContainsMcpServerCommand", inspectionResult.ContainsExpectedServerCommand);
+        ManagementFieldWriter.WriteField("ManagementLabelMessage", inspectionResult.Message);
         return 0;
     }
 }

@@ -73,29 +73,24 @@ internal static class LidGuardCommandConsole
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsSuspendHistoryCount", LocalizationService.DisplaySuspendHistoryEntryCount(normalizedSettings.SuspendHistoryEntryCount)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsPreSuspendWebhookUrl", LocalizationService.DisplayOptionalValue(PreSuspendWebhookConfiguration.GetDisplayValue(normalizedSettings.PreSuspendWebhookUrl))));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsPostSessionEndWebhookUrl", LocalizationService.DisplayOptionalValue(PostSessionEndWebhookConfiguration.GetDisplayValue(normalizedSettings.PostSessionEndWebhookUrl))));
-        Console.WriteLine(LocalizationService.GetFormattedStringWithFallback(
+        Console.WriteLine(LocalizationService.GetFormattedString(
             "SettingsClosedLidStopFollowUpWebhookUrl",
-            "  Ask-before-sleep reply URL: {0}",
             LocalizationService.DisplayOptionalValue(ClosedLidStopFollowUpWebhookConfiguration.GetDisplayValue(normalizedSettings.ClosedLidStopFollowUpWebhookUrl))));
-        Console.WriteLine(LocalizationService.GetFormattedStringWithFallback(
+        Console.WriteLine(LocalizationService.GetFormattedString(
             "SettingsClosedLidStopFollowUpDelaySeconds",
-            "  Ask-before-sleep reply wait (seconds): {0}",
             normalizedSettings.ClosedLidStopFollowUpDelaySeconds));
-        Console.WriteLine(LocalizationService.GetFormattedStringWithFallback(
+        Console.WriteLine(LocalizationService.GetFormattedString(
             "SettingsClosedLidStopFollowUpFeatureState",
-            "  Ask-before-sleep replies: {0}",
             DisplayClosedLidStopFollowUpFeatureState(normalizedSettings)));
         foreach (var configurationIssueMessage in CreateClosedLidStopFollowUpConfigurationIssueMessages(normalizedSettings))
         {
-            Console.WriteLine(LocalizationService.GetFormattedStringWithFallback(
+            Console.WriteLine(LocalizationService.GetFormattedString(
                 "SettingsClosedLidStopFollowUpConfigurationIssue",
-                "    Setup issue: {0}",
                 configurationIssueMessage));
         }
 
-        Console.WriteLine(LocalizationService.GetFormattedStringWithFallback(
+        Console.WriteLine(LocalizationService.GetFormattedString(
             "SettingsRepeatClosedLidStopFollowUp",
-            "  Ask again after reply: {0}",
             LocalizationService.DisplayBoolean(normalizedSettings.RepeatClosedLidStopFollowUp)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsClosedLidPermissionRequestDecision", LocalizationService.DisplayClosedLidPermissionRequestDecision(normalizedSettings.ClosedLidPermissionRequestDecision)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsUserInterfaceCulture", UserInterfaceCultureConfiguration.GetDisplayValue(normalizedSettings.UserInterfaceCulture)));
@@ -190,9 +185,9 @@ internal static class LidGuardCommandConsole
     {
         return ClosedLidStopFollowUpConfiguration.GetFeatureState(settings) switch
         {
-            ClosedLidStopFollowUpConfiguration.FeatureStateOn => LocalizationService.GetString("DisplayClosedLidStopFollowUpFeatureStateOn", "켜짐"),
-            ClosedLidStopFollowUpConfiguration.FeatureStateConfigurationError => LocalizationService.GetString("DisplayClosedLidStopFollowUpFeatureStateConfigurationError", "구성 오류"),
-            _ => LocalizationService.GetString("DisplayClosedLidStopFollowUpFeatureStateOff", "꺼짐")
+            ClosedLidStopFollowUpConfiguration.FeatureStateOn => LocalizationService.GetString("DisplayClosedLidStopFollowUpFeatureStateOn"),
+            ClosedLidStopFollowUpConfiguration.FeatureStateConfigurationError => LocalizationService.GetString("DisplayClosedLidStopFollowUpFeatureStateConfigurationError"),
+            _ => LocalizationService.GetString("DisplayClosedLidStopFollowUpFeatureStateOff")
         };
     }
 
@@ -207,11 +202,9 @@ internal static class LidGuardCommandConsole
             messages.Add(configurationIssue.Issue switch
             {
                 ClosedLidStopFollowUpConfigurationIssue.ReplyWaitTooShort => LocalizationService.GetString(
-                    "ClosedLidStopFollowUpConfigurationIssueReplyWaitTooShort",
-                    "The reply window is too short to notice the push notification and send a reply. Set it to 0 seconds to turn it off, or at least 20 seconds to use replies."),
+                    "ClosedLidStopFollowUpConfigurationIssueReplyWaitTooShort"),
                 ClosedLidStopFollowUpConfigurationIssue.PostStopDelayTooShort => LocalizationService.GetString(
-                    "ClosedLidStopFollowUpConfigurationIssuePostStopDelayTooShort",
-                    "Sleep or reply waiting can start too early before immediately-following prompts are seen. Set post-stop-suspend-delay-seconds to at least 10."),
+                    "ClosedLidStopFollowUpConfigurationIssuePostStopDelayTooShort"),
                 _ => configurationIssue.Message
             });
         }

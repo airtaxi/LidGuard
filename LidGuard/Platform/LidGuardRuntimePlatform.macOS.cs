@@ -12,7 +12,7 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
     public bool IsSupported => OperatingSystem.IsMacOS();
 
     public string UnsupportedMessage
-        => LocalizationService.GetString("PlatformUnsupportedMacOS", "This LidGuard build requires macOS.");
+        => LocalizationService.GetString("PlatformUnsupportedMacOS");
 
     public LidGuardOperationResult<LidGuardRuntimeServiceSet> CreateRuntimeServiceSet()
     {

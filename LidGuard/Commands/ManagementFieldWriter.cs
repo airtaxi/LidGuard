@@ -5,7 +5,7 @@ namespace LidGuard.Commands;
 
 internal static class ManagementFieldWriter
 {
-    public static void WriteField(string labelResourceName, string fallbackLabel, object value)
+    public static void WriteField(string labelResourceName, object value)
     {
         var displayValue = value switch
         {
@@ -13,12 +13,12 @@ internal static class ManagementFieldWriter
             HookInstallationStatus status => DisplayHookInstallationStatus(status),
             _ => LocalizationService.DisplayOptionalValue(value?.ToString() ?? string.Empty)
         };
-        Console.WriteLine(LocalizationService.GetFormattedString("ManagementField", LocalizationService.GetString(labelResourceName, fallbackLabel), displayValue));
+        Console.WriteLine(LocalizationService.GetFormattedString("ManagementField", LocalizationService.GetString(labelResourceName), displayValue));
     }
 
-    public static void WriteField(string labelResourceName, string fallbackLabel, HookInstallationStatus status)
-        => WriteField(labelResourceName, fallbackLabel, (object)status);
+    public static void WriteField(string labelResourceName, HookInstallationStatus status)
+        => WriteField(labelResourceName, (object)status);
 
     private static string DisplayHookInstallationStatus(HookInstallationStatus status)
-        => LocalizationService.GetString($"DisplayHookInstallationStatus{status}", status.ToString());
+        => LocalizationService.GetString($"DisplayHookInstallationStatus{status}");
 }
