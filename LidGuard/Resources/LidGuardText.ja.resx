@@ -1800,6 +1800,12 @@
   <data name="LiveStatusPendingSuspendLine" xml:space="preserve">
     <value>保留中のスリープ: {0}</value>
   </data>
+  <data name="LiveStatusStopFollowUpFeatureStateLine" xml:space="preserve">
+    <value>スリープ前の返信通知: {0}</value>
+  </data>
+  <data name="LiveStatusStopFollowUpDelayLine" xml:space="preserve">
+    <value>スリープ前の返信待ち: {0}</value>
+  </data>
   <data name="LiveStatusStopFollowUpRepeatLine" xml:space="preserve">
     <value>返信後にもう一度確認: {0}</value>
   </data>

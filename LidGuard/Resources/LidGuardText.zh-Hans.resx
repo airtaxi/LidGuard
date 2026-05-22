@@ -1800,6 +1800,12 @@
   <data name="LiveStatusPendingSuspendLine" xml:space="preserve">
     <value>待执行睡眠/休眠：{0}</value>
   </data>
+  <data name="LiveStatusStopFollowUpFeatureStateLine" xml:space="preserve">
+    <value>睡眠前回复通知：{0}</value>
+  </data>
+  <data name="LiveStatusStopFollowUpDelayLine" xml:space="preserve">
+    <value>睡眠前回复等待：{0}</value>
+  </data>
   <data name="LiveStatusStopFollowUpRepeatLine" xml:space="preserve">
     <value>回复后再次询问：{0}</value>
   </data>

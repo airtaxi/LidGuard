@@ -814,7 +814,7 @@
     <value>Hooks 物件</value>
   </data>
   <data name="SettingsInteractivePostStopSuspendSoundDetails" xml:space="preserve">
-    <value>工作階段結束後的睡眠/休眠警告音設定</value>
+    <value>off 表示停用，SystemSounds: {0}，或 .wav 路徑</value>
   </data>
   <data name="SettingsInteractiveGuidanceChangePostSessionEndWebhook" xml:space="preserve">
     <value>如要變更工作階段完成 Webhook URL，請執行: {0} settings --post-session-end-webhook-url &lt;http-or-https-url&gt;</value>
@@ -1799,6 +1799,12 @@
   </data>
   <data name="LiveStatusPendingSuspendLine" xml:space="preserve">
     <value>待處理的睡眠/休眠: {0}</value>
+  </data>
+  <data name="LiveStatusStopFollowUpFeatureStateLine" xml:space="preserve">
+    <value>睡眠前回覆通知: {0}</value>
+  </data>
+  <data name="LiveStatusStopFollowUpDelayLine" xml:space="preserve">
+    <value>睡眠前回覆等待: {0}</value>
   </data>
   <data name="LiveStatusStopFollowUpRepeatLine" xml:space="preserve">
     <value>回覆後再次詢問: {0}</value>
