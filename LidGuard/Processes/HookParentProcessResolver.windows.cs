@@ -120,7 +120,7 @@ internal static partial class HookParentProcessResolver
             value = default;
             if (address == IntPtr.Zero) return false;
 
-            Span<byte> byteBuffer = stackalloc byte[sizeof(TValue)];
+            var byteBuffer = (Span<byte>)stackalloc byte[sizeof(TValue)];
             if (!PInvoke.ReadProcessMemory(processHandle, address.ToPointer(), byteBuffer, out var bytesRead)) return false;
             if (bytesRead != (nuint)byteBuffer.Length) return false;
 

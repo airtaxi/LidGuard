@@ -97,10 +97,7 @@ internal static class LidGuardNotificationCulture
     private static List<CultureInfo> CreateSupportedCultureInfos(CultureInfo defaultCultureInfo)
     {
         var supportedCultureInfos = new List<CultureInfo>(s_supportedUserInterfaceCultures);
-        if (!supportedCultureInfos.Any(cultureInfo => cultureInfo.Name.Equals(defaultCultureInfo.Name, StringComparison.OrdinalIgnoreCase)))
-        {
-            supportedCultureInfos.Add(defaultCultureInfo);
-        }
+        if (!supportedCultureInfos.Any(cultureInfo => cultureInfo.Name.Equals(defaultCultureInfo.Name, StringComparison.OrdinalIgnoreCase))) supportedCultureInfos.Add(defaultCultureInfo);
 
         return supportedCultureInfos;
     }

@@ -61,10 +61,7 @@ public sealed class LidActionService : ILidActionService
         return (uint)nativeError;
     }
 
-    private static unsafe uint ReadDirectCurrentLidAction(Guid powerSchemeIdentifier, out uint value)
-    {
-        return PInvoke.PowerReadDCValueIndex(null, powerSchemeIdentifier, s_systemButtonSubgroupIdentifier, s_lidActionSettingIdentifier, out value);
-    }
+    private static unsafe uint ReadDirectCurrentLidAction(Guid powerSchemeIdentifier, out uint value) => PInvoke.PowerReadDCValueIndex(null, powerSchemeIdentifier, s_systemButtonSubgroupIdentifier, s_lidActionSettingIdentifier, out value);
 
     private static unsafe uint WriteAlternatingCurrentLidAction(Guid powerSchemeIdentifier, LidAction lidAction)
     {
@@ -72,10 +69,7 @@ public sealed class LidActionService : ILidActionService
         return (uint)nativeError;
     }
 
-    private static unsafe uint WriteDirectCurrentLidAction(Guid powerSchemeIdentifier, LidAction lidAction)
-    {
-        return PInvoke.PowerWriteDCValueIndex(null, powerSchemeIdentifier, s_systemButtonSubgroupIdentifier, s_lidActionSettingIdentifier, (uint)lidAction);
-    }
+    private static unsafe uint WriteDirectCurrentLidAction(Guid powerSchemeIdentifier, LidAction lidAction) => PInvoke.PowerWriteDCValueIndex(null, powerSchemeIdentifier, s_systemButtonSubgroupIdentifier, s_lidActionSettingIdentifier, (uint)lidAction);
 
     private static bool Succeeded(WIN32_ERROR nativeError) => (uint)nativeError == 0;
 }

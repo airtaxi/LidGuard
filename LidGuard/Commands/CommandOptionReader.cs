@@ -54,10 +54,7 @@ internal static class CommandOptionReader
 
     public static bool TryGetOption(IReadOnlyDictionary<string, string> options, out string optionValue, params string[] optionNames)
     {
-        foreach (var optionName in optionNames)
-        {
-            if (options.TryGetValue(optionName, out optionValue)) return true;
-        }
+        foreach (var optionName in optionNames) if (options.TryGetValue(optionName, out optionValue)) return true;
 
         optionValue = string.Empty;
         return false;

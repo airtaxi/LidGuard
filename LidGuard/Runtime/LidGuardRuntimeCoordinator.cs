@@ -1233,8 +1233,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 return CreateStopFollowUpResponse(stopFollowUpAwaitContext.ScheduledResponse, StopFollowUpStatuses.PollFailed);
             }
 
-            if (startResult.Value.ExpiresAtUtc is not null && startResult.Value.ExpiresAtUtc.Value < replyDeadlineUtc)
-                replyDeadlineUtc = startResult.Value.ExpiresAtUtc.Value;
+            if (startResult.Value.ExpiresAtUtc is not null && startResult.Value.ExpiresAtUtc.Value < replyDeadlineUtc) replyDeadlineUtc = startResult.Value.ExpiresAtUtc.Value;
 
             while (DateTimeOffset.UtcNow <= replyDeadlineUtc)
             {
@@ -1479,7 +1478,7 @@ internal sealed class LidGuardRuntimeCoordinator
             if (postStopSuspendDelaySeconds > 0) await Task.Delay(TimeSpan.FromSeconds(postStopSuspendDelaySeconds), pendingSuspendCancellationTokenSource.Token);
 
             var postStopSuspendSound = string.Empty;
-            int? postStopSuspendSoundVolumeOverridePercent = null;
+            var postStopSuspendSoundVolumeOverridePercent = (int?)null;
             await _gate.WaitAsync(pendingSuspendCancellationTokenSource.Token);
             try
             {
@@ -1523,8 +1522,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 _gate.Release();
             }
 
-            if (stopFollowUpAwaitContext is not null)
-                await stopFollowUpAwaitContext.FollowUpCompletedSource.Task.WaitAsync(pendingSuspendCancellationTokenSource.Token);
+            if (stopFollowUpAwaitContext is not null) await stopFollowUpAwaitContext.FollowUpCompletedSource.Task.WaitAsync(pendingSuspendCancellationTokenSource.Token);
 
             preSuspendWebhookAttempted = true;
             await SendPreSuspendWebhookAsync(
@@ -1552,8 +1550,7 @@ internal sealed class LidGuardRuntimeCoordinator
         catch (OperationCanceledException) when (!preSuspendWebhookAttempted)
         {
             var suppressPostSessionEndWebhook = await ShouldSuppressPostSessionEndWebhookOnPendingSuspendCancellationAsync(pendingSuspendCancellationTokenSource);
-            if (!suppressPostSessionEndWebhook)
-                await QueuePostSessionEndWebhookForCanceledSuspendAsync(pendingSuspendContext, snapshot, eventName);
+            if (!suppressPostSessionEndWebhook) await QueuePostSessionEndWebhookForCanceledSuspendAsync(pendingSuspendContext, snapshot, eventName);
         }
         catch (OperationCanceledException) { }
         finally
@@ -1571,7 +1568,7 @@ internal sealed class LidGuardRuntimeCoordinator
         CancellationToken cancellationToken)
     {
         var suspendMode = SystemSuspendMode.Sleep;
-        int? suspendHistoryEntryCount = null;
+        var suspendHistoryEntryCount = (int?)null;
         var activeSessionCount = 0;
         await _gate.WaitAsync(cancellationToken);
         try
@@ -2355,7 +2352,7 @@ internal sealed class LidGuardRuntimeCoordinator
         int emergencyHibernationTemperatureCelsius,
         EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
     {
-        int? suspendHistoryEntryCount = null;
+        var suspendHistoryEntryCount = (int?)null;
         var activeSessionCount = 0;
         await _gate.WaitAsync(CancellationToken.None);
         try

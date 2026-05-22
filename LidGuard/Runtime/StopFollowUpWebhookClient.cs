@@ -34,8 +34,7 @@ internal static class StopFollowUpWebhookClient
                 responseStream,
                 SuspendWebhookJsonSerializerContext.Default.StopFollowUpWebhookStartResponse,
                 cancellationToken);
-            if (startResponse is null)
-                return LidGuardOperationResult<StopFollowUpWebhookStartResponse>.Failure("The closed-lid stop follow-up webhook returned an empty response body.");
+            if (startResponse is null) return LidGuardOperationResult<StopFollowUpWebhookStartResponse>.Failure("The closed-lid stop follow-up webhook returned an empty response body.");
 
             return LidGuardOperationResult<StopFollowUpWebhookStartResponse>.Success(startResponse);
         }
@@ -73,8 +72,7 @@ internal static class StopFollowUpWebhookClient
                 responseStream,
                 SuspendWebhookJsonSerializerContext.Default.StopFollowUpWebhookPollResponse,
                 cancellationToken);
-            if (pollResponse is null)
-                return LidGuardOperationResult<StopFollowUpWebhookPollResponse>.Failure("The closed-lid stop follow-up poll returned an empty response body.");
+            if (pollResponse is null) return LidGuardOperationResult<StopFollowUpWebhookPollResponse>.Failure("The closed-lid stop follow-up poll returned an empty response body.");
 
             return LidGuardOperationResult<StopFollowUpWebhookPollResponse>.Success(pollResponse);
         }

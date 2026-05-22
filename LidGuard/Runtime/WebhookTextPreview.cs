@@ -38,10 +38,7 @@ internal static class WebhookTextPreview
 
     private static int FindLastWordBoundary(string text)
     {
-        for (var characterIndex = text.Length - 1; characterIndex >= 0; characterIndex--)
-        {
-            if (char.IsWhiteSpace(text[characterIndex])) return characterIndex;
-        }
+        for (var characterIndex = text.Length - 1; characterIndex >= 0; characterIndex--) if (char.IsWhiteSpace(text[characterIndex])) return characterIndex;
 
         return -1;
     }

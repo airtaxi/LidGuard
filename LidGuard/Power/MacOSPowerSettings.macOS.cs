@@ -50,8 +50,7 @@ internal static class MacOSPowerSettings
 
     public static LidGuardOperationResult SleepNow()
     {
-        if (!MacOSCommandPathResolver.TryFindExecutable("pmset", out var pmsetPath))
-            return LidGuardOperationResult.Failure("pmset was not found on PATH. LidGuard macOS suspend support requires /usr/bin/pmset.");
+        if (!MacOSCommandPathResolver.TryFindExecutable("pmset", out var pmsetPath)) return LidGuardOperationResult.Failure("pmset was not found on PATH. LidGuard macOS suspend support requires /usr/bin/pmset.");
 
         var commandResult = MacOSCommandRunner.Run(pmsetPath, ["sleepnow"], TimeSpan.FromSeconds(30));
         if (commandResult.Succeeded) return LidGuardOperationResult.Success();
@@ -81,13 +80,11 @@ internal static class MacOSPowerSettings
 
     public static MacOSCommandResult RunPrivilegedCommand(string commandName, IEnumerable<string> arguments, TimeSpan timeout = default)
     {
-        if (!MacOSCommandPathResolver.TryFindExecutable(commandName, out var commandPath))
-            return MacOSCommandResult.Failure($"{commandName} was not found on PATH.");
+        if (!MacOSCommandPathResolver.TryFindExecutable(commandName, out var commandPath)) return MacOSCommandResult.Failure($"{commandName} was not found on PATH.");
 
         if (IsRootUser()) return MacOSCommandRunner.Run(commandPath, arguments, timeout);
 
-        if (!MacOSCommandPathResolver.TryFindExecutable("sudo", out var sudoPath))
-            return MacOSCommandResult.Failure("sudo was not found on PATH. Run macos-permission install or run LidGuard as root for privileged macOS power operations.");
+        if (!MacOSCommandPathResolver.TryFindExecutable("sudo", out var sudoPath)) return MacOSCommandResult.Failure("sudo was not found on PATH. Run macos-permission install or run LidGuard as root for privileged macOS power operations.");
 
         var sudoArguments = new List<string> { "-n", commandPath };
         sudoArguments.AddRange(arguments ?? Array.Empty<string>());
@@ -100,8 +97,7 @@ internal static class MacOSPowerSettings
     private static LidGuardOperationResult ReadCurrentSetting(string settingName, out int settingValue, bool requirePresence)
     {
         settingValue = 0;
-        if (!MacOSCommandPathResolver.TryFindExecutable("pmset", out var pmsetPath))
-            return LidGuardOperationResult.Failure("pmset was not found on PATH. LidGuard macOS power support requires /usr/bin/pmset.");
+        if (!MacOSCommandPathResolver.TryFindExecutable("pmset", out var pmsetPath)) return LidGuardOperationResult.Failure("pmset was not found on PATH. LidGuard macOS power support requires /usr/bin/pmset.");
 
         var commandResult = MacOSCommandRunner.Run(pmsetPath, ["-g"], s_pmsetTimeout);
         if (!commandResult.Succeeded) return LidGuardOperationResult.Failure(commandResult.CreateFailureMessage("pmset -g"), commandResult.ExitCode);

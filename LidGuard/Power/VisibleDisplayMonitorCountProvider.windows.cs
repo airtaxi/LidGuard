@@ -46,7 +46,7 @@ internal sealed partial class VisibleDisplayMonitorCountProvider : IVisibleDispl
             var activeMonitorCount = 0;
             var activeInternalMonitorCount = 0;
 
-            foreach (WmiObject monitorConnection in connection.CreateQuery(MonitorConnectionQuery))
+            foreach (var monitorConnection in connection.CreateQuery(MonitorConnectionQuery))
             {
                 using (monitorConnection)
                 {

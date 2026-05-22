@@ -10,8 +10,7 @@ public static class ClaudeSoftLockSignalSource
         ArgumentNullException.ThrowIfNull(hookInput);
 
         var hookEventName = hookInput.HookEventName.Trim();
-        if (hookEventName.Equals(ClaudeHookEventNames.Notification, StringComparison.Ordinal))
-            return IsResolutionNotificationType(hookInput.NotificationType);
+        if (hookEventName.Equals(ClaudeHookEventNames.Notification, StringComparison.Ordinal)) return IsResolutionNotificationType(hookInput.NotificationType);
 
         if (hookEventName.Equals(ClaudeHookEventNames.PreToolUse, StringComparison.Ordinal)
             || hookEventName.Equals(ClaudeHookEventNames.PostToolUse, StringComparison.Ordinal)

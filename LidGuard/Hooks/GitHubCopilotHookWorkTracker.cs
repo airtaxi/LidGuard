@@ -30,10 +30,7 @@ internal static class GitHubCopilotHookWorkTracker
             return;
         }
 
-        if (TryGetCompletedBackgroundWorkIdentifier(hookInput, out var completedBackgroundWorkIdentifier))
-        {
-            UpdateSessionState(sessionIdentifier, sessionWorkState => sessionWorkState.RemoveBackgroundTask(completedBackgroundWorkIdentifier));
-        }
+        if (TryGetCompletedBackgroundWorkIdentifier(hookInput, out var completedBackgroundWorkIdentifier)) UpdateSessionState(sessionIdentifier, sessionWorkState => sessionWorkState.RemoveBackgroundTask(completedBackgroundWorkIdentifier));
     }
 
     public static bool RecordCompletionNotification(GitHubCopilotHookInput hookInput, string sessionIdentifier)
@@ -383,10 +380,7 @@ internal static class GitHubCopilotHookWorkTracker
     private static JsonArray CreateStringArray(IEnumerable<string> values)
     {
         var jsonArray = new JsonArray();
-        foreach (var value in values.Where(value => !string.IsNullOrWhiteSpace(value)))
-        {
-            jsonArray.Add((JsonNode)JsonValue.Create(value.Trim())!);
-        }
+        foreach (var value in values.Where(value => !string.IsNullOrWhiteSpace(value))) jsonArray.Add((JsonNode)JsonValue.Create(value.Trim())!);
 
         return jsonArray;
     }
@@ -552,10 +546,7 @@ internal static class GitHubCopilotHookWorkTracker
         }
 
         if (element.ValueKind != JsonValueKind.Array) return false;
-        foreach (var itemElement in element.EnumerateArray())
-        {
-            if (TryFindStringProperty(itemElement, propertyName, out value)) return true;
-        }
+        foreach (var itemElement in element.EnumerateArray()) if (TryFindStringProperty(itemElement, propertyName, out value)) return true;
 
         return false;
     }

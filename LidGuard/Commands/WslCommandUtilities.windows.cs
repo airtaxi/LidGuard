@@ -306,10 +306,7 @@ internal static class WslCommandUtilities
             using var process = new Process { StartInfo = processStartInfo };
             if (!process.Start()) return WslCommandResult.FailedToStart(LocalizationService.GetFormattedString("ManagementFailedToStartProcess", WslExecutableName));
 
-            if (!string.IsNullOrEmpty(standardInput))
-            {
-                process.StandardInput.Write(standardInput);
-            }
+            if (!string.IsNullOrEmpty(standardInput)) process.StandardInput.Write(standardInput);
 
             process.StandardInput.Close();
 

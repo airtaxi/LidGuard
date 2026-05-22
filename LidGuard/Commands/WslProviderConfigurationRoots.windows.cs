@@ -11,10 +11,7 @@ internal static class WslProviderConfigurationRoots
         out string configurationFilePath,
         out string message)
     {
-        if (!string.IsNullOrWhiteSpace(configuredConfigurationFilePath))
-        {
-            return WslCommandUtilities.TryNormalizeWslPath(distroName, configuredConfigurationFilePath, out configurationFilePath, out message);
-        }
+        if (!string.IsNullOrWhiteSpace(configuredConfigurationFilePath)) return WslCommandUtilities.TryNormalizeWslPath(distroName, configuredConfigurationFilePath, out configurationFilePath, out message);
 
         return provider switch
         {

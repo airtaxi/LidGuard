@@ -50,8 +50,7 @@ internal static class PushNotificationMessageFactory
 
     private static string CreateTitle(PendingWebhookEvent webhookEvent)
     {
-        if (webhookEvent.EventType.Equals(LidGuardWebhookEventTypes.StopFollowUp, StringComparison.Ordinal))
-            return LidGuardNotificationText.PushTitleStopFollowUp;
+        if (webhookEvent.EventType.Equals(LidGuardWebhookEventTypes.StopFollowUp, StringComparison.Ordinal)) return LidGuardNotificationText.PushTitleStopFollowUp;
         if (webhookEvent.EventType.Equals(LidGuardWebhookEventTypes.PostSessionEnd, StringComparison.Ordinal)) return LidGuardNotificationText.PushTitlePostSessionEnd;
 
         return webhookEvent.Reason switch
@@ -65,8 +64,7 @@ internal static class PushNotificationMessageFactory
 
     private static string CreateBody(PendingWebhookEvent webhookEvent)
     {
-        if (webhookEvent.EventType.Equals(LidGuardWebhookEventTypes.StopFollowUp, StringComparison.Ordinal))
-            return CreateStopFollowUpBody(webhookEvent);
+        if (webhookEvent.EventType.Equals(LidGuardWebhookEventTypes.StopFollowUp, StringComparison.Ordinal)) return CreateStopFollowUpBody(webhookEvent);
         if (webhookEvent.EventType.Equals(LidGuardWebhookEventTypes.PostSessionEnd, StringComparison.Ordinal)) return CreatePostSessionEndBody(webhookEvent);
 
         return CreatePreSuspendBody(webhookEvent);

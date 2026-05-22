@@ -61,8 +61,7 @@ public sealed class SystemSuspendService : ISystemSuspendService
 
     private static LidGuardOperationResult TryRequestModernStandbyByTurningOffDisplay()
     {
-        if (PInvoke.SendNotifyMessage(s_broadcastWindowHandle, WindowMessageSystemCommand, new WPARAM(SystemCommandMonitorPower), new LPARAM(MonitorPowerOff)))
-            return LidGuardOperationResult.Success();
+        if (PInvoke.SendNotifyMessage(s_broadcastWindowHandle, WindowMessageSystemCommand, new WPARAM(SystemCommandMonitorPower), new LPARAM(MonitorPowerOff))) return LidGuardOperationResult.Success();
 
         return LidGuardOperationResult.Failure("Failed to request Modern Standby by turning off the display.", Marshal.GetLastPInvokeError());
     }

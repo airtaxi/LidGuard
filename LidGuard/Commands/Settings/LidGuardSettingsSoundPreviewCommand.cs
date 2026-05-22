@@ -122,10 +122,7 @@ internal static class LidGuardSettingsSoundPreviewCommand
             .GetAwaiter()
             .GetResult();
 
-        foreach (var volumeWarningResult in playbackResult.VolumeWarningResults)
-        {
-            Console.Error.WriteLine(LocalizationService.GetFormattedString("TextWarning", volumeWarningResult.Message));
-        }
+        foreach (var volumeWarningResult in playbackResult.VolumeWarningResults) Console.Error.WriteLine(LocalizationService.GetFormattedString("TextWarning", volumeWarningResult.Message));
 
         if (!playbackResult.PlaybackResult.Succeeded)
         {

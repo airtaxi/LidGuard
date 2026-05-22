@@ -309,10 +309,7 @@ public static class ClaudeHookSettingsJsonDocument
             return false;
         }
 
-        foreach (var hookDefinition in s_requiredHookDefinitions)
-        {
-            changed |= RemoveManagedHook(hooksObject, hookDefinition.HookEventName);
-        }
+        foreach (var hookDefinition in s_requiredHookDefinitions) changed |= RemoveManagedHook(hooksObject, hookDefinition.HookEventName);
 
         if (!changed) return true;
         if (hooksObject.Count == 0) settingsObject.Remove(HooksPropertyName);
@@ -556,11 +553,7 @@ public static class ClaudeHookSettingsJsonDocument
     {
         message = string.Empty;
         var expectedTimeoutSeconds = GetExpectedTimeoutSeconds();
-        foreach (var hookDefinition in s_requiredHookDefinitions)
-        {
-            if (!TryHasExpectedHookTimeout(hooksObject, hookDefinition.HookEventName, hookDefinition.Matcher, expectedTimeoutSeconds, out message))
-                return false;
-        }
+        foreach (var hookDefinition in s_requiredHookDefinitions) if (!TryHasExpectedHookTimeout(hooksObject, hookDefinition.HookEventName, hookDefinition.Matcher, expectedTimeoutSeconds, out message)) return false;
 
         return true;
     }

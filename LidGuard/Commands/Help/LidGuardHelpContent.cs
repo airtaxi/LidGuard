@@ -125,10 +125,7 @@ internal static class LidGuardHelpContent
 
     private static IReadOnlyList<string> CreateSectionDetails(LidGuardHelpDocument document, string sectionTitle)
     {
-        foreach (var sectionEntry in document.SectionEntries)
-        {
-            if (sectionEntry.Title.Equals(sectionTitle, StringComparison.Ordinal)) return sectionEntry.Details;
-        }
+        foreach (var sectionEntry in document.SectionEntries) if (sectionEntry.Title.Equals(sectionTitle, StringComparison.Ordinal)) return sectionEntry.Details;
 
         return [];
     }

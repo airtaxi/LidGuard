@@ -53,8 +53,7 @@ internal static class ManagedHookStatusMessageRefresh
         var providerDisplayName = ManagedProviderSelection.GetProviderDisplayName(provider);
         if (!File.Exists(request.ConfigurationFilePath))
         {
-            if (ShouldWarnMissingLocalConfigurationFile(request.ConfigurationFilePath))
-                warningMessages.Add($"{providerDisplayName}: {CreateMissingConfigurationWarning(provider)}");
+            if (ShouldWarnMissingLocalConfigurationFile(request.ConfigurationFilePath)) warningMessages.Add($"{providerDisplayName}: {CreateMissingConfigurationWarning(provider)}");
             return;
         }
 
@@ -113,8 +112,7 @@ internal static class ManagedHookStatusMessageRefresh
 
         if (!WslCommandUtilities.FileExists(distroName, configurationFilePath))
         {
-            if (WslManagedProviderSelection.TryHasHookProviderConfigurationRoot(distroName, provider))
-                warningMessages.Add($"{providerDisplayName}: {CreateMissingConfigurationWarning(provider)}");
+            if (WslManagedProviderSelection.TryHasHookProviderConfigurationRoot(distroName, provider)) warningMessages.Add($"{providerDisplayName}: {CreateMissingConfigurationWarning(provider)}");
             return;
         }
 

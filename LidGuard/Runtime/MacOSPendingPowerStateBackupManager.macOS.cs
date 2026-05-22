@@ -7,8 +7,7 @@ internal static class MacOSPendingPowerStateBackupManager
 {
     public static LidGuardOperationResult<bool> RestorePendingBackupIfPresent()
     {
-        if (!MacOSPendingPowerStateBackupStore.TryLoad(out var state, out var hasBackup, out var loadMessage))
-            return LidGuardOperationResult<bool>.Failure(loadMessage);
+        if (!MacOSPendingPowerStateBackupStore.TryLoad(out var state, out var hasBackup, out var loadMessage)) return LidGuardOperationResult<bool>.Failure(loadMessage);
         if (!hasBackup) return LidGuardOperationResult<bool>.Success(false);
 
         var restoreResult = Restore(state);
@@ -21,16 +20,14 @@ internal static class MacOSPendingPowerStateBackupManager
     {
         var hibernateModeResult = MacOSPowerSettings.ReadHibernateMode();
         if (!hibernateModeResult.Succeeded) return LidGuardOperationResult<MacOSPendingPowerStateBackupState>.Failure(hibernateModeResult.Message, hibernateModeResult.NativeErrorCode);
-        if (!MacOSPowerSettings.IsSupportedHibernateMode(hibernateModeResult.Value))
-            return LidGuardOperationResult<MacOSPendingPowerStateBackupState>.Failure($"The current macOS hibernatemode value is unsupported by LidGuard: {hibernateModeResult.Value}.");
+        if (!MacOSPowerSettings.IsSupportedHibernateMode(hibernateModeResult.Value)) return LidGuardOperationResult<MacOSPendingPowerStateBackupState>.Failure($"The current macOS hibernatemode value is unsupported by LidGuard: {hibernateModeResult.Value}.");
 
         var state = new MacOSPendingPowerStateBackupState
         {
             IncludesHibernateMode = true,
             HibernateMode = hibernateModeResult.Value
         };
-        if (!MacOSPendingPowerStateBackupStore.TrySave(state, out var saveMessage))
-            return LidGuardOperationResult<MacOSPendingPowerStateBackupState>.Failure(saveMessage);
+        if (!MacOSPendingPowerStateBackupStore.TrySave(state, out var saveMessage)) return LidGuardOperationResult<MacOSPendingPowerStateBackupState>.Failure(saveMessage);
 
         return LidGuardOperationResult<MacOSPendingPowerStateBackupState>.Success(state);
     }
@@ -66,10 +63,7 @@ internal static class MacOSPendingPowerStateBackupManager
 
     private static int GetNativeErrorCode(params LidGuardOperationResult[] results)
     {
-        foreach (var result in results)
-        {
-            if (result.NativeErrorCode != 0) return result.NativeErrorCode;
-        }
+        foreach (var result in results) if (result.NativeErrorCode != 0) return result.NativeErrorCode;
 
         return 0;
     }

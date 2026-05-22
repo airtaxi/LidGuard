@@ -18,11 +18,9 @@ public sealed class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPlayer
     public LidGuardOperationResult<string> NormalizeConfiguration(string configuredValue)
     {
         var trimmedConfiguredValue = configuredValue?.Trim() ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(trimmedConfiguredValue) || trimmedConfiguredValue.Equals("off", StringComparison.OrdinalIgnoreCase))
-            return LidGuardOperationResult<string>.Success(string.Empty);
+        if (string.IsNullOrWhiteSpace(trimmedConfiguredValue) || trimmedConfiguredValue.Equals("off", StringComparison.OrdinalIgnoreCase)) return LidGuardOperationResult<string>.Success(string.Empty);
 
-        if (TryGetCanonicalSystemSoundName(trimmedConfiguredValue, out var canonicalSystemSoundName))
-            return LidGuardOperationResult<string>.Success(canonicalSystemSoundName);
+        if (TryGetCanonicalSystemSoundName(trimmedConfiguredValue, out var canonicalSystemSoundName)) return LidGuardOperationResult<string>.Success(canonicalSystemSoundName);
 
         return NormalizeWaveFilePath(trimmedConfiguredValue);
     }
@@ -33,8 +31,7 @@ public sealed class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPlayer
         if (!normalizeResult.Succeeded) return LidGuardOperationResult.Failure(normalizeResult.Message);
         if (string.IsNullOrWhiteSpace(normalizeResult.Value)) return LidGuardOperationResult.Success();
 
-        if (!MacOSCommandPathResolver.TryFindExecutable("afplay", out var audioPlayerPath))
-            return LidGuardOperationResult.Failure("afplay was not found on PATH. LidGuard macOS post-stop suspend sounds require /usr/bin/afplay.");
+        if (!MacOSCommandPathResolver.TryFindExecutable("afplay", out var audioPlayerPath)) return LidGuardOperationResult.Failure("afplay was not found on PATH. LidGuard macOS post-stop suspend sounds require /usr/bin/afplay.");
 
         var soundPath = normalizeResult.Value;
         if (TryGetCanonicalSystemSoundName(normalizeResult.Value, out var canonicalSystemSoundName))
@@ -65,15 +62,12 @@ public sealed class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPlayer
                 $"The post-stop suspend sound must be off, one of {supportedSystemSounds}, or a path to a .wav file.");
         }
 
-        if (Directory.Exists(fullWaveFilePath))
-            return LidGuardOperationResult<string>.Failure($"The configured WAV path points to a directory, not a file: {fullWaveFilePath}");
+        if (Directory.Exists(fullWaveFilePath)) return LidGuardOperationResult<string>.Failure($"The configured WAV path points to a directory, not a file: {fullWaveFilePath}");
 
         var waveFileDirectoryPath = Path.GetDirectoryName(fullWaveFilePath);
-        if (string.IsNullOrWhiteSpace(waveFileDirectoryPath) || !Directory.Exists(waveFileDirectoryPath))
-            return LidGuardOperationResult<string>.Failure($"The configured WAV directory does not exist: {waveFileDirectoryPath}");
+        if (string.IsNullOrWhiteSpace(waveFileDirectoryPath) || !Directory.Exists(waveFileDirectoryPath)) return LidGuardOperationResult<string>.Failure($"The configured WAV directory does not exist: {waveFileDirectoryPath}");
 
-        if (!File.Exists(fullWaveFilePath))
-            return LidGuardOperationResult<string>.Failure($"The configured WAV file does not exist: {fullWaveFilePath}");
+        if (!File.Exists(fullWaveFilePath)) return LidGuardOperationResult<string>.Failure($"The configured WAV file does not exist: {fullWaveFilePath}");
 
         return LidGuardOperationResult<string>.Success(fullWaveFilePath);
     }

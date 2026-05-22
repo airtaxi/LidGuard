@@ -332,10 +332,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
             return false;
         }
 
-        foreach (var hookDefinition in s_requiredHookDefinitions)
-        {
-            changed |= RemoveManagedHook(hooksObject, hookDefinition.HookEventName);
-        }
+        foreach (var hookDefinition in s_requiredHookDefinitions) changed |= RemoveManagedHook(hooksObject, hookDefinition.HookEventName);
 
         if (!changed) return true;
         if (hooksObject.Count == 0) configurationRootObject.Remove(HooksPropertyName);
@@ -403,10 +400,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
         var hooksObject = new JsonObject();
         foreach (var hookDefinition in s_requiredHookDefinitions)
         {
-            if (!hookCommandsByEvent.TryGetValue(hookDefinition.HookEventName, out var hookCommand))
-            {
-                throw new InvalidOperationException($"Missing hook command for '{hookDefinition.HookEventName}'.");
-            }
+            if (!hookCommandsByEvent.TryGetValue(hookDefinition.HookEventName, out var hookCommand)) throw new InvalidOperationException($"Missing hook command for '{hookDefinition.HookEventName}'.");
 
             hooksObject[hookDefinition.HookEventName] = JsonHookConfigurationDocument.CreateJsonArrayWithSingleNode(CreateManagedHookDefinition(hookCommand, hookShellName, hookDefinition.GetStatusMessage(), hookDefinition.Matcher));
         }
@@ -487,11 +481,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
     {
         message = string.Empty;
         var expectedTimeoutSeconds = GetExpectedTimeoutSeconds();
-        foreach (var hookDefinition in s_requiredHookDefinitions)
-        {
-            if (!TryHasExpectedHookTimeout(hooksObject, hookDefinition.HookEventName, expectedTimeoutSeconds, out message))
-                return false;
-        }
+        foreach (var hookDefinition in s_requiredHookDefinitions) if (!TryHasExpectedHookTimeout(hooksObject, hookDefinition.HookEventName, expectedTimeoutSeconds, out message)) return false;
 
         return true;
     }

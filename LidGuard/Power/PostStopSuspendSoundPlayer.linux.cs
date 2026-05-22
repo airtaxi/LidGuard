@@ -18,11 +18,9 @@ public sealed class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPlayer
     public LidGuardOperationResult<string> NormalizeConfiguration(string configuredValue)
     {
         var trimmedConfiguredValue = configuredValue?.Trim() ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(trimmedConfiguredValue) || trimmedConfiguredValue.Equals("off", StringComparison.OrdinalIgnoreCase))
-            return LidGuardOperationResult<string>.Success(string.Empty);
+        if (string.IsNullOrWhiteSpace(trimmedConfiguredValue) || trimmedConfiguredValue.Equals("off", StringComparison.OrdinalIgnoreCase)) return LidGuardOperationResult<string>.Success(string.Empty);
 
-        if (TryGetCanonicalSystemSoundName(trimmedConfiguredValue, out var canonicalSystemSoundName))
-            return LidGuardOperationResult<string>.Success(canonicalSystemSoundName);
+        if (TryGetCanonicalSystemSoundName(trimmedConfiguredValue, out var canonicalSystemSoundName)) return LidGuardOperationResult<string>.Success(canonicalSystemSoundName);
 
         return NormalizeWaveFilePath(trimmedConfiguredValue);
     }
@@ -33,14 +31,12 @@ public sealed class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPlayer
         if (!normalizeResult.Succeeded) return LidGuardOperationResult.Failure(normalizeResult.Message);
         if (string.IsNullOrWhiteSpace(normalizeResult.Value)) return LidGuardOperationResult.Success();
 
-        if (!TryFindAudioPlayer(out var audioPlayer))
-            return LidGuardOperationResult.Failure("No supported Linux audio player was found. Install pw-play, paplay, or aplay to use post-stop suspend sounds.");
+        if (!TryFindAudioPlayer(out var audioPlayer)) return LidGuardOperationResult.Failure("No supported Linux audio player was found. Install pw-play, paplay, or aplay to use post-stop suspend sounds.");
 
         var soundPath = normalizeResult.Value;
         if (TryGetCanonicalSystemSoundName(normalizeResult.Value, out var canonicalSystemSoundName))
         {
-            if (!TryResolveSystemSoundPath(canonicalSystemSoundName, audioPlayer, out soundPath))
-                return LidGuardOperationResult.Failure($"Could not find a Linux desktop sound-theme file for system sound {canonicalSystemSoundName}.");
+            if (!TryResolveSystemSoundPath(canonicalSystemSoundName, audioPlayer, out soundPath)) return LidGuardOperationResult.Failure($"Could not find a Linux desktop sound-theme file for system sound {canonicalSystemSoundName}.");
         }
 
         var commandResult = await LinuxCommandRunner.RunAsync(audioPlayer.ExecutablePath, [soundPath], cancellationToken);
@@ -65,15 +61,12 @@ public sealed class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPlayer
                 $"The post-stop suspend sound must be off, one of {supportedSystemSounds}, or a path to a .wav file.");
         }
 
-        if (Directory.Exists(fullWaveFilePath))
-            return LidGuardOperationResult<string>.Failure($"The configured WAV path points to a directory, not a file: {fullWaveFilePath}");
+        if (Directory.Exists(fullWaveFilePath)) return LidGuardOperationResult<string>.Failure($"The configured WAV path points to a directory, not a file: {fullWaveFilePath}");
 
         var waveFileDirectoryPath = Path.GetDirectoryName(fullWaveFilePath);
-        if (string.IsNullOrWhiteSpace(waveFileDirectoryPath) || !Directory.Exists(waveFileDirectoryPath))
-            return LidGuardOperationResult<string>.Failure($"The configured WAV directory does not exist: {waveFileDirectoryPath}");
+        if (string.IsNullOrWhiteSpace(waveFileDirectoryPath) || !Directory.Exists(waveFileDirectoryPath)) return LidGuardOperationResult<string>.Failure($"The configured WAV directory does not exist: {waveFileDirectoryPath}");
 
-        if (!File.Exists(fullWaveFilePath))
-            return LidGuardOperationResult<string>.Failure($"The configured WAV file does not exist: {fullWaveFilePath}");
+        if (!File.Exists(fullWaveFilePath)) return LidGuardOperationResult<string>.Failure($"The configured WAV file does not exist: {fullWaveFilePath}");
 
         return LidGuardOperationResult<string>.Success(fullWaveFilePath);
     }
@@ -106,7 +99,7 @@ public sealed class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPlayer
     {
         soundPath = string.Empty;
         var candidateSoundNames = s_systemSoundCandidates[canonicalSystemSoundName];
-        string[] extensions = audioPlayer.SupportsCompressedAudio ? [".wav", ".oga", ".ogg"] : [".wav"];
+        var extensions = audioPlayer.SupportsCompressedAudio ? new[] { ".wav", ".oga", ".ogg" } : new[] { ".wav" };
 
         foreach (var dataDirectoryPath in GetDataDirectoryPaths())
         {

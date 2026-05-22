@@ -13,9 +13,9 @@ public static class SystemThermalInformation
         {
             if (!Directory.Exists(ThermalZoneRootPath)) return null;
 
-            double? lowestCelsiusTemperature = null;
-            double? highestCelsiusTemperature = null;
-            double celsiusTemperatureSum = 0;
+            var lowestCelsiusTemperature = (double?)null;
+            var highestCelsiusTemperature = (double?)null;
+            var celsiusTemperatureSum = 0.0;
             var celsiusTemperatureCount = 0;
 
             foreach (var temperatureFilePath in EnumerateThermalZoneTemperatureFilePaths())

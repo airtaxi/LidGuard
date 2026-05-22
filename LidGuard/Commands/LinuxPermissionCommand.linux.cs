@@ -95,10 +95,7 @@ internal static class LinuxPermissionCommand
         if (LinuxCommandPathResolver.TryFindExecutable("systemctl", out var systemctlPath))
         {
             var systemctlResult = LinuxCommandRunner.Run(systemctlPath, ["--version"], s_checkCommandTimeout);
-            if (systemctlResult.Succeeded)
-            {
-                WriteCheckLine("LinuxPermissionCheckSystemctlVersion", Get("PermissionResultOk"));
-            }
+            if (systemctlResult.Succeeded) WriteCheckLine("LinuxPermissionCheckSystemctlVersion", Get("PermissionResultOk"));
             else
             {
                 succeeded = false;

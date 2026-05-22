@@ -62,10 +62,7 @@ internal static class McpConfigurationTomlUtilities
 
     public static bool ContainsArgument(string[] serverArgumentValues, string expectedArgument)
     {
-        foreach (var serverArgumentValue in serverArgumentValues)
-        {
-            if (serverArgumentValue.Equals(expectedArgument, StringComparison.Ordinal)) return true;
-        }
+        foreach (var serverArgumentValue in serverArgumentValues) if (serverArgumentValue.Equals(expectedArgument, StringComparison.Ordinal)) return true;
 
         return false;
     }
@@ -88,10 +85,7 @@ internal static class McpConfigurationTomlUtilities
 
     private static string ParseTomlScalarValue(string value)
     {
-        if (value.Length >= 2 && value.StartsWith("\"", StringComparison.Ordinal) && value.EndsWith("\"", StringComparison.Ordinal))
-        {
-            return UnescapeTomlBasicString(value[1..^1]);
-        }
+        if (value.Length >= 2 && value.StartsWith("\"", StringComparison.Ordinal) && value.EndsWith("\"", StringComparison.Ordinal)) return UnescapeTomlBasicString(value[1..^1]);
 
         if (value.Length >= 2 && value.StartsWith("'", StringComparison.Ordinal) && value.EndsWith("'", StringComparison.Ordinal)) return value[1..^1];
         return value;

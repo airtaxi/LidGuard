@@ -387,8 +387,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
 
     private static string CreateClosedLidStopFollowUpSummary(LidGuardControlSnapshot snapshot)
     {
-        if (snapshot.ClosedLidStopFollowUpConfigurationIssues.Length == 0)
-            return $"Closed-lid follow-up state: {snapshot.ClosedLidStopFollowUpFeatureState}.";
+        if (snapshot.ClosedLidStopFollowUpConfigurationIssues.Length == 0) return $"Closed-lid follow-up state: {snapshot.ClosedLidStopFollowUpFeatureState}.";
 
         return $"Closed-lid follow-up state: {snapshot.ClosedLidStopFollowUpFeatureState}. Issue(s): {string.Join("; ", snapshot.ClosedLidStopFollowUpConfigurationIssues)}";
     }
@@ -443,10 +442,8 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
     private static string CreateSessionCommandSummary(LidGuardSessionCommandOutcome outcome)
     {
         var scope = $"{AgentProviderDisplay.CreateProviderDisplayText(outcome.RequestedProvider, outcome.RequestedProviderName)}:{outcome.RequestedSessionIdentifier}";
-        if (outcome.Snapshot.RuntimeReachable)
-            return $"{outcome.RuntimeMessage} Runtime now tracks {outcome.Snapshot.ActiveSessionCount} active session(s) after handling {scope}.";
-        if (outcome.Snapshot.RuntimeUnavailable)
-            return $"{outcome.RuntimeMessage} Runtime is not running after handling {scope}.";
+        if (outcome.Snapshot.RuntimeReachable) return $"{outcome.RuntimeMessage} Runtime now tracks {outcome.Snapshot.ActiveSessionCount} active session(s) after handling {scope}.";
+        if (outcome.Snapshot.RuntimeUnavailable) return $"{outcome.RuntimeMessage} Runtime is not running after handling {scope}.";
         return $"{outcome.RuntimeMessage} Runtime status after handling {scope} is unavailable: {outcome.Snapshot.RuntimeMessage}";
     }
 }

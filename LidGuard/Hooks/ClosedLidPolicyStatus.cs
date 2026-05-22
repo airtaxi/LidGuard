@@ -11,8 +11,7 @@ internal static class ClosedLidPolicyStatus
     public static string DescribeInactiveReason(LidGuardPipeResponse response)
     {
         if (response.LidSwitchState != LidSwitchState.Closed) return $"the lid state is {response.LidSwitchState}";
-        if (response.VisibleDisplayMonitorCount > 0)
-            return $"{response.VisibleDisplayMonitorCount} visible display monitor(s) are active while the lid is closed";
+        if (response.VisibleDisplayMonitorCount > 0) return $"{response.VisibleDisplayMonitorCount} visible display monitor(s) are active while the lid is closed";
         return "the closed-lid policy is not active";
     }
 }

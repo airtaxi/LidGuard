@@ -26,10 +26,7 @@ internal static class ClaudeHookWorkTracker
             return;
         }
 
-        if (TryGetStoppedTaskIdentifier(hookInput, out var stoppedTaskIdentifier))
-        {
-            UpdateSessionState(sessionIdentifier, sessionWorkState => sessionWorkState.RemoveBackgroundTask(stoppedTaskIdentifier, string.Empty));
-        }
+        if (TryGetStoppedTaskIdentifier(hookInput, out var stoppedTaskIdentifier)) UpdateSessionState(sessionIdentifier, sessionWorkState => sessionWorkState.RemoveBackgroundTask(stoppedTaskIdentifier, string.Empty));
     }
 
     public static void RecordSubagentStarted(ClaudeHookInput hookInput, string sessionIdentifier)
@@ -461,10 +458,7 @@ internal static class ClaudeHookWorkTracker
         }
 
         if (element.ValueKind != JsonValueKind.Array) return false;
-        foreach (var itemElement in element.EnumerateArray())
-        {
-            if (TryFindStringProperty(itemElement, propertyName, out value)) return true;
-        }
+        foreach (var itemElement in element.EnumerateArray()) if (TryFindStringProperty(itemElement, propertyName, out value)) return true;
 
         return false;
     }

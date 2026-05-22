@@ -26,10 +26,8 @@ public sealed class SystemAudioVolumeController : ISystemAudioVolumeController
             s_osascriptTimeout);
         if (!muteResult.Succeeded) return LidGuardOperationResult<SystemAudioVolumeState>.Failure(muteResult.CreateFailureMessage("osascript output muted"));
 
-        if (!int.TryParse(volumeResult.StandardOutput.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var volumePercent))
-            return LidGuardOperationResult<SystemAudioVolumeState>.Failure("Failed to parse macOS output volume.");
-        if (!TryParseMuteState(muteResult.StandardOutput, out var isMuted))
-            return LidGuardOperationResult<SystemAudioVolumeState>.Failure("Failed to parse macOS output mute state.");
+        if (!int.TryParse(volumeResult.StandardOutput.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var volumePercent)) return LidGuardOperationResult<SystemAudioVolumeState>.Failure("Failed to parse macOS output volume.");
+        if (!TryParseMuteState(muteResult.StandardOutput, out var isMuted)) return LidGuardOperationResult<SystemAudioVolumeState>.Failure("Failed to parse macOS output mute state.");
 
         return LidGuardOperationResult<SystemAudioVolumeState>.Success(new SystemAudioVolumeState
         {
@@ -40,8 +38,7 @@ public sealed class SystemAudioVolumeController : ISystemAudioVolumeController
 
     public LidGuardOperationResult ApplyDefaultRenderDeviceVolumeOverride(int volumeOverridePercent)
     {
-        if (!LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(volumeOverridePercent))
-            return LidGuardOperationResult.Failure($"The volume override percent must be an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.");
+        if (!LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(volumeOverridePercent)) return LidGuardOperationResult.Failure($"The volume override percent must be an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.");
         if (!TryFindOsascript(out var osascriptPath, out var message)) return LidGuardOperationResult.Failure(message);
 
         var commandResult = MacOSCommandRunner.Run(

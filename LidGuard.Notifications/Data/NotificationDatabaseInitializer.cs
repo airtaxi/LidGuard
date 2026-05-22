@@ -23,10 +23,7 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
         using var inspectCommand = connection.CreateCommand();
         inspectCommand.CommandText = "PRAGMA table_info(WebhookEvents);";
         using var reader = await inspectCommand.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            columnNames.Add(reader.GetString(1));
-        }
+        while (await reader.ReadAsync(cancellationToken)) columnNames.Add(reader.GetString(1));
 
         await EnsureWebhookEventsColumnAsync(connection, columnNames, "UserInterfaceCulture", "TEXT NULL", cancellationToken);
         await EnsureWebhookEventsColumnAsync(connection, columnNames, "ReplyWaitSeconds", "INTEGER NULL", cancellationToken);

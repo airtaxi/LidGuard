@@ -131,10 +131,7 @@ internal static class LidGuardCommandLineApplication
 
     private static bool HasCommandHelpSwitch(string[] commandLineArguments)
     {
-        for (var argumentIndex = 1; argumentIndex < commandLineArguments.Length; argumentIndex++)
-        {
-            if (commandLineArguments[argumentIndex].Equals("--help", StringComparison.OrdinalIgnoreCase)) return true;
-        }
+        for (var argumentIndex = 1; argumentIndex < commandLineArguments.Length; argumentIndex++) if (commandLineArguments[argumentIndex].Equals("--help", StringComparison.OrdinalIgnoreCase)) return true;
 
         return false;
     }

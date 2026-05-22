@@ -29,10 +29,7 @@ internal static class CodexCommandLineProcessClassifier
     {
         if (string.IsNullOrWhiteSpace(commandLine)) return false;
 
-        foreach (var commandLineToken in commandLine.Split([' ', '\t', '\r', '\n', '"'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-        {
-            if (commandLineToken.Equals(token, StringComparison.OrdinalIgnoreCase)) return true;
-        }
+        foreach (var commandLineToken in commandLine.Split([' ', '\t', '\r', '\n', '"'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)) if (commandLineToken.Equals(token, StringComparison.OrdinalIgnoreCase)) return true;
 
         return false;
     }

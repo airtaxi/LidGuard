@@ -35,11 +35,11 @@ internal static class LiveStatusCommand
         }
 
         using var cancellationTokenSource = new CancellationTokenSource();
-        ConsoleCancelEventHandler cancelHandler = (_, eventArguments) =>
+        var cancelHandler = (ConsoleCancelEventHandler)((_, eventArguments) =>
         {
             eventArguments.Cancel = true;
             cancellationTokenSource.Cancel();
-        };
+        });
         Console.CancelKeyPress += cancelHandler;
 
         try

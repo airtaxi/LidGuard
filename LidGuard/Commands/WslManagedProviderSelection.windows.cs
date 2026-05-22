@@ -20,10 +20,7 @@ internal static class WslManagedProviderSelection
         var skippedProviderMessageList = new List<string>();
         foreach (var provider in selectedProviders)
         {
-            if (tryGetProviderAvailability(distroName, provider))
-            {
-                availableProviderList.Add(provider);
-            }
+            if (tryGetProviderAvailability(distroName, provider)) availableProviderList.Add(provider);
             else
             {
                 skippedProviderMessageList.Add(LocalizationService.GetFormattedString("ManagementSkippedAbsentProvider", ManagedProviderSelection.GetProviderDisplayName(provider), "WSL"));

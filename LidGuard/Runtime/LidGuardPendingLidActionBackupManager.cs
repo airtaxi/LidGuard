@@ -35,10 +35,7 @@ internal sealed class LidGuardPendingLidActionBackupManager(LidActionPolicyContr
 
     public LidGuardOperationResult<bool> RestorePendingBackupIfPresent()
     {
-        if (!LidGuardPendingLidActionBackupStore.TryLoad(out var backup, out var hasBackup, out var loadMessage))
-        {
-            return LidGuardOperationResult<bool>.Failure(loadMessage);
-        }
+        if (!LidGuardPendingLidActionBackupStore.TryLoad(out var backup, out var hasBackup, out var loadMessage)) return LidGuardOperationResult<bool>.Failure(loadMessage);
 
         if (!hasBackup) return LidGuardOperationResult<bool>.Success(false);
 
@@ -65,10 +62,7 @@ internal sealed class LidGuardPendingLidActionBackupManager(LidActionPolicyContr
 
     private static int GetNativeErrorCode(params LidGuardOperationResult[] results)
     {
-        foreach (var result in results)
-        {
-            if (result.NativeErrorCode != 0) return result.NativeErrorCode;
-        }
+        foreach (var result in results) if (result.NativeErrorCode != 0) return result.NativeErrorCode;
 
         return 0;
     }

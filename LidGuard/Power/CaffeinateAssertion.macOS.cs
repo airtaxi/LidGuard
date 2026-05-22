@@ -27,8 +27,7 @@ internal sealed class CaffeinateAssertion : IDisposable
 
     public static LidGuardOperationResult<CaffeinateAssertion> TryAcquire(IEnumerable<string> assertionFlags)
     {
-        if (!MacOSCommandPathResolver.TryFindExecutable("caffeinate", out var caffeinatePath))
-            return LidGuardOperationResult<CaffeinateAssertion>.Failure("caffeinate was not found on PATH. LidGuard macOS support requires /usr/bin/caffeinate.");
+        if (!MacOSCommandPathResolver.TryFindExecutable("caffeinate", out var caffeinatePath)) return LidGuardOperationResult<CaffeinateAssertion>.Failure("caffeinate was not found on PATH. LidGuard macOS support requires /usr/bin/caffeinate.");
 
         var processStartInformation = new ProcessStartInfo
         {

@@ -107,9 +107,9 @@ internal sealed class AgentTranscriptMonitor(
 
     private void HandleTranscriptFileChanged(LidGuardSessionKey sessionKey)
     {
-        AgentTranscriptActivityDetectedContext transcriptActivityDetectedContext = null;
-        AgentTranscriptStopDetectedContext transcriptStopDetectedContext = null;
-        AgentTranscriptSoftLockDetectedContext transcriptSoftLockDetectedContext = null;
+        var transcriptActivityDetectedContext = (AgentTranscriptActivityDetectedContext)null;
+        var transcriptStopDetectedContext = (AgentTranscriptStopDetectedContext)null;
+        var transcriptSoftLockDetectedContext = (AgentTranscriptSoftLockDetectedContext)null;
 
         lock (_gate)
         {
@@ -593,10 +593,7 @@ internal static class AgentTranscriptStopDetectors
         if (element.ValueKind == JsonValueKind.String) return IsClaudeInterruptMarker(element.GetString() ?? string.Empty);
         if (element.ValueKind == JsonValueKind.Array)
         {
-            foreach (var itemElement in element.EnumerateArray())
-            {
-                if (ContainsClaudeInterruptMarker(itemElement)) return true;
-            }
+            foreach (var itemElement in element.EnumerateArray()) if (ContainsClaudeInterruptMarker(itemElement)) return true;
 
             return false;
         }

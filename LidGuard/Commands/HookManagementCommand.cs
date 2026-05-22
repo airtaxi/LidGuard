@@ -136,10 +136,7 @@ internal static class HookManagementCommand
             }
 
             if (providers.Count > 1) Console.WriteLine(LocalizationService.GetFormattedString("ManagementHookEventsTitle", provider));
-            if (eventLines.Count == 0)
-            {
-                Console.WriteLine(LocalizationService.GetString("TextDisplayEmpty"));
-            }
+            if (eventLines.Count == 0) Console.WriteLine(LocalizationService.GetString("TextDisplayEmpty"));
             else
             {
                 foreach (var eventLine in eventLines) Console.WriteLine(LidGuardCommandTimestampFormatter.FormatHookEventLineForDisplay(eventLine));

@@ -217,10 +217,7 @@ public static class CodexHookConfigTomlDocument
 
         var nextSectionIndex = FindNextSectionIndex(lines, featuresSectionIndex + 1);
         var lastLineIndex = nextSectionIndex < 0 ? lines.Length : nextSectionIndex;
-        for (var lineIndex = featuresSectionIndex + 1; lineIndex < lastLineIndex; lineIndex++)
-        {
-            if (TryReadTomlKey(lines[lineIndex], out var key) && key.Equals(featureKey, StringComparison.Ordinal)) return true;
-        }
+        for (var lineIndex = featuresSectionIndex + 1; lineIndex < lastLineIndex; lineIndex++) if (TryReadTomlKey(lines[lineIndex], out var key) && key.Equals(featureKey, StringComparison.Ordinal)) return true;
 
         return false;
     }
@@ -279,20 +276,14 @@ public static class CodexHookConfigTomlDocument
 
     private static bool HasAllRequiredHookCommands(string content, Func<string, bool> commandPredicate)
     {
-        foreach (var hookEventName in s_requiredHookEventNames)
-        {
-            if (!ContainsHookCommand(content, hookEventName, commandPredicate)) return false;
-        }
+        foreach (var hookEventName in s_requiredHookEventNames) if (!ContainsHookCommand(content, hookEventName, commandPredicate)) return false;
 
         return true;
     }
 
     private static bool HasAllRequiredHookTimeouts(string content, int expectedTimeoutSeconds)
     {
-        foreach (var hookEventName in s_requiredHookEventNames)
-        {
-            if (!ContainsLidGuardHookWithSufficientTimeout(content, hookEventName, expectedTimeoutSeconds)) return false;
-        }
+        foreach (var hookEventName in s_requiredHookEventNames) if (!ContainsLidGuardHookWithSufficientTimeout(content, hookEventName, expectedTimeoutSeconds)) return false;
 
         return true;
     }
@@ -306,10 +297,7 @@ public static class CodexHookConfigTomlDocument
 
             var nextTableIndex = FindNextTableIndex(lines, lineIndex + 1);
             var commandLineEndIndex = nextTableIndex < 0 ? lines.Length : nextTableIndex;
-            for (var commandLineIndex = lineIndex + 1; commandLineIndex < commandLineEndIndex; commandLineIndex++)
-            {
-                if (TryReadCommandValue(lines[commandLineIndex], out var command) && commandPredicate(command)) return true;
-            }
+            for (var commandLineIndex = lineIndex + 1; commandLineIndex < commandLineEndIndex; commandLineIndex++) if (TryReadCommandValue(lines[commandLineIndex], out var command) && commandPredicate(command)) return true;
         }
 
         return false;
@@ -358,10 +346,7 @@ public static class CodexHookConfigTomlDocument
         if (removedLineIndexes.Count == 0) return content;
 
         var remainingLines = new List<string>();
-        for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
-        {
-            if (!removedLineIndexes.Contains(lineIndex)) remainingLines.Add(lines[lineIndex]);
-        }
+        for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++) if (!removedLineIndexes.Contains(lineIndex)) remainingLines.Add(lines[lineIndex]);
 
         RemoveEmptyHookMatcherTables(remainingLines);
         var updatedContent = JoinLines([.. remainingLines]).TrimEnd();
@@ -413,10 +398,7 @@ public static class CodexHookConfigTomlDocument
 
     private static bool HookBlockContainsCommand(IReadOnlyList<string> lines, int startIndex, int endIndex, Func<string, bool> commandPredicate)
     {
-        for (var lineIndex = startIndex; lineIndex < endIndex; lineIndex++)
-        {
-            if (TryReadCommandValue(lines[lineIndex], out var command) && commandPredicate(command)) return true;
-        }
+        for (var lineIndex = startIndex; lineIndex < endIndex; lineIndex++) if (TryReadCommandValue(lines[lineIndex], out var command) && commandPredicate(command)) return true;
 
         return false;
     }
@@ -498,10 +480,7 @@ public static class CodexHookConfigTomlDocument
 
     private static string ParseTomlStringValue(string value)
     {
-        if (value.Length >= 2 && value.StartsWith("\"", StringComparison.Ordinal) && value.EndsWith("\"", StringComparison.Ordinal))
-        {
-            return UnescapeTomlBasicString(value[1..^1]);
-        }
+        if (value.Length >= 2 && value.StartsWith("\"", StringComparison.Ordinal) && value.EndsWith("\"", StringComparison.Ordinal)) return UnescapeTomlBasicString(value[1..^1]);
 
         if (value.Length >= 2 && value.StartsWith("'", StringComparison.Ordinal) && value.EndsWith("'", StringComparison.Ordinal)) return value[1..^1];
         return value;
@@ -509,10 +488,7 @@ public static class CodexHookConfigTomlDocument
 
     private static bool IsKnownHookEventName(string hookEventName)
     {
-        foreach (var knownHookEventName in s_knownHookEventNames)
-        {
-            if (knownHookEventName.Equals(hookEventName, StringComparison.Ordinal)) return true;
-        }
+        foreach (var knownHookEventName in s_knownHookEventNames) if (knownHookEventName.Equals(hookEventName, StringComparison.Ordinal)) return true;
 
         return false;
     }
@@ -531,17 +507,11 @@ public static class CodexHookConfigTomlDocument
         return !string.IsNullOrWhiteSpace(statusMessage);
     }
 
-    private static bool UpsertStatusMessageLine(List<string> lines, int startIndex, int endIndex, string statusMessage)
-    {
-        return UpsertTomlValueLine(lines, startIndex, endIndex, "statusMessage", ToTomlStringLiteral(statusMessage));
-    }
+    private static bool UpsertStatusMessageLine(List<string> lines, int startIndex, int endIndex, string statusMessage) => UpsertTomlValueLine(lines, startIndex, endIndex, "statusMessage", ToTomlStringLiteral(statusMessage));
 
     private static int FindTomlKeyLineIndex(IReadOnlyList<string> lines, int startIndex, int endIndex, string key)
     {
-        for (var lineIndex = startIndex; lineIndex < endIndex; lineIndex++)
-        {
-            if (TryReadTomlKey(lines[lineIndex], out var candidateKey) && candidateKey.Equals(key, StringComparison.Ordinal)) return lineIndex;
-        }
+        for (var lineIndex = startIndex; lineIndex < endIndex; lineIndex++) if (TryReadTomlKey(lines[lineIndex], out var candidateKey) && candidateKey.Equals(key, StringComparison.Ordinal)) return lineIndex;
 
         return -1;
     }
@@ -667,10 +637,7 @@ public static class CodexHookConfigTomlDocument
             currentLastLineIndex++;
         }
 
-        for (var lineIndex = currentLastLineIndex - 1; lineIndex > featuresSectionIndex; lineIndex--)
-        {
-            if (TryReadTomlKey(updatedLines[lineIndex], out var key) && key.Equals(DeprecatedCodexHooksFeatureKey, StringComparison.Ordinal)) updatedLines.RemoveAt(lineIndex);
-        }
+        for (var lineIndex = currentLastLineIndex - 1; lineIndex > featuresSectionIndex; lineIndex--) if (TryReadTomlKey(updatedLines[lineIndex], out var key) && key.Equals(DeprecatedCodexHooksFeatureKey, StringComparison.Ordinal)) updatedLines.RemoveAt(lineIndex);
 
         return JoinLines([.. updatedLines]);
     }
@@ -685,10 +652,7 @@ public static class CodexHookConfigTomlDocument
 
     private static int FindSectionIndex(string[] lines, string sectionHeader)
     {
-        for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
-        {
-            if (lines[lineIndex].Trim().Equals(sectionHeader, StringComparison.Ordinal)) return lineIndex;
-        }
+        for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++) if (lines[lineIndex].Trim().Equals(sectionHeader, StringComparison.Ordinal)) return lineIndex;
 
         return -1;
     }

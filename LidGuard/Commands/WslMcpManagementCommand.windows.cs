@@ -158,10 +158,7 @@ internal static class WslMcpManagementCommand
 
     private static ManagedMcpInspectionResult InspectCodexMcp(string distroName, string wslExecutablePath)
     {
-        if (!WslProviderConfigurationRoots.TryGetMcpConfigurationFilePath(distroName, AgentProvider.Codex, out var configurationFilePath, out var message))
-        {
-            configurationFilePath = string.Empty;
-        }
+        if (!WslProviderConfigurationRoots.TryGetMcpConfigurationFilePath(distroName, AgentProvider.Codex, out var configurationFilePath, out var message)) configurationFilePath = string.Empty;
 
         var configurationFileExists = WslCommandUtilities.FileExists(distroName, configurationFilePath);
         WslCommandUtilities.TryResolveProviderCliDisplayText(distroName, AgentProvider.Codex, out var hasProviderCli, out var providerCliDisplayText);
@@ -217,10 +214,7 @@ internal static class WslMcpManagementCommand
         string distroName,
         string wslExecutablePath)
     {
-        if (!WslProviderConfigurationRoots.TryGetMcpConfigurationFilePath(distroName, provider, out var configurationFilePath, out var message))
-        {
-            configurationFilePath = string.Empty;
-        }
+        if (!WslProviderConfigurationRoots.TryGetMcpConfigurationFilePath(distroName, provider, out var configurationFilePath, out var message)) configurationFilePath = string.Empty;
 
         var configurationFileExists = WslCommandUtilities.FileExists(distroName, configurationFilePath);
         WslCommandUtilities.TryResolveProviderCliDisplayText(distroName, provider, out var hasProviderCli, out var providerCliDisplayText);

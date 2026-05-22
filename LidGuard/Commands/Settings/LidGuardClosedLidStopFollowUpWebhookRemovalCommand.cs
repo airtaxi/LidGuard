@@ -52,8 +52,7 @@ internal static class LidGuardClosedLidStopFollowUpWebhookRemovalCommand
         LidGuardCommandConsole.WriteSettings(outcome.UpdatedStoredSettings);
         Console.WriteLine(LocalizationService.GetString("SettingsClosedLidStopFollowUpWebhookUrlRemoved"));
 
-        if (outcome.ManagedHookRefreshResult is not null)
-            LidGuardSettingsUpdateCommand.WriteManagedHookRefreshResult(outcome.ManagedHookRefreshResult);
+        if (outcome.ManagedHookRefreshResult is not null) LidGuardSettingsUpdateCommand.WriteManagedHookRefreshResult(outcome.ManagedHookRefreshResult);
 
         if (outcome.Snapshot.RuntimeReachable)
         {

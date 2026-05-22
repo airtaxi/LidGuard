@@ -28,8 +28,7 @@ internal sealed class SystemdInhibitor : IDisposable
     public static LidGuardOperationResult<SystemdInhibitor> TryAcquire(string inhibitorTypesText, string reason)
     {
         if (string.IsNullOrWhiteSpace(inhibitorTypesText)) return LidGuardOperationResult<SystemdInhibitor>.Failure("A systemd inhibitor type is required.");
-        if (!LinuxCommandPathResolver.TryFindExecutable("systemd-inhibit", out var systemdInhibitPath))
-            return LidGuardOperationResult<SystemdInhibitor>.Failure("systemd-inhibit was not found on PATH. LidGuard Linux support requires systemd/logind.");
+        if (!LinuxCommandPathResolver.TryFindExecutable("systemd-inhibit", out var systemdInhibitPath)) return LidGuardOperationResult<SystemdInhibitor>.Failure("systemd-inhibit was not found on PATH. LidGuard Linux support requires systemd/logind.");
 
         var processStartInformation = new ProcessStartInfo
         {

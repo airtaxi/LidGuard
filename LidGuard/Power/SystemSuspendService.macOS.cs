@@ -38,10 +38,7 @@ public sealed class SystemSuspendService : ISystemSuspendService
 
     private static int GetNativeErrorCode(params LidGuardOperationResult[] results)
     {
-        foreach (var result in results)
-        {
-            if (result.NativeErrorCode != 0) return result.NativeErrorCode;
-        }
+        foreach (var result in results) if (result.NativeErrorCode != 0) return result.NativeErrorCode;
 
         return 0;
     }

@@ -19,10 +19,7 @@ internal static class ManagedProviderSelection
         var skippedProviderMessageList = new List<string>();
         foreach (var provider in selectedProviders)
         {
-            if (TryGetProviderAvailability(provider, getProviderConfigurationRootCandidatePaths(provider), out var skippedProviderMessage))
-            {
-                availableProviderList.Add(provider);
-            }
+            if (TryGetProviderAvailability(provider, getProviderConfigurationRootCandidatePaths(provider), out var skippedProviderMessage)) availableProviderList.Add(provider);
             else
             {
                 skippedProviderMessageList.Add(skippedProviderMessage);
@@ -81,10 +78,7 @@ internal static class ManagedProviderSelection
 
     private static string GetOption(IReadOnlyDictionary<string, string> options, params string[] optionNames)
     {
-        foreach (var optionName in optionNames)
-        {
-            if (options.TryGetValue(optionName, out var optionValue)) return optionValue;
-        }
+        foreach (var optionName in optionNames) if (options.TryGetValue(optionName, out var optionValue)) return optionValue;
 
         return string.Empty;
     }

@@ -108,10 +108,7 @@ internal static class ClaudeHookCommand
 
             if (hookEventName.Equals(ClaudeHookEventNames.UserPromptSubmit, StringComparison.Ordinal))
             {
-                if (ClaudeHookWorkTracker.TryRecordTaskNotification(hookInput, GetSessionIdentifier(hookInput)))
-                {
-                    return await ReportActivityAsync(hookInput, "task-notification");
-                }
+                if (ClaudeHookWorkTracker.TryRecordTaskNotification(hookInput, GetSessionIdentifier(hookInput))) return await ReportActivityAsync(hookInput, "task-notification");
 
                 return await SendRuntimeRequestAsync(LidGuardPipeCommands.Start, hookEventName, hookInput, timing: timing);
             }
@@ -219,10 +216,7 @@ internal static class ClaudeHookCommand
 
         private async Task<int> HandleNotificationAsync(ClaudeHookInput hookInput)
         {
-            if (ClaudeSoftLockSignalSource.TryGetSoftLockReason(hookInput, out var softLockReason))
-            {
-                return await SendSessionStateRequestAsync(LidGuardPipeCommands.MarkSessionSoftLocked, hookInput.HookEventName, hookInput, softLockReason);
-            }
+            if (ClaudeSoftLockSignalSource.TryGetSoftLockReason(hookInput, out var softLockReason)) return await SendSessionStateRequestAsync(LidGuardPipeCommands.MarkSessionSoftLocked, hookInput.HookEventName, hookInput, softLockReason);
 
             if (ClaudeSoftLockSignalSource.IsActivityEvent(hookInput)) return await SendSessionStateRequestAsync(LidGuardPipeCommands.MarkSessionActive, hookInput.HookEventName, hookInput, hookInput.NotificationType);
             return 0;

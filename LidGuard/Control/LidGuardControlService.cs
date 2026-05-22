@@ -15,8 +15,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
 
     public async Task<LidGuardOperationResult<LidGuardControlSnapshot>> GetStatusAsync(CancellationToken cancellationToken = default)
     {
-        if (!LidGuardSettingsStore.TryLoadOrCreate(out var storedSettings, out var message))
-            return LidGuardOperationResult<LidGuardControlSnapshot>.Failure(message);
+        if (!LidGuardSettingsStore.TryLoadOrCreate(out var storedSettings, out var message)) return LidGuardOperationResult<LidGuardControlSnapshot>.Failure(message);
 
         var response = await _runtimeClient.SendAsync(
             new LidGuardPipeRequest { Command = LidGuardPipeCommands.Status },
@@ -53,13 +52,10 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         string providerName = "",
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(sessionIdentifier))
-            return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Failure("A session identifier is required.");
-        if (provider == AgentProvider.Mcp && string.IsNullOrWhiteSpace(providerName))
-            providerName = string.Empty;
+        if (string.IsNullOrWhiteSpace(sessionIdentifier)) return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Failure("A session identifier is required.");
+        if (provider == AgentProvider.Mcp && string.IsNullOrWhiteSpace(providerName)) providerName = string.Empty;
 
-        if (!LidGuardSettingsStore.TryLoadOrCreate(out var storedSettings, out var message))
-            return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Failure(message);
+        if (!LidGuardSettingsStore.TryLoadOrCreate(out var storedSettings, out var message)) return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Failure(message);
 
         var normalizedStoredSettings = LidGuardSettings.Normalize(storedSettings);
         var normalizedProviderName = provider is null ? string.Empty : AgentProviderDisplay.NormalizeProviderName(provider.Value, providerName);
@@ -67,8 +63,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             new LidGuardPipeRequest { Command = LidGuardPipeCommands.Status },
             false,
             cancellationToken);
-        if (!statusResponse.Succeeded && !statusResponse.RuntimeUnavailable)
-            return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Failure(statusResponse.Message);
+        if (!statusResponse.Succeeded && !statusResponse.RuntimeUnavailable) return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Failure(statusResponse.Message);
 
         var removedSessions = GetMatchingSessions(statusResponse, sessionIdentifier, provider, normalizedProviderName);
         var removeResponse = await _runtimeClient.SendAsync(
@@ -83,8 +78,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             },
             false,
             cancellationToken);
-        if (!removeResponse.Succeeded && !removeResponse.RuntimeUnavailable)
-            return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Failure(removeResponse.Message);
+        if (!removeResponse.Succeeded && !removeResponse.RuntimeUnavailable) return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Failure(removeResponse.Message);
 
         return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Success(new LidGuardSessionRemovalOutcome
         {
@@ -404,11 +398,9 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         bool allowRuntimeUnavailableAsSuccess,
         CancellationToken cancellationToken)
     {
-        if (!TryValidateSessionCommandArguments(provider, providerName, sessionIdentifier, out var message))
-            return LidGuardOperationResult<LidGuardSessionCommandOutcome>.Failure(message);
+        if (!TryValidateSessionCommandArguments(provider, providerName, sessionIdentifier, out var message)) return LidGuardOperationResult<LidGuardSessionCommandOutcome>.Failure(message);
 
-        if (!LidGuardSettingsStore.TryLoadOrCreate(out var storedSettings, out message))
-            return LidGuardOperationResult<LidGuardSessionCommandOutcome>.Failure(message);
+        if (!LidGuardSettingsStore.TryLoadOrCreate(out var storedSettings, out message)) return LidGuardOperationResult<LidGuardSessionCommandOutcome>.Failure(message);
 
         var normalizedStoredSettings = LidGuardSettings.Normalize(storedSettings);
         var normalizedProviderName = AgentProviderDisplay.NormalizeProviderName(provider, providerName);
@@ -428,8 +420,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         };
 
         var response = await _runtimeClient.SendAsync(request, startRuntimeIfUnavailable, cancellationToken);
-        if (!response.Succeeded && !(allowRuntimeUnavailableAsSuccess && response.RuntimeUnavailable))
-            return LidGuardOperationResult<LidGuardSessionCommandOutcome>.Failure(response.Message);
+        if (!response.Succeeded && !(allowRuntimeUnavailableAsSuccess && response.RuntimeUnavailable)) return LidGuardOperationResult<LidGuardSessionCommandOutcome>.Failure(response.Message);
 
         return LidGuardOperationResult<LidGuardSessionCommandOutcome>.Success(new LidGuardSessionCommandOutcome
         {

@@ -117,7 +117,7 @@ public sealed partial class SystemAudioVolumeController : ISystemAudioVolumeCont
 
     private static unsafe LidGuardOperationResult<ComInterfaceHandle<IMMDeviceEnumerator>> CreateMmDeviceEnumerator()
     {
-        void* enumeratorPointer = null;
+        var enumeratorPointer = (void*)null;
         var result = PInvoke.CoCreateInstance(
             s_mmDeviceEnumeratorClassIdentifier,
             null,
@@ -131,7 +131,7 @@ public sealed partial class SystemAudioVolumeController : ISystemAudioVolumeCont
 
     private static unsafe LidGuardOperationResult<ComInterfaceHandle<IMMDevice>> GetDefaultAudioEndpoint(IMMDeviceEnumerator* enumeratorPointer)
     {
-        IMMDevice* endpointPointer = null;
+        var endpointPointer = (IMMDevice*)null;
         var result = enumeratorPointer->GetDefaultAudioEndpoint(EDataFlow.eRender, ERole.eConsole, &endpointPointer);
         if (Failed(result)) return LidGuardOperationResult<ComInterfaceHandle<IMMDevice>>.Failure("Failed to get the default Windows render audio endpoint.", (int)result);
 
@@ -140,7 +140,7 @@ public sealed partial class SystemAudioVolumeController : ISystemAudioVolumeCont
 
     private static unsafe LidGuardOperationResult<ComInterfaceHandle<IAudioEndpointVolume>> ActivateAudioEndpointVolume(IMMDevice* endpointPointer, ComApartment comApartment)
     {
-        void* endpointVolumePointer = null;
+        var endpointVolumePointer = (void*)null;
         var result = endpointPointer->Activate(IAudioEndpointVolume.IID_Guid, CLSCTX.CLSCTX_INPROC_SERVER, null, out endpointVolumePointer);
         if (Failed(result)) return LidGuardOperationResult<ComInterfaceHandle<IAudioEndpointVolume>>.Failure("Failed to activate the Windows audio endpoint volume interface.", (int)result);
 

@@ -19,10 +19,8 @@ public sealed class SystemAudioVolumeController : ISystemAudioVolumeController
         var muteResult = LinuxCommandRunner.Run(pactlPath, ["get-sink-mute", "@DEFAULT_SINK@"], s_pactlTimeout);
         if (!muteResult.Succeeded) return LidGuardOperationResult<SystemAudioVolumeState>.Failure(muteResult.CreateFailureMessage("pactl get-sink-mute"));
 
-        if (!TryParseVolumePercent(volumeResult.StandardOutput, out var volumePercent))
-            return LidGuardOperationResult<SystemAudioVolumeState>.Failure("Failed to parse pactl default sink volume.");
-        if (!TryParseMuteState(muteResult.StandardOutput, out var isMuted))
-            return LidGuardOperationResult<SystemAudioVolumeState>.Failure("Failed to parse pactl default sink mute state.");
+        if (!TryParseVolumePercent(volumeResult.StandardOutput, out var volumePercent)) return LidGuardOperationResult<SystemAudioVolumeState>.Failure("Failed to parse pactl default sink volume.");
+        if (!TryParseMuteState(muteResult.StandardOutput, out var isMuted)) return LidGuardOperationResult<SystemAudioVolumeState>.Failure("Failed to parse pactl default sink mute state.");
 
         return LidGuardOperationResult<SystemAudioVolumeState>.Success(new SystemAudioVolumeState
         {
@@ -33,8 +31,7 @@ public sealed class SystemAudioVolumeController : ISystemAudioVolumeController
 
     public LidGuardOperationResult ApplyDefaultRenderDeviceVolumeOverride(int volumeOverridePercent)
     {
-        if (!LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(volumeOverridePercent))
-            return LidGuardOperationResult.Failure($"The volume override percent must be an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.");
+        if (!LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(volumeOverridePercent)) return LidGuardOperationResult.Failure($"The volume override percent must be an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.");
         if (!TryFindPactl(out var pactlPath, out var message)) return LidGuardOperationResult.Failure(message);
 
         var volumeResult = LinuxCommandRunner.Run(pactlPath, ["set-sink-volume", "@DEFAULT_SINK@", $"{volumeOverridePercent}%"], s_pactlTimeout);

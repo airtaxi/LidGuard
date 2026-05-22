@@ -10,8 +10,7 @@ public sealed class SystemSuspendService : ISystemSuspendService
 
     public LidGuardOperationResult Suspend(SystemSuspendMode suspendMode)
     {
-        if (!LinuxCommandPathResolver.TryFindExecutable("systemctl", out var systemctlPath))
-            return LidGuardOperationResult.Failure("systemctl was not found on PATH. LidGuard Linux suspend support requires systemd/logind.");
+        if (!LinuxCommandPathResolver.TryFindExecutable("systemctl", out var systemctlPath)) return LidGuardOperationResult.Failure("systemctl was not found on PATH. LidGuard Linux suspend support requires systemd/logind.");
 
         var commandName = suspendMode == SystemSuspendMode.Hibernate ? "hibernate" : "suspend";
         var commandResult = LinuxCommandRunner.Run(systemctlPath, [commandName], s_systemctlTimeout);
