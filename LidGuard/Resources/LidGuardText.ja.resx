@@ -111,6 +111,12 @@
   <data name="SettingsClosedLidStopFollowUpWebhookUrl" xml:space="preserve">
     <value>  スリープ前の返信通知 URL: {0}</value>
   </data>
+  <data name="SettingsClosedLidStopFollowUpDelaySeconds" xml:space="preserve">
+    <value>  スリープ前の返信待ち時間 (秒): {0}</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpConfigurationIssue" xml:space="preserve">
+    <value>    設定の問題: {0}</value>
+  </data>
   <data name="SettingsRepeatClosedLidStopFollowUp" xml:space="preserve">
     <value>  返信後にもう一度確認する: {0}</value>
   </data>
@@ -236,6 +242,9 @@
   </data>
   <data name="SettingsOptionPostStopSuspendDelaySecondsValidation" xml:space="preserve">
     <value>post-stop-suspend-delay-seconds オプションは 0 以上の整数である必要があります。</value>
+  </data>
+  <data name="SettingsOptionClosedLidStopFollowUpDelaySecondsValidation" xml:space="preserve">
+    <value>closed-lid-stop-follow-up-delay-seconds オプションは 0 以上の整数である必要があります。</value>
   </data>
   <data name="ManagementContainsMcpServerCommand" xml:space="preserve">
     <value>  mcp-server コマンドを含む: {0}</value>
@@ -836,6 +845,24 @@
   </data>
   <data name="SettingsNameRepeatClosedLidStopFollowUp" xml:space="preserve">
     <value>返信後にもう一度確認する</value>
+  </data>
+  <data name="SettingsNameClosedLidStopFollowUpDelaySeconds" xml:space="preserve">
+    <value>スリープ前の返信待ち時間 (秒)</value>
+  </data>
+  <data name="DisplayClosedLidStopFollowUpFeatureStateOn" xml:space="preserve">
+    <value>オン</value>
+  </data>
+  <data name="DisplayClosedLidStopFollowUpFeatureStateOff" xml:space="preserve">
+    <value>オフ</value>
+  </data>
+  <data name="DisplayClosedLidStopFollowUpFeatureStateConfigurationError" xml:space="preserve">
+    <value>設定エラー</value>
+  </data>
+  <data name="ClosedLidStopFollowUpConfigurationIssueReplyWaitTooShort" xml:space="preserve">
+    <value>プッシュ通知に気づいて返信するには返信待ち時間が短すぎます。無効にするには 0 秒、返信を使うには 20 秒以上に設定してください。</value>
+  </data>
+  <data name="ClosedLidStopFollowUpConfigurationIssuePostStopDelayTooShort" xml:space="preserve">
+    <value>直後のプロンプトが表示される前に、スリープまたは返信待ちが早く始まりすぎる可能性があります。post-stop-suspend-delay-seconds を 10 秒以上に設定してください。</value>
   </data>
   <data name="TextDisplayOff" xml:space="preserve">
     <value>オフ</value>

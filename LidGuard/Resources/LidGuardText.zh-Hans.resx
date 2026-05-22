@@ -111,6 +111,12 @@
   <data name="SettingsClosedLidStopFollowUpWebhookUrl" xml:space="preserve">
     <value>  睡眠前回复提醒 URL：{0}</value>
   </data>
+  <data name="SettingsClosedLidStopFollowUpDelaySeconds" xml:space="preserve">
+    <value>  睡眠前回复等待时间（秒）：{0}</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpConfigurationIssue" xml:space="preserve">
+    <value>    设置问题：{0}</value>
+  </data>
   <data name="SettingsRepeatClosedLidStopFollowUp" xml:space="preserve">
     <value>  回复后再次询问：{0}</value>
   </data>
@@ -236,6 +242,9 @@
   </data>
   <data name="SettingsOptionPostStopSuspendDelaySecondsValidation" xml:space="preserve">
     <value>post-stop-suspend-delay-seconds 选项必须是非负整数。</value>
+  </data>
+  <data name="SettingsOptionClosedLidStopFollowUpDelaySecondsValidation" xml:space="preserve">
+    <value>closed-lid-stop-follow-up-delay-seconds 选项必须是非负整数。</value>
   </data>
   <data name="ManagementContainsMcpServerCommand" xml:space="preserve">
     <value>  包含 mcp-server 命令：{0}</value>
@@ -836,6 +845,24 @@
   </data>
   <data name="SettingsNameRepeatClosedLidStopFollowUp" xml:space="preserve">
     <value>回复后再次询问</value>
+  </data>
+  <data name="SettingsNameClosedLidStopFollowUpDelaySeconds" xml:space="preserve">
+    <value>睡眠前回复等待时间（秒）</value>
+  </data>
+  <data name="DisplayClosedLidStopFollowUpFeatureStateOn" xml:space="preserve">
+    <value>开启</value>
+  </data>
+  <data name="DisplayClosedLidStopFollowUpFeatureStateOff" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="DisplayClosedLidStopFollowUpFeatureStateConfigurationError" xml:space="preserve">
+    <value>配置错误</value>
+  </data>
+  <data name="ClosedLidStopFollowUpConfigurationIssueReplyWaitTooShort" xml:space="preserve">
+    <value>回复窗口太短，可能来不及看到推送通知并回复。设置为 0 秒可关闭；要使用回复，请设置为至少 20 秒。</value>
+  </data>
+  <data name="ClosedLidStopFollowUpConfigurationIssuePostStopDelayTooShort" xml:space="preserve">
+    <value>紧随其后的提示可能还没显示，睡眠或回复等待就过早开始。请将 post-stop-suspend-delay-seconds 设置为至少 10。</value>
   </data>
   <data name="TextDisplayOff" xml:space="preserve">
     <value>关闭</value>
