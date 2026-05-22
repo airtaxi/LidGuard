@@ -11,23 +11,16 @@ public static class SystemThermalInformation
 
     public static int? GetSystemTemperatureCelsius(EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
     {
-        var appleSiliconTemperatureCelsius = AggregateTemperatures(
-            MacOSAppleSiliconHumanInterfaceDeviceTemperatureSensor.ReadProcessorTemperaturesCelsius(),
-            emergencyHibernationTemperatureMode);
+        var appleSiliconTemperatureCelsius = AggregateTemperatures(MacOSAppleSiliconHumanInterfaceDeviceTemperatureSensor.ReadProcessorTemperaturesCelsius(), emergencyHibernationTemperatureMode);
         if (appleSiliconTemperatureCelsius is not null) return appleSiliconTemperatureCelsius;
 
-        var commandResult = MacOSPowerSettings.RunPrivilegedCommand(
-            "powermetrics",
-            ["--samplers", "smc", "-n", "1", "-i", "1000"],
-            s_powermetricsTimeout);
+        var commandResult = MacOSPowerSettings.RunPrivilegedCommand("powermetrics", ["--samplers", "smc", "-n", "1", "-i", "1000"], s_powermetricsTimeout);
         if (!commandResult.Succeeded) return null;
 
         return AggregateTemperatures(ParseCelsiusTemperatures(commandResult.StandardOutput), emergencyHibernationTemperatureMode);
     }
 
-    public static int? AggregateTemperatures(
-        IEnumerable<double> celsiusTemperatures,
-        EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
+    public static int? AggregateTemperatures(IEnumerable<double> celsiusTemperatures, EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
     {
         var temperatureValues = celsiusTemperatures
             .Where(static celsiusTemperature => celsiusTemperature > 0 && celsiusTemperature < 130)

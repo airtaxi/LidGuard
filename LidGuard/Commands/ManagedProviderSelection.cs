@@ -5,11 +5,7 @@ namespace LidGuard.Commands;
 
 internal static class ManagedProviderSelection
 {
-    public static void ResolveAvailableProviders(
-        IReadOnlyList<AgentProvider> selectedProviders,
-        Func<AgentProvider, IReadOnlyList<string>> getProviderConfigurationRootCandidatePaths,
-        out IReadOnlyList<AgentProvider> availableProviders,
-        out IReadOnlyList<string> skippedProviderMessages)
+    public static void ResolveAvailableProviders(IReadOnlyList<AgentProvider> selectedProviders, Func<AgentProvider, IReadOnlyList<string>> getProviderConfigurationRootCandidatePaths, out IReadOnlyList<AgentProvider> availableProviders, out IReadOnlyList<string> skippedProviderMessages)
     {
         availableProviders = selectedProviders;
         skippedProviderMessages = [];
@@ -30,25 +26,15 @@ internal static class ManagedProviderSelection
         skippedProviderMessages = skippedProviderMessageList;
     }
 
-    public static bool TrySelectProviders(
-        IReadOnlyDictionary<string, string> options,
-        string prompt,
-        out IReadOnlyList<AgentProvider> providers,
-        out string message)
+    public static bool TrySelectProviders(IReadOnlyDictionary<string, string> options, string prompt, out IReadOnlyList<AgentProvider> providers, out string message)
         => TrySelectProviders(GetOption(options, "provider"), prompt, out providers, out message);
 
-    public static bool TrySelectProviders(
-        string providerText,
-        string prompt,
-        out IReadOnlyList<AgentProvider> providers,
-        out string message)
+    public static bool TrySelectProviders(string providerText, string prompt, out IReadOnlyList<AgentProvider> providers, out string message)
     {
         providers = [];
         message = string.Empty;
 
-        return string.IsNullOrWhiteSpace(providerText)
-            ? TryReadProviders(prompt, out providers, out message)
-            : TryParseProviderSelection(providerText, out providers, out message);
+        return string.IsNullOrWhiteSpace(providerText) ? TryReadProviders(prompt, out providers, out message) : TryParseProviderSelection(providerText, out providers, out message);
     }
 
     public static string GetProviderDisplayName(AgentProvider provider)

@@ -1,5 +1,3 @@
 namespace LidGuard.Notifications.Data;
 
-internal sealed record AuthenticationRefreshTokenIssue(
-    string Token,
-    DateTimeOffset ExpiresAtUtc);
+internal sealed record AuthenticationRefreshTokenIssue(string Token, DateTimeOffset ExpiresAtUtc);

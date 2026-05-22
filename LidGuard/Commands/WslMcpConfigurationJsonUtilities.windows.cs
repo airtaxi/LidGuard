@@ -6,12 +6,7 @@ namespace LidGuard.Commands;
 
 internal static partial class McpConfigurationJsonUtilities
 {
-    public static bool TryLoadConfigurationRoot(
-        string distroName,
-        string configurationFilePath,
-        bool createIfMissing,
-        out JsonObject rootObject,
-        out string message)
+    public static bool TryLoadConfigurationRoot(string distroName, string configurationFilePath, bool createIfMissing, out JsonObject rootObject, out string message)
     {
         rootObject = new JsonObject();
         message = string.Empty;
@@ -29,13 +24,12 @@ internal static partial class McpConfigurationJsonUtilities
 
         try
         {
-            var rootNode = JsonNode.Parse(
-                content,
-                documentOptions: new JsonDocumentOptions
-                {
-                    AllowTrailingCommas = true,
-                    CommentHandling = JsonCommentHandling.Skip
-                });
+            var documentOptions = new JsonDocumentOptions
+            {
+                AllowTrailingCommas = true,
+                CommentHandling = JsonCommentHandling.Skip
+            };
+            var rootNode = JsonNode.Parse(content, documentOptions: documentOptions);
 
             if (rootNode is null) return true;
             if (rootNode is JsonObject existingRootObject)
@@ -56,9 +50,5 @@ internal static partial class McpConfigurationJsonUtilities
     }
 
     public static bool TrySaveConfigurationRoot(string distroName, string configurationFilePath, JsonObject rootObject, out string message)
-        => WslCommandUtilities.TryWriteTextFile(
-            distroName,
-            configurationFilePath,
-            rootObject.ToJsonString(new JsonSerializerOptions { WriteIndented = true }),
-            out message);
+        => WslCommandUtilities.TryWriteTextFile(distroName, configurationFilePath, rootObject.ToJsonString(new JsonSerializerOptions { WriteIndented = true }), out message);
 }

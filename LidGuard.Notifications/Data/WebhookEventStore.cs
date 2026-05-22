@@ -8,26 +8,7 @@ namespace LidGuard.Notifications.Data;
 
 internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactory)
 {
-    public async Task<long> InsertAsync(
-        string eventType,
-        string reason,
-        string? userInterfaceCulture,
-        int? softLockedSessionCount,
-        string? provider,
-        string? providerName,
-        string? sessionIdentifier,
-        DateTimeOffset? startedAtUtc,
-        DateTimeOffset? lastActivityAtUtc,
-        DateTimeOffset? endedAtUtc,
-        string? endReason,
-        int? activeSessionCount,
-        string? inputPromptPreview,
-        string? lastResponse,
-        int? replyWaitSeconds,
-        DateTimeOffset? replyDeadlineUtc,
-        string? workingDirectory,
-        string? transcriptPath,
-        CancellationToken cancellationToken)
+    public async Task<long> InsertAsync(string eventType, string reason, string? userInterfaceCulture, int? softLockedSessionCount, string? provider, string? providerName, string? sessionIdentifier, DateTimeOffset? startedAtUtc, DateTimeOffset? lastActivityAtUtc, DateTimeOffset? endedAtUtc, string? endReason, int? activeSessionCount, string? inputPromptPreview, string? lastResponse, int? replyWaitSeconds, DateTimeOffset? replyDeadlineUtc, string? workingDirectory, string? transcriptPath, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
@@ -104,26 +85,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         return Convert.ToInt64(result, CultureInfo.InvariantCulture);
     }
 
-    public async Task<StopFollowUpRequestAcceptedResult> InsertStopFollowUpAsync(
-        string eventType,
-        string reason,
-        string? userInterfaceCulture,
-        int? softLockedSessionCount,
-        string? provider,
-        string? providerName,
-        string? sessionIdentifier,
-        DateTimeOffset? startedAtUtc,
-        DateTimeOffset? lastActivityAtUtc,
-        DateTimeOffset? endedAtUtc,
-        string? endReason,
-        int? activeSessionCount,
-        string? inputPromptPreview,
-        string? lastResponse,
-        int replyWaitSeconds,
-        DateTimeOffset replyDeadlineUtc,
-        string? workingDirectory,
-        string? transcriptPath,
-        CancellationToken cancellationToken)
+    public async Task<StopFollowUpRequestAcceptedResult> InsertStopFollowUpAsync(string eventType, string reason, string? userInterfaceCulture, int? softLockedSessionCount, string? provider, string? providerName, string? sessionIdentifier, DateTimeOffset? startedAtUtc, DateTimeOffset? lastActivityAtUtc, DateTimeOffset? endedAtUtc, string? endReason, int? activeSessionCount, string? inputPromptPreview, string? lastResponse, int replyWaitSeconds, DateTimeOffset replyDeadlineUtc, string? workingDirectory, string? transcriptPath, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
         var publicIdentifier = Guid.NewGuid().ToString("N");
@@ -132,29 +94,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
 
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
         using var transaction = connection.BeginTransaction();
-        var webhookEventIdentifier = await InsertWebhookEventAsync(
-            connection,
-            transaction,
-            eventType,
-            reason,
-            userInterfaceCulture,
-            softLockedSessionCount,
-            provider,
-            providerName,
-            sessionIdentifier,
-            startedAtUtc,
-            lastActivityAtUtc,
-            endedAtUtc,
-            endReason,
-            activeSessionCount,
-            inputPromptPreview,
-            lastResponse,
-            replyWaitSeconds,
-            replyDeadlineUtc,
-            workingDirectory,
-            transcriptPath,
-            now,
-            cancellationToken);
+        var webhookEventIdentifier = await InsertWebhookEventAsync(connection, transaction, eventType, reason, userInterfaceCulture, softLockedSessionCount, provider, providerName, sessionIdentifier, startedAtUtc, lastActivityAtUtc, endedAtUtc, endReason, activeSessionCount, inputPromptPreview, lastResponse, replyWaitSeconds, replyDeadlineUtc, workingDirectory, transcriptPath, now, cancellationToken);
         using (var command = connection.CreateCommand())
         {
             command.Transaction = transaction;
@@ -246,31 +186,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
             using var reader = await selectCommand.ExecuteReaderAsync(cancellationToken);
             while (await reader.ReadAsync(cancellationToken))
             {
-                events.Add(new PendingWebhookEvent(
-                    reader.GetInt64(0),
-                    reader.GetString(1),
-                    reader.GetString(2),
-                    reader.IsDBNull(3) ? null : reader.GetString(3),
-                    reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                    reader.IsDBNull(5) ? null : reader.GetString(5),
-                    reader.IsDBNull(6) ? null : reader.GetString(6),
-                    reader.IsDBNull(7) ? null : reader.GetString(7),
-                    reader.IsDBNull(8) ? null : DateTimeOffset.Parse(reader.GetString(8), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                    reader.IsDBNull(9) ? null : DateTimeOffset.Parse(reader.GetString(9), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                    reader.IsDBNull(10) ? null : DateTimeOffset.Parse(reader.GetString(10), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                    reader.IsDBNull(11) ? null : reader.GetString(11),
-                    reader.IsDBNull(12) ? null : reader.GetInt32(12),
-                    reader.IsDBNull(13) ? null : reader.GetString(13),
-                    reader.IsDBNull(14) ? null : reader.GetString(14),
-                    reader.IsDBNull(15) ? null : reader.GetInt32(15),
-                    reader.IsDBNull(16) ? null : DateTimeOffset.Parse(reader.GetString(16), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                    reader.IsDBNull(17) ? null : reader.GetString(17),
-                    reader.IsDBNull(18) ? null : reader.GetString(18),
-                    reader.IsDBNull(19) ? null : reader.GetString(19),
-                    reader.IsDBNull(20) ? null : reader.GetString(20),
-                    reader.IsDBNull(21) ? null : reader.GetString(21),
-                    DateTimeOffset.Parse(reader.GetString(22), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                    Convert.ToInt32(reader.GetValue(23), CultureInfo.InvariantCulture) + 1));
+                events.Add(new PendingWebhookEvent(reader.GetInt64(0), reader.GetString(1), reader.GetString(2), reader.IsDBNull(3) ? null : reader.GetString(3), reader.IsDBNull(4) ? null : reader.GetInt32(4), reader.IsDBNull(5) ? null : reader.GetString(5), reader.IsDBNull(6) ? null : reader.GetString(6), reader.IsDBNull(7) ? null : reader.GetString(7), reader.IsDBNull(8) ? null : DateTimeOffset.Parse(reader.GetString(8), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.IsDBNull(9) ? null : DateTimeOffset.Parse(reader.GetString(9), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.IsDBNull(10) ? null : DateTimeOffset.Parse(reader.GetString(10), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.IsDBNull(11) ? null : reader.GetString(11), reader.IsDBNull(12) ? null : reader.GetInt32(12), reader.IsDBNull(13) ? null : reader.GetString(13), reader.IsDBNull(14) ? null : reader.GetString(14), reader.IsDBNull(15) ? null : reader.GetInt32(15), reader.IsDBNull(16) ? null : DateTimeOffset.Parse(reader.GetString(16), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.IsDBNull(17) ? null : reader.GetString(17), reader.IsDBNull(18) ? null : reader.GetString(18), reader.IsDBNull(19) ? null : reader.GetString(19), reader.IsDBNull(20) ? null : reader.GetString(20), reader.IsDBNull(21) ? null : reader.GetString(21), DateTimeOffset.Parse(reader.GetString(22), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), Convert.ToInt32(reader.GetValue(23), CultureInfo.InvariantCulture) + 1));
             }
         }
 
@@ -334,10 +250,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    public async Task<StopFollowUpReplySubmissionResult> SubmitStopFollowUpReplyAsync(
-        string publicIdentifier,
-        string reply,
-        CancellationToken cancellationToken)
+    public async Task<StopFollowUpReplySubmissionResult> SubmitStopFollowUpReplyAsync(string publicIdentifier, string reply, CancellationToken cancellationToken)
     {
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
         using var transaction = connection.BeginTransaction();
@@ -395,9 +308,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         return new StopFollowUpReplySubmissionResult(true, StopFollowUpRequestStatuses.Answered, "Reply submitted.");
     }
 
-    public async Task<StopFollowUpCancellationResult> CancelStopFollowUpAsync(
-        string publicIdentifier,
-        CancellationToken cancellationToken)
+    public async Task<StopFollowUpCancellationResult> CancelStopFollowUpAsync(string publicIdentifier, CancellationToken cancellationToken)
     {
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
         using var transaction = connection.BeginTransaction();
@@ -455,10 +366,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         return new StopFollowUpCancellationResult(true, StopFollowUpRequestStatuses.Canceled, "Follow-up request canceled.");
     }
 
-    public async Task<StopFollowUpPollResponse?> GetStopFollowUpPollResponseAsync(
-        string publicIdentifier,
-        string pollToken,
-        CancellationToken cancellationToken)
+    public async Task<StopFollowUpPollResponse?> GetStopFollowUpPollResponseAsync(string publicIdentifier, string pollToken, CancellationToken cancellationToken)
     {
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
         using var transaction = connection.BeginTransaction();
@@ -560,49 +468,13 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
         {
-            events.Add(new WebhookEventSummary(
-                reader.GetInt64(0),
-                reader.GetString(1),
-                reader.GetString(2),
-                reader.IsDBNull(3) ? null : reader.GetString(3),
-                reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                reader.IsDBNull(5) ? null : reader.GetString(5),
-                reader.IsDBNull(6) ? null : reader.GetString(6),
-                reader.IsDBNull(7) ? null : reader.GetString(7),
-                reader.IsDBNull(8) ? null : DateTimeOffset.Parse(reader.GetString(8), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                reader.IsDBNull(9) ? null : DateTimeOffset.Parse(reader.GetString(9), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                reader.IsDBNull(10) ? null : DateTimeOffset.Parse(reader.GetString(10), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                reader.IsDBNull(11) ? null : reader.GetString(11),
-                reader.IsDBNull(12) ? null : reader.GetInt32(12),
-                reader.IsDBNull(13) ? null : reader.GetString(13),
-                reader.IsDBNull(14) ? null : reader.GetString(14),
-                reader.IsDBNull(15) ? null : reader.GetInt32(15),
-                reader.IsDBNull(16) ? null : DateTimeOffset.Parse(reader.GetString(16), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                reader.IsDBNull(17) ? null : reader.GetString(17),
-                reader.IsDBNull(18) ? null : reader.GetString(18),
-                reader.IsDBNull(19) ? null : reader.GetString(19),
-                reader.IsDBNull(20) ? null : reader.GetString(20),
-                reader.IsDBNull(21) ? null : reader.GetString(21),
-                reader.IsDBNull(22) ? null : DateTimeOffset.Parse(reader.GetString(22), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                reader.IsDBNull(23) ? null : DateTimeOffset.Parse(reader.GetString(23), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                DateTimeOffset.Parse(reader.GetString(24), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                reader.IsDBNull(25) ? null : DateTimeOffset.Parse(reader.GetString(25), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                reader.GetString(26),
-                Convert.ToInt32(reader.GetValue(27), CultureInfo.InvariantCulture),
-                Convert.ToInt32(reader.GetValue(28), CultureInfo.InvariantCulture),
-                Convert.ToInt32(reader.GetValue(29), CultureInfo.InvariantCulture),
-                Convert.ToInt32(reader.GetValue(30), CultureInfo.InvariantCulture),
-                Convert.ToInt32(reader.GetValue(31), CultureInfo.InvariantCulture),
-                reader.IsDBNull(32) ? null : reader.GetString(32)));
+            events.Add(new WebhookEventSummary(reader.GetInt64(0), reader.GetString(1), reader.GetString(2), reader.IsDBNull(3) ? null : reader.GetString(3), reader.IsDBNull(4) ? null : reader.GetInt32(4), reader.IsDBNull(5) ? null : reader.GetString(5), reader.IsDBNull(6) ? null : reader.GetString(6), reader.IsDBNull(7) ? null : reader.GetString(7), reader.IsDBNull(8) ? null : DateTimeOffset.Parse(reader.GetString(8), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.IsDBNull(9) ? null : DateTimeOffset.Parse(reader.GetString(9), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.IsDBNull(10) ? null : DateTimeOffset.Parse(reader.GetString(10), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.IsDBNull(11) ? null : reader.GetString(11), reader.IsDBNull(12) ? null : reader.GetInt32(12), reader.IsDBNull(13) ? null : reader.GetString(13), reader.IsDBNull(14) ? null : reader.GetString(14), reader.IsDBNull(15) ? null : reader.GetInt32(15), reader.IsDBNull(16) ? null : DateTimeOffset.Parse(reader.GetString(16), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.IsDBNull(17) ? null : reader.GetString(17), reader.IsDBNull(18) ? null : reader.GetString(18), reader.IsDBNull(19) ? null : reader.GetString(19), reader.IsDBNull(20) ? null : reader.GetString(20), reader.IsDBNull(21) ? null : reader.GetString(21), reader.IsDBNull(22) ? null : DateTimeOffset.Parse(reader.GetString(22), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.IsDBNull(23) ? null : DateTimeOffset.Parse(reader.GetString(23), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), DateTimeOffset.Parse(reader.GetString(24), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.IsDBNull(25) ? null : DateTimeOffset.Parse(reader.GetString(25), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.GetString(26), Convert.ToInt32(reader.GetValue(27), CultureInfo.InvariantCulture), Convert.ToInt32(reader.GetValue(28), CultureInfo.InvariantCulture), Convert.ToInt32(reader.GetValue(29), CultureInfo.InvariantCulture), Convert.ToInt32(reader.GetValue(30), CultureInfo.InvariantCulture), Convert.ToInt32(reader.GetValue(31), CultureInfo.InvariantCulture), reader.IsDBNull(32) ? null : reader.GetString(32)));
         }
 
         return events;
     }
 
-    private static async Task ExpirePendingStopFollowUpRequestsAsync(
-        SqliteConnection connection,
-        SqliteTransaction transaction,
-        CancellationToken cancellationToken)
+    private static async Task ExpirePendingStopFollowUpRequestsAsync(SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
     {
         using var command = connection.CreateCommand();
         command.Transaction = transaction;
@@ -630,29 +502,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
     private static object ToDatabaseValue(string? value)
         => string.IsNullOrWhiteSpace(value) ? DBNull.Value : value;
 
-    private static async Task<long> InsertWebhookEventAsync(
-        SqliteConnection connection,
-        SqliteTransaction transaction,
-        string eventType,
-        string reason,
-        string? userInterfaceCulture,
-        int? softLockedSessionCount,
-        string? provider,
-        string? providerName,
-        string? sessionIdentifier,
-        DateTimeOffset? startedAtUtc,
-        DateTimeOffset? lastActivityAtUtc,
-        DateTimeOffset? endedAtUtc,
-        string? endReason,
-        int? activeSessionCount,
-        string? inputPromptPreview,
-        string? lastResponse,
-        int? replyWaitSeconds,
-        DateTimeOffset? replyDeadlineUtc,
-        string? workingDirectory,
-        string? transcriptPath,
-        DateTimeOffset receivedAtUtc,
-        CancellationToken cancellationToken)
+    private static async Task<long> InsertWebhookEventAsync(SqliteConnection connection, SqliteTransaction transaction, string eventType, string reason, string? userInterfaceCulture, int? softLockedSessionCount, string? provider, string? providerName, string? sessionIdentifier, DateTimeOffset? startedAtUtc, DateTimeOffset? lastActivityAtUtc, DateTimeOffset? endedAtUtc, string? endReason, int? activeSessionCount, string? inputPromptPreview, string? lastResponse, int? replyWaitSeconds, DateTimeOffset? replyDeadlineUtc, string? workingDirectory, string? transcriptPath, DateTimeOffset receivedAtUtc, CancellationToken cancellationToken)
     {
         using var command = connection.CreateCommand();
         command.Transaction = transaction;

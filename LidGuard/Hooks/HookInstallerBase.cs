@@ -24,9 +24,7 @@ public abstract class HookInstallerBase : IHookInstaller
         if (!configurationFileExists) return AddProviderSpecificInspectionDetails(normalizedRequest, CreateMissingConfigurationInspection(normalizedRequest, hookCommand));
 
         var content = File.ReadAllText(normalizedRequest.ConfigurationFilePath);
-        return AddProviderSpecificInspectionDetails(
-            normalizedRequest,
-            InspectConfiguration(normalizedRequest, hookCommand, content, configurationFileExists));
+        return AddProviderSpecificInspectionDetails(normalizedRequest, InspectConfiguration(normalizedRequest, hookCommand, content, configurationFileExists));
     }
 
     public HookInstallationResult Install(HookInstallationRequest request)
@@ -39,9 +37,7 @@ public abstract class HookInstallerBase : IHookInstaller
         if (!HookCommandUtilities.HookExecutableExists(normalizedRequest.HookExecutablePath))
         {
             var missingExecutableInspection = Inspect(normalizedRequest);
-            return HookInstallationResult.Failure(
-                missingExecutableInspection,
-                Format("HookManagementHookExecutableDoesNotExist", normalizedRequest.HookExecutablePath));
+            return HookInstallationResult.Failure(missingExecutableInspection, Format("HookManagementHookExecutableDoesNotExist", normalizedRequest.HookExecutablePath));
         }
 
         var hookCommand = HookCommandUtilities.CreateHookCommand(normalizedRequest.HookExecutablePath, normalizedRequest.HookCommandName);

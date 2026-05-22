@@ -28,15 +28,7 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
 
         var lidActionService = new LidActionService();
         var lidStateSource = CreateLidStateSource();
-        var serviceSet = new LidGuardRuntimeServiceSet(
-            new PowerRequestService(),
-            new ProcessExitWatcher(),
-            new LidActionPolicyController(lidActionService),
-            new SystemSuspendService(),
-            postStopSuspendSoundPlayerResult.Value,
-            systemAudioVolumeControllerResult.Value,
-            lidStateSource,
-            new VisibleDisplayMonitorCountProvider());
+        var serviceSet = new LidGuardRuntimeServiceSet(new PowerRequestService(), new ProcessExitWatcher(), new LidActionPolicyController(lidActionService), new SystemSuspendService(), postStopSuspendSoundPlayerResult.Value, systemAudioVolumeControllerResult.Value, lidStateSource, new VisibleDisplayMonitorCountProvider());
 
         return LidGuardOperationResult<LidGuardRuntimeServiceSet>.Success(serviceSet);
     }

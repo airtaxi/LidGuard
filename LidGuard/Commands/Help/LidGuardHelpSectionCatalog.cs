@@ -14,17 +14,8 @@ internal static class LidGuardHelpSectionCatalog
             new LidGuardHelpSectionEntry(LidGuardHelpSectionTitles.Diagnostics, []),
             new LidGuardHelpSectionEntry(LidGuardHelpSectionTitles.HookIntegration, []),
             new LidGuardHelpSectionEntry(LidGuardHelpSectionTitles.McpIntegration, []),
-            new LidGuardHelpSectionEntry(
-                LidGuardHelpSectionTitles.ManagedAndInternalCommands,
-                [
-                    LocalizationService.GetString("Help_ManagedCommands_Detail")
-                ]),
-            new LidGuardHelpSectionEntry(
-                LidGuardHelpSectionTitles.PathsAndNotes,
-                CreatePathsAndNotesDetails(
-                    documentContext.SettingsFilePath,
-                    documentContext.SessionLogFilePath,
-                    documentContext.SuspendHistoryLogFilePath))
+            new LidGuardHelpSectionEntry(LidGuardHelpSectionTitles.ManagedAndInternalCommands, [LocalizationService.GetString("Help_ManagedCommands_Detail")]),
+            new LidGuardHelpSectionEntry(LidGuardHelpSectionTitles.PathsAndNotes, CreatePathsAndNotesDetails(documentContext.SettingsFilePath, documentContext.SessionLogFilePath, documentContext.SuspendHistoryLogFilePath))
         ];
     }
 
@@ -49,10 +40,7 @@ internal static class LidGuardHelpSectionCatalog
         ];
     }
 
-    private static IReadOnlyList<string> CreatePathsAndNotesDetails(
-        string settingsFilePath,
-        string sessionLogFilePath,
-        string suspendHistoryLogFilePath)
+    private static IReadOnlyList<string> CreatePathsAndNotesDetails(string settingsFilePath, string sessionLogFilePath, string suspendHistoryLogFilePath)
     {
         return
         [

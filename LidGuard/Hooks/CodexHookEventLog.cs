@@ -12,32 +12,15 @@ public static class CodexHookEventLog
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
-        var details = HookEventLog.CreateDetails(
-            ("source", hookInput.Source),
-            ("model", hookInput.Model));
+        var details = HookEventLog.CreateDetails(("source", hookInput.Source), ("model", hookInput.Model));
         return s_eventLog.AppendReceived(hookInput.HookEventName, hookInput, details, IsUserPromptSubmitEvent(hookInput.HookEventName));
     }
 
-    public static TimeSpan AppendRuntimeResult(
-        CodexHookInput hookInput,
-        string commandName,
-        bool succeeded,
-        bool runtimeUnavailable,
-        int activeSessionCount,
-        string message,
-        string timingDetails = "")
+    public static TimeSpan AppendRuntimeResult(CodexHookInput hookInput, string commandName, bool succeeded, bool runtimeUnavailable, int activeSessionCount, string message, string timingDetails = "")
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
-        return s_eventLog.AppendRuntimeResult(
-            hookInput.HookEventName,
-            hookInput,
-            commandName,
-            succeeded,
-            runtimeUnavailable,
-            activeSessionCount,
-            message,
-            timingDetails);
+        return s_eventLog.AppendRuntimeResult(hookInput.HookEventName, hookInput, commandName, succeeded, runtimeUnavailable, activeSessionCount, message, timingDetails);
     }
 
     public static void AppendMessage(string message) => s_eventLog.AppendMessage(message);

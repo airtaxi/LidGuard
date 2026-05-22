@@ -22,18 +22,14 @@ internal static class LidGuardNotificationCulture
 
     public static void ApplyDefaultCultureFromEnvironmentOrOptions(LidGuardNotificationsOptions options)
     {
-        var cultureInfo = TryResolveEnvironmentCulture(out var environmentCultureInfo)
-            ? environmentCultureInfo
-            : ResolveConfiguredOrProcessCultureInfo(options);
+        var cultureInfo = TryResolveEnvironmentCulture(out var environmentCultureInfo) ? environmentCultureInfo : ResolveConfiguredOrProcessCultureInfo(options);
         ApplyCultureInfo(cultureInfo);
     }
 
     public static RequestLocalizationOptions CreateRequestLocalizationOptions(LidGuardNotificationsOptions options)
     {
         var hasEnvironmentCulture = TryResolveEnvironmentCulture(out var environmentCultureInfo);
-        var defaultCultureInfo = hasEnvironmentCulture
-            ? environmentCultureInfo
-            : ResolveConfiguredOrProcessCultureInfo(options);
+        var defaultCultureInfo = hasEnvironmentCulture ? environmentCultureInfo : ResolveConfiguredOrProcessCultureInfo(options);
         var supportedCultureInfos = CreateSupportedCultureInfos(defaultCultureInfo);
         var requestLocalizationOptions = new RequestLocalizationOptions
         {
@@ -48,8 +44,7 @@ internal static class LidGuardNotificationCulture
         {
             requestLocalizationOptions.RequestCultureProviders =
             [
-                new CustomRequestCultureProvider(_ =>
-                    Task.FromResult<ProviderCultureResult?>(new ProviderCultureResult(environmentCultureInfo.Name)))
+                new CustomRequestCultureProvider(_ => Task.FromResult<ProviderCultureResult?>(new ProviderCultureResult(environmentCultureInfo.Name)))
             ];
         }
 

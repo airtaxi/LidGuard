@@ -142,19 +142,7 @@ internal static class MacOSPermissionCommand
         try
         {
             File.WriteAllText(temporaryRuleFilePath, ruleContent);
-            var installResult = MacOSCommandRunner.Run(
-                sudoExecutablePath,
-                [
-                    "sh",
-                    "-c",
-                    s_installRuleScript,
-                    "lidguard-rule-install",
-                    temporaryRuleFilePath,
-                    RuleFilePath,
-                    ManagedMarker,
-                    VersionMarker
-                ],
-                TimeSpan.FromMinutes(2));
+            var installResult = MacOSCommandRunner.Run(sudoExecutablePath, ["sh", "-c", s_installRuleScript, "lidguard-rule-install", temporaryRuleFilePath, RuleFilePath, ManagedMarker, VersionMarker], TimeSpan.FromMinutes(2));
             if (!installResult.Succeeded)
             {
                 Console.Error.WriteLine(installResult.CreateFailureMessage("sudo install"));
@@ -218,18 +206,7 @@ internal static class MacOSPermissionCommand
             return 1;
         }
 
-        var removeResult = MacOSCommandRunner.Run(
-            sudoExecutablePath,
-            [
-                "sh",
-                "-c",
-                s_removeRuleScript,
-                "lidguard-rule-remove",
-                RuleFilePath,
-                ManagedMarker,
-                VersionMarker
-            ],
-            TimeSpan.FromMinutes(2));
+        var removeResult = MacOSCommandRunner.Run(sudoExecutablePath, ["sh", "-c", s_removeRuleScript, "lidguard-rule-remove", RuleFilePath, ManagedMarker, VersionMarker], TimeSpan.FromMinutes(2));
         if (removeResult.Started && removeResult.ExitCode == 2)
         {
             Console.WriteLine(Format("MacOSPermissionSudoersRuleNotInstalled", RuleFilePath));
@@ -313,10 +290,7 @@ internal static class MacOSPermissionCommand
 
     private static bool WritePowermetricsCheck()
     {
-        var commandResult = MacOSPowerSettings.RunPrivilegedCommand(
-            "powermetrics",
-            ["--samplers", "smc", "-n", "1", "-i", "1000"],
-            s_checkCommandTimeout);
+        var commandResult = MacOSPowerSettings.RunPrivilegedCommand("powermetrics", ["--samplers", "smc", "-n", "1", "-i", "1000"], s_checkCommandTimeout);
         if (commandResult.Succeeded)
         {
             WriteCheckLine("MacOSPermissionCheckPrivilegedPowermetricsSmcSample", Get("PermissionResultOk"));
@@ -328,9 +302,7 @@ internal static class MacOSPermissionCommand
     }
 
     private static string DescribeExecutableAvailability(string commandName)
-        => MacOSCommandPathResolver.TryFindExecutable(commandName, out var executablePath)
-            ? Format("PermissionExecutableAvailable", executablePath)
-            : Get("PermissionExecutableMissing");
+        => MacOSCommandPathResolver.TryFindExecutable(commandName, out var executablePath) ? Format("PermissionExecutableAvailable", executablePath) : Get("PermissionExecutableMissing");
 
     private static string DescribeSleepDisabled()
     {
@@ -371,9 +343,7 @@ internal static class MacOSPermissionCommand
         if (!ruleInspection.InspectionSucceeded) return Format("MacOSPermissionRuleContentInspectionUnavailable", ruleInspection.Message);
         if (!ruleInspection.Exists) return Get("PermissionRuleNotInstalled");
         if (!ruleInspection.IsManaged) return Get("PermissionRulePresentUnmanaged");
-        return ruleInspection.IsForCurrentUser
-            ? Get("PermissionRuleInstalledForCurrentUser")
-            : Get("PermissionRuleInstalledForAnotherUser");
+        return ruleInspection.IsForCurrentUser ? Get("PermissionRuleInstalledForCurrentUser") : Get("PermissionRuleInstalledForAnotherUser");
     }
 
     private static RuleContentReadResult ReadRuleContentDirect()
@@ -455,12 +425,8 @@ internal static class MacOSPermissionCommand
         if (currentUserName.Equals("root", StringComparison.Ordinal) && !string.IsNullOrWhiteSpace(sudoUserName)) return sudoUserName.Trim();
         if (!string.IsNullOrWhiteSpace(currentUserName)) return currentUserName;
 
-        var userResult = MacOSCommandPathResolver.TryFindExecutable("whoami", out var whoamiPath)
-            ? MacOSCommandRunner.Run(whoamiPath, [], s_checkCommandTimeout)
-            : MacOSCommandResult.Failure("whoami was not found.");
-        return userResult.Succeeded && !string.IsNullOrWhiteSpace(userResult.StandardOutput)
-            ? userResult.StandardOutput.Trim()
-            : Get("PermissionUnknownUser");
+        var userResult = MacOSCommandPathResolver.TryFindExecutable("whoami", out var whoamiPath) ? MacOSCommandRunner.Run(whoamiPath, [], s_checkCommandTimeout) : MacOSCommandResult.Failure("whoami was not found.");
+        return userResult.Succeeded && !string.IsNullOrWhiteSpace(userResult.StandardOutput) ? userResult.StandardOutput.Trim() : Get("PermissionUnknownUser");
     }
 
     private static bool IsRootUser()
@@ -504,23 +470,14 @@ internal static class MacOSPermissionCommand
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
     }
 
-    private readonly record struct RuleInspection(
-        bool Exists,
-        bool IsManaged,
-        bool IsForCurrentUser,
-        bool InspectionSucceeded,
-        string Message)
+    private readonly record struct RuleInspection(bool Exists, bool IsManaged, bool IsForCurrentUser, bool InspectionSucceeded, string Message)
     {
         public static RuleInspection NotInstalled() => new(false, false, false, true, string.Empty);
 
         public static RuleInspection Inconclusive(string message) => new(false, false, false, false, message);
     }
 
-    private readonly record struct RuleContentReadResult(
-        bool Succeeded,
-        bool NotFound,
-        string Content,
-        string Message)
+    private readonly record struct RuleContentReadResult(bool Succeeded, bool NotFound, string Content, string Message)
     {
         public static RuleContentReadResult Success(string content) => new(true, false, content ?? string.Empty, string.Empty);
 

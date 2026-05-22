@@ -26,11 +26,7 @@ internal static class ClosedLidStopFollowUpConfiguration
     {
         var normalizedSettings = LidGuardSettings.Normalize(settings);
         if (!IsEnabled(normalizedSettings, out _)) return DefaultHookTimeoutSeconds;
-        return Math.Max(
-            DefaultHookTimeoutSeconds,
-            normalizedSettings.PostStopSuspendDelaySeconds
-                + normalizedSettings.ClosedLidStopFollowUpDelaySeconds
-                + AdditionalHookTimeoutBufferSeconds);
+        return Math.Max(DefaultHookTimeoutSeconds, normalizedSettings.PostStopSuspendDelaySeconds + normalizedSettings.ClosedLidStopFollowUpDelaySeconds + AdditionalHookTimeoutBufferSeconds);
     }
 
     public static bool IsEnabled(LidGuardSettings settings, out string normalizedClosedLidStopFollowUpWebhookUrl)
@@ -39,10 +35,7 @@ internal static class ClosedLidStopFollowUpConfiguration
         var normalizedSettings = LidGuardSettings.Normalize(settings);
         if (normalizedSettings.ClosedLidStopFollowUpDelaySeconds == 0) return false;
         if (GetConfigurationIssues(normalizedSettings).Length > 0) return false;
-        if (!TryNormalizeConfiguredValue(
-            normalizedSettings.ClosedLidStopFollowUpWebhookUrl,
-            out normalizedClosedLidStopFollowUpWebhookUrl,
-            out _))
+        if (!TryNormalizeConfiguredValue(normalizedSettings.ClosedLidStopFollowUpWebhookUrl, out normalizedClosedLidStopFollowUpWebhookUrl, out _))
         {
             return false;
         }
@@ -56,43 +49,27 @@ internal static class ClosedLidStopFollowUpConfiguration
         if (string.IsNullOrWhiteSpace(normalizedSettings.ClosedLidStopFollowUpWebhookUrl)) return [];
 
         var issues = new List<ClosedLidStopFollowUpConfigurationIssueDetail>();
-        if (!TryNormalizeConfiguredValue(
-            normalizedSettings.ClosedLidStopFollowUpWebhookUrl,
-            out _,
-            out var webhookUrlMessage))
+        if (!TryNormalizeConfiguredValue(normalizedSettings.ClosedLidStopFollowUpWebhookUrl, out _, out var webhookUrlMessage))
         {
-            issues.Add(new ClosedLidStopFollowUpConfigurationIssueDetail(
-                ClosedLidStopFollowUpConfigurationIssue.InvalidWebhookUrl,
-                webhookUrlMessage));
+            issues.Add(new ClosedLidStopFollowUpConfigurationIssueDetail(ClosedLidStopFollowUpConfigurationIssue.InvalidWebhookUrl, webhookUrlMessage));
         }
 
         if (normalizedSettings.ClosedLidStopFollowUpDelaySeconds is > 0 and < MinimumReplyWaitSeconds)
         {
-            issues.Add(new ClosedLidStopFollowUpConfigurationIssueDetail(
-                ClosedLidStopFollowUpConfigurationIssue.ReplyWaitTooShort,
-                string.Empty));
+            issues.Add(new ClosedLidStopFollowUpConfigurationIssueDetail(ClosedLidStopFollowUpConfigurationIssue.ReplyWaitTooShort, string.Empty));
         }
 
         if (normalizedSettings.ClosedLidStopFollowUpDelaySeconds > 0
             && normalizedSettings.PostStopSuspendDelaySeconds < MinimumPostStopSuspendDelaySeconds)
         {
-            issues.Add(new ClosedLidStopFollowUpConfigurationIssueDetail(
-                ClosedLidStopFollowUpConfigurationIssue.PostStopDelayTooShort,
-                string.Empty));
+            issues.Add(new ClosedLidStopFollowUpConfigurationIssueDetail(ClosedLidStopFollowUpConfigurationIssue.PostStopDelayTooShort, string.Empty));
         }
 
         return [.. issues];
     }
 
-    public static bool TryNormalizeConfiguredValue(
-        string closedLidStopFollowUpWebhookUrl,
-        out string normalizedClosedLidStopFollowUpWebhookUrl,
-        out string message)
-        => WebhookUrlConfiguration.TryNormalizeConfiguredValue(
-            closedLidStopFollowUpWebhookUrl,
-            "closed-lid stop follow-up",
-            out normalizedClosedLidStopFollowUpWebhookUrl,
-            out message);
+    public static bool TryNormalizeConfiguredValue(string closedLidStopFollowUpWebhookUrl, out string normalizedClosedLidStopFollowUpWebhookUrl, out string message)
+        => WebhookUrlConfiguration.TryNormalizeConfiguredValue(closedLidStopFollowUpWebhookUrl, "closed-lid stop follow-up", out normalizedClosedLidStopFollowUpWebhookUrl, out message);
 }
 
 internal enum ClosedLidStopFollowUpConfigurationIssue
@@ -102,6 +79,4 @@ internal enum ClosedLidStopFollowUpConfigurationIssue
     PostStopDelayTooShort
 }
 
-internal readonly record struct ClosedLidStopFollowUpConfigurationIssueDetail(
-    ClosedLidStopFollowUpConfigurationIssue Issue,
-    string Message);
+internal readonly record struct ClosedLidStopFollowUpConfigurationIssueDetail(ClosedLidStopFollowUpConfigurationIssue Issue, string Message);

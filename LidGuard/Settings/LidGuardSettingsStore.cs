@@ -48,17 +48,12 @@ internal static class LidGuardSettingsStore
     {
         var settingsFilePath = GetDefaultSettingsFilePath();
         var normalizedSettings = LidGuardSettings.Normalize(settings);
-        if (!PostStopSuspendSoundConfiguration.TryValidateVolumeOverridePercent(
-            normalizedSettings.PostStopSuspendSoundVolumeOverridePercent,
-            out message))
+        if (!PostStopSuspendSoundConfiguration.TryValidateVolumeOverridePercent(normalizedSettings.PostStopSuspendSoundVolumeOverridePercent, out message))
             return false;
         if (!SuspendHistoryConfiguration.TryValidateEntryCount(normalizedSettings.SuspendHistoryEntryCount, out message)) return false;
         if (!SessionTimeoutConfiguration.TryValidateMinutes(normalizedSettings.SessionTimeoutMinutes, out message)) return false;
         if (!ServerRuntimeCleanupConfiguration.TryValidateDelayMinutes(normalizedSettings.ServerRuntimeCleanupDelayMinutes, out message)) return false;
-        if (!UserInterfaceCultureConfiguration.TryNormalizeConfiguredValue(
-            normalizedSettings.UserInterfaceCulture,
-            out _,
-            out message))
+        if (!UserInterfaceCultureConfiguration.TryNormalizeConfiguredValue(normalizedSettings.UserInterfaceCulture, out _, out message))
             return false;
 
         try

@@ -7,12 +7,7 @@ namespace LidGuard.Commands;
 
 internal static class LidGuardSessionRequestFactory
 {
-    public static bool TryCreateSessionRequest(
-        IReadOnlyDictionary<string, string> options,
-        string commandName,
-        bool includeSettings,
-        out LidGuardPipeRequest request,
-        out string message)
+    public static bool TryCreateSessionRequest(IReadOnlyDictionary<string, string> options, string commandName, bool includeSettings, out LidGuardPipeRequest request, out string message)
     {
         request = new LidGuardPipeRequest();
         message = string.Empty;
@@ -23,8 +18,7 @@ internal static class LidGuardSessionRequestFactory
         var providerText = CommandOptionReader.GetOption(options, "provider");
         if (!AgentProviderOptionParser.TryParseProvider(providerText, out var provider))
         {
-            message = LocalizationService.GetString(
-                "SessionRequestProviderRequired");
+            message = LocalizationService.GetString("SessionRequestProviderRequired");
             return false;
         }
 
@@ -34,8 +28,7 @@ internal static class LidGuardSessionRequestFactory
         if (string.IsNullOrWhiteSpace(sessionIdentifier)) sessionIdentifier = CreateFallbackSessionIdentifier(provider, providerName, workingDirectory);
         if (provider == AgentProvider.Mcp && string.IsNullOrWhiteSpace(providerName))
         {
-            message = LocalizationService.GetString(
-                "SessionRequestProviderNameRequiredForMcp");
+            message = LocalizationService.GetString("SessionRequestProviderNameRequiredForMcp");
             return false;
         }
 
@@ -56,10 +49,7 @@ internal static class LidGuardSessionRequestFactory
         return true;
     }
 
-    public static bool TryCreateSessionRemovalRequest(
-        IReadOnlyDictionary<string, string> options,
-        out LidGuardPipeRequest request,
-        out string message)
+    public static bool TryCreateSessionRemovalRequest(IReadOnlyDictionary<string, string> options, out LidGuardPipeRequest request, out string message)
     {
         request = new LidGuardPipeRequest();
         message = string.Empty;
@@ -69,22 +59,19 @@ internal static class LidGuardSessionRequestFactory
         {
             if (CommandOptionReader.TryGetOption(options, out _, "session", "session-id", "session-identifier"))
             {
-                message = LocalizationService.GetString(
-                    "SessionRequestAllCannotCombineWithSession");
+                message = LocalizationService.GetString("SessionRequestAllCannotCombineWithSession");
                 return false;
             }
 
             if (CommandOptionReader.TryGetOption(options, out _, "provider"))
             {
-                message = LocalizationService.GetString(
-                    "SessionRequestAllCannotCombineWithProvider");
+                message = LocalizationService.GetString("SessionRequestAllCannotCombineWithProvider");
                 return false;
             }
 
             if (CommandOptionReader.TryGetOption(options, out _, "provider-name"))
             {
-                message = LocalizationService.GetString(
-                    "SessionRequestAllCannotCombineWithProviderName");
+                message = LocalizationService.GetString("SessionRequestAllCannotCombineWithProviderName");
                 return false;
             }
 
@@ -107,8 +94,7 @@ internal static class LidGuardSessionRequestFactory
         var providerWasSpecified = CommandOptionReader.TryGetOption(options, out var providerText, "provider");
         if (providerWasSpecified && !AgentProviderOptionParser.TryParseProvider(providerText, out provider))
         {
-            message = LocalizationService.GetString(
-                "SessionRequestUnsupportedProvider");
+            message = LocalizationService.GetString("SessionRequestUnsupportedProvider");
             return false;
         }
 
@@ -126,10 +112,7 @@ internal static class LidGuardSessionRequestFactory
         return true;
     }
 
-    private static bool TryParseWatchedProcessIdentifier(
-        IReadOnlyDictionary<string, string> options,
-        out int watchedProcessIdentifier,
-        out string message)
+    private static bool TryParseWatchedProcessIdentifier(IReadOnlyDictionary<string, string> options, out int watchedProcessIdentifier, out string message)
     {
         watchedProcessIdentifier = 0;
         message = string.Empty;
@@ -138,8 +121,7 @@ internal static class LidGuardSessionRequestFactory
         if (string.IsNullOrWhiteSpace(watchedProcessText)) return true;
         if (int.TryParse(watchedProcessText, out watchedProcessIdentifier) && watchedProcessIdentifier >= 0) return true;
 
-        message = LocalizationService.GetString(
-            "SessionRequestWatchedProcessIdentifierValidation");
+        message = LocalizationService.GetString("SessionRequestWatchedProcessIdentifierValidation");
         return false;
     }
 

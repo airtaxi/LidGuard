@@ -32,12 +32,7 @@ public sealed class CodexHookInstaller : HookInstallerBase
     protected override string GetDefaultConfigurationFilePath() => GetDefaultCodexConfigurationFilePath();
 
     protected override HookInstallationInspection InspectConfiguration(HookInstallationRequest request, string hookCommand, string content, bool configurationFileExists)
-        => CodexHookConfigTomlDocument.InspectConfigToml(
-            request.ConfigurationFilePath,
-            request.HookExecutablePath,
-            hookCommand,
-            content,
-            configurationFileExists);
+        => CodexHookConfigTomlDocument.InspectConfigToml(request.ConfigurationFilePath, request.HookExecutablePath, hookCommand, content, configurationFileExists);
 
     protected override bool TryCreateInstalledContent(string originalContent, string hookCommand, out string updatedContent, out string message)
     {
@@ -56,9 +51,7 @@ public sealed class CodexHookInstaller : HookInstallerBase
 
     protected override bool ShouldSkipInstall(HookInstallationInspection currentInspection, out string message)
     {
-        message = LocalizationService.GetFormattedString(
-            "HookManagementAlreadyInstalledOutsideManagedBlock",
-            ProviderDisplayName);
+        message = LocalizationService.GetFormattedString("HookManagementAlreadyInstalledOutsideManagedBlock", ProviderDisplayName);
         return currentInspection.IsInstalled && !currentInspection.HasCheck(HookInstallationCheck.ManagedBlock);
     }
 }

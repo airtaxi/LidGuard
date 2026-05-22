@@ -10,36 +10,33 @@ internal static class LidGuardRuntimeLogWriter
 
     public static void AppendRuntimeLog(string eventName, string command, LidGuardPipeResponse response)
     {
-        LidGuardRuntimeSessionLogStore.Append(new LidGuardRuntimeSessionLogEntry
+        var logEntry = new LidGuardRuntimeSessionLogEntry
         {
             EventName = eventName,
             Command = command,
             Succeeded = response.Succeeded,
             Message = response.Message,
             ActiveSessionCount = response.ActiveSessionCount
-        });
+        };
+        LidGuardRuntimeSessionLogStore.Append(logEntry);
     }
 
-    public static void AppendEmergencyHibernationLog(
-        string eventName,
-        LidGuardPipeResponse response,
-        int observedTemperatureCelsius,
-        int emergencyHibernationTemperatureCelsius,
-        EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
+    public static void AppendEmergencyHibernationLog(string eventName, LidGuardPipeResponse response, int observedTemperatureCelsius, int emergencyHibernationTemperatureCelsius, EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
     {
-        LidGuardRuntimeSessionLogStore.Append(new LidGuardRuntimeSessionLogEntry
+        var logEntry = new LidGuardRuntimeSessionLogEntry
         {
             EventName = eventName,
             Command = EmergencyHibernationMonitorCommandName,
             Succeeded = response.Succeeded,
             Message = $"{response.Message} Observed temperature: {DescribeEmergencyHibernationTemperature(observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode)}.",
             ActiveSessionCount = response.ActiveSessionCount
-        });
+        };
+        LidGuardRuntimeSessionLogStore.Append(logEntry);
     }
 
     public static void AppendSessionLog(string eventName, LidGuardPipeRequest request, LidGuardPipeResponse response, int watchedProcessIdentifier = 0)
     {
-        LidGuardRuntimeSessionLogStore.Append(new LidGuardRuntimeSessionLogEntry
+        var logEntry = new LidGuardRuntimeSessionLogEntry
         {
             EventName = eventName,
             Command = request.Command,
@@ -56,12 +53,13 @@ internal static class LidGuardRuntimeLogWriter
             Succeeded = response.Succeeded,
             Message = response.Message,
             ActiveSessionCount = response.ActiveSessionCount
-        });
+        };
+        LidGuardRuntimeSessionLogStore.Append(logEntry);
     }
 
     public static void AppendSessionLog(string eventName, LidGuardPipeRequest request, LidGuardPipeResponse response, LidGuardSessionSnapshot snapshot)
     {
-        LidGuardRuntimeSessionLogStore.Append(new LidGuardRuntimeSessionLogEntry
+        var logEntry = new LidGuardRuntimeSessionLogEntry
         {
             EventName = eventName,
             Command = request.Command,
@@ -79,12 +77,13 @@ internal static class LidGuardRuntimeLogWriter
             Succeeded = response.Succeeded,
             Message = response.Message,
             ActiveSessionCount = response.ActiveSessionCount
-        });
+        };
+        LidGuardRuntimeSessionLogStore.Append(logEntry);
     }
 
     public static void AppendSessionLog(string eventName, LidGuardSessionStopRequest request, LidGuardPipeResponse response, string commandName)
     {
-        LidGuardRuntimeSessionLogStore.Append(new LidGuardRuntimeSessionLogEntry
+        var logEntry = new LidGuardRuntimeSessionLogEntry
         {
             EventName = eventName,
             Command = commandName,
@@ -96,17 +95,13 @@ internal static class LidGuardRuntimeLogWriter
             Succeeded = response.Succeeded,
             Message = response.Message,
             ActiveSessionCount = response.ActiveSessionCount
-        });
+        };
+        LidGuardRuntimeSessionLogStore.Append(logEntry);
     }
 
-    public static void AppendSessionLog(
-        string eventName,
-        LidGuardSessionStopRequest request,
-        LidGuardPipeResponse response,
-        LidGuardSessionSnapshot snapshot,
-        string commandName)
+    public static void AppendSessionLog(string eventName, LidGuardSessionStopRequest request, LidGuardPipeResponse response, LidGuardSessionSnapshot snapshot, string commandName)
     {
-        LidGuardRuntimeSessionLogStore.Append(new LidGuardRuntimeSessionLogEntry
+        var logEntry = new LidGuardRuntimeSessionLogEntry
         {
             EventName = eventName,
             Command = commandName,
@@ -124,16 +119,13 @@ internal static class LidGuardRuntimeLogWriter
             Succeeded = response.Succeeded,
             Message = response.Message,
             ActiveSessionCount = response.ActiveSessionCount
-        });
+        };
+        LidGuardRuntimeSessionLogStore.Append(logEntry);
     }
 
-    public static void AppendSessionLog(
-        string eventName,
-        PendingSuspendContext pendingSuspendContext,
-        LidGuardPipeResponse response,
-        LidGuardSessionSnapshot snapshot)
+    public static void AppendSessionLog(string eventName, PendingSuspendContext pendingSuspendContext, LidGuardPipeResponse response, LidGuardSessionSnapshot snapshot)
     {
-        LidGuardRuntimeSessionLogStore.Append(new LidGuardRuntimeSessionLogEntry
+        var logEntry = new LidGuardRuntimeSessionLogEntry
         {
             EventName = eventName,
             Command = pendingSuspendContext.CommandName,
@@ -149,12 +141,10 @@ internal static class LidGuardRuntimeLogWriter
             Succeeded = response.Succeeded,
             Message = response.Message,
             ActiveSessionCount = response.ActiveSessionCount
-        });
+        };
+        LidGuardRuntimeSessionLogStore.Append(logEntry);
     }
 
-    private static string DescribeEmergencyHibernationTemperature(
-        int observedTemperatureCelsius,
-        int emergencyHibernationTemperatureCelsius,
-        EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
+    private static string DescribeEmergencyHibernationTemperature(int observedTemperatureCelsius, int emergencyHibernationTemperatureCelsius, EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
         => $"{observedTemperatureCelsius} Celsius using {emergencyHibernationTemperatureMode} mode (threshold: {emergencyHibernationTemperatureCelsius} Celsius)";
 }

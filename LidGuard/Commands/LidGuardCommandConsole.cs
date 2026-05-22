@@ -32,15 +32,7 @@ internal static class LidGuardCommandConsole
                 var providerDisplayText = AgentProviderDisplay.CreateProviderDisplayText(session.Provider, session.ProviderName);
                 var startedAt = LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(session.StartedAt);
                 var lastActivityAt = LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(session.LastActivityAt);
-                Console.WriteLine(
-                    LocalizationService.GetFormattedString("ConsoleSessionLine",
-                        providerDisplayText,
-                        session.SessionIdentifier,
-                        processText,
-                        DescribeSoftLockStatus(session),
-                        session.WorkingDirectory,
-                        startedAt,
-                        lastActivityAt));
+                Console.WriteLine(LocalizationService.GetFormattedString("ConsoleSessionLine", providerDisplayText, session.SessionIdentifier, processText, DescribeSoftLockStatus(session), session.WorkingDirectory, startedAt, lastActivityAt));
             }
         }
 
@@ -73,25 +65,15 @@ internal static class LidGuardCommandConsole
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsSuspendHistoryCount", LocalizationService.DisplaySuspendHistoryEntryCount(normalizedSettings.SuspendHistoryEntryCount)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsPreSuspendWebhookUrl", LocalizationService.DisplayOptionalValue(PreSuspendWebhookConfiguration.GetDisplayValue(normalizedSettings.PreSuspendWebhookUrl))));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsPostSessionEndWebhookUrl", LocalizationService.DisplayOptionalValue(PostSessionEndWebhookConfiguration.GetDisplayValue(normalizedSettings.PostSessionEndWebhookUrl))));
-        Console.WriteLine(LocalizationService.GetFormattedString(
-            "SettingsClosedLidStopFollowUpWebhookUrl",
-            LocalizationService.DisplayOptionalValue(ClosedLidStopFollowUpWebhookConfiguration.GetDisplayValue(normalizedSettings.ClosedLidStopFollowUpWebhookUrl))));
-        Console.WriteLine(LocalizationService.GetFormattedString(
-            "SettingsClosedLidStopFollowUpDelaySeconds",
-            normalizedSettings.ClosedLidStopFollowUpDelaySeconds));
-        Console.WriteLine(LocalizationService.GetFormattedString(
-            "SettingsClosedLidStopFollowUpFeatureState",
-            DisplayClosedLidStopFollowUpFeatureState(normalizedSettings)));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsClosedLidStopFollowUpWebhookUrl", LocalizationService.DisplayOptionalValue(ClosedLidStopFollowUpWebhookConfiguration.GetDisplayValue(normalizedSettings.ClosedLidStopFollowUpWebhookUrl))));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsClosedLidStopFollowUpDelaySeconds", normalizedSettings.ClosedLidStopFollowUpDelaySeconds));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsClosedLidStopFollowUpFeatureState", DisplayClosedLidStopFollowUpFeatureState(normalizedSettings)));
         foreach (var configurationIssueMessage in CreateClosedLidStopFollowUpConfigurationIssueMessages(normalizedSettings))
         {
-            Console.WriteLine(LocalizationService.GetFormattedString(
-                "SettingsClosedLidStopFollowUpConfigurationIssue",
-                configurationIssueMessage));
+            Console.WriteLine(LocalizationService.GetFormattedString("SettingsClosedLidStopFollowUpConfigurationIssue", configurationIssueMessage));
         }
 
-        Console.WriteLine(LocalizationService.GetFormattedString(
-            "SettingsRepeatClosedLidStopFollowUp",
-            LocalizationService.DisplayBoolean(normalizedSettings.RepeatClosedLidStopFollowUp)));
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsRepeatClosedLidStopFollowUp", LocalizationService.DisplayBoolean(normalizedSettings.RepeatClosedLidStopFollowUp)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsClosedLidPermissionRequestDecision", LocalizationService.DisplayClosedLidPermissionRequestDecision(normalizedSettings.ClosedLidPermissionRequestDecision)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsUserInterfaceCulture", UserInterfaceCultureConfiguration.GetDisplayValue(normalizedSettings.UserInterfaceCulture)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsReason", powerRequest.Reason));
@@ -142,12 +124,7 @@ internal static class LidGuardCommandConsole
     }
 
     private static LidGuardHelpDocument CreateHelpDocument()
-        => LidGuardHelpContent.CreateDocument(
-            GetCommandDisplayName(),
-            LidGuardSettingsStore.GetDefaultSettingsFilePath(),
-            LidGuardRuntimeSessionLogStore.GetDefaultLogFilePath(),
-            SuspendHistoryLogStore.GetDefaultLogFilePath(),
-            LidGuardSupportedSystemSounds.Describe());
+        => LidGuardHelpContent.CreateDocument(GetCommandDisplayName(), LidGuardSettingsStore.GetDefaultSettingsFilePath(), LidGuardRuntimeSessionLogStore.GetDefaultLogFilePath(), SuspendHistoryLogStore.GetDefaultLogFilePath(), LidGuardSupportedSystemSounds.Describe());
 
     private static void WriteHelpSection(LidGuardHelpSection helpSection)
     {
@@ -199,14 +176,13 @@ internal static class LidGuardCommandConsole
         var messages = new List<string>();
         foreach (var configurationIssue in configurationIssues)
         {
-            messages.Add(configurationIssue.Issue switch
+            var message = configurationIssue.Issue switch
             {
-                ClosedLidStopFollowUpConfigurationIssue.ReplyWaitTooShort => LocalizationService.GetString(
-                    "ClosedLidStopFollowUpConfigurationIssueReplyWaitTooShort"),
-                ClosedLidStopFollowUpConfigurationIssue.PostStopDelayTooShort => LocalizationService.GetString(
-                    "ClosedLidStopFollowUpConfigurationIssuePostStopDelayTooShort"),
+                ClosedLidStopFollowUpConfigurationIssue.ReplyWaitTooShort => LocalizationService.GetString("ClosedLidStopFollowUpConfigurationIssueReplyWaitTooShort"),
+                ClosedLidStopFollowUpConfigurationIssue.PostStopDelayTooShort => LocalizationService.GetString("ClosedLidStopFollowUpConfigurationIssuePostStopDelayTooShort"),
                 _ => configurationIssue.Message
-            });
+            };
+            messages.Add(message);
         }
 
         return [.. messages.Where(static message => !string.IsNullOrWhiteSpace(message))];

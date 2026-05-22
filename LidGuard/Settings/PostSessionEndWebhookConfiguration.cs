@@ -15,9 +15,5 @@ internal static class PostSessionEndWebhookConfiguration
     }
 
     public static bool TryNormalizeConfiguredValue(string postSessionEndWebhookUrl, out string normalizedPostSessionEndWebhookUrl, out string message)
-        => WebhookUrlConfiguration.TryNormalizeConfiguredValue(
-            postSessionEndWebhookUrl,
-            "post-session-end",
-            out normalizedPostSessionEndWebhookUrl,
-            out message);
+        => WebhookUrlConfiguration.TryNormalizeConfiguredValue(postSessionEndWebhookUrl, "post-session-end", out normalizedPostSessionEndWebhookUrl, out message);
 }

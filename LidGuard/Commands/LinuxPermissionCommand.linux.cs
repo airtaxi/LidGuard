@@ -78,9 +78,7 @@ internal static class LinuxPermissionCommand
         var succeeded = true;
         Console.WriteLine(Get("LinuxPermissionCheckTitle"));
 
-        var inhibitorResult = SystemdInhibitor.TryAcquire(
-            "sleep:idle:handle-lid-switch",
-            "LidGuard Linux permission check is verifying inhibitor access.");
+        var inhibitorResult = SystemdInhibitor.TryAcquire("sleep:idle:handle-lid-switch", "LidGuard Linux permission check is verifying inhibitor access.");
         if (inhibitorResult.Succeeded)
         {
             inhibitorResult.Value.Dispose();
@@ -156,19 +154,7 @@ internal static class LinuxPermissionCommand
         try
         {
             File.WriteAllText(temporaryRuleFilePath, ruleContent);
-            var installResult = LinuxCommandRunner.Run(
-                sudoExecutablePath,
-                [
-                    "sh",
-                    "-c",
-                    s_installRuleScript,
-                    "lidguard-rule-install",
-                    temporaryRuleFilePath,
-                    RuleFilePath,
-                    ManagedMarker,
-                    VersionMarker
-                ],
-                TimeSpan.FromMinutes(2));
+            var installResult = LinuxCommandRunner.Run(sudoExecutablePath, ["sh", "-c", s_installRuleScript, "lidguard-rule-install", temporaryRuleFilePath, RuleFilePath, ManagedMarker, VersionMarker], TimeSpan.FromMinutes(2));
             if (!installResult.Succeeded)
             {
                 Console.Error.WriteLine(installResult.CreateFailureMessage("sudo install"));
@@ -232,18 +218,7 @@ internal static class LinuxPermissionCommand
             return 1;
         }
 
-        var removeResult = LinuxCommandRunner.Run(
-            sudoExecutablePath,
-            [
-                "sh",
-                "-c",
-                s_removeRuleScript,
-                "lidguard-rule-remove",
-                RuleFilePath,
-                ManagedMarker,
-                VersionMarker
-            ],
-            TimeSpan.FromMinutes(2));
+        var removeResult = LinuxCommandRunner.Run(sudoExecutablePath, ["sh", "-c", s_removeRuleScript, "lidguard-rule-remove", RuleFilePath, ManagedMarker, VersionMarker], TimeSpan.FromMinutes(2));
         if (removeResult.Started && removeResult.ExitCode == 2)
         {
             Console.WriteLine(Format("LinuxPermissionPolkitRuleNotInstalled", RuleFilePath));
@@ -273,14 +248,10 @@ internal static class LinuxPermissionCommand
     }
 
     private static string DescribeExecutableAvailability(string commandName)
-        => LinuxCommandPathResolver.TryFindExecutable(commandName, out var executablePath)
-            ? Format("PermissionExecutableAvailable", executablePath)
-            : Get("PermissionExecutableMissing");
+        => LinuxCommandPathResolver.TryFindExecutable(commandName, out var executablePath) ? Format("PermissionExecutableAvailable", executablePath) : Get("PermissionExecutableMissing");
 
     private static string DescribeCapability(string capabilityName)
-        => TryQueryLogindCapability(capabilityName, out var capabilityValue, out var message)
-            ? capabilityValue
-            : Format("PermissionResultUnavailableParenthesized", message);
+        => TryQueryLogindCapability(capabilityName, out var capabilityValue, out var message) ? capabilityValue : Format("PermissionResultUnavailableParenthesized", message);
 
     private static bool TryQueryLogindCapability(string capabilityName, out string capabilityValue, out string message)
     {
@@ -292,16 +263,7 @@ internal static class LinuxPermissionCommand
             return false;
         }
 
-        var commandResult = LinuxCommandRunner.Run(
-            busctlPath,
-            [
-                "call",
-                "org.freedesktop.login1",
-                "/org/freedesktop/login1",
-                "org.freedesktop.login1.Manager",
-                capabilityName
-            ],
-            s_checkCommandTimeout);
+        var commandResult = LinuxCommandRunner.Run(busctlPath, ["call", "org.freedesktop.login1", "/org/freedesktop/login1", "org.freedesktop.login1.Manager", capabilityName], s_checkCommandTimeout);
         if (!commandResult.Succeeded)
         {
             message = commandResult.CreateFailureMessage($"busctl call {capabilityName}");
@@ -332,9 +294,7 @@ internal static class LinuxPermissionCommand
         if (!readResult.Succeeded && readResult.IsInconclusive)
         {
             var sudoReadResult = ReadRuleContentWithNonInteractiveSudo();
-            readResult = sudoReadResult.Succeeded || sudoReadResult.NotFound
-                ? sudoReadResult
-                : RuleContentReadResult.Inconclusive($"{readResult.Message} {sudoReadResult.Message}".Trim());
+            readResult = sudoReadResult.Succeeded || sudoReadResult.NotFound ? sudoReadResult : RuleContentReadResult.Inconclusive($"{readResult.Message} {sudoReadResult.Message}".Trim());
         }
 
         if (readResult.NotFound) return RuleInspection.NotInstalled();
@@ -351,9 +311,7 @@ internal static class LinuxPermissionCommand
         if (!ruleInspection.InspectionSucceeded) return Format("LinuxPermissionRuleUnableToInspect", ruleInspection.Message);
         if (!ruleInspection.Exists) return Get("PermissionRuleNotInstalled");
         if (!ruleInspection.IsManaged) return Get("PermissionRulePresentUnmanaged");
-        return ruleInspection.IsForCurrentUser
-            ? Get("PermissionRuleInstalledForCurrentUser")
-            : Get("PermissionRuleInstalledForAnotherUser");
+        return ruleInspection.IsForCurrentUser ? Get("PermissionRuleInstalledForCurrentUser") : Get("PermissionRuleInstalledForAnotherUser");
     }
 
     private static RuleContentReadResult ReadRuleContentDirect()
@@ -378,14 +336,14 @@ internal static class LinuxPermissionCommand
 
     private static string CreateRuleContent(string targetUserName)
     {
+        static string CreateActionLine(string actionIdentifier, int actionIndex)
+        {
+            var separator = actionIndex + 1 == s_allowedActionIdentifiers.Length ? string.Empty : ",";
+            return $"        \"{actionIdentifier}\"{separator}";
+        }
+
         var escapedUserName = EscapeJavaScriptString(targetUserName);
-        var actionLines = string.Join(
-            Environment.NewLine,
-            s_allowedActionIdentifiers.Select((actionIdentifier, actionIndex) =>
-            {
-                var separator = actionIndex + 1 == s_allowedActionIdentifiers.Length ? string.Empty : ",";
-                return $"        \"{actionIdentifier}\"{separator}";
-            }));
+        var actionLines = string.Join(Environment.NewLine, s_allowedActionIdentifiers.Select(CreateActionLine));
         return $$"""
 // {{ManagedMarker}}
 // {{VersionMarker}}
@@ -411,12 +369,8 @@ polkit.addRule(function(action, subject) {
         if (currentUserName.Equals("root", StringComparison.Ordinal) && !string.IsNullOrWhiteSpace(sudoUserName)) return sudoUserName.Trim();
         if (!string.IsNullOrWhiteSpace(currentUserName)) return currentUserName;
 
-        var userResult = LinuxCommandPathResolver.TryFindExecutable("whoami", out var whoamiPath)
-            ? LinuxCommandRunner.Run(whoamiPath, [], s_checkCommandTimeout)
-            : LinuxCommandResult.Failure("whoami was not found.");
-        return userResult.Succeeded && !string.IsNullOrWhiteSpace(userResult.StandardOutput)
-            ? userResult.StandardOutput.Trim()
-            : Get("PermissionUnknownUser");
+        var userResult = LinuxCommandPathResolver.TryFindExecutable("whoami", out var whoamiPath) ? LinuxCommandRunner.Run(whoamiPath, [], s_checkCommandTimeout) : LinuxCommandResult.Failure("whoami was not found.");
+        return userResult.Succeeded && !string.IsNullOrWhiteSpace(userResult.StandardOutput) ? userResult.StandardOutput.Trim() : Get("PermissionUnknownUser");
     }
 
     private static bool IsRootUser()
@@ -455,24 +409,14 @@ polkit.addRule(function(action, subject) {
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
     }
 
-    private readonly record struct RuleInspection(
-        bool Exists,
-        bool IsManaged,
-        bool IsForCurrentUser,
-        bool InspectionSucceeded,
-        string Message)
+    private readonly record struct RuleInspection(bool Exists, bool IsManaged, bool IsForCurrentUser, bool InspectionSucceeded, string Message)
     {
         public static RuleInspection NotInstalled() => new(false, false, false, true, string.Empty);
 
         public static RuleInspection Inconclusive(string message) => new(false, false, false, false, message);
     }
 
-    private readonly record struct RuleContentReadResult(
-        bool Succeeded,
-        bool NotFound,
-        bool IsInconclusive,
-        string Content,
-        string Message)
+    private readonly record struct RuleContentReadResult(bool Succeeded, bool NotFound, bool IsInconclusive, string Content, string Message)
     {
         public static RuleContentReadResult Success(string content) => new(true, false, false, content ?? string.Empty, string.Empty);
 

@@ -49,13 +49,13 @@ internal static class GitHubCopilotHookWorkTracker
         if (notificationType.Equals(GitHubCopilotHookEventNames.AgentCompletedNotificationType, StringComparison.Ordinal)
             || notificationType.Equals(GitHubCopilotHookEventNames.AgentIdleNotificationType, StringComparison.Ordinal))
         {
-            UpdateSessionState(
-                sessionIdentifier,
-                sessionWorkState =>
-                {
-                    sessionWorkState.RemoveBackgroundTaskFromNotification(AgentWorkKind, notificationText);
-                    sessionWorkState.RemoveSubagentFromNotification(notificationText);
-                });
+            void ClearAgentWork(GitHubCopilotHookSessionWorkState sessionWorkState)
+            {
+                sessionWorkState.RemoveBackgroundTaskFromNotification(AgentWorkKind, notificationText);
+                sessionWorkState.RemoveSubagentFromNotification(notificationText);
+            }
+
+            UpdateSessionState(sessionIdentifier, ClearAgentWork);
             return true;
         }
 
@@ -68,11 +68,7 @@ internal static class GitHubCopilotHookWorkTracker
 
         if (string.IsNullOrWhiteSpace(hookInput.AgentName)) return;
 
-        var subagentWorkItem = new GitHubCopilotHookSubagentWorkItem(
-            hookInput.AgentName.Trim(),
-            hookInput.AgentDisplayName.Trim(),
-            hookInput.TranscriptPath.Trim(),
-            DateTimeOffset.UtcNow);
+        var subagentWorkItem = new GitHubCopilotHookSubagentWorkItem(hookInput.AgentName.Trim(), hookInput.AgentDisplayName.Trim(), hookInput.TranscriptPath.Trim(), DateTimeOffset.UtcNow);
         UpdateSessionState(sessionIdentifier, sessionWorkState => sessionWorkState.UpsertSubagent(subagentWorkItem));
     }
 
@@ -92,9 +88,7 @@ internal static class GitHubCopilotHookWorkTracker
         SynchronizeWorkFromTranscript(hookInput.TranscriptPath, sessionIdentifier);
 
         var sessionWorkState = ReadSessionState(sessionIdentifier);
-        var pendingWorkSnapshot = new GitHubCopilotHookPendingWorkSnapshot(
-            [.. sessionWorkState.ActiveSubagents],
-            [.. sessionWorkState.ActiveBackgroundTasks]);
+        var pendingWorkSnapshot = new GitHubCopilotHookPendingWorkSnapshot([..sessionWorkState.ActiveSubagents], [..sessionWorkState.ActiveBackgroundTasks]);
         if (!pendingWorkSnapshot.HasPendingWork) return false;
 
         reason = pendingWorkSnapshot.CreatePendingWorkReason();
@@ -102,19 +96,9 @@ internal static class GitHubCopilotHookWorkTracker
         return true;
     }
 
-    public static void RecordDeferredStop(
-        string sessionIdentifier,
-        bool isProviderSessionEnd,
-        string sessionEndReason,
-        string pendingProviderWorkReason)
+    public static void RecordDeferredStop(string sessionIdentifier, bool isProviderSessionEnd, string sessionEndReason, string pendingProviderWorkReason)
     {
-        UpdateSessionState(
-            sessionIdentifier,
-            sessionWorkState => sessionWorkState.DeferredStop = new GitHubCopilotHookDeferredStop(
-                isProviderSessionEnd,
-                sessionEndReason,
-                pendingProviderWorkReason,
-                DateTimeOffset.UtcNow));
+        UpdateSessionState(sessionIdentifier, sessionWorkState => sessionWorkState.DeferredStop = new GitHubCopilotHookDeferredStop(isProviderSessionEnd, sessionEndReason, pendingProviderWorkReason, DateTimeOffset.UtcNow));
     }
 
     public static void ClearSessionState(string sessionIdentifier)
@@ -153,20 +137,10 @@ internal static class GitHubCopilotHookWorkTracker
             && !string.IsNullOrWhiteSpace(hookInput.HookEventName);
         if (hasDifferentHookEventName) return false;
 
-        return TryCreateBackgroundWorkItem(
-            hookInput.ToolName,
-            hookInput.ToolInput,
-            hookInput.ToolResult,
-            string.Empty,
-            out backgroundWorkItem);
+        return TryCreateBackgroundWorkItem(hookInput.ToolName, hookInput.ToolInput, hookInput.ToolResult, string.Empty, out backgroundWorkItem);
     }
 
-    private static bool TryCreateBackgroundWorkItem(
-        string toolName,
-        JsonElement toolInput,
-        JsonElement toolResult,
-        string toolCallIdentifier,
-        out GitHubCopilotHookBackgroundWorkItem backgroundWorkItem)
+    private static bool TryCreateBackgroundWorkItem(string toolName, JsonElement toolInput, JsonElement toolResult, string toolCallIdentifier, out GitHubCopilotHookBackgroundWorkItem backgroundWorkItem)
     {
         backgroundWorkItem = default;
         var normalizedToolName = toolName.Trim();
@@ -177,12 +151,7 @@ internal static class GitHubCopilotHookWorkTracker
             if (string.IsNullOrWhiteSpace(agentIdentifier)) agentIdentifier = toolCallIdentifier.Trim();
             if (string.IsNullOrWhiteSpace(agentIdentifier)) return false;
 
-            backgroundWorkItem = new GitHubCopilotHookBackgroundWorkItem(
-                agentIdentifier,
-                normalizedToolName,
-                AgentWorkKind,
-                CreateBackgroundWorkSummary(normalizedToolName, toolInput, agentIdentifier),
-                DateTimeOffset.UtcNow);
+            backgroundWorkItem = new GitHubCopilotHookBackgroundWorkItem(agentIdentifier, normalizedToolName, AgentWorkKind, CreateBackgroundWorkSummary(normalizedToolName, toolInput, agentIdentifier), DateTimeOffset.UtcNow);
             return true;
         }
 
@@ -192,12 +161,7 @@ internal static class GitHubCopilotHookWorkTracker
             if (string.IsNullOrWhiteSpace(shellIdentifier)) shellIdentifier = toolCallIdentifier.Trim();
             if (string.IsNullOrWhiteSpace(shellIdentifier)) return false;
 
-            backgroundWorkItem = new GitHubCopilotHookBackgroundWorkItem(
-                shellIdentifier,
-                normalizedToolName,
-                ShellWorkKind,
-                CreateBackgroundWorkSummary(normalizedToolName, toolInput, shellIdentifier),
-                DateTimeOffset.UtcNow);
+            backgroundWorkItem = new GitHubCopilotHookBackgroundWorkItem(shellIdentifier, normalizedToolName, ShellWorkKind, CreateBackgroundWorkSummary(normalizedToolName, toolInput, shellIdentifier), DateTimeOffset.UtcNow);
             return true;
         }
 
@@ -206,12 +170,7 @@ internal static class GitHubCopilotHookWorkTracker
             var agentIdentifier = ExtractAgentIdentifier(toolInput, toolResult);
             if (string.IsNullOrWhiteSpace(agentIdentifier)) return false;
 
-            backgroundWorkItem = new GitHubCopilotHookBackgroundWorkItem(
-                agentIdentifier,
-                normalizedToolName,
-                AgentWorkKind,
-                CreateBackgroundWorkSummary(normalizedToolName, toolInput, agentIdentifier),
-                DateTimeOffset.UtcNow);
+            backgroundWorkItem = new GitHubCopilotHookBackgroundWorkItem(agentIdentifier, normalizedToolName, AgentWorkKind, CreateBackgroundWorkSummary(normalizedToolName, toolInput, agentIdentifier), DateTimeOffset.UtcNow);
             return true;
         }
 
@@ -283,11 +242,7 @@ internal static class GitHubCopilotHookWorkTracker
             var sessionWorkState = new GitHubCopilotHookSessionWorkState();
             if (rootObject["deferredStop"] is JsonObject deferredStopObject)
             {
-                sessionWorkState.DeferredStop = new GitHubCopilotHookDeferredStop(
-                    GetBooleanProperty(deferredStopObject, "isProviderSessionEnd"),
-                    GetStringProperty(deferredStopObject, "sessionEndReason"),
-                    GetStringProperty(deferredStopObject, "pendingProviderWorkReason"),
-                    GetDateTimeOffsetProperty(deferredStopObject, "deferredAt"));
+                sessionWorkState.DeferredStop = new GitHubCopilotHookDeferredStop(GetBooleanProperty(deferredStopObject, "isProviderSessionEnd"), GetStringProperty(deferredStopObject, "sessionEndReason"), GetStringProperty(deferredStopObject, "pendingProviderWorkReason"), GetDateTimeOffsetProperty(deferredStopObject, "deferredAt"));
             }
 
             if (rootObject[ActiveSubagentsPropertyName] is JsonArray activeSubagents)
@@ -299,11 +254,7 @@ internal static class GitHubCopilotHookWorkTracker
                     var agentIdentifier = GetStringProperty(activeSubagentObject, "agentIdentifier");
                     if (string.IsNullOrWhiteSpace(agentIdentifier)) continue;
 
-                    sessionWorkState.UpsertSubagent(new GitHubCopilotHookSubagentWorkItem(
-                        agentIdentifier,
-                        GetStringProperty(activeSubagentObject, "agentDisplayName"),
-                        GetStringProperty(activeSubagentObject, "agentTranscriptPath"),
-                        GetDateTimeOffsetProperty(activeSubagentObject, "startedAt")));
+                    sessionWorkState.UpsertSubagent(new GitHubCopilotHookSubagentWorkItem(agentIdentifier, GetStringProperty(activeSubagentObject, "agentDisplayName"), GetStringProperty(activeSubagentObject, "agentTranscriptPath"), GetDateTimeOffsetProperty(activeSubagentObject, "startedAt")));
                 }
             }
 
@@ -316,12 +267,7 @@ internal static class GitHubCopilotHookWorkTracker
                     var workIdentifier = GetStringProperty(activeBackgroundTaskObject, "workIdentifier");
                     if (string.IsNullOrWhiteSpace(workIdentifier)) continue;
 
-                    sessionWorkState.UpsertBackgroundTask(new GitHubCopilotHookBackgroundWorkItem(
-                        workIdentifier,
-                        GetStringProperty(activeBackgroundTaskObject, "toolName"),
-                        GetStringProperty(activeBackgroundTaskObject, "workKind"),
-                        GetStringProperty(activeBackgroundTaskObject, "summary"),
-                        GetDateTimeOffsetProperty(activeBackgroundTaskObject, "startedAt")));
+                    sessionWorkState.UpsertBackgroundTask(new GitHubCopilotHookBackgroundWorkItem(workIdentifier, GetStringProperty(activeBackgroundTaskObject, "toolName"), GetStringProperty(activeBackgroundTaskObject, "workKind"), GetStringProperty(activeBackgroundTaskObject, "summary"), GetDateTimeOffsetProperty(activeBackgroundTaskObject, "startedAt")));
                 }
             }
 
@@ -332,10 +278,7 @@ internal static class GitHubCopilotHookWorkTracker
         catch (JsonException) { return new GitHubCopilotHookSessionWorkState(); }
     }
 
-    private static void WriteSessionStateWithoutLock(
-        string stateFilePath,
-        string sessionIdentifier,
-        GitHubCopilotHookSessionWorkState sessionWorkState)
+    private static void WriteSessionStateWithoutLock(string stateFilePath, string sessionIdentifier, GitHubCopilotHookSessionWorkState sessionWorkState)
     {
         if (!sessionWorkState.ShouldPersist)
         {
@@ -390,13 +333,14 @@ internal static class GitHubCopilotHookWorkTracker
         var subagentsArray = new JsonArray();
         foreach (var subagentWorkItem in subagentWorkItems)
         {
-            subagentsArray.Add((JsonNode)new JsonObject
+            var subagentObject = new JsonObject
             {
                 ["agentIdentifier"] = subagentWorkItem.AgentIdentifier,
                 ["agentDisplayName"] = subagentWorkItem.AgentDisplayName,
                 ["agentTranscriptPath"] = subagentWorkItem.AgentTranscriptPath,
                 ["startedAt"] = subagentWorkItem.StartedAt.ToString("O", CultureInfo.InvariantCulture)
-            });
+            };
+            subagentsArray.Add((JsonNode)subagentObject);
         }
 
         return subagentsArray;
@@ -407,14 +351,15 @@ internal static class GitHubCopilotHookWorkTracker
         var backgroundTasksArray = new JsonArray();
         foreach (var backgroundWorkItem in backgroundWorkItems)
         {
-            backgroundTasksArray.Add((JsonNode)new JsonObject
+            var backgroundTaskObject = new JsonObject
             {
                 ["workIdentifier"] = backgroundWorkItem.WorkIdentifier,
                 ["toolName"] = backgroundWorkItem.ToolName,
                 ["workKind"] = backgroundWorkItem.WorkKind,
                 ["summary"] = backgroundWorkItem.Summary,
                 ["startedAt"] = backgroundWorkItem.StartedAt.ToString("O", CultureInfo.InvariantCulture)
-            });
+            };
+            backgroundTasksArray.Add((JsonNode)backgroundTaskObject);
         }
 
         return backgroundTasksArray;
@@ -560,9 +505,7 @@ internal static class GitHubCopilotHookWorkTracker
     private static DateTimeOffset GetDateTimeOffsetProperty(JsonObject jsonObject, string propertyName)
     {
         var value = GetStringProperty(jsonObject, propertyName);
-        return DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dateTimeOffset)
-            ? dateTimeOffset
-            : DateTimeOffset.MinValue;
+        return DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dateTimeOffset) ? dateTimeOffset : DateTimeOffset.MinValue;
     }
 
     private static bool GetBooleanProperty(JsonObject jsonObject, string propertyName)
@@ -655,9 +598,7 @@ internal static class GitHubCopilotHookWorkTracker
 
         public void RemoveSubagentFromNotification(string notificationText)
         {
-            var removedCount = ActiveSubagents.RemoveAll(subagentWorkItem =>
-                !string.IsNullOrWhiteSpace(subagentWorkItem.AgentIdentifier)
-                && notificationText.Contains(subagentWorkItem.AgentIdentifier, StringComparison.Ordinal));
+            var removedCount = ActiveSubagents.RemoveAll(subagentWorkItem => !string.IsNullOrWhiteSpace(subagentWorkItem.AgentIdentifier) && notificationText.Contains(subagentWorkItem.AgentIdentifier, StringComparison.Ordinal));
             if (removedCount > 0) return;
 
             if (ActiveSubagents.Count == 1) RemoveSubagent(ActiveSubagents[0].AgentIdentifier);
@@ -681,10 +622,7 @@ internal static class GitHubCopilotHookWorkTracker
 
         public void RemoveBackgroundTaskFromNotification(string workKind, string notificationText)
         {
-            var removedCount = ActiveBackgroundTasks.RemoveAll(backgroundWorkItem =>
-                backgroundWorkItem.WorkKind.Equals(workKind, StringComparison.Ordinal)
-                && !string.IsNullOrWhiteSpace(backgroundWorkItem.WorkIdentifier)
-                && notificationText.Contains(backgroundWorkItem.WorkIdentifier, StringComparison.Ordinal));
+            var removedCount = ActiveBackgroundTasks.RemoveAll(backgroundWorkItem => backgroundWorkItem.WorkKind.Equals(workKind, StringComparison.Ordinal) && !string.IsNullOrWhiteSpace(backgroundWorkItem.WorkIdentifier) && notificationText.Contains(backgroundWorkItem.WorkIdentifier, StringComparison.Ordinal));
             if (removedCount > 0) return;
 
             var matchingBackgroundTasks = ActiveBackgroundTasks
@@ -828,9 +766,7 @@ internal static class GitHubCopilotHookWorkTracker
             if (!element.TryGetProperty("data", out var dataElement)) return;
             if (!TryGetStringProperty(dataElement, "toolName", out var toolName)) return;
 
-            var toolCallIdentifier = TryGetStringProperty(dataElement, "toolCallId", out var currentToolCallIdentifier)
-                ? currentToolCallIdentifier
-                : string.Empty;
+            var toolCallIdentifier = TryGetStringProperty(dataElement, "toolCallId", out var currentToolCallIdentifier) ? currentToolCallIdentifier : string.Empty;
             var toolInput = dataElement.TryGetProperty("arguments", out var toolInputElement) ? toolInputElement : default;
             var toolResult = dataElement.TryGetProperty("result", out var toolResultElement) ? toolResultElement : default;
 
@@ -854,17 +790,9 @@ internal static class GitHubCopilotHookWorkTracker
             subagentWorkItem = default;
             if (!TryGetStringProperty(inputElement, "agentName", out var agentIdentifier)) return false;
 
-            var agentDisplayName = TryGetStringProperty(inputElement, "agentDisplayName", out var currentAgentDisplayName)
-                ? currentAgentDisplayName
-                : string.Empty;
-            var transcriptPath = TryGetStringProperty(inputElement, "transcriptPath", out var currentTranscriptPath)
-                ? currentTranscriptPath
-                : string.Empty;
-            subagentWorkItem = new GitHubCopilotHookSubagentWorkItem(
-                agentIdentifier,
-                agentDisplayName,
-                transcriptPath,
-                DateTimeOffset.UtcNow);
+            var agentDisplayName = TryGetStringProperty(inputElement, "agentDisplayName", out var currentAgentDisplayName) ? currentAgentDisplayName : string.Empty;
+            var transcriptPath = TryGetStringProperty(inputElement, "transcriptPath", out var currentTranscriptPath) ? currentTranscriptPath : string.Empty;
+            subagentWorkItem = new GitHubCopilotHookSubagentWorkItem(agentIdentifier, agentDisplayName, transcriptPath, DateTimeOffset.UtcNow);
             return true;
         }
 
@@ -911,28 +839,13 @@ internal static class GitHubCopilotHookWorkTracker
         }
     }
 
-    private readonly record struct GitHubCopilotHookSubagentWorkItem(
-        string AgentIdentifier,
-        string AgentDisplayName,
-        string AgentTranscriptPath,
-        DateTimeOffset StartedAt);
+    private readonly record struct GitHubCopilotHookSubagentWorkItem(string AgentIdentifier, string AgentDisplayName, string AgentTranscriptPath, DateTimeOffset StartedAt);
 
-    private readonly record struct GitHubCopilotHookBackgroundWorkItem(
-        string WorkIdentifier,
-        string ToolName,
-        string WorkKind,
-        string Summary,
-        DateTimeOffset StartedAt);
+    private readonly record struct GitHubCopilotHookBackgroundWorkItem(string WorkIdentifier, string ToolName, string WorkKind, string Summary, DateTimeOffset StartedAt);
 
-    private sealed record GitHubCopilotHookDeferredStop(
-        bool IsProviderSessionEnd,
-        string SessionEndReason,
-        string PendingProviderWorkReason,
-        DateTimeOffset DeferredAt);
+    private sealed record GitHubCopilotHookDeferredStop(bool IsProviderSessionEnd, string SessionEndReason, string PendingProviderWorkReason, DateTimeOffset DeferredAt);
 
-    private readonly record struct GitHubCopilotHookPendingWorkSnapshot(
-        GitHubCopilotHookSubagentWorkItem[] ActiveSubagents,
-        GitHubCopilotHookBackgroundWorkItem[] ActiveBackgroundTasks)
+    private readonly record struct GitHubCopilotHookPendingWorkSnapshot(GitHubCopilotHookSubagentWorkItem[] ActiveSubagents, GitHubCopilotHookBackgroundWorkItem[] ActiveBackgroundTasks)
     {
         public bool HasPendingWork => ActiveSubagents.Length > 0 || ActiveBackgroundTasks.Length > 0;
 
@@ -952,24 +865,12 @@ internal static class GitHubCopilotHookWorkTracker
             var summaryParts = new List<string>();
             if (ActiveSubagents.Length > 0)
             {
-                summaryParts.Add("subagents="
-                    + string.Join(
-                        ",",
-                        ActiveSubagents.Select(subagentWorkItem =>
-                            string.IsNullOrWhiteSpace(subagentWorkItem.AgentDisplayName)
-                                ? subagentWorkItem.AgentIdentifier
-                                : $"{subagentWorkItem.AgentDisplayName}:{subagentWorkItem.AgentIdentifier}")));
+                summaryParts.Add("subagents=" + string.Join(",", ActiveSubagents.Select(subagentWorkItem => string.IsNullOrWhiteSpace(subagentWorkItem.AgentDisplayName) ? subagentWorkItem.AgentIdentifier : $"{subagentWorkItem.AgentDisplayName}:{subagentWorkItem.AgentIdentifier}")));
             }
 
             if (ActiveBackgroundTasks.Length > 0)
             {
-                summaryParts.Add("backgroundTasks="
-                    + string.Join(
-                        ",",
-                        ActiveBackgroundTasks.Select(backgroundWorkItem =>
-                            string.IsNullOrWhiteSpace(backgroundWorkItem.Summary)
-                                ? backgroundWorkItem.WorkIdentifier
-                                : backgroundWorkItem.Summary)));
+                summaryParts.Add("backgroundTasks=" + string.Join(",", ActiveBackgroundTasks.Select(backgroundWorkItem => string.IsNullOrWhiteSpace(backgroundWorkItem.Summary) ? backgroundWorkItem.WorkIdentifier : backgroundWorkItem.Summary)));
             }
 
             return string.Join(" ", summaryParts);

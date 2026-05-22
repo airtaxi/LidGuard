@@ -51,11 +51,7 @@ internal static class WslHookSnippetCommand
         };
     }
 
-    private static bool TryParseArguments(
-        string[] commandLineArguments,
-        out string format,
-        out Dictionary<string, string> options,
-        out string message)
+    private static bool TryParseArguments(string[] commandLineArguments, out string format, out Dictionary<string, string> options, out string message)
     {
         format = string.Empty;
         options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);

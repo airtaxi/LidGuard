@@ -4,23 +4,16 @@ using LidGuard.Settings;
 
 namespace LidGuard.Runtime;
 
-internal sealed class PostStopSuspendSoundPlaybackCoordinator(
-    IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer,
-    ISystemAudioVolumeController systemAudioVolumeController)
+internal sealed class PostStopSuspendSoundPlaybackCoordinator(IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer, ISystemAudioVolumeController systemAudioVolumeController)
 {
-    public async Task<PostStopSuspendSoundPlaybackResult> PlayAsync(
-        string postStopSuspendSound,
-        int? postStopSuspendSoundVolumeOverridePercent,
-        CancellationToken cancellationToken)
+    public async Task<PostStopSuspendSoundPlaybackResult> PlayAsync(string postStopSuspendSound, int? postStopSuspendSoundVolumeOverridePercent, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(postStopSuspendSound)) return PostStopSuspendSoundPlaybackResult.Success();
 
         if (!PostStopSuspendSoundConfiguration.TryValidateVolumeOverridePercent(postStopSuspendSoundVolumeOverridePercent, out var validationMessage))
         {
             var validationPlaybackResult = await postStopSuspendSoundPlayer.PlayAsync(postStopSuspendSound, cancellationToken);
-            return PostStopSuspendSoundPlaybackResult.FromPlaybackResult(
-                validationPlaybackResult,
-                [LidGuardOperationResult.Failure($"Post-stop suspend sound volume override skipped: {validationMessage}")]);
+            return PostStopSuspendSoundPlaybackResult.FromPlaybackResult(validationPlaybackResult, [LidGuardOperationResult.Failure($"Post-stop suspend sound volume override skipped: {validationMessage}")]);
         }
 
         if (postStopSuspendSoundVolumeOverridePercent is null)
@@ -33,8 +26,7 @@ internal sealed class PostStopSuspendSoundPlaybackCoordinator(
         var captureResult = systemAudioVolumeController.CaptureDefaultRenderDeviceState();
         if (!captureResult.Succeeded)
         {
-            warningResults.Add(LidGuardOperationResult.Failure(
-                $"Post-stop suspend sound volume override skipped because the current system audio volume could not be captured: {captureResult.Message}"));
+            warningResults.Add(LidGuardOperationResult.Failure($"Post-stop suspend sound volume override skipped because the current system audio volume could not be captured: {captureResult.Message}"));
             var uncapturedPlaybackResult = await postStopSuspendSoundPlayer.PlayAsync(postStopSuspendSound, cancellationToken);
             return PostStopSuspendSoundPlaybackResult.FromPlaybackResult(uncapturedPlaybackResult, [.. warningResults]);
         }
@@ -65,9 +57,7 @@ internal sealed class PostStopSuspendSoundPlaybackResult
 
     public static PostStopSuspendSoundPlaybackResult Success() => new();
 
-    public static PostStopSuspendSoundPlaybackResult FromPlaybackResult(
-        LidGuardOperationResult playbackResult,
-        LidGuardOperationResult[] volumeWarningResults = null)
+    public static PostStopSuspendSoundPlaybackResult FromPlaybackResult(LidGuardOperationResult playbackResult, LidGuardOperationResult[] volumeWarningResults = null)
         => new()
         {
             PlaybackResult = playbackResult,

@@ -4,13 +4,7 @@ namespace LidGuard.Notifications.Data;
 
 internal sealed class NotificationDeliveryStore(SqliteConnectionFactory connectionFactory)
 {
-    public async Task InsertAsync(
-        long webhookEventIdentifier,
-        long subscriptionIdentifier,
-        string status,
-        int? httpStatusCode,
-        string? errorMessage,
-        CancellationToken cancellationToken)
+    public async Task InsertAsync(long webhookEventIdentifier, long subscriptionIdentifier, string status, int? httpStatusCode, string? errorMessage, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);

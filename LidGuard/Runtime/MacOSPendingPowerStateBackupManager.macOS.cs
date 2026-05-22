@@ -47,9 +47,7 @@ internal static class MacOSPendingPowerStateBackupManager
         return LidGuardOperationResult.Failure(deleteMessage);
     }
 
-    public static LidGuardOperationResult RollBackFailedApply(
-        MacOSPendingPowerStateBackupState state,
-        LidGuardOperationResult applyResult)
+    public static LidGuardOperationResult RollBackFailedApply(MacOSPendingPowerStateBackupState state, LidGuardOperationResult applyResult)
     {
         var restoreResult = Restore(state);
         if (!restoreResult.Succeeded)

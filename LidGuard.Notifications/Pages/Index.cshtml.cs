@@ -5,9 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace LidGuard.Notifications.Pages;
 
-internal sealed class IndexModel(
-    PushSubscriptionStore subscriptionStore,
-    IOptions<LidGuardNotificationsOptions> options) : PageModel
+internal sealed class IndexModel(PushSubscriptionStore subscriptionStore, IOptions<LidGuardNotificationsOptions> options) : PageModel
 {
     public int ActiveSubscriptionCount { get; private set; }
 

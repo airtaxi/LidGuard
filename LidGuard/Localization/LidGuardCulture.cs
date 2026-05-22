@@ -157,7 +157,5 @@ internal static class LidGuardCulture
     }
 
     private static string CultureInvalidEnvironmentWarning(string cultureName, string detail)
-        => LocalizationService.GetFormattedString("CultureInvalidUserInterfaceCultureWarning",
-            $"{UserInterfaceCultureEnvironmentVariableName}={cultureName}",
-            detail);
+        => LocalizationService.GetFormattedString("CultureInvalidUserInterfaceCultureWarning", $"{UserInterfaceCultureEnvironmentVariableName}={cultureName}", detail);
 }

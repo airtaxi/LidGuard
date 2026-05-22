@@ -4,43 +4,17 @@ namespace LidGuard.Commands.Help;
 
 internal static class LidGuardHelpContent
 {
-    internal static LidGuardHelpDocument CreateDocument(
-        string commandDisplayName,
-        string settingsFilePath,
-        string sessionLogFilePath,
-        string suspendHistoryLogFilePath,
-        string supportedPostStopSuspendSystemSounds)
+    internal static LidGuardHelpDocument CreateDocument(string commandDisplayName, string settingsFilePath, string sessionLogFilePath, string suspendHistoryLogFilePath, string supportedPostStopSuspendSystemSounds)
     {
-        var documentContext = new LidGuardHelpDocumentContext(
-            commandDisplayName,
-            settingsFilePath,
-            sessionLogFilePath,
-            suspendHistoryLogFilePath,
-            supportedPostStopSuspendSystemSounds);
+        var documentContext = new LidGuardHelpDocumentContext(commandDisplayName, settingsFilePath, sessionLogFilePath, suspendHistoryLogFilePath, supportedPostStopSuspendSystemSounds);
 
-        return new LidGuardHelpDocument(
-            documentContext,
-            LidGuardHelpSectionCatalog.CreateSectionEntries(documentContext),
-            LidGuardHelpCommandCatalog.CreateCommandEntries(documentContext));
+        return new LidGuardHelpDocument(documentContext, LidGuardHelpSectionCatalog.CreateSectionEntries(documentContext), LidGuardHelpCommandCatalog.CreateCommandEntries(documentContext));
     }
 
-    internal static IReadOnlyList<LidGuardHelpSection> CreateSections(
-        string commandDisplayName,
-        string settingsFilePath,
-        string sessionLogFilePath,
-        string suspendHistoryLogFilePath,
-        string supportedPostStopSuspendSystemSounds)
-        => CreateAllSections(CreateDocument(
-            commandDisplayName,
-            settingsFilePath,
-            sessionLogFilePath,
-            suspendHistoryLogFilePath,
-            supportedPostStopSuspendSystemSounds));
+    internal static IReadOnlyList<LidGuardHelpSection> CreateSections(string commandDisplayName, string settingsFilePath, string sessionLogFilePath, string suspendHistoryLogFilePath, string supportedPostStopSuspendSystemSounds)
+        => CreateAllSections(CreateDocument(commandDisplayName, settingsFilePath, sessionLogFilePath, suspendHistoryLogFilePath, supportedPostStopSuspendSystemSounds));
 
-    internal static bool TryFindCommand(
-        LidGuardHelpDocument document,
-        string commandName,
-        out LidGuardHelpCommandEntry commandEntry)
+    internal static bool TryFindCommand(LidGuardHelpDocument document, string commandName, out LidGuardHelpCommandEntry commandEntry)
     {
         commandEntry = default;
         var normalizedCommandName = commandName.Trim();
@@ -82,10 +56,7 @@ internal static class LidGuardHelpContent
     {
         var helpSections = new List<LidGuardHelpSection>
         {
-            new(
-                LidGuardHelpSectionTitles.Usage,
-                LidGuardHelpSectionCatalog.CreateSummaryUsageDetails(document.Context.CommandDisplayName),
-                [])
+            new(LidGuardHelpSectionTitles.Usage, LidGuardHelpSectionCatalog.CreateSummaryUsageDetails(document.Context.CommandDisplayName), [])
         };
 
         foreach (var sectionEntry in document.SectionEntries)
@@ -102,17 +73,12 @@ internal static class LidGuardHelpContent
         return helpSections;
     }
 
-    internal static IReadOnlyList<LidGuardHelpSection> CreateCommandSections(
-        LidGuardHelpDocument document,
-        LidGuardHelpCommandEntry commandEntry)
+    internal static IReadOnlyList<LidGuardHelpSection> CreateCommandSections(LidGuardHelpDocument document, LidGuardHelpCommandEntry commandEntry)
     {
         return
         [
             new LidGuardHelpSection(LidGuardHelpSectionTitles.Usage, CreateCommandUsageDetails(commandEntry), []),
-            new LidGuardHelpSection(
-                commandEntry.SectionTitle,
-                CreateSectionDetails(document, commandEntry.SectionTitle),
-                commandEntry.HelpCommands)
+            new LidGuardHelpSection(commandEntry.SectionTitle, CreateSectionDetails(document, commandEntry.SectionTitle), commandEntry.HelpCommands)
         ];
     }
 
@@ -149,11 +115,7 @@ internal static class LidGuardHelpContent
         {
             if (!commandEntry.SectionTitle.Equals(sectionTitle, StringComparison.Ordinal)) continue;
 
-            helpCommands.Add(new LidGuardHelpCommand(
-                CreateSummaryCommandLabel(commandEntry),
-                commandEntry.SummaryDescription,
-                [],
-                []));
+            helpCommands.Add(new LidGuardHelpCommand(CreateSummaryCommandLabel(commandEntry), commandEntry.SummaryDescription, [], []));
         }
 
         return helpCommands;

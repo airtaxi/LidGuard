@@ -39,22 +39,7 @@ internal sealed class LidGuardPipeResponse
 
     public string StopFollowUpStatus { get; init; } = string.Empty;
 
-    public static LidGuardPipeResponse Success(
-        string message,
-        int activeSessionCount,
-        LidGuardSessionStatus[] sessions,
-        LidGuardSettings settings,
-        LidSwitchState lidSwitchState = LidSwitchState.Unknown,
-        int visibleDisplayMonitorCount = 0,
-        string messageCode = "",
-        string[] messageArguments = null,
-        bool suspendScheduled = false,
-        SystemSuspendMode suspendMode = SystemSuspendMode.Sleep,
-        int suspendDelaySeconds = 0,
-        string suspendReasonCode = "",
-        bool stopContinuationRequested = false,
-        string stopContinuationPrompt = "",
-        string stopFollowUpStatus = "") => new()
+    public static LidGuardPipeResponse Success(string message, int activeSessionCount, LidGuardSessionStatus[] sessions, LidGuardSettings settings, LidSwitchState lidSwitchState = LidSwitchState.Unknown, int visibleDisplayMonitorCount = 0, string messageCode = "", string[] messageArguments = null, bool suspendScheduled = false, SystemSuspendMode suspendMode = SystemSuspendMode.Sleep, int suspendDelaySeconds = 0, string suspendReasonCode = "", bool stopContinuationRequested = false, string stopContinuationPrompt = "", string stopFollowUpStatus = "") => new()
     {
         Succeeded = true,
         Message = message,
@@ -74,14 +59,7 @@ internal sealed class LidGuardPipeResponse
         StopFollowUpStatus = stopFollowUpStatus ?? string.Empty
     };
 
-    public static LidGuardPipeResponse Failure(
-        string message,
-        int activeSessionCount = 0,
-        bool runtimeUnavailable = false,
-        LidSwitchState lidSwitchState = LidSwitchState.Unknown,
-        int visibleDisplayMonitorCount = 0,
-        string messageCode = "",
-        string[] messageArguments = null) => new()
+    public static LidGuardPipeResponse Failure(string message, int activeSessionCount = 0, bool runtimeUnavailable = false, LidSwitchState lidSwitchState = LidSwitchState.Unknown, int visibleDisplayMonitorCount = 0, string messageCode = "", string[] messageArguments = null) => new()
     {
         Succeeded = false,
         RuntimeUnavailable = runtimeUnavailable,

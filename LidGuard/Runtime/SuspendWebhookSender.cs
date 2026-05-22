@@ -9,13 +9,7 @@ internal static class SuspendWebhookSender
 {
     private static readonly HttpClient s_httpClient = new();
 
-    public static async Task<LidGuardOperationResult> SendAsync(
-        string preSuspendWebhookUrl,
-        SuspendWebhookReason reason,
-        int softLockedSessionCount,
-        string userInterfaceCulture,
-        CancellationToken cancellationToken,
-        TimeSpan? timeout = null)
+    public static async Task<LidGuardOperationResult> SendAsync(string preSuspendWebhookUrl, SuspendWebhookReason reason, int softLockedSessionCount, string userInterfaceCulture, CancellationToken cancellationToken, TimeSpan? timeout = null)
     {
         if (!PreSuspendWebhookConfiguration.TryNormalizeConfiguredValue(preSuspendWebhookUrl, out var normalizedPreSuspendWebhookUrl, out var message)) return LidGuardOperationResult.Failure(message);
 
@@ -28,54 +22,26 @@ internal static class SuspendWebhookSender
             UserInterfaceCulture = userInterfaceCulture,
             SoftLockedSessionCount = reason == SuspendWebhookReason.SoftLocked ? softLockedSessionCount : null
         };
-        return await SendCoreAsync(
-            normalizedPreSuspendWebhookUrl,
-            request,
-            "pre-suspend",
-            cancellationToken,
-            timeout);
+        return await SendCoreAsync(normalizedPreSuspendWebhookUrl, request, "pre-suspend", cancellationToken, timeout);
     }
 
-    public static async Task<LidGuardOperationResult> SendAsync(
-        string preSuspendWebhookUrl,
-        LidGuardWebhookRequest request,
-        CancellationToken cancellationToken,
-        TimeSpan? timeout = null)
+    public static async Task<LidGuardOperationResult> SendAsync(string preSuspendWebhookUrl, LidGuardWebhookRequest request, CancellationToken cancellationToken, TimeSpan? timeout = null)
     {
         if (!PreSuspendWebhookConfiguration.TryNormalizeConfiguredValue(preSuspendWebhookUrl, out var normalizedPreSuspendWebhookUrl, out var message)) return LidGuardOperationResult.Failure(message);
 
         if (string.IsNullOrWhiteSpace(normalizedPreSuspendWebhookUrl)) return LidGuardOperationResult.Success();
-        return await SendCoreAsync(
-            normalizedPreSuspendWebhookUrl,
-            request,
-            "pre-suspend",
-            cancellationToken,
-            timeout);
+        return await SendCoreAsync(normalizedPreSuspendWebhookUrl, request, "pre-suspend", cancellationToken, timeout);
     }
 
-    public static async Task<LidGuardOperationResult> SendPostSessionEndAsync(
-        string postSessionEndWebhookUrl,
-        LidGuardWebhookRequest request,
-        CancellationToken cancellationToken,
-        TimeSpan? timeout = null)
+    public static async Task<LidGuardOperationResult> SendPostSessionEndAsync(string postSessionEndWebhookUrl, LidGuardWebhookRequest request, CancellationToken cancellationToken, TimeSpan? timeout = null)
     {
         if (!PostSessionEndWebhookConfiguration.TryNormalizeConfiguredValue(postSessionEndWebhookUrl, out var normalizedPostSessionEndWebhookUrl, out var message)) return LidGuardOperationResult.Failure(message);
 
         if (string.IsNullOrWhiteSpace(normalizedPostSessionEndWebhookUrl)) return LidGuardOperationResult.Success();
-        return await SendCoreAsync(
-            normalizedPostSessionEndWebhookUrl,
-            request,
-            "post-session-end",
-            cancellationToken,
-            timeout);
+        return await SendCoreAsync(normalizedPostSessionEndWebhookUrl, request, "post-session-end", cancellationToken, timeout);
     }
 
-    private static async Task<LidGuardOperationResult> SendCoreAsync(
-        string webhookUrl,
-        LidGuardWebhookRequest request,
-        string displayName,
-        CancellationToken cancellationToken,
-        TimeSpan? timeout = null)
+    private static async Task<LidGuardOperationResult> SendCoreAsync(string webhookUrl, LidGuardWebhookRequest request, string displayName, CancellationToken cancellationToken, TimeSpan? timeout = null)
     {
         var requestContent = JsonSerializer.Serialize(request, SuspendWebhookJsonSerializerContext.Default.LidGuardWebhookRequest);
         using var requestMessage = new HttpRequestMessage(HttpMethod.Post, webhookUrl)
@@ -95,8 +61,7 @@ internal static class SuspendWebhookSender
             using var response = await s_httpClient.SendAsync(requestMessage, effectiveCancellationToken);
             if (response.IsSuccessStatusCode) return LidGuardOperationResult.Success();
 
-            return LidGuardOperationResult.Failure(
-                $"The {displayName} webhook returned {(int)response.StatusCode} ({response.ReasonPhrase}).");
+            return LidGuardOperationResult.Failure($"The {displayName} webhook returned {(int)response.StatusCode} ({response.ReasonPhrase}).");
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {

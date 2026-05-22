@@ -12,10 +12,7 @@ internal sealed class VisibleDisplayMonitorCountProvider : IVisibleDisplayMonito
     {
         if (!MacOSCommandPathResolver.TryFindExecutable("system_profiler", out var systemProfilerPath)) return 0;
 
-        var commandResult = MacOSCommandRunner.Run(
-            systemProfilerPath,
-            ["SPDisplaysDataType", "-json"],
-            s_systemProfilerTimeout);
+        var commandResult = MacOSCommandRunner.Run(systemProfilerPath, ["SPDisplaysDataType", "-json"], s_systemProfilerTimeout);
         if (!commandResult.Succeeded) return 0;
 
         return CountVisibleDisplayMonitors(commandResult.StandardOutput, excludeInternalDisplayMonitors);

@@ -15,9 +15,5 @@ internal static class PreSuspendWebhookConfiguration
     }
 
     public static bool TryNormalizeConfiguredValue(string preSuspendWebhookUrl, out string normalizedPreSuspendWebhookUrl, out string message)
-        => WebhookUrlConfiguration.TryNormalizeConfiguredValue(
-            preSuspendWebhookUrl,
-            "pre-suspend",
-            out normalizedPreSuspendWebhookUrl,
-            out message);
+        => WebhookUrlConfiguration.TryNormalizeConfiguredValue(preSuspendWebhookUrl, "pre-suspend", out normalizedPreSuspendWebhookUrl, out message);
 }

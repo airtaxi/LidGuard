@@ -4,21 +4,13 @@ using LidGuard.Sessions;
 
 namespace LidGuard.Runtime;
 
-internal sealed class AgentTranscriptMonitor(
-    AgentTranscriptMonitoringProfile monitoringProfile,
-    Func<AgentTranscriptActivityDetectedContext, Task> transcriptActivityDetectedAsync,
-    Func<AgentTranscriptStopDetectedContext, Task> transcriptStopDetectedAsync,
-    Func<AgentTranscriptSoftLockDetectedContext, Task> transcriptSoftLockDetectedAsync)
+internal sealed class AgentTranscriptMonitor(AgentTranscriptMonitoringProfile monitoringProfile, Func<AgentTranscriptActivityDetectedContext, Task> transcriptActivityDetectedAsync, Func<AgentTranscriptStopDetectedContext, Task> transcriptStopDetectedAsync, Func<AgentTranscriptSoftLockDetectedContext, Task> transcriptSoftLockDetectedAsync)
 {
     private const int TranscriptPollingIntervalMilliseconds = 1000;
     private readonly object _gate = new();
     private readonly Dictionary<LidGuardSessionKey, MonitoredAgentTranscriptSessionState> _monitoredSessions = [];
 
-    public AgentTranscriptMonitoringRegistrationResult RegisterOrUpdateSession(
-        string sessionIdentifier,
-        string providerName,
-        string workingDirectory,
-        string transcriptPath)
+    public AgentTranscriptMonitoringRegistrationResult RegisterOrUpdateSession(string sessionIdentifier, string providerName, string workingDirectory, string transcriptPath)
     {
         var sessionKey = new LidGuardSessionKey(monitoringProfile.Provider, sessionIdentifier, providerName);
         var resolvedTranscriptPath = ResolveTranscriptPath(sessionIdentifier, transcriptPath, out var resolutionMessage);
@@ -75,9 +67,7 @@ internal sealed class AgentTranscriptMonitor(
                 LastObservedTranscriptLength = initialTranscriptObservation.Length,
                 LastObservedTranscriptLastWriteTimeUtc = initialTranscriptObservation.LastWriteTimeUtc
             };
-            pollingTimer.Change(
-                TimeSpan.FromMilliseconds(TranscriptPollingIntervalMilliseconds),
-                TimeSpan.FromMilliseconds(TranscriptPollingIntervalMilliseconds));
+            pollingTimer.Change(TimeSpan.FromMilliseconds(TranscriptPollingIntervalMilliseconds), TimeSpan.FromMilliseconds(TranscriptPollingIntervalMilliseconds));
         }
 
         return new AgentTranscriptMonitoringRegistrationResult
@@ -185,9 +175,7 @@ internal sealed class AgentTranscriptMonitor(
         _ = NotifyTranscriptActivityDetectedAsync(transcriptActivityDetectedContext, transcriptActivityDetectedAsync);
     }
 
-    private static async Task NotifyTranscriptActivityDetectedAsync(
-        AgentTranscriptActivityDetectedContext transcriptActivityDetectedContext,
-        Func<AgentTranscriptActivityDetectedContext, Task> transcriptActivityDetectedAsync)
+    private static async Task NotifyTranscriptActivityDetectedAsync(AgentTranscriptActivityDetectedContext transcriptActivityDetectedContext, Func<AgentTranscriptActivityDetectedContext, Task> transcriptActivityDetectedAsync)
     {
         try
         {
@@ -198,9 +186,7 @@ internal sealed class AgentTranscriptMonitor(
         }
     }
 
-    private static async Task NotifyTranscriptStopDetectedAsync(
-        AgentTranscriptStopDetectedContext transcriptStopDetectedContext,
-        Func<AgentTranscriptStopDetectedContext, Task> transcriptStopDetectedAsync)
+    private static async Task NotifyTranscriptStopDetectedAsync(AgentTranscriptStopDetectedContext transcriptStopDetectedContext, Func<AgentTranscriptStopDetectedContext, Task> transcriptStopDetectedAsync)
     {
         try
         {
@@ -211,9 +197,7 @@ internal sealed class AgentTranscriptMonitor(
         }
     }
 
-    private static async Task NotifyTranscriptSoftLockDetectedAsync(
-        AgentTranscriptSoftLockDetectedContext transcriptSoftLockDetectedContext,
-        Func<AgentTranscriptSoftLockDetectedContext, Task> transcriptSoftLockDetectedAsync)
+    private static async Task NotifyTranscriptSoftLockDetectedAsync(AgentTranscriptSoftLockDetectedContext transcriptSoftLockDetectedContext, Func<AgentTranscriptSoftLockDetectedContext, Task> transcriptSoftLockDetectedAsync)
     {
         try
         {
@@ -270,9 +254,7 @@ internal sealed class AgentTranscriptMonitor(
                 return matchingTranscriptPaths[0];
             }
 
-            resolutionMessage = matchingTranscriptPaths.Length == 0
-                ? $"Skipped {monitoringProfile.DisplayName} transcript monitoring because hook input did not include transcript_path and no matching transcript file was found for session '{sessionIdentifier}'."
-                : $"Skipped {monitoringProfile.DisplayName} transcript monitoring because hook input did not include transcript_path and multiple matching transcript files were found for session '{sessionIdentifier}'.";
+            resolutionMessage = matchingTranscriptPaths.Length == 0 ? $"Skipped {monitoringProfile.DisplayName} transcript monitoring because hook input did not include transcript_path and no matching transcript file was found for session '{sessionIdentifier}'." : $"Skipped {monitoringProfile.DisplayName} transcript monitoring because hook input did not include transcript_path and multiple matching transcript files were found for session '{sessionIdentifier}'.";
             return string.Empty;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or DirectoryNotFoundException or PathTooLongException)
@@ -294,9 +276,7 @@ internal sealed class AgentTranscriptMonitor(
         {
             var transcriptFileInfo = new FileInfo(transcriptPath);
             transcriptFileInfo.Refresh();
-            return transcriptFileInfo.Exists
-                ? new AgentTranscriptObservation(transcriptFileInfo.Length, transcriptFileInfo.LastWriteTimeUtc)
-                : new AgentTranscriptObservation(0, DateTime.MinValue);
+            return transcriptFileInfo.Exists ? new AgentTranscriptObservation(transcriptFileInfo.Length, transcriptFileInfo.LastWriteTimeUtc) : new AgentTranscriptObservation(0, DateTime.MinValue);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException)
         {
@@ -444,11 +424,7 @@ internal static class AgentTranscriptSoftLockDetectors
         return true;
     }
 
-    private static bool TryInspectCodexTranscriptResponseItem(
-        string transcriptLine,
-        out string payloadType,
-        out string functionName,
-        out string functionCallIdentifier)
+    private static bool TryInspectCodexTranscriptResponseItem(string transcriptLine, out string payloadType, out string functionName, out string functionCallIdentifier)
     {
         payloadType = string.Empty;
         functionName = string.Empty;
@@ -471,10 +447,7 @@ internal static class AgentTranscriptSoftLockDetectors
         catch (JsonException) { return false; }
     }
 
-    private static string[] ReadRecentTranscriptLines(
-        string transcriptPath,
-        int lineLimit,
-        int byteLimit)
+    private static string[] ReadRecentTranscriptLines(string transcriptPath, int lineLimit, int byteLimit)
     {
         try
         {

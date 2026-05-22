@@ -14,12 +14,6 @@ internal static class ClosedLidStopFollowUpWebhookConfiguration
         };
     }
 
-    public static bool TryNormalizeConfiguredValue(
-        string closedLidStopFollowUpWebhookUrl,
-        out string normalizedClosedLidStopFollowUpWebhookUrl,
-        out string message)
-        => ClosedLidStopFollowUpConfiguration.TryNormalizeConfiguredValue(
-            closedLidStopFollowUpWebhookUrl,
-            out normalizedClosedLidStopFollowUpWebhookUrl,
-            out message);
+    public static bool TryNormalizeConfiguredValue(string closedLidStopFollowUpWebhookUrl, out string normalizedClosedLidStopFollowUpWebhookUrl, out string message)
+        => ClosedLidStopFollowUpConfiguration.TryNormalizeConfiguredValue(closedLidStopFollowUpWebhookUrl, out normalizedClosedLidStopFollowUpWebhookUrl, out message);
 }

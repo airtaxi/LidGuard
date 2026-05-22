@@ -23,9 +23,7 @@ internal static class MacOSPowerSettings
         var commandResult = RunPrivilegedPmset(["-a", "disablesleep", disabled ? "1" : "0"]);
         if (commandResult.Succeeded) return LidGuardOperationResult.Success();
 
-        return LidGuardOperationResult.Failure(
-            CreatePrivilegedPmsetFailureMessage(commandResult, "pmset disablesleep"),
-            commandResult.ExitCode);
+        return LidGuardOperationResult.Failure(CreatePrivilegedPmsetFailureMessage(commandResult, "pmset disablesleep"), commandResult.ExitCode);
     }
 
     public static LidGuardOperationResult<int> ReadHibernateMode()
@@ -43,9 +41,7 @@ internal static class MacOSPowerSettings
         var commandResult = RunPrivilegedPmset(["-a", "hibernatemode", hibernateMode.ToString()]);
         if (commandResult.Succeeded) return LidGuardOperationResult.Success();
 
-        return LidGuardOperationResult.Failure(
-            CreatePrivilegedPmsetFailureMessage(commandResult, "pmset hibernatemode"),
-            commandResult.ExitCode);
+        return LidGuardOperationResult.Failure(CreatePrivilegedPmsetFailureMessage(commandResult, "pmset hibernatemode"), commandResult.ExitCode);
     }
 
     public static LidGuardOperationResult SleepNow()

@@ -22,11 +22,7 @@ public sealed class SystemAudioVolumeController : ISystemAudioVolumeController
         if (!TryParseVolumePercent(volumeResult.StandardOutput, out var volumePercent)) return LidGuardOperationResult<SystemAudioVolumeState>.Failure("Failed to parse pactl default sink volume.");
         if (!TryParseMuteState(muteResult.StandardOutput, out var isMuted)) return LidGuardOperationResult<SystemAudioVolumeState>.Failure("Failed to parse pactl default sink mute state.");
 
-        return LidGuardOperationResult<SystemAudioVolumeState>.Success(new SystemAudioVolumeState
-        {
-            MasterVolumeScalar = volumePercent / 100.0f,
-            IsMuted = isMuted
-        });
+        return LidGuardOperationResult<SystemAudioVolumeState>.Success(new SystemAudioVolumeState { MasterVolumeScalar = volumePercent / 100.0f, IsMuted = isMuted });
     }
 
     public LidGuardOperationResult ApplyDefaultRenderDeviceVolumeOverride(int volumeOverridePercent)
@@ -36,9 +32,7 @@ public sealed class SystemAudioVolumeController : ISystemAudioVolumeController
 
         var volumeResult = LinuxCommandRunner.Run(pactlPath, ["set-sink-volume", "@DEFAULT_SINK@", $"{volumeOverridePercent}%"], s_pactlTimeout);
         var muteResult = LinuxCommandRunner.Run(pactlPath, ["set-sink-mute", "@DEFAULT_SINK@", "0"], s_pactlTimeout);
-        return CombineVolumeChangeResults(
-            volumeResult.Succeeded ? LidGuardOperationResult.Success() : LidGuardOperationResult.Failure(volumeResult.CreateFailureMessage("pactl set-sink-volume"), volumeResult.ExitCode),
-            muteResult.Succeeded ? LidGuardOperationResult.Success() : LidGuardOperationResult.Failure(muteResult.CreateFailureMessage("pactl set-sink-mute"), muteResult.ExitCode));
+        return CombineVolumeChangeResults(volumeResult.Succeeded ? LidGuardOperationResult.Success() : LidGuardOperationResult.Failure(volumeResult.CreateFailureMessage("pactl set-sink-volume"), volumeResult.ExitCode), muteResult.Succeeded ? LidGuardOperationResult.Success() : LidGuardOperationResult.Failure(muteResult.CreateFailureMessage("pactl set-sink-mute"), muteResult.ExitCode));
     }
 
     public LidGuardOperationResult RestoreDefaultRenderDeviceState(SystemAudioVolumeState state)
@@ -50,9 +44,7 @@ public sealed class SystemAudioVolumeController : ISystemAudioVolumeController
         var muteValue = state.IsMuted ? "1" : "0";
         var volumeResult = LinuxCommandRunner.Run(pactlPath, ["set-sink-volume", "@DEFAULT_SINK@", $"{volumePercent}%"], s_pactlTimeout);
         var muteResult = LinuxCommandRunner.Run(pactlPath, ["set-sink-mute", "@DEFAULT_SINK@", muteValue], s_pactlTimeout);
-        return CombineVolumeChangeResults(
-            volumeResult.Succeeded ? LidGuardOperationResult.Success() : LidGuardOperationResult.Failure(volumeResult.CreateFailureMessage("pactl set-sink-volume"), volumeResult.ExitCode),
-            muteResult.Succeeded ? LidGuardOperationResult.Success() : LidGuardOperationResult.Failure(muteResult.CreateFailureMessage("pactl set-sink-mute"), muteResult.ExitCode));
+        return CombineVolumeChangeResults(volumeResult.Succeeded ? LidGuardOperationResult.Success() : LidGuardOperationResult.Failure(volumeResult.CreateFailureMessage("pactl set-sink-volume"), volumeResult.ExitCode), muteResult.Succeeded ? LidGuardOperationResult.Success() : LidGuardOperationResult.Failure(muteResult.CreateFailureMessage("pactl set-sink-mute"), muteResult.ExitCode));
     }
 
     private static bool TryFindPactl(out string pactlPath, out string message)

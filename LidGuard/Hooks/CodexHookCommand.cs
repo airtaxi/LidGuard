@@ -19,8 +19,7 @@ internal static class CodexHookCommand
         var executablePath = HookCommandUtilities.GetDefaultHookExecutableReference();
         if (string.IsNullOrWhiteSpace(executablePath))
         {
-            Console.Error.WriteLine(LocalizationService.GetString(
-                "HookCommandDefaultExecutableNotResolved"));
+            Console.Error.WriteLine(LocalizationService.GetString("HookCommandDefaultExecutableNotResolved"));
             return 1;
         }
 
@@ -43,10 +42,7 @@ internal static class CodexHookCommand
             return 0;
         }
 
-        Console.Error.WriteLine(LocalizationService.GetFormattedString(
-            "HookCommandUnsupportedSnippetFormat",
-            "Codex",
-            "config-toml or hooks-json"));
+        Console.Error.WriteLine(LocalizationService.GetFormattedString("HookCommandUnsupportedSnippetFormat", "Codex", "config-toml or hooks-json"));
         return 1;
     }
 
@@ -57,11 +53,7 @@ internal static class CodexHookCommand
         public async Task<int> RunAsync()
         {
             var timing = new HookExecutionTiming();
-            var readResult = await ReadHookInputAsync(
-                timing,
-                "LidGuard Codex hook received empty input.",
-                ParseHookInput,
-                message => message);
+            var readResult = await ReadHookInputAsync(timing, "LidGuard Codex hook received empty input.", ParseHookInput, message => message);
             if (!readResult.Succeeded) return 0;
 
             var hookInput = readResult.HookInput;
@@ -76,21 +68,9 @@ internal static class CodexHookCommand
 
         protected override void AppendMessage(string message) => CodexHookEventLog.AppendMessage(message);
 
-        protected override void AppendRuntimeResult(
-            string hookEventName,
-            CodexHookInput hookInput,
-            string commandName,
-            LidGuardPipeResponse response,
-            string details)
+        protected override void AppendRuntimeResult(string hookEventName, CodexHookInput hookInput, string commandName, LidGuardPipeResponse response, string details)
         {
-            CodexHookEventLog.AppendRuntimeResult(
-                hookInput,
-                commandName,
-                response.Succeeded,
-                response.RuntimeUnavailable,
-                response.ActiveSessionCount,
-                response.Message,
-                details);
+            CodexHookEventLog.AppendRuntimeResult(hookInput, commandName, response.Succeeded, response.RuntimeUnavailable, response.ActiveSessionCount, response.Message, details);
         }
 
         protected override string CreateSessionEndReason(string hookEventName, CodexHookInput hookInput, string sessionEndReason)
@@ -112,9 +92,7 @@ internal static class CodexHookCommand
             try
             {
                 var hookInput = JsonSerializer.Deserialize(hookInputJson, LidGuardJsonSerializerContext.Default.CodexHookInput);
-                return hookInput is null
-                    ? HookCommandInputParseResult<CodexHookInput>.Failure("LidGuard Codex hook could not parse input.")
-                    : HookCommandInputParseResult<CodexHookInput>.Success(hookInput);
+                return hookInput is null ? HookCommandInputParseResult<CodexHookInput>.Failure("LidGuard Codex hook could not parse input.") : HookCommandInputParseResult<CodexHookInput>.Success(hookInput);
             }
             catch (JsonException exception)
             {
@@ -124,14 +102,7 @@ internal static class CodexHookCommand
 
         private Task<int> WriteClosedLidPermissionRequestDecisionAsync(CodexHookInput hookInput)
         {
-            return WriteClosedLidDecisionAsync(
-                CodexHookEventNames.PermissionRequest,
-                hookInput,
-                response => $"LidGuard Codex hook skipped PermissionRequest decision because runtime status is unavailable: {response.Message}",
-                response => $"LidGuard Codex hook left PermissionRequest to Codex because {ClosedLidPolicyStatus.DescribeInactiveReason(response)}.",
-                response => $"LidGuard Codex hook handled closed-lid PermissionRequest with {response.Settings.ClosedLidPermissionRequestDecision}.",
-                response => CodexClosedLidPermissionRequestDecisionOutput.Write(response.Settings),
-                true);
+            return WriteClosedLidDecisionAsync(CodexHookEventNames.PermissionRequest, hookInput, response => $"LidGuard Codex hook skipped PermissionRequest decision because runtime status is unavailable: {response.Message}", response => $"LidGuard Codex hook left PermissionRequest to Codex because {ClosedLidPolicyStatus.DescribeInactiveReason(response)}.", response => $"LidGuard Codex hook handled closed-lid PermissionRequest with {response.Settings.ClosedLidPermissionRequestDecision}.", response => CodexClosedLidPermissionRequestDecisionOutput.Write(response.Settings), true);
         }
     }
 

@@ -11,9 +11,7 @@ internal static class ManagedProviderConfigurationRoots
     public static string ClaudeUserConfigurationFilePath => GetUserProfileFilePath(ClaudeUserConfigurationFileName);
 
     public static string GitHubCopilotMcpConfigurationFilePath
-        => Path.Combine(
-            GitHubCopilotHookInstaller.GetDefaultGitHubCopilotConfigurationDirectoryPath(),
-            CopilotMcpConfigurationFileName);
+        => Path.Combine(GitHubCopilotHookInstaller.GetDefaultGitHubCopilotConfigurationDirectoryPath(), CopilotMcpConfigurationFileName);
 
     public static IReadOnlyList<string> GetMcpCandidatePaths(AgentProvider provider)
     {

@@ -18,9 +18,7 @@ public static class SystemThermalInformation
         return TryReadSystemTemperatureCelsius(RawThermalZoneClassName, emergencyHibernationTemperatureMode);
     }
 
-    private static int? TryReadSystemTemperatureCelsius(
-        string thermalZoneClassName,
-        EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
+    private static int? TryReadSystemTemperatureCelsius(string thermalZoneClassName, EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
     {
         try
         {
@@ -37,12 +35,8 @@ public static class SystemThermalInformation
                     var celsiusTemperature = TryReadThermalZoneTemperatureInCelsius(thermalZone);
                     if (!celsiusTemperature.HasValue) continue;
 
-                    lowestCelsiusTemperature = !lowestCelsiusTemperature.HasValue || celsiusTemperature.Value < lowestCelsiusTemperature.Value
-                        ? celsiusTemperature.Value
-                        : lowestCelsiusTemperature.Value;
-                    highestCelsiusTemperature = !highestCelsiusTemperature.HasValue || celsiusTemperature.Value > highestCelsiusTemperature.Value
-                        ? celsiusTemperature.Value
-                        : highestCelsiusTemperature.Value;
+                    lowestCelsiusTemperature = !lowestCelsiusTemperature.HasValue || celsiusTemperature.Value < lowestCelsiusTemperature.Value ? celsiusTemperature.Value : lowestCelsiusTemperature.Value;
+                    highestCelsiusTemperature = !highestCelsiusTemperature.HasValue || celsiusTemperature.Value > highestCelsiusTemperature.Value ? celsiusTemperature.Value : highestCelsiusTemperature.Value;
                     celsiusTemperatureSum += celsiusTemperature.Value;
                     celsiusTemperatureCount++;
                 }
@@ -50,23 +44,13 @@ public static class SystemThermalInformation
 
             if (!lowestCelsiusTemperature.HasValue || !highestCelsiusTemperature.HasValue || celsiusTemperatureCount == 0) return null;
 
-            var aggregatedCelsiusTemperature = GetAggregatedTemperatureCelsius(
-                lowestCelsiusTemperature.Value,
-                highestCelsiusTemperature.Value,
-                celsiusTemperatureSum,
-                celsiusTemperatureCount,
-                emergencyHibernationTemperatureMode);
+            var aggregatedCelsiusTemperature = GetAggregatedTemperatureCelsius(lowestCelsiusTemperature.Value, highestCelsiusTemperature.Value, celsiusTemperatureSum, celsiusTemperatureCount, emergencyHibernationTemperatureMode);
             return (int)Math.Round(aggregatedCelsiusTemperature, MidpointRounding.AwayFromZero);
         }
         catch (Exception) { return null; }
     }
 
-    private static double GetAggregatedTemperatureCelsius(
-        double lowestCelsiusTemperature,
-        double highestCelsiusTemperature,
-        double celsiusTemperatureSum,
-        int celsiusTemperatureCount,
-        EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
+    private static double GetAggregatedTemperatureCelsius(double lowestCelsiusTemperature, double highestCelsiusTemperature, double celsiusTemperatureSum, int celsiusTemperatureCount, EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
         => emergencyHibernationTemperatureMode switch
         {
             EmergencyHibernationTemperatureMode.Low => lowestCelsiusTemperature,

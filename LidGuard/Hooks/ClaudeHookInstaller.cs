@@ -32,12 +32,7 @@ public sealed class ClaudeHookInstaller : HookInstallerBase
     protected override string GetDefaultConfigurationFilePath() => GetDefaultClaudeConfigurationFilePath();
 
     protected override HookInstallationInspection InspectConfiguration(HookInstallationRequest request, string hookCommand, string content, bool configurationFileExists)
-        => ClaudeHookSettingsJsonDocument.InspectSettingsJson(
-            request.ConfigurationFilePath,
-            request.HookExecutablePath,
-            hookCommand,
-            content,
-            configurationFileExists);
+        => ClaudeHookSettingsJsonDocument.InspectSettingsJson(request.ConfigurationFilePath, request.HookExecutablePath, hookCommand, content, configurationFileExists);
 
     protected override bool TryCreateInstalledContent(string originalContent, string hookCommand, out string updatedContent, out string message)
         => ClaudeHookSettingsJsonDocument.TryInstallManagedHooks(originalContent, hookCommand, out updatedContent, out message);

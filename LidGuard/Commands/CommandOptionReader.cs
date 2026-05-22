@@ -4,11 +4,7 @@ namespace LidGuard.Commands;
 
 internal static class CommandOptionReader
 {
-    public static bool TryParseOptions(
-        string[] commandLineArguments,
-        int firstOptionIndex,
-        out Dictionary<string, string> options,
-        out string message)
+    public static bool TryParseOptions(string[] commandLineArguments, int firstOptionIndex, out Dictionary<string, string> options, out string message)
     {
         options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         message = string.Empty;
@@ -60,11 +56,7 @@ internal static class CommandOptionReader
         return false;
     }
 
-    public static bool TryGetRequiredOption(
-        IReadOnlyDictionary<string, string> options,
-        string optionName,
-        out string value,
-        out string message)
+    public static bool TryGetRequiredOption(IReadOnlyDictionary<string, string> options, string optionName, out string value, out string message)
     {
         value = GetOption(options, optionName);
         if (!string.IsNullOrWhiteSpace(value))
@@ -78,12 +70,7 @@ internal static class CommandOptionReader
         return false;
     }
 
-    public static bool TryParseBooleanOption(
-        IReadOnlyDictionary<string, string> options,
-        bool defaultValue,
-        out bool value,
-        out string message,
-        params string[] optionNames)
+    public static bool TryParseBooleanOption(IReadOnlyDictionary<string, string> options, bool defaultValue, out bool value, out string message, params string[] optionNames)
     {
         value = defaultValue;
         message = string.Empty;

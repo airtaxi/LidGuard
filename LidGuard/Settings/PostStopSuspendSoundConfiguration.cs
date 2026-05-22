@@ -20,11 +20,7 @@ internal static class PostStopSuspendSoundConfiguration
         return false;
     }
 
-    public static bool TryNormalize(
-        LidGuardSettings settings,
-        IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer,
-        out LidGuardSettings normalizedSettings,
-        out string message)
+    public static bool TryNormalize(LidGuardSettings settings, IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer, out LidGuardSettings normalizedSettings, out string message)
     {
         var normalizedInputSettings = LidGuardSettings.Normalize(settings);
         var normalizeResult = postStopSuspendSoundPlayer.NormalizeConfiguration(normalizedInputSettings.PostStopSuspendSound);

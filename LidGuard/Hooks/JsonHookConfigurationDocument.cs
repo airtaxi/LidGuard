@@ -32,17 +32,7 @@ internal static class JsonHookConfigurationDocument
         return false;
     }
 
-    public static bool TryInspectNestedCommandHookEvent(
-        JsonObject hooksObject,
-        string hookEventName,
-        string expectedHookCommand,
-        string expectedMatcher,
-        string providerDisplayName,
-        Func<string, bool> isManagedHookCommand,
-        Func<JsonObject, string, bool> hasExpectedHookCommand,
-        Func<JsonObject, bool> hasExpectedHookShell,
-        out JsonHookEventInspection inspection,
-        out string message)
+    public static bool TryInspectNestedCommandHookEvent(JsonObject hooksObject, string hookEventName, string expectedHookCommand, string expectedMatcher, string providerDisplayName, Func<string, bool> isManagedHookCommand, Func<JsonObject, string, bool> hasExpectedHookCommand, Func<JsonObject, bool> hasExpectedHookShell, out JsonHookEventInspection inspection, out string message)
     {
         inspection = default;
         message = string.Empty;
@@ -93,18 +83,7 @@ internal static class JsonHookConfigurationDocument
         return true;
     }
 
-    public static bool TryInspectFlatCommandHookEvent(
-        JsonObject hooksObject,
-        string hookEventName,
-        IEnumerable<string> supportedHookEventNames,
-        string expectedHookCommand,
-        string expectedMatcher,
-        string providerDisplayName,
-        Func<JsonObject, string> getHookCommand,
-        Func<string, string, bool> isManagedHookCommand,
-        Func<JsonObject, string, bool> hasExpectedHookCommand,
-        out JsonHookEventInspection inspection,
-        out string message)
+    public static bool TryInspectFlatCommandHookEvent(JsonObject hooksObject, string hookEventName, IEnumerable<string> supportedHookEventNames, string expectedHookCommand, string expectedMatcher, string providerDisplayName, Func<JsonObject, string> getHookCommand, Func<string, string, bool> isManagedHookCommand, Func<JsonObject, string, bool> hasExpectedHookCommand, out JsonHookEventInspection inspection, out string message)
     {
         inspection = default;
         message = string.Empty;
@@ -175,12 +154,7 @@ internal static class JsonHookConfigurationDocument
         return true;
     }
 
-    public static bool RemoveFlatManagedCommandHooks(
-        JsonObject hooksObject,
-        string hookEventName,
-        IEnumerable<string> supportedHookEventNames,
-        Func<JsonObject, string> getHookCommand,
-        Func<string, string, bool> isManagedHookCommand)
+    public static bool RemoveFlatManagedCommandHooks(JsonObject hooksObject, string hookEventName, IEnumerable<string> supportedHookEventNames, Func<JsonObject, string> getHookCommand, Func<string, string, bool> isManagedHookCommand)
     {
         var changed = false;
         foreach (var supportedHookEventName in supportedHookEventNames)
@@ -205,14 +179,7 @@ internal static class JsonHookConfigurationDocument
         return changed;
     }
 
-    public static bool TryRefreshNestedManagedHookStatusMessage(
-        JsonObject hooksObject,
-        string hookEventName,
-        string statusMessage,
-        string providerDisplayName,
-        Func<string, bool> isManagedHookCommand,
-        out bool changed,
-        out string message)
+    public static bool TryRefreshNestedManagedHookStatusMessage(JsonObject hooksObject, string hookEventName, string statusMessage, string providerDisplayName, Func<string, bool> isManagedHookCommand, out bool changed, out string message)
     {
         changed = false;
         message = string.Empty;
@@ -256,16 +223,7 @@ internal static class JsonHookConfigurationDocument
         return true;
     }
 
-    public static bool TryRefreshFlatManagedHookStatusMessage(
-        JsonObject hooksObject,
-        string hookEventName,
-        IEnumerable<string> supportedHookEventNames,
-        string statusMessage,
-        string providerDisplayName,
-        Func<JsonObject, string> getHookCommand,
-        Func<string, string, bool> isManagedHookCommand,
-        out bool changed,
-        out string message)
+    public static bool TryRefreshFlatManagedHookStatusMessage(JsonObject hooksObject, string hookEventName, IEnumerable<string> supportedHookEventNames, string statusMessage, string providerDisplayName, Func<JsonObject, string> getHookCommand, Func<string, string, bool> isManagedHookCommand, out bool changed, out string message)
     {
         changed = false;
         message = string.Empty;
@@ -316,8 +274,4 @@ internal static class JsonHookConfigurationDocument
     }
 }
 
-internal readonly record struct JsonHookEventInspection(
-    bool HasManagedHook,
-    bool HasExpectedCommand,
-    bool HasExpectedMatcher,
-    bool HasExpectedShell);
+internal readonly record struct JsonHookEventInspection(bool HasManagedHook, bool HasExpectedCommand, bool HasExpectedMatcher, bool HasExpectedShell);

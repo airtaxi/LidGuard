@@ -54,13 +54,7 @@ internal static partial class MacOSAppleSiliconHumanInterfaceDeviceTemperatureSe
 
             var keys = stackalloc IntPtr[] { primaryUsagePageKey, primaryUsageKey };
             var values = stackalloc IntPtr[] { primaryUsagePageValue, primaryUsageValue };
-            matchingDictionary = CoreFoundationDictionaryCreate(
-                IntPtr.Zero,
-                keys,
-                values,
-                2,
-                dictionaryKeyCallbacks,
-                dictionaryValueCallbacks);
+            matchingDictionary = CoreFoundationDictionaryCreate(IntPtr.Zero, keys, values, 2, dictionaryKeyCallbacks, dictionaryValueCallbacks);
             if (matchingDictionary == IntPtr.Zero) return temperatures;
 
             client = HumanInterfaceDeviceEventSystemClientCreate(IntPtr.Zero);
@@ -108,11 +102,7 @@ internal static partial class MacOSAppleSiliconHumanInterfaceDeviceTemperatureSe
             var productName = GetCoreFoundationString(productNameReference);
             if (!IsProcessorTemperatureProduct(productName)) return null;
 
-            eventReference = HumanInterfaceDeviceServiceClientCopyEvent(
-                service,
-                HumanInterfaceDeviceTemperatureEventType,
-                0,
-                0);
+            eventReference = HumanInterfaceDeviceServiceClientCopyEvent(service, HumanInterfaceDeviceTemperatureEventType, 0, 0);
             if (eventReference == IntPtr.Zero) return null;
 
             var temperatureCelsius = HumanInterfaceDeviceEventGetFloatValue(eventReference, HumanInterfaceDeviceTemperatureEventField);
@@ -153,9 +143,7 @@ internal static partial class MacOSAppleSiliconHumanInterfaceDeviceTemperatureSe
         if (nativeObject != IntPtr.Zero) CoreFoundationRelease(nativeObject);
     }
 
-    private static bool TryGetCoreFoundationDictionaryCallbacks(
-        out IntPtr dictionaryKeyCallbacks,
-        out IntPtr dictionaryValueCallbacks)
+    private static bool TryGetCoreFoundationDictionaryCallbacks(out IntPtr dictionaryKeyCallbacks, out IntPtr dictionaryValueCallbacks)
     {
         dictionaryKeyCallbacks = IntPtr.Zero;
         dictionaryValueCallbacks = IntPtr.Zero;
@@ -192,13 +180,7 @@ internal static partial class MacOSAppleSiliconHumanInterfaceDeviceTemperatureSe
     private static partial IntPtr CoreFoundationArrayGetValueAtIndex(IntPtr array, nint index);
 
     [LibraryImport(CoreFoundationLibraryPath, EntryPoint = "CFDictionaryCreate")]
-    private static unsafe partial IntPtr CoreFoundationDictionaryCreate(
-        IntPtr allocator,
-        IntPtr* keys,
-        IntPtr* values,
-        nint valueCount,
-        IntPtr keyCallbacks,
-        IntPtr valueCallbacks);
+    private static unsafe partial IntPtr CoreFoundationDictionaryCreate(IntPtr allocator, IntPtr* keys, IntPtr* values, nint valueCount, IntPtr keyCallbacks, IntPtr valueCallbacks);
 
     [LibraryImport(CoreFoundationLibraryPath, EntryPoint = "CFNumberCreate")]
     private static partial IntPtr CoreFoundationNumberCreate(IntPtr allocator, int numberType, ref int value);
@@ -225,11 +207,7 @@ internal static partial class MacOSAppleSiliconHumanInterfaceDeviceTemperatureSe
     private static partial int HumanInterfaceDeviceEventSystemClientSetMatching(IntPtr client, IntPtr matching);
 
     [LibraryImport(InputOutputKitLibraryPath, EntryPoint = "IOHIDServiceClientCopyEvent")]
-    private static partial IntPtr HumanInterfaceDeviceServiceClientCopyEvent(
-        IntPtr service,
-        long eventType,
-        int options,
-        long timeout);
+    private static partial IntPtr HumanInterfaceDeviceServiceClientCopyEvent(IntPtr service, long eventType, int options, long timeout);
 
     [LibraryImport(InputOutputKitLibraryPath, EntryPoint = "IOHIDServiceClientCopyProperty")]
     private static partial IntPtr HumanInterfaceDeviceServiceClientCopyProperty(IntPtr service, IntPtr key);

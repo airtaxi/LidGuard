@@ -14,11 +14,7 @@ internal static class HookManagementCommand
             return 1;
         }
 
-        ManagedProviderSelection.ResolveAvailableProviders(
-            selectedProviders,
-            ManagedProviderConfigurationRoots.GetHookCandidatePaths,
-            out var providers,
-            out var skippedProviderMessages);
+        ManagedProviderSelection.ResolveAvailableProviders(selectedProviders, ManagedProviderConfigurationRoots.GetHookCandidatePaths, out var providers, out var skippedProviderMessages);
 
         ManagedProviderSelection.WriteSkippedProviderMessages(skippedProviderMessages);
         if (providers.Count == 0) return ManagedProviderSelection.WriteNoAvailableProvidersFound();
@@ -44,11 +40,7 @@ internal static class HookManagementCommand
             return 1;
         }
 
-        ManagedProviderSelection.ResolveAvailableProviders(
-            selectedProviders,
-            ManagedProviderConfigurationRoots.GetHookCandidatePaths,
-            out var providers,
-            out var skippedProviderMessages);
+        ManagedProviderSelection.ResolveAvailableProviders(selectedProviders, ManagedProviderConfigurationRoots.GetHookCandidatePaths, out var providers, out var skippedProviderMessages);
 
         ManagedProviderSelection.WriteSkippedProviderMessages(skippedProviderMessages);
         if (providers.Count == 0) return ManagedProviderSelection.WriteNoAvailableProvidersFound();
@@ -73,11 +65,7 @@ internal static class HookManagementCommand
             return 1;
         }
 
-        ManagedProviderSelection.ResolveAvailableProviders(
-            selectedProviders,
-            ManagedProviderConfigurationRoots.GetHookCandidatePaths,
-            out var providers,
-            out var skippedProviderMessages);
+        ManagedProviderSelection.ResolveAvailableProviders(selectedProviders, ManagedProviderConfigurationRoots.GetHookCandidatePaths, out var providers, out var skippedProviderMessages);
 
         ManagedProviderSelection.WriteSkippedProviderMessages(skippedProviderMessages);
         if (providers.Count == 0) return ManagedProviderSelection.WriteNoAvailableProvidersFound();
@@ -108,11 +96,7 @@ internal static class HookManagementCommand
             return 1;
         }
 
-        ManagedProviderSelection.ResolveAvailableProviders(
-            selectedProviders,
-            ManagedProviderConfigurationRoots.GetHookCandidatePaths,
-            out var providers,
-            out var skippedProviderMessages);
+        ManagedProviderSelection.ResolveAvailableProviders(selectedProviders, ManagedProviderConfigurationRoots.GetHookCandidatePaths, out var providers, out var skippedProviderMessages);
 
         ManagedProviderSelection.WriteSkippedProviderMessages(skippedProviderMessages);
         if (providers.Count == 0) return ManagedProviderSelection.WriteNoAvailableProvidersFound();
@@ -207,11 +191,7 @@ internal static class HookManagementCommand
         return installer is not null;
     }
 
-    private static bool TryCreateHookRequest(
-        IReadOnlyDictionary<string, string> options,
-        IHookInstaller installer,
-        out HookInstallationRequest request,
-        out string message)
+    private static bool TryCreateHookRequest(IReadOnlyDictionary<string, string> options, IHookInstaller installer, out HookInstallationRequest request, out string message)
     {
         request = null;
         message = string.Empty;
@@ -221,12 +201,7 @@ internal static class HookManagementCommand
         return true;
     }
 
-    private static bool TrySelectHookProviders(
-        IReadOnlyDictionary<string, string> options,
-        string prompt,
-        bool rejectSharedConfigurationFile,
-        out IReadOnlyList<AgentProvider> providers,
-        out string message)
+    private static bool TrySelectHookProviders(IReadOnlyDictionary<string, string> options, string prompt, bool rejectSharedConfigurationFile, out IReadOnlyList<AgentProvider> providers, out string message)
     {
         providers = [];
         message = string.Empty;
@@ -361,9 +336,7 @@ internal static class HookManagementCommand
         ManagementFieldWriter.WriteField("ManagementLabelExpectedCommands", inspection.HasCheck(HookInstallationCheck.ExpectedHookCommands));
         ManagementFieldWriter.WriteField("ManagementLabelExpectedNotificationMatcher", inspection.HasCheck(HookInstallationCheck.ExpectedNotificationMatcher));
         ManagementFieldWriter.WriteField("ManagementLabelConflictingAgentStopHooks", inspection.HasCheck(HookInstallationCheck.ConflictingAgentStopHooks));
-        ManagementFieldWriter.WriteField(
-            "ManagementLabelConflictSources",
-            inspection.ConflictingAgentStopHookSources.Count == 0 ? LocalizationService.GetString("TextDisplayNone") : string.Join(" | ", inspection.ConflictingAgentStopHookSources));
+        ManagementFieldWriter.WriteField("ManagementLabelConflictSources", inspection.ConflictingAgentStopHookSources.Count == 0 ? LocalizationService.GetString("TextDisplayNone") : string.Join(" | ", inspection.ConflictingAgentStopHookSources));
         ManagementFieldWriter.WriteField("ManagementLabelMessage", DisplayHookManagementMessage(inspection.Provider, inspection.Message));
     }
 

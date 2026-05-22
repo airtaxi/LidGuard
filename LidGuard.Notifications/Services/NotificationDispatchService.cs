@@ -5,14 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace LidGuard.Notifications.Services;
 
-internal sealed class NotificationDispatchService(
-    WebhookEventProcessingSignal processingSignal,
-    WebhookEventStore webhookEventStore,
-    PushSubscriptionStore subscriptionStore,
-    NotificationDeliveryStore deliveryStore,
-    IWebPushNotificationSender pushNotificationSender,
-    IOptions<LidGuardNotificationsOptions> options,
-    ILogger<NotificationDispatchService> logger) : BackgroundService
+internal sealed class NotificationDispatchService(WebhookEventProcessingSignal processingSignal, WebhookEventStore webhookEventStore, PushSubscriptionStore subscriptionStore, NotificationDeliveryStore deliveryStore, IWebPushNotificationSender pushNotificationSender, IOptions<LidGuardNotificationsOptions> options, ILogger<NotificationDispatchService> logger) : BackgroundService
 {
     private const int WebhookEventBatchSize = 20;
 
@@ -70,20 +63,10 @@ internal sealed class NotificationDispatchService(
         }
     }
 
-    private async Task RecordDeliveryAsync(
-        PendingWebhookEvent webhookEvent,
-        ActivePushSubscription subscription,
-        PushNotificationSendResult deliveryResult,
-        CancellationToken cancellationToken)
+    private async Task RecordDeliveryAsync(PendingWebhookEvent webhookEvent, ActivePushSubscription subscription, PushNotificationSendResult deliveryResult, CancellationToken cancellationToken)
     {
         var deliveryStatus = GetDeliveryStatus(deliveryResult.Status);
-        await deliveryStore.InsertAsync(
-            webhookEvent.WebhookEventIdentifier,
-            subscription.SubscriptionIdentifier,
-            deliveryStatus,
-            deliveryResult.HttpStatusCode,
-            deliveryResult.ErrorMessage,
-            cancellationToken);
+        await deliveryStore.InsertAsync(webhookEvent.WebhookEventIdentifier, subscription.SubscriptionIdentifier, deliveryStatus, deliveryResult.HttpStatusCode, deliveryResult.ErrorMessage, cancellationToken);
 
         if (deliveryResult.Status == PushNotificationSendStatus.Succeeded)
         {

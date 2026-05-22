@@ -47,11 +47,7 @@ public sealed partial class SystemAudioVolumeController : ISystemAudioVolumeCont
         var muteResult = GetMute(endpointVolumeHandle.Pointer, out var isMuted);
         if (!muteResult.Succeeded) return LidGuardOperationResult<SystemAudioVolumeState>.Failure(muteResult.Message, muteResult.NativeErrorCode);
 
-        return LidGuardOperationResult<SystemAudioVolumeState>.Success(new SystemAudioVolumeState
-        {
-            MasterVolumeScalar = masterVolumeScalar,
-            IsMuted = isMuted
-        });
+        return LidGuardOperationResult<SystemAudioVolumeState>.Success(new SystemAudioVolumeState { MasterVolumeScalar = masterVolumeScalar, IsMuted = isMuted });
     }
 
     private static unsafe LidGuardOperationResult ApplyDefaultRenderDeviceVolumeOverrideCore(int volumeOverridePercent)
@@ -118,12 +114,7 @@ public sealed partial class SystemAudioVolumeController : ISystemAudioVolumeCont
     private static unsafe LidGuardOperationResult<ComInterfaceHandle<IMMDeviceEnumerator>> CreateMmDeviceEnumerator()
     {
         var enumeratorPointer = (void*)null;
-        var result = PInvoke.CoCreateInstance(
-            s_mmDeviceEnumeratorClassIdentifier,
-            null,
-            CLSCTX.CLSCTX_INPROC_SERVER,
-            IMMDeviceEnumerator.IID_Guid,
-            out enumeratorPointer);
+        var result = PInvoke.CoCreateInstance(s_mmDeviceEnumeratorClassIdentifier, null, CLSCTX.CLSCTX_INPROC_SERVER, IMMDeviceEnumerator.IID_Guid, out enumeratorPointer);
         if (Failed(result)) return LidGuardOperationResult<ComInterfaceHandle<IMMDeviceEnumerator>>.Failure("Failed to create the Windows audio device enumerator.", (int)result);
 
         return LidGuardOperationResult<ComInterfaceHandle<IMMDeviceEnumerator>>.Success(new ComInterfaceHandle<IMMDeviceEnumerator>((IMMDeviceEnumerator*)enumeratorPointer));

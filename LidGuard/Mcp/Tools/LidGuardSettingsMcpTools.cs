@@ -65,89 +65,28 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         OpenWorld = false,
         UseStructuredContent = true),
      Description("Update one or more LidGuard settings in a single call, save them to the LidGuard settings file, and try to sync a running runtime without starting one.")]
-    public async Task<LidGuardSettingsUpdateToolResponse> UpdateSettings(
-        [Description("Reset all settings to LidGuard defaults before applying any other provided values.")]
-        bool resetToDefaults = false,
-        [Description("Set whether LidGuard prevents normal system sleep while sessions are active. Omit to keep the current value.")]
-        bool? preventSystemSleep = null,
 #if !LIDGUARD_LINUX && !LIDGUARD_MACOS
-        [Description("Set whether LidGuard requests away mode while sessions are active. Omit to keep the current value.")]
-        bool? preventAwayModeSleep = null,
+    public async Task<LidGuardSettingsUpdateToolResponse> UpdateSettings([Description("Reset all settings to LidGuard defaults before applying any other provided values.")] bool resetToDefaults = false, [Description("Set whether LidGuard prevents normal system sleep while sessions are active. Omit to keep the current value.")] bool? preventSystemSleep = null, [Description("Set whether LidGuard requests away mode while sessions are active. Omit to keep the current value.")] bool? preventAwayModeSleep = null, [Description("Set whether LidGuard prevents display sleep while sessions are active. Omit to keep the current value.")] bool? preventDisplaySleep = null, [Description("Set whether LidGuard temporarily changes the active power plan lid action to Do Nothing. Omit to keep the current value.")] bool? changeLidAction = null, [Description("Set whether LidGuard watches the resolved parent process and cleans up when that process exits. Omit to keep the current value.")] bool? watchParentProcess = null, [Description("Set the inactive session timeout in minutes. Pass off or an empty string to disable it, pass an integer of at least 1 to enable it, or omit to keep the current value.")] string sessionTimeoutMinutes = null, [Description("Set how long LidGuard stays running after all sessions end and cleanup is finished. Pass off or an empty string to keep the runtime alive, pass 0 to exit immediately, pass a positive integer to wait that many minutes, or omit to keep the current value.")] string serverRuntimeCleanupDelayMinutes = null, [Description("Set whether LidGuard should request Emergency Hibernation when the guarded system temperature reaches the configured high-temperature threshold while the lid is closed. Omit to keep the current value.")] bool? emergencyHibernationOnHighTemperature = null, [Description("Set whether Emergency Hibernation uses the lowest, average, or highest available temperature sensor value. Allowed values: Low, Average, or High. Omit to keep the current value.")] EmergencyHibernationTemperatureMode? emergencyHibernationTemperatureMode = null, [Description("Set the Emergency Hibernation temperature threshold in Celsius. Stored and runtime values are clamped to 70 through 110. Omit to keep the current value.")] int? emergencyHibernationTemperatureCelsius = null, [Description("Set whether LidGuard requests sleep or hibernate after the last session stops while the lid is closed. Omit to keep the current value.")] SystemSuspendMode? suspendMode = null, [Description("Set the safety delay before sleep/hibernate or ask-before-sleep reply waiting can begin after the last session stops, so immediately-following prompts can arrive first. Use 0 for immediate sleep or hibernate when reply waiting is off. Omit to keep the current value.")] int? postStopSuspendDelaySeconds = null, [Description("Set the sleep or hibernate warning sound. Use off or an empty string to disable it. Supported system sound names are Asterisk, Beep, Exclamation, Hand, and Question. You can also pass a path to a playable .wav file. Omit to keep the current value.")] string postStopSuspendSound = null, [Description("Set the optional temporary output volume percent used while the sleep or hibernate warning sound plays. Pass off or an empty string to disable it, pass 1 through 100 to enable it, or omit to keep the current value.")] string postStopSuspendSoundVolumeOverridePercent = null, [Description("Set how many recent suspend history entries LidGuard retains. Pass off or an empty string to disable recording, pass an integer of at least 1 to enable it, or omit to keep the current value.")] string suspendHistoryEntryCount = null, [Description("Set the webhook URL LidGuard POSTs before requesting sleep or hibernate. Pass an empty string to disable it. Omit to keep the current value.")] string preSuspendWebhookUrl = null, [Description("Set the webhook URL LidGuard POSTs after a session completes normally when LidGuard is not about to sleep or hibernate. Pass an empty string to disable it. Omit to keep the current value.")] string postSessionEndWebhookUrl = null, [Description("Set the webhook URL for the closed-lid ask-me-before-sleeping notification. Pass an empty string to disable it. Omit to keep the current value.")] string closedLidStopFollowUpWebhookUrl = null, [Description("Set how many seconds LidGuard waits for a reply after sending the closed-lid ask-me-before-sleeping notification. Use 0 to disable reply waiting, or 20 or more when it is enabled. Defaults to 180. Omit to keep the current value.")] int? closedLidStopFollowUpDelaySeconds = null, [Description("Set whether LidGuard asks again after a reply keeps a closed-lid session working and the provider later tries to finish again. Omit to keep the current value.")] bool? repeatClosedLidStopFollowUp = null, [Description("Set the PermissionRequest behavior while the lid is closed. Deny and Allow return structured hook decisions; Ask soft-locks the session and returns empty stdout so the provider asks normally. Omit to keep the current value.")] ClosedLidPermissionRequestDecision? closedLidPermissionRequestDecision = null, [Description("Set the reason text Windows shows for LidGuard's sleep prevention. Pass an empty string to restore LidGuard's default reason text. Omit to keep the current value.")] string powerRequestReason = null, CancellationToken cancellationToken = default)
+#else
+    public async Task<LidGuardSettingsUpdateToolResponse> UpdateSettings([Description("Reset all settings to LidGuard defaults before applying any other provided values.")] bool resetToDefaults = false, [Description("Set whether LidGuard prevents normal system sleep while sessions are active. Omit to keep the current value.")] bool? preventSystemSleep = null, [Description("Set whether LidGuard prevents display sleep while sessions are active. Omit to keep the current value.")] bool? preventDisplaySleep = null, [Description("Set whether LidGuard temporarily changes the active power plan lid action to Do Nothing. Omit to keep the current value.")] bool? changeLidAction = null, [Description("Set whether LidGuard watches the resolved parent process and cleans up when that process exits. Omit to keep the current value.")] bool? watchParentProcess = null, [Description("Set the inactive session timeout in minutes. Pass off or an empty string to disable it, pass an integer of at least 1 to enable it, or omit to keep the current value.")] string sessionTimeoutMinutes = null, [Description("Set how long LidGuard stays running after all sessions end and cleanup is finished. Pass off or an empty string to keep the runtime alive, pass 0 to exit immediately, pass a positive integer to wait that many minutes, or omit to keep the current value.")] string serverRuntimeCleanupDelayMinutes = null, [Description("Set whether LidGuard should request Emergency Hibernation when the guarded system temperature reaches the configured high-temperature threshold while the lid is closed. Omit to keep the current value.")] bool? emergencyHibernationOnHighTemperature = null, [Description("Set whether Emergency Hibernation uses the lowest, average, or highest available temperature sensor value. Allowed values: Low, Average, or High. Omit to keep the current value.")] EmergencyHibernationTemperatureMode? emergencyHibernationTemperatureMode = null, [Description("Set the Emergency Hibernation temperature threshold in Celsius. Stored and runtime values are clamped to 70 through 110. Omit to keep the current value.")] int? emergencyHibernationTemperatureCelsius = null, [Description("Set whether LidGuard requests sleep or hibernate after the last session stops while the lid is closed. Omit to keep the current value.")] SystemSuspendMode? suspendMode = null, [Description("Set the safety delay before sleep/hibernate or ask-before-sleep reply waiting can begin after the last session stops, so immediately-following prompts can arrive first. Use 0 for immediate sleep or hibernate when reply waiting is off. Omit to keep the current value.")] int? postStopSuspendDelaySeconds = null, [Description("Set the sleep or hibernate warning sound. Use off or an empty string to disable it. Supported system sound names are Asterisk, Beep, Exclamation, Hand, and Question. You can also pass a path to a playable .wav file. Omit to keep the current value.")] string postStopSuspendSound = null, [Description("Set the optional temporary output volume percent used while the sleep or hibernate warning sound plays. Pass off or an empty string to disable it, pass 1 through 100 to enable it, or omit to keep the current value.")] string postStopSuspendSoundVolumeOverridePercent = null, [Description("Set how many recent suspend history entries LidGuard retains. Pass off or an empty string to disable recording, pass an integer of at least 1 to enable it, or omit to keep the current value.")] string suspendHistoryEntryCount = null, [Description("Set the webhook URL LidGuard POSTs before requesting sleep or hibernate. Pass an empty string to disable it. Omit to keep the current value.")] string preSuspendWebhookUrl = null, [Description("Set the webhook URL LidGuard POSTs after a session completes normally when LidGuard is not about to sleep or hibernate. Pass an empty string to disable it. Omit to keep the current value.")] string postSessionEndWebhookUrl = null, [Description("Set the webhook URL for the closed-lid ask-me-before-sleeping notification. Pass an empty string to disable it. Omit to keep the current value.")] string closedLidStopFollowUpWebhookUrl = null, [Description("Set how many seconds LidGuard waits for a reply after sending the closed-lid ask-me-before-sleeping notification. Use 0 to disable reply waiting, or 20 or more when it is enabled. Defaults to 180. Omit to keep the current value.")] int? closedLidStopFollowUpDelaySeconds = null, [Description("Set whether LidGuard asks again after a reply keeps a closed-lid session working and the provider later tries to finish again. Omit to keep the current value.")] bool? repeatClosedLidStopFollowUp = null, [Description("Set the PermissionRequest behavior while the lid is closed. Deny and Allow return structured hook decisions; Ask soft-locks the session and returns empty stdout so the provider asks normally. Omit to keep the current value.")] ClosedLidPermissionRequestDecision? closedLidPermissionRequestDecision = null, [Description("Set the reason text Windows shows for LidGuard's sleep prevention. Pass an empty string to restore LidGuard's default reason text. Omit to keep the current value.")] string powerRequestReason = null, CancellationToken cancellationToken = default)
 #endif
-        [Description("Set whether LidGuard prevents display sleep while sessions are active. Omit to keep the current value.")]
-        bool? preventDisplaySleep = null,
-        [Description("Set whether LidGuard temporarily changes the active power plan lid action to Do Nothing. Omit to keep the current value.")]
-        bool? changeLidAction = null,
-        [Description("Set whether LidGuard watches the resolved parent process and cleans up when that process exits. Omit to keep the current value.")]
-        bool? watchParentProcess = null,
-        [Description("Set the inactive session timeout in minutes. Pass off or an empty string to disable it, pass an integer of at least 1 to enable it, or omit to keep the current value.")]
-        string sessionTimeoutMinutes = null,
-        [Description("Set how long LidGuard stays running after all sessions end and cleanup is finished. Pass off or an empty string to keep the runtime alive, pass 0 to exit immediately, pass a positive integer to wait that many minutes, or omit to keep the current value.")]
-        string serverRuntimeCleanupDelayMinutes = null,
-        [Description("Set whether LidGuard should request Emergency Hibernation when the guarded system temperature reaches the configured high-temperature threshold while the lid is closed. Omit to keep the current value.")]
-        bool? emergencyHibernationOnHighTemperature = null,
-        [Description("Set whether Emergency Hibernation uses the lowest, average, or highest available temperature sensor value. Allowed values: Low, Average, or High. Omit to keep the current value.")]
-        EmergencyHibernationTemperatureMode? emergencyHibernationTemperatureMode = null,
-        [Description("Set the Emergency Hibernation temperature threshold in Celsius. Stored and runtime values are clamped to 70 through 110. Omit to keep the current value.")]
-        int? emergencyHibernationTemperatureCelsius = null,
-        [Description("Set whether LidGuard requests sleep or hibernate after the last session stops while the lid is closed. Omit to keep the current value.")]
-        SystemSuspendMode? suspendMode = null,
-        [Description("Set the safety delay before sleep/hibernate or ask-before-sleep reply waiting can begin after the last session stops, so immediately-following prompts can arrive first. Use 0 for immediate sleep or hibernate when reply waiting is off. Omit to keep the current value.")]
-        int? postStopSuspendDelaySeconds = null,
-        [Description("Set the sleep or hibernate warning sound. Use off or an empty string to disable it. Supported system sound names are Asterisk, Beep, Exclamation, Hand, and Question. You can also pass a path to a playable .wav file. Omit to keep the current value.")]
-        string postStopSuspendSound = null,
-        [Description("Set the optional temporary output volume percent used while the sleep or hibernate warning sound plays. Pass off or an empty string to disable it, pass 1 through 100 to enable it, or omit to keep the current value.")]
-        string postStopSuspendSoundVolumeOverridePercent = null,
-        [Description("Set how many recent suspend history entries LidGuard retains. Pass off or an empty string to disable recording, pass an integer of at least 1 to enable it, or omit to keep the current value.")]
-        string suspendHistoryEntryCount = null,
-        [Description("Set the webhook URL LidGuard POSTs before requesting sleep or hibernate. Pass an empty string to disable it. Omit to keep the current value.")]
-        string preSuspendWebhookUrl = null,
-        [Description("Set the webhook URL LidGuard POSTs after a session completes normally when LidGuard is not about to sleep or hibernate. Pass an empty string to disable it. Omit to keep the current value.")]
-        string postSessionEndWebhookUrl = null,
-        [Description("Set the webhook URL for the closed-lid ask-me-before-sleeping notification. Pass an empty string to disable it. Omit to keep the current value.")]
-        string closedLidStopFollowUpWebhookUrl = null,
-        [Description("Set how many seconds LidGuard waits for a reply after sending the closed-lid ask-me-before-sleeping notification. Use 0 to disable reply waiting, or 20 or more when it is enabled. Defaults to 180. Omit to keep the current value.")]
-        int? closedLidStopFollowUpDelaySeconds = null,
-        [Description("Set whether LidGuard asks again after a reply keeps a closed-lid session working and the provider later tries to finish again. Omit to keep the current value.")]
-        bool? repeatClosedLidStopFollowUp = null,
-        [Description("Set the PermissionRequest behavior while the lid is closed. Deny and Allow return structured hook decisions; Ask soft-locks the session and returns empty stdout so the provider asks normally. Omit to keep the current value.")]
-        ClosedLidPermissionRequestDecision? closedLidPermissionRequestDecision = null,
-        [Description("Set the reason text Windows shows for LidGuard's sleep prevention. Pass an empty string to restore LidGuard's default reason text. Omit to keep the current value.")]
-        string powerRequestReason = null,
-        CancellationToken cancellationToken = default)
     {
-        if (!TryParsePostStopSuspendSoundVolumeOverridePercent(
-            postStopSuspendSoundVolumeOverridePercent,
-            out var hasPostStopSuspendSoundVolumeOverridePercent,
-            out var parsedPostStopSuspendSoundVolumeOverridePercent,
-            out var volumeOverrideMessage))
+        if (!TryParsePostStopSuspendSoundVolumeOverridePercent(postStopSuspendSoundVolumeOverridePercent, out var hasPostStopSuspendSoundVolumeOverridePercent, out var parsedPostStopSuspendSoundVolumeOverridePercent, out var volumeOverrideMessage))
         {
             throw new McpException(volumeOverrideMessage);
         }
 
-        if (!TryParseSuspendHistoryEntryCount(
-            suspendHistoryEntryCount,
-            out var hasSuspendHistoryEntryCount,
-            out var parsedSuspendHistoryEntryCount,
-            out var suspendHistoryMessage))
+        if (!TryParseSuspendHistoryEntryCount(suspendHistoryEntryCount, out var hasSuspendHistoryEntryCount, out var parsedSuspendHistoryEntryCount, out var suspendHistoryMessage))
         {
             throw new McpException(suspendHistoryMessage);
         }
 
-        if (!TryParseSessionTimeoutMinutes(
-            sessionTimeoutMinutes,
-            out var hasSessionTimeoutMinutes,
-            out var parsedSessionTimeoutMinutes,
-            out var sessionTimeoutMessage))
+        if (!TryParseSessionTimeoutMinutes(sessionTimeoutMinutes, out var hasSessionTimeoutMinutes, out var parsedSessionTimeoutMinutes, out var sessionTimeoutMessage))
         {
             throw new McpException(sessionTimeoutMessage);
         }
 
-        if (!TryParseServerRuntimeCleanupDelayMinutes(
-            serverRuntimeCleanupDelayMinutes,
-            out var hasServerRuntimeCleanupDelayMinutes,
-            out var parsedServerRuntimeCleanupDelayMinutes,
-            out var serverRuntimeCleanupMessage))
+        if (!TryParseServerRuntimeCleanupDelayMinutes(serverRuntimeCleanupDelayMinutes, out var hasServerRuntimeCleanupDelayMinutes, out var parsedServerRuntimeCleanupDelayMinutes, out var serverRuntimeCleanupMessage))
         {
             throw new McpException(serverRuntimeCleanupMessage);
         }
@@ -200,11 +139,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         };
     }
 
-    private static bool TryParsePostStopSuspendSoundVolumeOverridePercent(
-        string configuredValue,
-        out bool hasPostStopSuspendSoundVolumeOverridePercent,
-        out int? postStopSuspendSoundVolumeOverridePercent,
-        out string message)
+    private static bool TryParsePostStopSuspendSoundVolumeOverridePercent(string configuredValue, out bool hasPostStopSuspendSoundVolumeOverridePercent, out int? postStopSuspendSoundVolumeOverridePercent, out string message)
     {
         hasPostStopSuspendSoundVolumeOverridePercent = false;
         postStopSuspendSoundVolumeOverridePercent = null;
@@ -225,11 +160,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         return false;
     }
 
-    private static bool TryParseSuspendHistoryEntryCount(
-        string configuredValue,
-        out bool hasSuspendHistoryEntryCount,
-        out int? suspendHistoryEntryCount,
-        out string message)
+    private static bool TryParseSuspendHistoryEntryCount(string configuredValue, out bool hasSuspendHistoryEntryCount, out int? suspendHistoryEntryCount, out string message)
     {
         hasSuspendHistoryEntryCount = false;
         suspendHistoryEntryCount = null;
@@ -249,11 +180,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         return false;
     }
 
-    private static bool TryParseSessionTimeoutMinutes(
-        string configuredValue,
-        out bool hasSessionTimeoutMinutes,
-        out int? sessionTimeoutMinutes,
-        out string message)
+    private static bool TryParseSessionTimeoutMinutes(string configuredValue, out bool hasSessionTimeoutMinutes, out int? sessionTimeoutMinutes, out string message)
     {
         hasSessionTimeoutMinutes = false;
         sessionTimeoutMinutes = null;
@@ -273,11 +200,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         return false;
     }
 
-    private static bool TryParseServerRuntimeCleanupDelayMinutes(
-        string configuredValue,
-        out bool hasServerRuntimeCleanupDelayMinutes,
-        out int? serverRuntimeCleanupDelayMinutes,
-        out string message)
+    private static bool TryParseServerRuntimeCleanupDelayMinutes(string configuredValue, out bool hasServerRuntimeCleanupDelayMinutes, out int? serverRuntimeCleanupDelayMinutes, out string message)
     {
         hasServerRuntimeCleanupDelayMinutes = false;
         serverRuntimeCleanupDelayMinutes = null;
@@ -304,14 +227,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         OpenWorld = false,
         UseStructuredContent = true),
      Description("Remove one or more active LidGuard sessions by session identifier. When provider is omitted, LidGuard removes every active session whose session identifier matches. When provider is mcp, you can also pass providerName to remove only one MCP-backed provider's session.")]
-    public async Task<LidGuardSessionRemovalToolResponse> RemoveSession(
-        [Description("The session identifier to remove.")]
-        string sessionIdentifier,
-        [Description("Optional provider filter. Omit to remove matching sessions across all providers.")]
-        AgentProvider? provider = null,
-        [Description("Optional provider name filter used only when provider is mcp. Omit it to remove every MCP-backed session that shares the same session identifier.")]
-        string providerName = null,
-        CancellationToken cancellationToken = default)
+    public async Task<LidGuardSessionRemovalToolResponse> RemoveSession([Description("The session identifier to remove.")] string sessionIdentifier, [Description("Optional provider filter. Omit to remove matching sessions across all providers.")] AgentProvider? provider = null, [Description("Optional provider name filter used only when provider is mcp. Omit it to remove every MCP-backed session that shares the same session identifier.")] string providerName = null, CancellationToken cancellationToken = default)
     {
         var result = await controlService.RemoveSessionAsync(sessionIdentifier, provider, providerName, cancellationToken);
         if (!result.Succeeded) throw new McpException(result.Message);
@@ -336,16 +252,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         OpenWorld = false,
         UseStructuredContent = true),
      Description("Mark an existing LidGuard session as soft-locked. A soft-locked session stays tracked, but it stops keeping the machine awake. Use this before you finish a turn because you need the user's next input. This tool does not end the turn for you; after calling it, end or hand back the conversation yourself.")]
-    public async Task<LidGuardSessionCommandToolResponse> SetSessionSoftLock(
-        [Description("The provider whose active LidGuard session should become soft-locked.")]
-        AgentProvider provider,
-        [Description("The session identifier to soft-lock.")]
-        string sessionIdentifier,
-        [Description("The reason why the session is becoming soft-locked, such as waiting_for_user_input.")]
-        string reason,
-        [Description("Required when provider is mcp so LidGuard can distinguish which MCP-backed provider owns the session.")]
-        string providerName = null,
-        CancellationToken cancellationToken = default)
+    public async Task<LidGuardSessionCommandToolResponse> SetSessionSoftLock([Description("The provider whose active LidGuard session should become soft-locked.")] AgentProvider provider, [Description("The session identifier to soft-lock.")] string sessionIdentifier, [Description("The reason why the session is becoming soft-locked, such as waiting_for_user_input.")] string reason, [Description("Required when provider is mcp so LidGuard can distinguish which MCP-backed provider owns the session.")] string providerName = null, CancellationToken cancellationToken = default)
     {
         var result = await controlService.SetSessionSoftLockAsync(sessionIdentifier, provider, providerName, reason, cancellationToken);
         if (!result.Succeeded) throw new McpException(result.Message);
@@ -360,16 +267,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
         OpenWorld = false,
         UseStructuredContent = true),
      Description("Clear a previous soft lock when autonomous work resumes on an existing LidGuard session. Call this before continuing work on the same session after the user replies or the waiting condition is resolved.")]
-    public async Task<LidGuardSessionCommandToolResponse> ClearSessionSoftLock(
-        [Description("The provider whose active LidGuard session should become active again.")]
-        AgentProvider provider,
-        [Description("The session identifier whose soft lock should be cleared.")]
-        string sessionIdentifier,
-        [Description("Optional reason describing why the session is active again, such as resumed_after_user_reply.")]
-        string reason = null,
-        [Description("Required when provider is mcp so LidGuard can distinguish which MCP-backed provider owns the session.")]
-        string providerName = null,
-        CancellationToken cancellationToken = default)
+    public async Task<LidGuardSessionCommandToolResponse> ClearSessionSoftLock([Description("The provider whose active LidGuard session should become active again.")] AgentProvider provider, [Description("The session identifier whose soft lock should be cleared.")] string sessionIdentifier, [Description("Optional reason describing why the session is active again, such as resumed_after_user_reply.")] string reason = null, [Description("Required when provider is mcp so LidGuard can distinguish which MCP-backed provider owns the session.")] string providerName = null, CancellationToken cancellationToken = default)
     {
         var result = await controlService.ClearSessionSoftLockAsync(sessionIdentifier, provider, providerName, reason, cancellationToken);
         if (!result.Succeeded) throw new McpException(result.Message);
@@ -401,9 +299,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
 
     private static string CreateUpdateSummary(LidGuardSettingsUpdateOutcome outcome)
     {
-        var changeSummary = outcome.HadEffectiveChanges
-            ? $"Applied {outcome.AppliedChanges.Length} setting change(s): {string.Join(", ", outcome.AppliedChanges)}."
-            : "No setting values changed.";
+        var changeSummary = outcome.HadEffectiveChanges ? $"Applied {outcome.AppliedChanges.Length} setting change(s): {string.Join(", ", outcome.AppliedChanges)}." : "No setting values changed.";
 
         if (outcome.Snapshot.RuntimeReachable) return $"{changeSummary} Running runtime synchronized.";
         if (outcome.Snapshot.RuntimeUnavailable) return $"{changeSummary} Runtime is not running, so the saved settings will apply on the next session start.";
@@ -412,13 +308,9 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
 
     private static string CreateSessionRemovalSummary(LidGuardSessionRemovalOutcome outcome)
     {
-        var requestScope = outcome.HasProviderFilter
-            ? $"{AgentProviderDisplay.CreateProviderDisplayText(outcome.RequestedProvider, outcome.RequestedProviderName)}:{outcome.RequestedSessionIdentifier}"
-            : $"session id {outcome.RequestedSessionIdentifier}";
+        var requestScope = outcome.HasProviderFilter ? $"{AgentProviderDisplay.CreateProviderDisplayText(outcome.RequestedProvider, outcome.RequestedProviderName)}:{outcome.RequestedSessionIdentifier}" : $"session id {outcome.RequestedSessionIdentifier}";
         var removedSessionCount = outcome.RemovedSessions.Length;
-        var removalSummary = removedSessionCount == 0
-            ? $"No active sessions matched {requestScope}."
-            : $"Removed {removedSessionCount} active session(s) matching {requestScope}.";
+        var removalSummary = removedSessionCount == 0 ? $"No active sessions matched {requestScope}." : $"Removed {removedSessionCount} active session(s) matching {requestScope}.";
 
         if (outcome.Snapshot.RuntimeReachable) return $"{removalSummary} Runtime now has {outcome.Snapshot.ActiveSessionCount} active session(s).";
         if (outcome.Snapshot.RuntimeUnavailable) return $"{removalSummary} Runtime is not running.";

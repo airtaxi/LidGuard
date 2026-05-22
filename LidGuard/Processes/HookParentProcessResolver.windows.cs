@@ -55,12 +55,7 @@ internal static partial class HookParentProcessResolver
 
             var processBasicInformation = default(PROCESS_BASIC_INFORMATION);
             var returnLength = 0u;
-            var status = WdkPInvoke.NtQueryInformationProcess(
-                (HANDLE)processHandle.DangerousGetHandle(),
-                WdkProcessInformationClass.ProcessBasicInformation,
-                &processBasicInformation,
-                (uint)sizeof(PROCESS_BASIC_INFORMATION),
-                ref returnLength);
+            var status = WdkPInvoke.NtQueryInformationProcess((HANDLE)processHandle.DangerousGetHandle(), WdkProcessInformationClass.ProcessBasicInformation, &processBasicInformation, (uint)sizeof(PROCESS_BASIC_INFORMATION), ref returnLength);
             if ((int)status != 0) return false;
 
             var parentProcessIdentifierValue = (nuint)processBasicInformation.InheritedFromUniqueProcessId;
@@ -76,12 +71,7 @@ internal static partial class HookParentProcessResolver
 
             var processBasicInformation = default(PROCESS_BASIC_INFORMATION);
             var returnLength = 0u;
-            var status = WdkPInvoke.NtQueryInformationProcess(
-                (HANDLE)processHandle.DangerousGetHandle(),
-                WdkProcessInformationClass.ProcessBasicInformation,
-                &processBasicInformation,
-                (uint)sizeof(PROCESS_BASIC_INFORMATION),
-                ref returnLength);
+            var status = WdkPInvoke.NtQueryInformationProcess((HANDLE)processHandle.DangerousGetHandle(), WdkProcessInformationClass.ProcessBasicInformation, &processBasicInformation, (uint)sizeof(PROCESS_BASIC_INFORMATION), ref returnLength);
             if ((int)status != 0) return false;
 
             var processEnvironmentBlockAddress = (IntPtr)processBasicInformation.PebBaseAddress;

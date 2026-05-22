@@ -8,15 +8,9 @@ using WebPush;
 
 namespace LidGuard.Notifications.Services;
 
-internal sealed class ClosureOpenSourceWebPushNotificationSender(
-    WebPushClient webPushClient,
-    IOptions<LidGuardNotificationsOptions> options,
-    ILogger<ClosureOpenSourceWebPushNotificationSender> logger) : IWebPushNotificationSender
+internal sealed class ClosureOpenSourceWebPushNotificationSender(WebPushClient webPushClient, IOptions<LidGuardNotificationsOptions> options, ILogger<ClosureOpenSourceWebPushNotificationSender> logger) : IWebPushNotificationSender
 {
-    public async Task<PushNotificationSendResult> SendAsync(
-        ActivePushSubscription subscription,
-        PushNotificationMessage message,
-        CancellationToken cancellationToken)
+    public async Task<PushNotificationSendResult> SendAsync(ActivePushSubscription subscription, PushNotificationMessage message, CancellationToken cancellationToken)
     {
         var pushSubscription = new PushSubscription(subscription.Endpoint, subscription.P256dh, subscription.Auth);
         var webPushOptions = new WebPushOptions

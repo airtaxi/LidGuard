@@ -8,9 +8,7 @@ namespace LidGuard.Commands;
 
 internal static class LidGuardPreSuspendWebhookRemovalCommand
 {
-    public static async Task<int> SendRemovePreSuspendWebhookAsync(
-        IReadOnlyDictionary<string, string> options,
-        ILidGuardRuntimePlatform runtimePlatform)
+    public static async Task<int> SendRemovePreSuspendWebhookAsync(IReadOnlyDictionary<string, string> options, ILidGuardRuntimePlatform runtimePlatform)
     {
         if (options.Count > 0)
         {
@@ -39,8 +37,7 @@ internal static class LidGuardPreSuspendWebhookRemovalCommand
         }
 
         var controlService = new LidGuardControlService(postStopSuspendSoundPlayerResult.Value);
-        var updateResult = await controlService.UpdateSettingsAsync(
-            new LidGuardSettingsPatch { PreSuspendWebhookUrl = string.Empty });
+        var updateResult = await controlService.UpdateSettingsAsync(new LidGuardSettingsPatch { PreSuspendWebhookUrl = string.Empty });
         if (!updateResult.Succeeded)
         {
             Console.Error.WriteLine(updateResult.Message);
@@ -65,10 +62,7 @@ internal static class LidGuardPreSuspendWebhookRemovalCommand
             return 0;
         }
 
-        Console.Error.WriteLine(LidGuardRuntimeResponseLocalizer.Localize(
-            outcome.Snapshot.RuntimeMessageCode,
-            outcome.Snapshot.RuntimeMessageArguments,
-            outcome.Snapshot.RuntimeMessage));
+        Console.Error.WriteLine(LidGuardRuntimeResponseLocalizer.Localize(outcome.Snapshot.RuntimeMessageCode, outcome.Snapshot.RuntimeMessageArguments, outcome.Snapshot.RuntimeMessage));
         return 1;
     }
 }

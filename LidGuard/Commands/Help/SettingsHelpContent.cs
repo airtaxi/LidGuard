@@ -11,17 +11,7 @@ internal static class SettingsHelpContent
         var supportedPostStopSuspendSystemSounds = context.SupportedPostStopSuspendSystemSounds;
         var synopsis = CreateSynopsis(commandDisplayName);
         var options = CreateOptions(supportedPostStopSuspendSystemSounds);
-        return LidGuardHelpCommandEntryFactory.CreateSingleCommandEntry(
-            LidGuardPipeCommands.Settings,
-            [],
-            LidGuardHelpSectionTitles.SettingsAndSuspend,
-            synopsis,
-            LocalizationService.GetString("Help_Settings_Description"),
-            options,
-            [
-                LocalizationService.GetString("Help_Settings_InteractiveModeNote"),
-                LocalizationService.GetString("Help_Settings_RemoveWebhookNote")
-            ]);
+        return LidGuardHelpCommandEntryFactory.CreateSingleCommandEntry(LidGuardPipeCommands.Settings, [], LidGuardHelpSectionTitles.SettingsAndSuspend, synopsis, LocalizationService.GetString("Help_Settings_Description"), options, [LocalizationService.GetString("Help_Settings_InteractiveModeNote"), LocalizationService.GetString("Help_Settings_RemoveWebhookNote")]);
     }
 
     private static string CreateSynopsis(string commandDisplayName)
@@ -45,37 +35,7 @@ internal static class SettingsHelpContent
 #if !LIDGUARD_LINUX && !LIDGUARD_MACOS
         options.Add(new LidGuardHelpOption("--prevent-away-mode-sleep <bool>", LocalizationService.GetString("Help_Settings_PreventAwayModeSleepOption")));
 #endif
-        options.AddRange([
-            new LidGuardHelpOption("--prevent-display-sleep <bool>", LocalizationService.GetString("Help_Settings_PreventDisplaySleepOption")),
-            new LidGuardHelpOption("--watch-parent-process <bool>", LocalizationService.GetString("Help_Settings_WatchParentProcessOption")),
-            new LidGuardHelpOption("--session-timeout-minutes off|<minutes>", LocalizationService.GetString("Help_Settings_SessionTimeoutOption")),
-            new LidGuardHelpOption("--server-runtime-cleanup-delay-minutes off|0|<minutes>", LocalizationService.GetString("Help_Settings_ServerRuntimeCleanupDelayOption")),
-            new LidGuardHelpOption("--emergency-hibernation-on-high-temperature <bool>", LocalizationService.GetString("Help_Settings_EmergencyHibernationOption")),
-            new LidGuardHelpOption("--emergency-hibernation-temperature-mode low|average|high", LocalizationService.GetString("Help_Settings_EmergencyHibernationTemperatureModeOption")),
-            new LidGuardHelpOption("--emergency-hibernation-temperature-celsius <number>", LocalizationService.GetString("Help_Settings_EmergencyHibernationTemperatureCelsiusOption")),
-            new LidGuardHelpOption("--suspend-mode sleep|hibernate", LocalizationService.GetString("Help_Settings_SuspendModeOption")),
-            new LidGuardHelpOption("--post-stop-suspend-delay-seconds <number>", LocalizationService.GetString("Help_Settings_PostStopSuspendDelayOption")),
-            new LidGuardHelpOption("--post-stop-suspend-sound off|<system-sound>|<wav-path>", LocalizationService.GetFormattedString("HelpSettingsPostStopSuspendSoundOption", supportedPostStopSuspendSystemSounds)),
-            new LidGuardHelpOption("--post-stop-suspend-sound-volume-override-percent off|<1-100>", LocalizationService.GetString("Help_Settings_PostStopSuspendSoundVolumeOption")),
-            new LidGuardHelpOption("--suspend-history-count off|<count>", LocalizationService.GetString("Help_Settings_SuspendHistoryOption")),
-            new LidGuardHelpOption("--pre-suspend-webhook-url <http-or-https-url>", LocalizationService.GetString("Help_Settings_PreSuspendWebhookOption")),
-            new LidGuardHelpOption("--post-session-end-webhook-url <http-or-https-url>", LocalizationService.GetString("Help_Settings_PostSessionEndWebhookOption")),
-            new LidGuardHelpOption(
-                "--closed-lid-stop-follow-up-webhook-url <http-or-https-url>",
-                LocalizationService.GetString(
-                    "Help_Settings_ClosedLidStopFollowUpWebhookOption")),
-            new LidGuardHelpOption(
-                "--closed-lid-stop-follow-up-delay-seconds <number>",
-                LocalizationService.GetString(
-                    "Help_Settings_ClosedLidStopFollowUpDelayOption")),
-            new LidGuardHelpOption(
-                "--repeat-closed-lid-stop-follow-up <bool>",
-                LocalizationService.GetString(
-                    "Help_Settings_RepeatClosedLidStopFollowUpOption")),
-            new LidGuardHelpOption("--closed-lid-permission-request-decision deny|allow|ask", LocalizationService.GetString("Help_Settings_ClosedLidPermissionRequestDecisionOption")),
-            new LidGuardHelpOption("--ui-culture auto|en|ko|ja|zh-Hans|zh-Hant|<culture-name>", LocalizationService.GetString("Help_Settings_UserInterfaceCultureOption")),
-            new LidGuardHelpOption("--power-request-reason <text>", LocalizationService.GetString("Help_Settings_PowerRequestReasonOption"))
-        ]);
+        options.AddRange([new LidGuardHelpOption("--prevent-display-sleep <bool>", LocalizationService.GetString("Help_Settings_PreventDisplaySleepOption")), new LidGuardHelpOption("--watch-parent-process <bool>", LocalizationService.GetString("Help_Settings_WatchParentProcessOption")), new LidGuardHelpOption("--session-timeout-minutes off|<minutes>", LocalizationService.GetString("Help_Settings_SessionTimeoutOption")), new LidGuardHelpOption("--server-runtime-cleanup-delay-minutes off|0|<minutes>", LocalizationService.GetString("Help_Settings_ServerRuntimeCleanupDelayOption")), new LidGuardHelpOption("--emergency-hibernation-on-high-temperature <bool>", LocalizationService.GetString("Help_Settings_EmergencyHibernationOption")), new LidGuardHelpOption("--emergency-hibernation-temperature-mode low|average|high", LocalizationService.GetString("Help_Settings_EmergencyHibernationTemperatureModeOption")), new LidGuardHelpOption("--emergency-hibernation-temperature-celsius <number>", LocalizationService.GetString("Help_Settings_EmergencyHibernationTemperatureCelsiusOption")), new LidGuardHelpOption("--suspend-mode sleep|hibernate", LocalizationService.GetString("Help_Settings_SuspendModeOption")), new LidGuardHelpOption("--post-stop-suspend-delay-seconds <number>", LocalizationService.GetString("Help_Settings_PostStopSuspendDelayOption")), new LidGuardHelpOption("--post-stop-suspend-sound off|<system-sound>|<wav-path>", LocalizationService.GetFormattedString("HelpSettingsPostStopSuspendSoundOption", supportedPostStopSuspendSystemSounds)), new LidGuardHelpOption("--post-stop-suspend-sound-volume-override-percent off|<1-100>", LocalizationService.GetString("Help_Settings_PostStopSuspendSoundVolumeOption")), new LidGuardHelpOption("--suspend-history-count off|<count>", LocalizationService.GetString("Help_Settings_SuspendHistoryOption")), new LidGuardHelpOption("--pre-suspend-webhook-url <http-or-https-url>", LocalizationService.GetString("Help_Settings_PreSuspendWebhookOption")), new LidGuardHelpOption("--post-session-end-webhook-url <http-or-https-url>", LocalizationService.GetString("Help_Settings_PostSessionEndWebhookOption")), new LidGuardHelpOption("--closed-lid-stop-follow-up-webhook-url <http-or-https-url>", LocalizationService.GetString("Help_Settings_ClosedLidStopFollowUpWebhookOption")), new LidGuardHelpOption("--closed-lid-stop-follow-up-delay-seconds <number>", LocalizationService.GetString("Help_Settings_ClosedLidStopFollowUpDelayOption")), new LidGuardHelpOption("--repeat-closed-lid-stop-follow-up <bool>", LocalizationService.GetString("Help_Settings_RepeatClosedLidStopFollowUpOption")), new LidGuardHelpOption("--closed-lid-permission-request-decision deny|allow|ask", LocalizationService.GetString("Help_Settings_ClosedLidPermissionRequestDecisionOption")), new LidGuardHelpOption("--ui-culture auto|en|ko|ja|zh-Hans|zh-Hant|<culture-name>", LocalizationService.GetString("Help_Settings_UserInterfaceCultureOption")), new LidGuardHelpOption("--power-request-reason <text>", LocalizationService.GetString("Help_Settings_PowerRequestReasonOption"))]);
 
         return options;
     }

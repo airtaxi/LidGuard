@@ -61,10 +61,7 @@ internal static class LidGuardExceptionLog
     {
         var observedBefore = eventArguments.Observed;
         eventArguments.SetObserved();
-        AppendException(
-            "unobserved-task-exception",
-            eventArguments.Exception,
-            $"observedBefore={observedBefore}{Environment.NewLine}observed=true");
+        AppendException("unobserved-task-exception", eventArguments.Exception, $"observedBefore={observedBefore}{Environment.NewLine}observed=true");
     }
 
     private static void AppendException(string eventName, Exception exception, string details)
@@ -114,12 +111,7 @@ internal static class LidGuardExceptionLog
         return stringBuilder;
     }
 
-    private static void AppendExceptionDetails(
-        StringBuilder stringBuilder,
-        Exception exception,
-        string label,
-        int depth,
-        HashSet<Exception> visitedExceptions)
+    private static void AppendExceptionDetails(StringBuilder stringBuilder, Exception exception, string label, int depth, HashSet<Exception> visitedExceptions)
     {
         var indent = new string(' ', depth * 2);
         if (!visitedExceptions.Add(exception))
@@ -146,12 +138,7 @@ internal static class LidGuardExceptionLog
         {
             var innerException = aggregateException.InnerExceptions[innerExceptionIndex];
             if (ReferenceEquals(innerException, exception.InnerException)) continue;
-            AppendExceptionDetails(
-                stringBuilder,
-                innerException,
-                $"{label}.innerExceptions[{innerExceptionIndex}]",
-                depth + 1,
-                visitedExceptions);
+            AppendExceptionDetails(stringBuilder, innerException, $"{label}.innerExceptions[{innerExceptionIndex}]", depth + 1, visitedExceptions);
         }
     }
 

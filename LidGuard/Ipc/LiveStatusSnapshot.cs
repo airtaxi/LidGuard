@@ -18,10 +18,7 @@ internal sealed class LiveStatusSnapshot
 
     public static LiveStatusSnapshot RuntimeUnavailable(string message = "LidGuard runtime is not running.") => new()
     {
-        Response = LidGuardPipeResponse.Failure(
-            message,
-            runtimeUnavailable: true,
-            messageCode: LidGuardPipeResponseMessageCodes.RuntimeNotRunning)
+        Response = LidGuardPipeResponse.Failure(message, runtimeUnavailable: true, messageCode: LidGuardPipeResponseMessageCodes.RuntimeNotRunning)
     };
 
     public static LiveStatusSnapshot Failure(string message) => new()

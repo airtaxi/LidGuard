@@ -4,32 +4,13 @@ using LidGuard.Sessions;
 
 namespace LidGuard.Commands;
 
-internal readonly record struct ManagedMcpInspectionResult(
-    AgentProvider Provider,
-    string ConfigurationFilePath,
-    bool ConfigurationFileExists,
-    bool HasProviderCli,
-    string ProviderCliDisplayText,
-    bool HasNamedServerEntry,
-    bool MatchesCurrentLidGuardExecutable,
-    bool ContainsExpectedServerCommand,
-    string ServerType,
-    string ServerCommand,
-    string ServerArguments,
-    string ServerUrl,
-    string Message)
+internal readonly record struct ManagedMcpInspectionResult(AgentProvider Provider, string ConfigurationFilePath, bool ConfigurationFileExists, bool HasProviderCli, string ProviderCliDisplayText, bool HasNamedServerEntry, bool MatchesCurrentLidGuardExecutable, bool ContainsExpectedServerCommand, string ServerType, string ServerCommand, string ServerArguments, string ServerUrl, string Message)
 {
     public bool IsManagedMcpServerInstalled => HasNamedServerEntry && MatchesCurrentLidGuardExecutable && ContainsExpectedServerCommand;
 
     public bool ShouldRefreshManagedMcpServer => HasNamedServerEntry && ContainsExpectedServerCommand;
 
-    public static string GetStatusMessage(
-        string configurationFilePath,
-        bool configurationFileExists,
-        bool hasServerEntry,
-        bool matchesCurrentLidGuardExecutable,
-        bool containsExpectedServerCommand,
-        string parseMessage)
+    public static string GetStatusMessage(string configurationFilePath, bool configurationFileExists, bool hasServerEntry, bool matchesCurrentLidGuardExecutable, bool containsExpectedServerCommand, string parseMessage)
     {
         if (!configurationFileExists) return LocalizationService.GetFormattedString("ManagementConfigurationFileDoesNotExist", configurationFilePath);
         if (!string.IsNullOrWhiteSpace(parseMessage)) return parseMessage;

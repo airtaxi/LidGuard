@@ -35,11 +35,7 @@ internal static class ClaudeHookWorkTracker
 
         if (string.IsNullOrWhiteSpace(hookInput.AgentIdentifier)) return;
 
-        var subagentWorkItem = new ClaudeHookSubagentWorkItem(
-            hookInput.AgentIdentifier.Trim(),
-            hookInput.AgentType.Trim(),
-            hookInput.AgentTranscriptPath.Trim(),
-            DateTimeOffset.UtcNow);
+        var subagentWorkItem = new ClaudeHookSubagentWorkItem(hookInput.AgentIdentifier.Trim(), hookInput.AgentType.Trim(), hookInput.AgentTranscriptPath.Trim(), DateTimeOffset.UtcNow);
         UpdateSessionState(sessionIdentifier, sessionWorkState => sessionWorkState.UpsertSubagent(subagentWorkItem));
     }
 
@@ -57,12 +53,7 @@ internal static class ClaudeHookWorkTracker
 
         if (string.IsNullOrWhiteSpace(hookInput.TaskIdentifier)) return;
 
-        var backgroundWorkItem = new ClaudeHookBackgroundWorkItem(
-            string.Empty,
-            hookInput.TaskIdentifier.Trim(),
-            ClaudeHookEventNames.TaskCreated,
-            CreateTaskSummary(hookInput),
-            DateTimeOffset.UtcNow);
+        var backgroundWorkItem = new ClaudeHookBackgroundWorkItem(string.Empty, hookInput.TaskIdentifier.Trim(), ClaudeHookEventNames.TaskCreated, CreateTaskSummary(hookInput), DateTimeOffset.UtcNow);
         UpdateSessionState(sessionIdentifier, sessionWorkState => sessionWorkState.UpsertBackgroundTask(backgroundWorkItem));
     }
 
@@ -81,11 +72,7 @@ internal static class ClaudeHookWorkTracker
         if (!TryParseTaskNotification(hookInput.Prompt, out var taskNotification)) return false;
         if (!taskNotification.IsTerminal) return true;
 
-        UpdateSessionState(
-            sessionIdentifier,
-            sessionWorkState => sessionWorkState.RemoveBackgroundTask(
-                taskNotification.TaskIdentifier,
-                taskNotification.ToolUseIdentifier));
+        UpdateSessionState(sessionIdentifier, sessionWorkState => sessionWorkState.RemoveBackgroundTask(taskNotification.TaskIdentifier, taskNotification.ToolUseIdentifier));
         return true;
     }
 
@@ -97,9 +84,7 @@ internal static class ClaudeHookWorkTracker
         SynchronizeBackgroundTasksFromTranscript(hookInput.TranscriptPath, sessionIdentifier);
 
         var sessionWorkState = ReadSessionState(sessionIdentifier);
-        var pendingWorkSnapshot = new ClaudeHookPendingWorkSnapshot(
-            [.. sessionWorkState.ActiveSubagents],
-            [.. sessionWorkState.ActiveBackgroundTasks]);
+        var pendingWorkSnapshot = new ClaudeHookPendingWorkSnapshot([..sessionWorkState.ActiveSubagents], [..sessionWorkState.ActiveBackgroundTasks]);
         if (!pendingWorkSnapshot.HasPendingWork) return false;
 
         reason = pendingWorkSnapshot.CreatePendingWorkReason(hookInput.StopHookActive);
@@ -107,19 +92,9 @@ internal static class ClaudeHookWorkTracker
         return true;
     }
 
-    public static void RecordDeferredStop(
-        string sessionIdentifier,
-        bool isProviderSessionEnd,
-        string sessionEndReason,
-        string pendingProviderWorkReason)
+    public static void RecordDeferredStop(string sessionIdentifier, bool isProviderSessionEnd, string sessionEndReason, string pendingProviderWorkReason)
     {
-        UpdateSessionState(
-            sessionIdentifier,
-            sessionWorkState => sessionWorkState.DeferredStop = new ClaudeHookDeferredStop(
-                isProviderSessionEnd,
-                sessionEndReason,
-                pendingProviderWorkReason,
-                DateTimeOffset.UtcNow));
+        UpdateSessionState(sessionIdentifier, sessionWorkState => sessionWorkState.DeferredStop = new ClaudeHookDeferredStop(isProviderSessionEnd, sessionEndReason, pendingProviderWorkReason, DateTimeOffset.UtcNow));
     }
 
     public static void ClearSessionState(string sessionIdentifier)
@@ -160,12 +135,7 @@ internal static class ClaudeHookWorkTracker
         var taskIdentifier = ExtractTaskIdentifier(hookInput.ToolResponse);
         if (string.IsNullOrWhiteSpace(toolUseIdentifier) && string.IsNullOrWhiteSpace(taskIdentifier)) return false;
 
-        backgroundWorkItem = new ClaudeHookBackgroundWorkItem(
-            toolUseIdentifier,
-            taskIdentifier,
-            hookInput.ToolName.Trim(),
-            CreateBackgroundWorkSummary(hookInput.ToolName, hookInput.ToolInput, taskIdentifier, toolUseIdentifier),
-            DateTimeOffset.UtcNow);
+        backgroundWorkItem = new ClaudeHookBackgroundWorkItem(toolUseIdentifier, taskIdentifier, hookInput.ToolName.Trim(), CreateBackgroundWorkSummary(hookInput.ToolName, hookInput.ToolInput, taskIdentifier, toolUseIdentifier), DateTimeOffset.UtcNow);
         return true;
     }
 
@@ -231,11 +201,7 @@ internal static class ClaudeHookWorkTracker
             var sessionWorkState = new ClaudeHookSessionWorkState();
             if (rootObject["deferredStop"] is JsonObject deferredStopObject)
             {
-                sessionWorkState.DeferredStop = new ClaudeHookDeferredStop(
-                    GetBooleanProperty(deferredStopObject, "isProviderSessionEnd"),
-                    GetStringProperty(deferredStopObject, "sessionEndReason"),
-                    GetStringProperty(deferredStopObject, "pendingProviderWorkReason"),
-                    GetDateTimeOffsetProperty(deferredStopObject, "deferredAt"));
+                sessionWorkState.DeferredStop = new ClaudeHookDeferredStop(GetBooleanProperty(deferredStopObject, "isProviderSessionEnd"), GetStringProperty(deferredStopObject, "sessionEndReason"), GetStringProperty(deferredStopObject, "pendingProviderWorkReason"), GetDateTimeOffsetProperty(deferredStopObject, "deferredAt"));
             }
 
             if (rootObject[ActiveSubagentsPropertyName] is JsonArray activeSubagents)
@@ -247,11 +213,7 @@ internal static class ClaudeHookWorkTracker
                     var agentIdentifier = GetStringProperty(activeSubagentObject, "agentIdentifier");
                     if (string.IsNullOrWhiteSpace(agentIdentifier)) continue;
 
-                    sessionWorkState.UpsertSubagent(new ClaudeHookSubagentWorkItem(
-                        agentIdentifier,
-                        GetStringProperty(activeSubagentObject, "agentType"),
-                        GetStringProperty(activeSubagentObject, "agentTranscriptPath"),
-                        GetDateTimeOffsetProperty(activeSubagentObject, "startedAt")));
+                    sessionWorkState.UpsertSubagent(new ClaudeHookSubagentWorkItem(agentIdentifier, GetStringProperty(activeSubagentObject, "agentType"), GetStringProperty(activeSubagentObject, "agentTranscriptPath"), GetDateTimeOffsetProperty(activeSubagentObject, "startedAt")));
                 }
             }
 
@@ -265,12 +227,7 @@ internal static class ClaudeHookWorkTracker
                     var taskIdentifier = GetStringProperty(activeBackgroundTaskObject, "taskIdentifier");
                     if (string.IsNullOrWhiteSpace(toolUseIdentifier) && string.IsNullOrWhiteSpace(taskIdentifier)) continue;
 
-                    sessionWorkState.UpsertBackgroundTask(new ClaudeHookBackgroundWorkItem(
-                        toolUseIdentifier,
-                        taskIdentifier,
-                        GetStringProperty(activeBackgroundTaskObject, "toolName"),
-                        GetStringProperty(activeBackgroundTaskObject, "summary"),
-                        GetDateTimeOffsetProperty(activeBackgroundTaskObject, "startedAt")));
+                    sessionWorkState.UpsertBackgroundTask(new ClaudeHookBackgroundWorkItem(toolUseIdentifier, taskIdentifier, GetStringProperty(activeBackgroundTaskObject, "toolName"), GetStringProperty(activeBackgroundTaskObject, "summary"), GetDateTimeOffsetProperty(activeBackgroundTaskObject, "startedAt")));
                 }
             }
 
@@ -279,10 +236,7 @@ internal static class ClaudeHookWorkTracker
         catch (JsonException) { return new ClaudeHookSessionWorkState(); }
     }
 
-    private static void WriteSessionStateWithoutLock(
-        string stateFilePath,
-        string sessionIdentifier,
-        ClaudeHookSessionWorkState sessionWorkState)
+    private static void WriteSessionStateWithoutLock(string stateFilePath, string sessionIdentifier, ClaudeHookSessionWorkState sessionWorkState)
     {
         if (!sessionWorkState.ShouldPersist)
         {
@@ -316,13 +270,14 @@ internal static class ClaudeHookWorkTracker
         var subagentsArray = new JsonArray();
         foreach (var subagentWorkItem in subagentWorkItems)
         {
-            subagentsArray.Add((JsonNode)new JsonObject
+            var subagentObject = new JsonObject
             {
                 ["agentIdentifier"] = subagentWorkItem.AgentIdentifier,
                 ["agentType"] = subagentWorkItem.AgentType,
                 ["agentTranscriptPath"] = subagentWorkItem.AgentTranscriptPath,
                 ["startedAt"] = subagentWorkItem.StartedAt.ToString("O", CultureInfo.InvariantCulture)
-            });
+            };
+            subagentsArray.Add((JsonNode)subagentObject);
         }
 
         return subagentsArray;
@@ -333,14 +288,15 @@ internal static class ClaudeHookWorkTracker
         var backgroundTasksArray = new JsonArray();
         foreach (var backgroundWorkItem in backgroundWorkItems)
         {
-            backgroundTasksArray.Add((JsonNode)new JsonObject
+            var backgroundTaskObject = new JsonObject
             {
                 ["toolUseIdentifier"] = backgroundWorkItem.ToolUseIdentifier,
                 ["taskIdentifier"] = backgroundWorkItem.TaskIdentifier,
                 ["toolName"] = backgroundWorkItem.ToolName,
                 ["summary"] = backgroundWorkItem.Summary,
                 ["startedAt"] = backgroundWorkItem.StartedAt.ToString("O", CultureInfo.InvariantCulture)
-            });
+            };
+            backgroundTasksArray.Add((JsonNode)backgroundTaskObject);
         }
 
         return backgroundTasksArray;
@@ -359,11 +315,7 @@ internal static class ClaudeHookWorkTracker
         return TryGetBooleanProperty(toolInput, "run_in_background", out var runInBackground) && runInBackground;
     }
 
-    private static string CreateBackgroundWorkSummary(
-        string toolName,
-        JsonElement toolInput,
-        string taskIdentifier,
-        string toolUseIdentifier)
+    private static string CreateBackgroundWorkSummary(string toolName, JsonElement toolInput, string taskIdentifier, string toolUseIdentifier)
     {
         var detail = string.Empty;
         var hasBackgroundWorkDetail = TryGetStringProperty(toolInput, "description", out detail)
@@ -405,10 +357,7 @@ internal static class ClaudeHookWorkTracker
         if (taskNotificationEndIndex < 0) return false;
 
         var taskNotificationContent = content[(taskNotificationStartTagEndIndex + 1)..taskNotificationEndIndex];
-        taskNotification = new ClaudeHookTaskNotification(
-            ExtractTagText(taskNotificationContent, "task-id"),
-            ExtractTagText(taskNotificationContent, "tool-use-id"),
-            ExtractTagText(taskNotificationContent, "status"));
+        taskNotification = new ClaudeHookTaskNotification(ExtractTagText(taskNotificationContent, "task-id"), ExtractTagText(taskNotificationContent, "tool-use-id"), ExtractTagText(taskNotificationContent, "status"));
         return true;
     }
 
@@ -475,9 +424,7 @@ internal static class ClaudeHookWorkTracker
     private static DateTimeOffset GetDateTimeOffsetProperty(JsonObject jsonObject, string propertyName)
     {
         var value = GetStringProperty(jsonObject, propertyName);
-        return DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dateTimeOffset)
-            ? dateTimeOffset
-            : DateTimeOffset.MinValue;
+        return DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dateTimeOffset) ? dateTimeOffset : DateTimeOffset.MinValue;
     }
 
     private static bool GetBooleanProperty(JsonObject jsonObject, string propertyName)
@@ -549,11 +496,7 @@ internal static class ClaudeHookWorkTracker
 
         public void RemoveBackgroundTask(string taskIdentifier, string toolUseIdentifier)
         {
-            ActiveBackgroundTasks.RemoveAll(backgroundWorkItem =>
-                !string.IsNullOrWhiteSpace(taskIdentifier)
-                    && backgroundWorkItem.TaskIdentifier.Equals(taskIdentifier.Trim(), StringComparison.Ordinal)
-                || !string.IsNullOrWhiteSpace(toolUseIdentifier)
-                    && backgroundWorkItem.ToolUseIdentifier.Equals(toolUseIdentifier.Trim(), StringComparison.Ordinal));
+            ActiveBackgroundTasks.RemoveAll(backgroundWorkItem => !string.IsNullOrWhiteSpace(taskIdentifier) && backgroundWorkItem.TaskIdentifier.Equals(taskIdentifier.Trim(), StringComparison.Ordinal) || !string.IsNullOrWhiteSpace(toolUseIdentifier) && backgroundWorkItem.ToolUseIdentifier.Equals(toolUseIdentifier.Trim(), StringComparison.Ordinal));
         }
 
         public void ApplyTranscriptWorkSnapshot(ClaudeHookTranscriptWorkSnapshot transcriptWorkSnapshot)
@@ -567,9 +510,7 @@ internal static class ClaudeHookWorkTracker
             }
         }
 
-        private static bool WorkItemsReferToSameTask(
-            ClaudeHookBackgroundWorkItem firstBackgroundWorkItem,
-            ClaudeHookBackgroundWorkItem secondBackgroundWorkItem)
+        private static bool WorkItemsReferToSameTask(ClaudeHookBackgroundWorkItem firstBackgroundWorkItem, ClaudeHookBackgroundWorkItem secondBackgroundWorkItem)
         {
             var hasMatchingToolUseIdentifier = !string.IsNullOrWhiteSpace(firstBackgroundWorkItem.ToolUseIdentifier)
                 && firstBackgroundWorkItem.ToolUseIdentifier.Equals(secondBackgroundWorkItem.ToolUseIdentifier, StringComparison.Ordinal);
@@ -609,9 +550,7 @@ internal static class ClaudeHookWorkTracker
             || !string.IsNullOrWhiteSpace(backgroundWorkItem.ToolUseIdentifier)
                 && CompletedToolUseIdentifiers.Contains(backgroundWorkItem.ToolUseIdentifier);
 
-        private static bool WorkItemsReferToSameTask(
-            ClaudeHookBackgroundWorkItem firstBackgroundWorkItem,
-            ClaudeHookBackgroundWorkItem secondBackgroundWorkItem)
+        private static bool WorkItemsReferToSameTask(ClaudeHookBackgroundWorkItem firstBackgroundWorkItem, ClaudeHookBackgroundWorkItem secondBackgroundWorkItem)
         {
             var hasMatchingToolUseIdentifier = !string.IsNullOrWhiteSpace(firstBackgroundWorkItem.ToolUseIdentifier)
                 && firstBackgroundWorkItem.ToolUseIdentifier.Equals(secondBackgroundWorkItem.ToolUseIdentifier, StringComparison.Ordinal);
@@ -701,12 +640,7 @@ internal static class ClaudeHookWorkTracker
             var taskIdentifier = GetTaskIdentifierFromToolUseElement(element);
             if (string.IsNullOrWhiteSpace(toolUseIdentifier) && string.IsNullOrWhiteSpace(taskIdentifier)) return;
 
-            transcriptWorkSnapshot.AddStartedBackgroundTask(new ClaudeHookBackgroundWorkItem(
-                toolUseIdentifier,
-                taskIdentifier,
-                toolName,
-                CreateBackgroundWorkSummary(toolName, toolInput, taskIdentifier, toolUseIdentifier),
-                DateTimeOffset.UtcNow));
+            transcriptWorkSnapshot.AddStartedBackgroundTask(new ClaudeHookBackgroundWorkItem(toolUseIdentifier, taskIdentifier, toolName, CreateBackgroundWorkSummary(toolName, toolInput, taskIdentifier, toolUseIdentifier), DateTimeOffset.UtcNow));
         }
 
         private static bool TryGetToolNameAndInput(JsonElement element, out string toolName, out JsonElement toolInput)
@@ -781,36 +715,18 @@ internal static class ClaudeHookWorkTracker
         }
     }
 
-    private readonly record struct ClaudeHookSubagentWorkItem(
-        string AgentIdentifier,
-        string AgentType,
-        string AgentTranscriptPath,
-        DateTimeOffset StartedAt);
+    private readonly record struct ClaudeHookSubagentWorkItem(string AgentIdentifier, string AgentType, string AgentTranscriptPath, DateTimeOffset StartedAt);
 
-    private readonly record struct ClaudeHookBackgroundWorkItem(
-        string ToolUseIdentifier,
-        string TaskIdentifier,
-        string ToolName,
-        string Summary,
-        DateTimeOffset StartedAt);
+    private readonly record struct ClaudeHookBackgroundWorkItem(string ToolUseIdentifier, string TaskIdentifier, string ToolName, string Summary, DateTimeOffset StartedAt);
 
-    private readonly record struct ClaudeHookTaskNotification(
-        string TaskIdentifier,
-        string ToolUseIdentifier,
-        string Status)
+    private readonly record struct ClaudeHookTaskNotification(string TaskIdentifier, string ToolUseIdentifier, string Status)
     {
         public bool IsTerminal => IsTerminalTaskStatus(Status);
     }
 
-    private sealed record ClaudeHookDeferredStop(
-        bool IsProviderSessionEnd,
-        string SessionEndReason,
-        string PendingProviderWorkReason,
-        DateTimeOffset DeferredAt);
+    private sealed record ClaudeHookDeferredStop(bool IsProviderSessionEnd, string SessionEndReason, string PendingProviderWorkReason, DateTimeOffset DeferredAt);
 
-    private readonly record struct ClaudeHookPendingWorkSnapshot(
-        ClaudeHookSubagentWorkItem[] ActiveSubagents,
-        ClaudeHookBackgroundWorkItem[] ActiveBackgroundTasks)
+    private readonly record struct ClaudeHookPendingWorkSnapshot(ClaudeHookSubagentWorkItem[] ActiveSubagents, ClaudeHookBackgroundWorkItem[] ActiveBackgroundTasks)
     {
         public bool HasPendingWork => ActiveSubagents.Length > 0 || ActiveBackgroundTasks.Length > 0;
 
@@ -833,24 +749,12 @@ internal static class ClaudeHookWorkTracker
             var summaryParts = new List<string>();
             if (ActiveSubagents.Length > 0)
             {
-                summaryParts.Add("subagents="
-                    + string.Join(
-                        ",",
-                        ActiveSubagents.Select(subagentWorkItem =>
-                            string.IsNullOrWhiteSpace(subagentWorkItem.AgentType)
-                                ? subagentWorkItem.AgentIdentifier
-                                : $"{subagentWorkItem.AgentType}:{subagentWorkItem.AgentIdentifier}")));
+                summaryParts.Add("subagents=" + string.Join(",", ActiveSubagents.Select(subagentWorkItem => string.IsNullOrWhiteSpace(subagentWorkItem.AgentType) ? subagentWorkItem.AgentIdentifier : $"{subagentWorkItem.AgentType}:{subagentWorkItem.AgentIdentifier}")));
             }
 
             if (ActiveBackgroundTasks.Length > 0)
             {
-                summaryParts.Add("backgroundTasks="
-                    + string.Join(
-                        ",",
-                        ActiveBackgroundTasks.Select(backgroundWorkItem =>
-                            string.IsNullOrWhiteSpace(backgroundWorkItem.Summary)
-                                ? backgroundWorkItem.ToolUseIdentifier
-                                : backgroundWorkItem.Summary)));
+                summaryParts.Add("backgroundTasks=" + string.Join(",", ActiveBackgroundTasks.Select(backgroundWorkItem => string.IsNullOrWhiteSpace(backgroundWorkItem.Summary) ? backgroundWorkItem.ToolUseIdentifier : backgroundWorkItem.Summary)));
             }
 
             return string.Join(" ", summaryParts);

@@ -25,26 +25,14 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
         if (!systemAudioVolumeControllerResult.Succeeded) return LidGuardOperationResult<LidGuardRuntimeServiceSet>.Failure(systemAudioVolumeControllerResult.Message);
 
         var lidActionService = new LidActionService();
-        var serviceSet = new LidGuardRuntimeServiceSet(
-            new PowerRequestService(),
-            new ProcessExitWatcher(),
-            new LidActionPolicyController(lidActionService),
-            new SystemSuspendService(),
-            postStopSuspendSoundPlayerResult.Value,
-            systemAudioVolumeControllerResult.Value,
-            new LidStateSource(),
-            new VisibleDisplayMonitorCountProvider());
+        var serviceSet = new LidGuardRuntimeServiceSet(new PowerRequestService(), new ProcessExitWatcher(), new LidActionPolicyController(lidActionService), new SystemSuspendService(), postStopSuspendSoundPlayerResult.Value, systemAudioVolumeControllerResult.Value, new LidStateSource(), new VisibleDisplayMonitorCountProvider());
 
         return LidGuardOperationResult<LidGuardRuntimeServiceSet>.Success(serviceSet);
     }
 
     public LidGuardOperationResult<IPostStopSuspendSoundPlayer> CreatePostStopSuspendSoundPlayer()
-        => OperatingSystem.IsMacOS()
-            ? LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Success(new PostStopSuspendSoundPlayer())
-            : LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Failure(UnsupportedMessage);
+        => OperatingSystem.IsMacOS() ? LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Success(new PostStopSuspendSoundPlayer()) : LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Failure(UnsupportedMessage);
 
     public LidGuardOperationResult<ISystemAudioVolumeController> CreateSystemAudioVolumeController()
-        => OperatingSystem.IsMacOS()
-            ? LidGuardOperationResult<ISystemAudioVolumeController>.Success(new SystemAudioVolumeController())
-            : LidGuardOperationResult<ISystemAudioVolumeController>.Failure(UnsupportedMessage);
+        => OperatingSystem.IsMacOS() ? LidGuardOperationResult<ISystemAudioVolumeController>.Success(new SystemAudioVolumeController()) : LidGuardOperationResult<ISystemAudioVolumeController>.Failure(UnsupportedMessage);
 }

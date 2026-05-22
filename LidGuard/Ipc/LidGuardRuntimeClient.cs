@@ -18,16 +18,10 @@ internal sealed class LidGuardRuntimeClient
         "elif command -v nohup >/dev/null 2>&1; then nohup \"$@\" </dev/null >/dev/null 2>&1 & " +
         "else \"$@\" </dev/null >/dev/null 2>&1 & fi";
 
-    public async Task<LidGuardPipeResponse> SendAsync(
-        LidGuardPipeRequest request,
-        bool startRuntimeIfUnavailable,
-        CancellationToken cancellationToken = default,
-        LidGuardRuntimeClientDiagnostics diagnostics = null)
+    public async Task<LidGuardPipeResponse> SendAsync(LidGuardPipeRequest request, bool startRuntimeIfUnavailable, CancellationToken cancellationToken = default, LidGuardRuntimeClientDiagnostics diagnostics = null)
     {
         var initialConnectStopwatch = Stopwatch.StartNew();
-        var pipeClientStream = startRuntimeIfUnavailable
-            ? await TryConnectAsync(s_runtimeAutoStartProbeTimeout, cancellationToken)
-            : await WaitForRuntimeAsync(s_runtimeConnectionTimeout, cancellationToken);
+        var pipeClientStream = startRuntimeIfUnavailable ? await TryConnectAsync(s_runtimeAutoStartProbeTimeout, cancellationToken) : await WaitForRuntimeAsync(s_runtimeConnectionTimeout, cancellationToken);
         initialConnectStopwatch.Stop();
         if (diagnostics is not null)
         {
@@ -49,10 +43,7 @@ internal sealed class LidGuardRuntimeClient
 
             if (!runtimeStarted)
             {
-                return LidGuardPipeResponse.Failure(
-                    "Failed to start the LidGuard runtime.",
-                    runtimeUnavailable: true,
-                    messageCode: LidGuardPipeResponseMessageCodes.FailedToStartRuntime);
+                return LidGuardPipeResponse.Failure("Failed to start the LidGuard runtime.", runtimeUnavailable: true, messageCode: LidGuardPipeResponseMessageCodes.FailedToStartRuntime);
             }
 
             var startupConnectStopwatch = Stopwatch.StartNew();
@@ -67,10 +58,7 @@ internal sealed class LidGuardRuntimeClient
 
         if (pipeClientStream is null)
         {
-            return LidGuardPipeResponse.Failure(
-                "LidGuard runtime is not running.",
-                runtimeUnavailable: true,
-                messageCode: LidGuardPipeResponseMessageCodes.RuntimeNotRunning);
+            return LidGuardPipeResponse.Failure("LidGuard runtime is not running.", runtimeUnavailable: true, messageCode: LidGuardPipeResponseMessageCodes.RuntimeNotRunning);
         }
 
         using (pipeClientStream)
@@ -152,10 +140,7 @@ internal sealed class LidGuardRuntimeClient
         }
     }
 
-    private static async Task<LiveStatusSnapshot> TryWriteLiveStatusRequestAsync(
-        StreamWriter streamWriter,
-        string requestJson,
-        CancellationToken cancellationToken)
+    private static async Task<LiveStatusSnapshot> TryWriteLiveStatusRequestAsync(StreamWriter streamWriter, string requestJson, CancellationToken cancellationToken)
     {
         try { await streamWriter.WriteLineAsync(requestJson.AsMemory(), cancellationToken); return null; }
         catch (IOException exception) { return CreateLiveStatusConnectionFailureSnapshot(exception); }
@@ -208,11 +193,7 @@ internal sealed class LidGuardRuntimeClient
 
     private static async Task<NamedPipeClientStream> TryConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
     {
-        var pipeClientStream = new NamedPipeClientStream(
-            ".",
-            LidGuardPipeNames.RuntimePipeName,
-            PipeDirection.InOut,
-            PipeOptions.Asynchronous);
+        var pipeClientStream = new NamedPipeClientStream(".", LidGuardPipeNames.RuntimePipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
 
         try
         {

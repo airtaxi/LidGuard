@@ -4,11 +4,7 @@ internal sealed class HookEventLog(string logFileName)
 {
     public string GetDefaultLogFilePath() => HookEventLogWriter.GetDefaultLogFilePath(logFileName);
 
-    public TimeSpan AppendReceived(
-        string hookEventName,
-        IHookCommandInput hookInput,
-        string providerDetails,
-        bool includePrompt)
+    public TimeSpan AppendReceived(string hookEventName, IHookCommandInput hookInput, string providerDetails, bool includePrompt)
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
@@ -16,23 +12,10 @@ internal sealed class HookEventLog(string logFileName)
         if (!string.IsNullOrWhiteSpace(providerDetails)) details = $"{details} {providerDetails}";
         if (includePrompt) details = $"{details} prompt={HookEventLogWriter.Sanitize(hookInput.Prompt)}";
 
-        return AppendLine(HookEventLogWriter.CreateLogLine(
-            "received",
-            hookEventName,
-            hookInput.SessionIdentifier,
-            hookInput.WorkingDirectory,
-            details));
+        return AppendLine(HookEventLogWriter.CreateLogLine("received", hookEventName, hookInput.SessionIdentifier, hookInput.WorkingDirectory, details));
     }
 
-    public TimeSpan AppendRuntimeResult(
-        string hookEventName,
-        IHookCommandInput hookInput,
-        string commandName,
-        bool succeeded,
-        bool runtimeUnavailable,
-        int activeSessionCount,
-        string message,
-        string timingDetails = "")
+    public TimeSpan AppendRuntimeResult(string hookEventName, IHookCommandInput hookInput, string commandName, bool succeeded, bool runtimeUnavailable, int activeSessionCount, string message, string timingDetails = "")
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
@@ -41,12 +24,7 @@ internal sealed class HookEventLog(string logFileName)
             + $"succeeded={succeeded} runtimeUnavailable={runtimeUnavailable} activeSessions={activeSessionCount} message={HookEventLogWriter.Sanitize(message)}";
         if (!string.IsNullOrWhiteSpace(timingDetails)) details = $"{details} {HookEventLogWriter.Sanitize(timingDetails)}";
 
-        return AppendLine(HookEventLogWriter.CreateLogLine(
-            "runtime-result",
-            hookEventName,
-            hookInput.SessionIdentifier,
-            hookInput.WorkingDirectory,
-            details));
+        return AppendLine(HookEventLogWriter.CreateLogLine("runtime-result", hookEventName, hookInput.SessionIdentifier, hookInput.WorkingDirectory, details));
     }
 
     public void AppendMessage(string message)

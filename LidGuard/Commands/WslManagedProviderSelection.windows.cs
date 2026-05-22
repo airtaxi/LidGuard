@@ -5,12 +5,7 @@ namespace LidGuard.Commands;
 
 internal static class WslManagedProviderSelection
 {
-    public static void ResolveAvailableProviders(
-        string distroName,
-        IReadOnlyList<AgentProvider> selectedProviders,
-        Func<string, AgentProvider, bool> tryGetProviderAvailability,
-        out IReadOnlyList<AgentProvider> availableProviders,
-        out IReadOnlyList<string> skippedProviderMessages)
+    public static void ResolveAvailableProviders(string distroName, IReadOnlyList<AgentProvider> selectedProviders, Func<string, AgentProvider, bool> tryGetProviderAvailability, out IReadOnlyList<AgentProvider> availableProviders, out IReadOnlyList<string> skippedProviderMessages)
     {
         availableProviders = selectedProviders;
         skippedProviderMessages = [];

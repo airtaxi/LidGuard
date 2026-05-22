@@ -5,9 +5,7 @@ using LidGuard.Runtime;
 
 namespace LidGuard.Ipc;
 
-internal sealed class LidGuardPipeServer(
-    LidGuardRuntimeCoordinator runtimeCoordinator,
-    Action requestRuntimeStop)
+internal sealed class LidGuardPipeServer(LidGuardRuntimeCoordinator runtimeCoordinator, Action requestRuntimeStop)
 {
     private static readonly TimeSpan s_liveStatusSnapshotRefreshInterval = TimeSpan.FromSeconds(1);
 
@@ -15,12 +13,7 @@ internal sealed class LidGuardPipeServer(
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            var pipeServerStream = new NamedPipeServerStream(
-                LidGuardPipeNames.RuntimePipeName,
-                PipeDirection.InOut,
-                NamedPipeServerStream.MaxAllowedServerInstances,
-                PipeTransmissionMode.Byte,
-                PipeOptions.Asynchronous);
+            var pipeServerStream = new NamedPipeServerStream(LidGuardPipeNames.RuntimePipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
 
             await pipeServerStream.WaitForConnectionAsync(cancellationToken);
             _ = HandleConnectionAndDisposeAsync(pipeServerStream, cancellationToken);
@@ -81,10 +74,7 @@ internal sealed class LidGuardPipeServer(
         }
     }
 
-    private static async Task<bool> WaitForNextLiveStatusSnapshotAsync(
-        LiveStatusEventHub.LiveStatusSubscription subscription,
-        Task<string> clientDisconnectTask,
-        CancellationToken cancellationToken)
+    private static async Task<bool> WaitForNextLiveStatusSnapshotAsync(LiveStatusEventHub.LiveStatusSubscription subscription, Task<string> clientDisconnectTask, CancellationToken cancellationToken)
     {
         using var refreshCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var changeTask = subscription.WaitForChangeAsync(refreshCancellationTokenSource.Token);

@@ -35,13 +35,7 @@ public sealed class GitHubCopilotHookInstaller : HookInstallerBase
     protected override HookInstallationInspection InspectConfiguration(HookInstallationRequest request, string hookCommand, string content, bool configurationFileExists)
     {
         var expectedHookCommands = GitHubCopilotHookConfigurationJsonDocument.CreateManagedHookCommands(hookCommand);
-        return GitHubCopilotHookConfigurationJsonDocument.InspectConfigurationJson(
-            request.ConfigurationFilePath,
-            request.HookExecutablePath,
-            hookCommand,
-            expectedHookCommands,
-            content,
-            configurationFileExists);
+        return GitHubCopilotHookConfigurationJsonDocument.InspectConfigurationJson(request.ConfigurationFilePath, request.HookExecutablePath, hookCommand, expectedHookCommands, content, configurationFileExists);
     }
 
     protected override bool TryCreateInstalledContent(string originalContent, string hookCommand, out string updatedContent, out string message)
@@ -75,11 +69,12 @@ public sealed class GitHubCopilotHookInstaller : HookInstallerBase
         try
         {
             var configurationContent = File.ReadAllText(configurationFilePath);
-            var rootNode = JsonNode.Parse(configurationContent, documentOptions: new JsonDocumentOptions
+            var documentOptions = new JsonDocumentOptions
             {
                 AllowTrailingCommas = true,
                 CommentHandling = JsonCommentHandling.Skip
-            });
+            };
+            var rootNode = JsonNode.Parse(configurationContent, documentOptions: documentOptions);
             configurationRootObject = rootNode as JsonObject;
         }
         catch (JsonException) { return; }
@@ -113,10 +108,7 @@ public sealed class GitHubCopilotHookInstaller : HookInstallerBase
         var conflictingAgentStopHookSources = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
         var normalizedConfigurationFilePath = Path.GetFullPath(request.ConfigurationFilePath);
 
-        AddConflictingAgentStopHooksFromDirectory(
-            Path.Combine(GetCopilotConfigurationDirectoryPath(), CopilotHooksDirectoryName),
-            normalizedConfigurationFilePath,
-            conflictingAgentStopHookSources);
+        AddConflictingAgentStopHooksFromDirectory(Path.Combine(GetCopilotConfigurationDirectoryPath(), CopilotHooksDirectoryName), normalizedConfigurationFilePath, conflictingAgentStopHookSources);
 
         var repositoryHooksDirectoryPath = Path.Combine(Environment.CurrentDirectory, ".github", CopilotHooksDirectoryName);
         AddConflictingAgentStopHooksFromDirectory(repositoryHooksDirectoryPath, normalizedConfigurationFilePath, conflictingAgentStopHookSources);
@@ -139,9 +131,7 @@ public sealed class GitHubCopilotHookInstaller : HookInstallerBase
         var currentPlatformCommand = GetStringProperty(hookDefinitionObject, currentPlatformShellName);
         if (!string.IsNullOrWhiteSpace(currentPlatformCommand)) return currentPlatformCommand;
 
-        var alternatePlatformShellName = currentPlatformShellName.Equals("powershell", StringComparison.Ordinal)
-            ? "bash"
-            : "powershell";
+        var alternatePlatformShellName = currentPlatformShellName.Equals("powershell", StringComparison.Ordinal) ? "bash" : "powershell";
         var alternatePlatformCommand = GetStringProperty(hookDefinitionObject, alternatePlatformShellName);
         if (!string.IsNullOrWhiteSpace(alternatePlatformCommand)) return alternatePlatformCommand;
 

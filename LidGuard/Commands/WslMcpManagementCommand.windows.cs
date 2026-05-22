@@ -58,9 +58,7 @@ internal static class WslMcpManagementCommand
         {
             if (providers.Count > 1) Console.WriteLine(LocalizationService.GetFormattedString("ManagementMcpStatusTitle", ManagedProviderSelection.GetProviderDisplayName(provider)));
 
-            var providerExitCode = TryInspectProviderMcp(provider, distroName, wslExecutablePath, out var inspectionResult)
-                ? ManagedMcpInspectionResult.WriteProviderMcpStatus(inspectionResult)
-                : WriteUnsupportedProvider();
+            var providerExitCode = TryInspectProviderMcp(provider, distroName, wslExecutablePath, out var inspectionResult) ? ManagedMcpInspectionResult.WriteProviderMcpStatus(inspectionResult) : WriteUnsupportedProvider();
 
             if (providerExitCode != 0) exitCode = providerExitCode;
             if (providers.Count > 1) Console.WriteLine();
@@ -81,9 +79,7 @@ internal static class WslMcpManagementCommand
         foreach (var provider in providers)
         {
             if (providers.Count > 1) Console.WriteLine(LocalizationService.GetFormattedString("ManagementInstallingMcpServer", ManagedProviderSelection.GetProviderDisplayName(provider)));
-            var providerExitCode = TryInspectProviderMcp(provider, distroName, wslExecutablePath, out var inspectionResult)
-                ? InstallProviderMcp(provider, distroName, wslExecutablePath, inspectionResult)
-                : WriteUnsupportedProvider();
+            var providerExitCode = TryInspectProviderMcp(provider, distroName, wslExecutablePath, out var inspectionResult) ? InstallProviderMcp(provider, distroName, wslExecutablePath, inspectionResult) : WriteUnsupportedProvider();
             if (providerExitCode != 0) exitCode = providerExitCode;
             if (providers.Count > 1) Console.WriteLine();
         }
@@ -111,24 +107,16 @@ internal static class WslMcpManagementCommand
         return exitCode;
     }
 
-    private static int InstallProviderMcp(
-        AgentProvider provider,
-        string distroName,
-        string wslExecutablePath,
-        ManagedMcpInspectionResult inspectionResult)
+    private static int InstallProviderMcp(AgentProvider provider, string distroName, string wslExecutablePath, ManagedMcpInspectionResult inspectionResult)
     {
         if (inspectionResult.ShouldRefreshManagedMcpServer)
         {
-            Console.WriteLine(
-                LocalizationService.GetString("ManagementExistingMcpServerRefreshing")
-                    .Replace("{0}", ManagedProviderSelection.GetProviderDisplayName(provider), StringComparison.Ordinal));
+            Console.WriteLine(LocalizationService.GetString("ManagementExistingMcpServerRefreshing").Replace("{0}", ManagedProviderSelection.GetProviderDisplayName(provider), StringComparison.Ordinal));
 
             var removeExitCode = RemoveProviderMcp(provider, distroName);
             if (removeExitCode != 0)
             {
-                Console.Error.WriteLine(
-                    LocalizationService.GetString("ManagementSkippingMcpInstallAfterRemoveFailure")
-                        .Replace("{0}", ManagedProviderSelection.GetProviderDisplayName(provider), StringComparison.Ordinal));
+                Console.Error.WriteLine(LocalizationService.GetString("ManagementSkippingMcpInstallAfterRemoveFailure").Replace("{0}", ManagedProviderSelection.GetProviderDisplayName(provider), StringComparison.Ordinal));
                 return removeExitCode;
             }
         }
@@ -193,26 +181,10 @@ internal static class WslMcpManagementCommand
             message = LocalizationService.GetFormattedString("ManagementConfigurationFileDoesNotExist", configurationFilePath);
         }
 
-        return new ManagedMcpInspectionResult(
-            AgentProvider.Codex,
-            configurationFilePath,
-            configurationFileExists,
-            hasProviderCli,
-            providerCliDisplayText,
-            hasServerEntry,
-            matchesCurrentLidGuardExecutable,
-            containsExpectedServerCommand,
-            string.Empty,
-            serverCommand,
-            serverArguments,
-            string.Empty,
-            ManagedMcpInspectionResult.GetStatusMessage(configurationFilePath, configurationFileExists, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, message));
+        return new ManagedMcpInspectionResult(AgentProvider.Codex, configurationFilePath, configurationFileExists, hasProviderCli, providerCliDisplayText, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, string.Empty, serverCommand, serverArguments, string.Empty, ManagedMcpInspectionResult.GetStatusMessage(configurationFilePath, configurationFileExists, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, message));
     }
 
-    private static ManagedMcpInspectionResult InspectJsonProviderMcp(
-        AgentProvider provider,
-        string distroName,
-        string wslExecutablePath)
+    private static ManagedMcpInspectionResult InspectJsonProviderMcp(AgentProvider provider, string distroName, string wslExecutablePath)
     {
         if (!WslProviderConfigurationRoots.TryGetMcpConfigurationFilePath(distroName, provider, out var configurationFilePath, out var message)) configurationFilePath = string.Empty;
 
@@ -245,27 +217,10 @@ internal static class WslMcpManagementCommand
             }
         }
 
-        return new ManagedMcpInspectionResult(
-            provider,
-            configurationFilePath,
-            configurationFileExists,
-            hasProviderCli,
-            providerCliDisplayText,
-            hasServerEntry,
-            matchesCurrentLidGuardExecutable,
-            containsExpectedServerCommand,
-            serverType,
-            serverCommand,
-            serverArguments,
-            serverUrl,
-            ManagedMcpInspectionResult.GetStatusMessage(configurationFilePath, configurationFileExists, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, message));
+        return new ManagedMcpInspectionResult(provider, configurationFilePath, configurationFileExists, hasProviderCli, providerCliDisplayText, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, serverType, serverCommand, serverArguments, serverUrl, ManagedMcpInspectionResult.GetStatusMessage(configurationFilePath, configurationFileExists, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, message));
     }
 
-    private static bool TryInspectProviderMcp(
-        AgentProvider provider,
-        string distroName,
-        string wslExecutablePath,
-        out ManagedMcpInspectionResult inspectionResult)
+    private static bool TryInspectProviderMcp(AgentProvider provider, string distroName, string wslExecutablePath, out ManagedMcpInspectionResult inspectionResult)
     {
         inspectionResult = provider switch
         {
@@ -278,22 +233,12 @@ internal static class WslMcpManagementCommand
         return provider is AgentProvider.Codex or AgentProvider.Claude or AgentProvider.GitHubCopilot;
     }
 
-    private static bool TrySelectMcpProviders(
-        string providerText,
-        string prompt,
-        string distroName,
-        out IReadOnlyList<AgentProvider> providers,
-        out string message)
+    private static bool TrySelectMcpProviders(string providerText, string prompt, string distroName, out IReadOnlyList<AgentProvider> providers, out string message)
     {
         providers = [];
         if (!ManagedProviderSelection.TrySelectProviders(providerText, prompt, out var selectedProviders, out message)) return false;
 
-        WslManagedProviderSelection.ResolveAvailableProviders(
-            distroName,
-            selectedProviders,
-            WslManagedProviderSelection.TryHasMcpProviderConfigurationRoot,
-            out providers,
-            out var skippedProviderMessages);
+        WslManagedProviderSelection.ResolveAvailableProviders(distroName, selectedProviders, WslManagedProviderSelection.TryHasMcpProviderConfigurationRoot, out providers, out var skippedProviderMessages);
 
         ManagedProviderSelection.WriteSkippedProviderMessages(skippedProviderMessages);
         if (providers.Count > 0) return true;
@@ -302,13 +247,7 @@ internal static class WslMcpManagementCommand
         return true;
     }
 
-    private static bool TryParseArguments(
-        string commandName,
-        string[] commandLineArguments,
-        out string operationName,
-        out string providerText,
-        out Dictionary<string, string> options,
-        out string message)
+    private static bool TryParseArguments(string commandName, string[] commandLineArguments, out string operationName, out string providerText, out Dictionary<string, string> options, out string message)
     {
         operationName = NormalizeOperationName(commandName);
         providerText = string.Empty;

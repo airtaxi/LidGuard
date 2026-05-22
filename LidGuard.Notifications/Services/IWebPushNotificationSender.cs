@@ -5,8 +5,5 @@ namespace LidGuard.Notifications.Services;
 
 internal interface IWebPushNotificationSender
 {
-    Task<PushNotificationSendResult> SendAsync(
-        ActivePushSubscription subscription,
-        PushNotificationMessage message,
-        CancellationToken cancellationToken);
+    Task<PushNotificationSendResult> SendAsync(ActivePushSubscription subscription, PushNotificationMessage message, CancellationToken cancellationToken);
 }

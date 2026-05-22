@@ -25,9 +25,7 @@ internal static class LidGuardRuntimeSessionLogStore
                 if (!string.IsNullOrWhiteSpace(logDirectoryPath)) Directory.CreateDirectory(logDirectoryPath);
 
                 var entryJson = JsonSerializer.Serialize(entry, LidGuardRuntimeSessionLogJsonSerializerContext.Default.LidGuardRuntimeSessionLogEntry);
-                var logLines = File.Exists(logFilePath)
-                    ? File.ReadAllLines(logFilePath).Where(line => !string.IsNullOrWhiteSpace(line)).ToList()
-                    : [];
+                var logLines = File.Exists(logFilePath) ? File.ReadAllLines(logFilePath).Where(line => !string.IsNullOrWhiteSpace(line)).ToList() : [];
 
                 logLines.Add(entryJson);
                 if (logLines.Count > MaximumEntryCount) logLines = logLines.Skip(logLines.Count - MaximumEntryCount).ToList();
@@ -63,9 +61,7 @@ internal static class LidGuardRuntimeSessionLogStore
             {
                 try
                 {
-                    var logEntry = JsonSerializer.Deserialize(
-                        logLines[lineIndex],
-                        LidGuardRuntimeSessionLogJsonSerializerContext.Default.LidGuardRuntimeSessionLogEntry);
+                    var logEntry = JsonSerializer.Deserialize(logLines[lineIndex], LidGuardRuntimeSessionLogJsonSerializerContext.Default.LidGuardRuntimeSessionLogEntry);
                     if (logEntry is not null) logEntries.Add(logEntry);
                 }
                 catch (JsonException) { }

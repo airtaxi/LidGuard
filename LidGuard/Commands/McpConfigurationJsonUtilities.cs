@@ -64,11 +64,7 @@ internal static partial class McpConfigurationJsonUtilities
         return false;
     }
 
-    public static bool TryGetJsonMcpServerEntry(
-        string configurationContent,
-        string managedServerName,
-        out JsonObject serverObject,
-        out string message)
+    public static bool TryGetJsonMcpServerEntry(string configurationContent, string managedServerName, out JsonObject serverObject, out string message)
     {
         serverObject = new JsonObject();
         message = string.Empty;
@@ -76,11 +72,12 @@ internal static partial class McpConfigurationJsonUtilities
         JsonObject rootObject;
         try
         {
-            var rootNode = JsonNode.Parse(configurationContent, documentOptions: new JsonDocumentOptions
+            var documentOptions = new JsonDocumentOptions
             {
                 AllowTrailingCommas = true,
                 CommentHandling = JsonCommentHandling.Skip
-            });
+            };
+            var rootNode = JsonNode.Parse(configurationContent, documentOptions: documentOptions);
 
             if (rootNode is not JsonObject existingRootObject)
             {
@@ -114,11 +111,7 @@ internal static partial class McpConfigurationJsonUtilities
         return true;
     }
 
-    public static bool TryLoadConfigurationRoot(
-        string configurationFilePath,
-        bool createIfMissing,
-        out JsonObject rootObject,
-        out string message)
+    public static bool TryLoadConfigurationRoot(string configurationFilePath, bool createIfMissing, out JsonObject rootObject, out string message)
     {
         rootObject = new JsonObject();
         message = string.Empty;
@@ -134,13 +127,12 @@ internal static partial class McpConfigurationJsonUtilities
 
         try
         {
-            var rootNode = JsonNode.Parse(
-                File.ReadAllText(configurationFilePath),
-                documentOptions: new JsonDocumentOptions
-                {
-                    AllowTrailingCommas = true,
-                    CommentHandling = JsonCommentHandling.Skip
-                });
+            var documentOptions = new JsonDocumentOptions
+            {
+                AllowTrailingCommas = true,
+                CommentHandling = JsonCommentHandling.Skip
+            };
+            var rootNode = JsonNode.Parse(File.ReadAllText(configurationFilePath), documentOptions: documentOptions);
 
             if (rootNode is null)
             {
@@ -179,9 +171,7 @@ internal static partial class McpConfigurationJsonUtilities
             var configurationDirectoryPath = Path.GetDirectoryName(configurationFilePath);
             if (!string.IsNullOrWhiteSpace(configurationDirectoryPath)) Directory.CreateDirectory(configurationDirectoryPath);
 
-            File.WriteAllText(
-                configurationFilePath,
-                rootObject.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+            File.WriteAllText(configurationFilePath, rootObject.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
             return true;
         }
         catch (IOException exception)

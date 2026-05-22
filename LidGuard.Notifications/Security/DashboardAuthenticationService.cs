@@ -10,9 +10,7 @@ internal sealed class DashboardAuthenticationService(AuthenticationRefreshTokenS
 {
     public async Task SignInAsync(HttpContext httpContext, bool rememberLogin, CancellationToken cancellationToken)
     {
-        var refreshTokenIssue = rememberLogin
-            ? await refreshTokenStore.CreateAsync(DashboardAuthenticationConstants.RefreshTokenLifetime, cancellationToken)
-            : null;
+        var refreshTokenIssue = rememberLogin ? await refreshTokenStore.CreateAsync(DashboardAuthenticationConstants.RefreshTokenLifetime, cancellationToken) : null;
 
         await SignInWithIssueAsync(httpContext, rememberLogin, refreshTokenIssue);
     }
@@ -28,10 +26,7 @@ internal sealed class DashboardAuthenticationService(AuthenticationRefreshTokenS
             return true;
         }
 
-        var refreshTokenIssue = await refreshTokenStore.RotateAsync(
-            refreshToken,
-            DashboardAuthenticationConstants.RefreshTokenLifetime,
-            cancellationToken);
+        var refreshTokenIssue = await refreshTokenStore.RotateAsync(refreshToken, DashboardAuthenticationConstants.RefreshTokenLifetime, cancellationToken);
         if (refreshTokenIssue is null)
         {
             DeleteRefreshCookie(httpContext);
@@ -54,10 +49,7 @@ internal sealed class DashboardAuthenticationService(AuthenticationRefreshTokenS
         await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     }
 
-    private static async Task SignInWithIssueAsync(
-        HttpContext httpContext,
-        bool rememberLogin,
-        AuthenticationRefreshTokenIssue? refreshTokenIssue)
+    private static async Task SignInWithIssueAsync(HttpContext httpContext, bool rememberLogin, AuthenticationRefreshTokenIssue? refreshTokenIssue)
     {
         var now = DateTimeOffset.UtcNow;
         var principal = CreatePrincipal();
@@ -74,10 +66,7 @@ internal sealed class DashboardAuthenticationService(AuthenticationRefreshTokenS
 
         if (rememberLogin && refreshTokenIssue is not null)
         {
-            httpContext.Response.Cookies.Append(
-                DashboardAuthenticationConstants.RefreshCookieName,
-                refreshTokenIssue.Token,
-                CreateRefreshCookieOptions(httpContext, refreshTokenIssue.ExpiresAtUtc));
+            httpContext.Response.Cookies.Append(DashboardAuthenticationConstants.RefreshCookieName, refreshTokenIssue.Token, CreateRefreshCookieOptions(httpContext, refreshTokenIssue.ExpiresAtUtc));
         }
         else
         {
@@ -87,9 +76,7 @@ internal sealed class DashboardAuthenticationService(AuthenticationRefreshTokenS
 
     private static ClaimsPrincipal CreatePrincipal()
     {
-        var identity = new ClaimsIdentity(
-            [new Claim(ClaimTypes.Name, LidGuardNotificationText.Brand)],
-            CookieAuthenticationDefaults.AuthenticationScheme);
+        var identity = new ClaimsIdentity([new Claim(ClaimTypes.Name, LidGuardNotificationText.Brand)], CookieAuthenticationDefaults.AuthenticationScheme);
         return new ClaimsPrincipal(identity);
     }
 
@@ -107,14 +94,13 @@ internal sealed class DashboardAuthenticationService(AuthenticationRefreshTokenS
 
     private static void DeleteRefreshCookie(HttpContext httpContext)
     {
-        httpContext.Response.Cookies.Delete(
-            DashboardAuthenticationConstants.RefreshCookieName,
-            new CookieOptions
-            {
-                HttpOnly = true,
-                Path = "/",
-                SameSite = SameSiteMode.Strict,
-                Secure = httpContext.Request.IsHttps
-            });
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Path = "/",
+            SameSite = SameSiteMode.Strict,
+            Secure = httpContext.Request.IsHttps
+        };
+        httpContext.Response.Cookies.Delete(DashboardAuthenticationConstants.RefreshCookieName, cookieOptions);
     }
 }

@@ -141,10 +141,7 @@ internal static class AgentTranscriptResponseExtractor
         textBuilder.Append(text.Trim());
     }
 
-    private static string[] ReadRecentTranscriptLines(
-        string transcriptPath,
-        int lineLimit,
-        int byteLimit)
+    private static string[] ReadRecentTranscriptLines(string transcriptPath, int lineLimit, int byteLimit)
     {
         try
         {

@@ -13,11 +13,7 @@ public sealed class ManagedHookStatusMessageRefreshResult
 
 internal static class ManagedHookStatusMessageRefresh
 {
-    private delegate bool TryRefreshManagedHookConfiguration(
-        string content,
-        out string updatedContent,
-        out bool changed,
-        out string message);
+    private delegate bool TryRefreshManagedHookConfiguration(string content, out string updatedContent, out bool changed, out string message);
 
     public static ManagedHookStatusMessageRefreshResult RefreshInstalledManagedHooks()
     {
@@ -43,11 +39,7 @@ internal static class ManagedHookStatusMessageRefresh
         RefreshCurrentPlatformHook(AgentProvider.GitHubCopilot, new GitHubCopilotHookInstaller(), changedProviderNames, warningMessages);
     }
 
-    private static void RefreshCurrentPlatformHook(
-        AgentProvider provider,
-        IHookInstaller installer,
-        List<string> changedProviderNames,
-        List<string> warningMessages)
+    private static void RefreshCurrentPlatformHook(AgentProvider provider, IHookInstaller installer, List<string> changedProviderNames, List<string> warningMessages)
     {
         var request = installer.CreateDefaultRequest(createBackup: false);
         var providerDisplayName = ManagedProviderSelection.GetProviderDisplayName(provider);
@@ -58,12 +50,7 @@ internal static class ManagedHookStatusMessageRefresh
         }
 
         var hookCommand = HookCommandUtilities.CreateHookCommand(request.HookExecutablePath, request.HookCommandName);
-        RefreshConfigurationFile(
-            providerDisplayName,
-            request.ConfigurationFilePath,
-            CreateLocalRefreshDelegate(provider, hookCommand),
-            changedProviderNames,
-            warningMessages);
+        RefreshConfigurationFile(providerDisplayName, request.ConfigurationFilePath, CreateLocalRefreshDelegate(provider, hookCommand), changedProviderNames, warningMessages);
     }
 
 #if LIDGUARD_WINDOWS
@@ -149,23 +136,9 @@ internal static class ManagedHookStatusMessageRefresh
             AgentProvider.Codex => (string content, out string updatedContent, out bool changed, out string message)
                 => CodexHookConfigTomlDocument.TryRefreshManagedHookConfiguration(content, hookCommand, true, out updatedContent, out changed, out message),
             AgentProvider.Claude => (string content, out string updatedContent, out bool changed, out string message)
-                => ClaudeHookSettingsJsonDocument.TryRefreshManagedHooks(
-                    content,
-                    hookCommand,
-                    HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform(),
-                    true,
-                    out updatedContent,
-                    out changed,
-                    out message),
+                => ClaudeHookSettingsJsonDocument.TryRefreshManagedHooks(content, hookCommand, HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform(), true, out updatedContent, out changed, out message),
             AgentProvider.GitHubCopilot => (string content, out string updatedContent, out bool changed, out string message)
-                => GitHubCopilotHookConfigurationJsonDocument.TryRefreshManagedHooks(
-                    content,
-                    GitHubCopilotHookConfigurationJsonDocument.CreateManagedHookCommands(hookCommand),
-                    HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform(),
-                    true,
-                    out updatedContent,
-                    out changed,
-                    out message),
+                => GitHubCopilotHookConfigurationJsonDocument.TryRefreshManagedHooks(content, GitHubCopilotHookConfigurationJsonDocument.CreateManagedHookCommands(hookCommand), HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform(), true, out updatedContent, out changed, out message),
             _ => UnsupportedRefreshDelegate()
         };
     }
@@ -209,12 +182,7 @@ internal static class ManagedHookStatusMessageRefresh
             return false;
         };
 
-    private static void RefreshConfigurationFile(
-        string providerDisplayName,
-        string configurationFilePath,
-        TryRefreshManagedHookConfiguration tryRefreshManagedHookConfiguration,
-        List<string> changedProviderNames,
-        List<string> warningMessages)
+    private static void RefreshConfigurationFile(string providerDisplayName, string configurationFilePath, TryRefreshManagedHookConfiguration tryRefreshManagedHookConfiguration, List<string> changedProviderNames, List<string> warningMessages)
     {
         try
         {

@@ -148,10 +148,7 @@ internal static class LidGuardCommandLineApplication
             or LidGuardPipeCommands.McpRemove
             or "mcp-uninstall";
 
-    private static bool TryParseOptionalSingleValueArgument(
-        string[] commandLineArguments,
-        out string commandArgument,
-        out string message)
+    private static bool TryParseOptionalSingleValueArgument(string[] commandLineArguments, out string commandArgument, out string message)
     {
         commandArgument = string.Empty;
         message = string.Empty;
@@ -175,10 +172,7 @@ internal static class LidGuardCommandLineApplication
         return false;
     }
 
-    private static int RunSingleValueCommand(
-        string commandName,
-        string commandArgument,
-        ILidGuardRuntimePlatform runtimePlatform)
+    private static int RunSingleValueCommand(string commandName, string commandArgument, ILidGuardRuntimePlatform runtimePlatform)
         => commandName switch
         {
             LidGuardPipeCommands.CurrentTemperature => WriteCurrentTemperature(commandArgument),
@@ -251,17 +245,7 @@ internal static class LidGuardCommandLineApplication
 
             using var serviceSet = serviceSetResult.Value;
             var settings = CreateRuntimeSettings();
-            var runtimeCoordinator = new LidGuardRuntimeCoordinator(
-                settings,
-                serviceSet.PowerRequestService,
-                serviceSet.ProcessExitWatcher,
-                serviceSet.LidActionPolicyController,
-                serviceSet.SystemSuspendService,
-                serviceSet.PostStopSuspendSoundPlayer,
-                serviceSet.SystemAudioVolumeController,
-                serviceSet.LidStateSource,
-                serviceSet.VisibleDisplayMonitorCountProvider,
-                cancellationTokenSource.Cancel);
+            var runtimeCoordinator = new LidGuardRuntimeCoordinator(settings, serviceSet.PowerRequestService, serviceSet.ProcessExitWatcher, serviceSet.LidActionPolicyController, serviceSet.SystemSuspendService, serviceSet.PostStopSuspendSoundPlayer, serviceSet.SystemAudioVolumeController, serviceSet.LidStateSource, serviceSet.VisibleDisplayMonitorCountProvider, cancellationTokenSource.Cancel);
 
             var pipeServer = new LidGuardPipeServer(runtimeCoordinator, cancellationTokenSource.Cancel);
 
@@ -451,18 +435,11 @@ internal static class LidGuardCommandLineApplication
         var currentTemperatureCelsius = GetCurrentTemperatureCelsius(emergencyHibernationTemperatureMode);
         if (!currentTemperatureCelsius.HasValue)
         {
-            Console.WriteLine(
-                LocalizationService.GetString(
-                    "ConsoleCurrentTemperatureUnavailable")
-                    .Replace("{0}", LocalizationService.DisplayEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode), StringComparison.Ordinal));
+            Console.WriteLine(LocalizationService.GetString("ConsoleCurrentTemperatureUnavailable").Replace("{0}", LocalizationService.DisplayEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode), StringComparison.Ordinal));
             return 0;
         }
 
-        Console.WriteLine(
-            LocalizationService.GetString(
-                "ConsoleCurrentTemperature")
-                .Replace("{0}", LocalizationService.DisplayEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode), StringComparison.Ordinal)
-                .Replace("{1}", currentTemperatureCelsius.Value.ToString(), StringComparison.Ordinal));
+        Console.WriteLine(LocalizationService.GetString("ConsoleCurrentTemperature").Replace("{0}", LocalizationService.DisplayEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode), StringComparison.Ordinal).Replace("{1}", currentTemperatureCelsius.Value.ToString(), StringComparison.Ordinal));
         return 0;
     }
 
@@ -514,24 +491,18 @@ internal static class LidGuardCommandLineApplication
     private static int? GetCurrentTemperatureCelsius(EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
         => SystemThermalInformation.GetSystemTemperatureCelsius(emergencyHibernationTemperatureMode);
 
-    private static bool TryResolveCurrentTemperatureMode(
-        string temperatureModeText,
-        out EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode,
-        out string message)
+    private static bool TryResolveCurrentTemperatureMode(string temperatureModeText, out EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode, out string message)
     {
         emergencyHibernationTemperatureMode = LidGuardSettings.HeadlessRuntimeDefault.EmergencyHibernationTemperatureMode;
         message = string.Empty;
         if (string.IsNullOrWhiteSpace(temperatureModeText) || temperatureModeText.Trim().Equals("default", StringComparison.OrdinalIgnoreCase)) return TryLoadCurrentTemperatureModeFromSettings(out emergencyHibernationTemperatureMode, out message);
         if (LidGuardSettingsCommand.TryParseEmergencyHibernationTemperatureMode(temperatureModeText, out emergencyHibernationTemperatureMode)) return true;
 
-        message = LocalizationService.GetString(
-            "ConsoleCurrentTemperatureModeValidation");
+        message = LocalizationService.GetString("ConsoleCurrentTemperatureModeValidation");
         return false;
     }
 
-    private static bool TryLoadCurrentTemperatureModeFromSettings(
-        out EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode,
-        out string message)
+    private static bool TryLoadCurrentTemperatureModeFromSettings(out EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode, out string message)
     {
         emergencyHibernationTemperatureMode = LidGuardSettings.HeadlessRuntimeDefault.EmergencyHibernationTemperatureMode;
         message = string.Empty;

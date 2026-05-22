@@ -32,9 +32,7 @@ internal sealed class EventsModel(WebhookEventStore webhookEventStore) : PageMod
     public async Task<IActionResult> OnPostCancelAsync(string publicIdentifier, CancellationToken cancellationToken)
     {
         var cancellationResult = await webhookEventStore.CancelStopFollowUpAsync(publicIdentifier, cancellationToken);
-        EventMessage = cancellationResult.Succeeded
-            ? LidGuardNotificationText.StopFollowUpCancelSucceededMessage
-            : cancellationResult.Message;
+        EventMessage = cancellationResult.Succeeded ? LidGuardNotificationText.StopFollowUpCancelSucceededMessage : cancellationResult.Message;
         return Redirect($"/events#followup-{publicIdentifier}");
     }
 }

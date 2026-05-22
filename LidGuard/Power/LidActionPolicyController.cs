@@ -39,12 +39,7 @@ public sealed class LidActionPolicyController(ILidActionService lidActionService
             directCurrentAction = readResult.Value;
         }
 
-        var backup = new LidActionBackup(
-            powerSchemeResult.Value,
-            includesAlternatingCurrent,
-            alternatingCurrentAction,
-            includesDirectCurrent,
-            directCurrentAction);
+        var backup = new LidActionBackup(powerSchemeResult.Value, includesAlternatingCurrent, alternatingCurrentAction, includesDirectCurrent, directCurrentAction);
 
         return LidGuardOperationResult<LidActionBackup>.Success(backup);
     }

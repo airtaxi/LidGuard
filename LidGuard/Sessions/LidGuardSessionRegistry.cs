@@ -82,12 +82,7 @@ public sealed class LidGuardSessionRegistry
     public bool TryMarkActive(AgentProvider provider, string sessionIdentifier, out LidGuardSessionSnapshot snapshot, out bool changed)
         => TryMarkActive(provider, sessionIdentifier, string.Empty, out snapshot, out changed);
 
-    public bool TryMarkActive(
-        AgentProvider provider,
-        string sessionIdentifier,
-        string providerName,
-        out LidGuardSessionSnapshot snapshot,
-        out bool changed)
+    public bool TryMarkActive(AgentProvider provider, string sessionIdentifier, string providerName, out LidGuardSessionSnapshot snapshot, out bool changed)
     {
         changed = false;
         snapshot = LidGuardSessionSnapshot.Empty;
@@ -113,12 +108,7 @@ public sealed class LidGuardSessionRegistry
         }
     }
 
-    public bool TryMarkPendingProviderWork(
-        AgentProvider provider,
-        string sessionIdentifier,
-        string providerName,
-        string pendingProviderWorkReason,
-        out LidGuardSessionSnapshot snapshot)
+    public bool TryMarkPendingProviderWork(AgentProvider provider, string sessionIdentifier, string providerName, string pendingProviderWorkReason, out LidGuardSessionSnapshot snapshot)
     {
         snapshot = LidGuardSessionSnapshot.Empty;
         if (string.IsNullOrWhiteSpace(sessionIdentifier)) return false;
@@ -128,27 +118,13 @@ public sealed class LidGuardSessionRegistry
         {
             if (!_sessions.TryGetValue(key, out var existingSnapshot)) return false;
 
-            snapshot = CloneSnapshot(
-                existingSnapshot,
-                LidGuardSessionSoftLockState.None,
-                string.Empty,
-                null,
-                DateTimeOffset.UtcNow,
-                true,
-                pendingProviderWorkReason?.Trim() ?? string.Empty);
+            snapshot = CloneSnapshot(existingSnapshot, LidGuardSessionSoftLockState.None, string.Empty, null, DateTimeOffset.UtcNow, true, pendingProviderWorkReason?.Trim() ?? string.Empty);
             _sessions[key] = snapshot;
             return true;
         }
     }
 
-    public bool TryMarkSoftLocked(
-        AgentProvider provider,
-        string sessionIdentifier,
-        string providerName,
-        string softLockReason,
-        DateTimeOffset softLockedAt,
-        out LidGuardSessionSnapshot snapshot,
-        out bool changed)
+    public bool TryMarkSoftLocked(AgentProvider provider, string sessionIdentifier, string providerName, string softLockReason, DateTimeOffset softLockedAt, out LidGuardSessionSnapshot snapshot, out bool changed)
     {
         changed = false;
         snapshot = LidGuardSessionSnapshot.Empty;
@@ -166,12 +142,7 @@ public sealed class LidGuardSessionRegistry
                 return true;
             }
 
-            snapshot = CloneSnapshot(
-                existingSnapshot,
-                LidGuardSessionSoftLockState.SoftLocked,
-                normalizedSoftLockReason,
-                softLockedAt,
-                existingSnapshot.LastActivityAt);
+            snapshot = CloneSnapshot(existingSnapshot, LidGuardSessionSoftLockState.SoftLocked, normalizedSoftLockReason, softLockedAt, existingSnapshot.LastActivityAt);
             _sessions[key] = snapshot;
             changed = true;
             return true;
@@ -188,14 +159,7 @@ public sealed class LidGuardSessionRegistry
         lock (_gate) _sessions.Clear();
     }
 
-    private static LidGuardSessionSnapshot CloneSnapshot(
-        LidGuardSessionSnapshot snapshot,
-        LidGuardSessionSoftLockState softLockState,
-        string softLockReason,
-        DateTimeOffset? softLockedAt,
-        DateTimeOffset lastActivityAt,
-        bool? hasPendingProviderWork = null,
-        string pendingProviderWorkReason = null)
+    private static LidGuardSessionSnapshot CloneSnapshot(LidGuardSessionSnapshot snapshot, LidGuardSessionSoftLockState softLockState, string softLockReason, DateTimeOffset? softLockedAt, DateTimeOffset lastActivityAt, bool? hasPendingProviderWork = null, string pendingProviderWorkReason = null)
     {
         return new LidGuardSessionSnapshot
         {

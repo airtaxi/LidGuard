@@ -34,9 +34,7 @@ internal static class ManagedProviderCliResolver
             return true;
         }
 
-        message = LocalizationService.GetFormattedString("ManagementProviderCliNotFound",
-            ManagedProviderSelection.GetProviderDisplayName(provider),
-            string.Join(" | ", GetProviderCliCandidatePaths(provider)));
+        message = LocalizationService.GetFormattedString("ManagementProviderCliNotFound", ManagedProviderSelection.GetProviderDisplayName(provider), string.Join(" | ", GetProviderCliCandidatePaths(provider)));
         return false;
     }
 

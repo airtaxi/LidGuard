@@ -124,12 +124,7 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
             "CREATE INDEX IF NOT EXISTS IX_AuthenticationRefreshTokens_ExpiresAtUtc ON AuthenticationRefreshTokens(ExpiresAtUtc);"
         ];
 
-    private static async Task EnsureWebhookEventsColumnAsync(
-        SqliteConnection connection,
-        ISet<string> existingColumnNames,
-        string columnName,
-        string columnDefinition,
-        CancellationToken cancellationToken)
+    private static async Task EnsureWebhookEventsColumnAsync(SqliteConnection connection, ISet<string> existingColumnNames, string columnName, string columnDefinition, CancellationToken cancellationToken)
     {
         if (existingColumnNames.Contains(columnName)) return;
 

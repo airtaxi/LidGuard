@@ -5,11 +5,7 @@ internal static class WebhookUrlConfiguration
     public static string GetDisplayValue(string webhookUrl)
         => string.IsNullOrWhiteSpace(webhookUrl) ? "off" : webhookUrl;
 
-    public static bool TryNormalizeConfiguredValue(
-        string webhookUrl,
-        string displayName,
-        out string normalizedWebhookUrl,
-        out string message)
+    public static bool TryNormalizeConfiguredValue(string webhookUrl, string displayName, out string normalizedWebhookUrl, out string message)
     {
         normalizedWebhookUrl = string.Empty;
         message = string.Empty;

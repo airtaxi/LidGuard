@@ -27,10 +27,7 @@ internal sealed class LidStateSource : ILidStateSource
     {
         if (!MacOSCommandPathResolver.TryFindExecutable("ioreg", out var ioregPath)) return LidSwitchState.Unknown;
 
-        var commandResult = MacOSCommandRunner.Run(
-            ioregPath,
-            ["-r", "-k", "AppleClamshellState", "-d", "1"],
-            s_ioregTimeout);
+        var commandResult = MacOSCommandRunner.Run(ioregPath, ["-r", "-k", "AppleClamshellState", "-d", "1"], s_ioregTimeout);
         if (!commandResult.Succeeded) return LidSwitchState.Unknown;
 
         return ParseClamshellState(commandResult.StandardOutput);

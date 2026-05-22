@@ -12,10 +12,7 @@ internal static class NotificationUserInterfaceCultureConfiguration
     public static string NormalizeStoredValue(string userInterfaceCulture)
         => string.IsNullOrWhiteSpace(userInterfaceCulture) ? AutomaticCultureName : userInterfaceCulture.Trim();
 
-    public static bool TryNormalizeConfiguredValue(
-        string userInterfaceCulture,
-        out string normalizedUserInterfaceCulture,
-        out string message)
+    public static bool TryNormalizeConfiguredValue(string userInterfaceCulture, out string normalizedUserInterfaceCulture, out string message)
     {
         normalizedUserInterfaceCulture = NormalizeStoredValue(userInterfaceCulture);
         message = string.Empty;

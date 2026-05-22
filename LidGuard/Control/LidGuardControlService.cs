@@ -17,40 +17,15 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
     {
         if (!LidGuardSettingsStore.TryLoadOrCreate(out var storedSettings, out var message)) return LidGuardOperationResult<LidGuardControlSnapshot>.Failure(message);
 
-        var response = await _runtimeClient.SendAsync(
-            new LidGuardPipeRequest { Command = LidGuardPipeCommands.Status },
-            false,
-            cancellationToken);
+        var response = await _runtimeClient.SendAsync(new LidGuardPipeRequest { Command = LidGuardPipeCommands.Status }, false, cancellationToken);
 
         return LidGuardOperationResult<LidGuardControlSnapshot>.Success(CreateSnapshot(storedSettings, response));
     }
 
-    public Task<LidGuardOperationResult<LidGuardSessionCommandOutcome>> ClearSessionSoftLockAsync(
-        string sessionIdentifier,
-        AgentProvider provider,
-        string providerName = "",
-        string sessionStateReason = "",
-        CancellationToken cancellationToken = default)
-        => SendSessionCommandAsync(
-            LidGuardPipeCommands.MarkSessionActive,
-            provider,
-            providerName,
-            sessionIdentifier,
-            string.Empty,
-            0,
-            sessionStateReason,
-            false,
-            string.Empty,
-            false,
-            false,
-            false,
-            cancellationToken);
+    public Task<LidGuardOperationResult<LidGuardSessionCommandOutcome>> ClearSessionSoftLockAsync(string sessionIdentifier, AgentProvider provider, string providerName = "", string sessionStateReason = "", CancellationToken cancellationToken = default)
+        => SendSessionCommandAsync(LidGuardPipeCommands.MarkSessionActive, provider, providerName, sessionIdentifier, string.Empty, 0, sessionStateReason, false, string.Empty, false, false, false, cancellationToken);
 
-    public async Task<LidGuardOperationResult<LidGuardSessionRemovalOutcome>> RemoveSessionAsync(
-        string sessionIdentifier,
-        AgentProvider? provider = null,
-        string providerName = "",
-        CancellationToken cancellationToken = default)
+    public async Task<LidGuardOperationResult<LidGuardSessionRemovalOutcome>> RemoveSessionAsync(string sessionIdentifier, AgentProvider? provider = null, string providerName = "", CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(sessionIdentifier)) return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Failure("A session identifier is required.");
         if (provider == AgentProvider.Mcp && string.IsNullOrWhiteSpace(providerName)) providerName = string.Empty;
@@ -59,28 +34,23 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
 
         var normalizedStoredSettings = LidGuardSettings.Normalize(storedSettings);
         var normalizedProviderName = provider is null ? string.Empty : AgentProviderDisplay.NormalizeProviderName(provider.Value, providerName);
-        var statusResponse = await _runtimeClient.SendAsync(
-            new LidGuardPipeRequest { Command = LidGuardPipeCommands.Status },
-            false,
-            cancellationToken);
+        var statusResponse = await _runtimeClient.SendAsync(new LidGuardPipeRequest { Command = LidGuardPipeCommands.Status }, false, cancellationToken);
         if (!statusResponse.Succeeded && !statusResponse.RuntimeUnavailable) return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Failure(statusResponse.Message);
 
         var removedSessions = GetMatchingSessions(statusResponse, sessionIdentifier, provider, normalizedProviderName);
-        var removeResponse = await _runtimeClient.SendAsync(
-            new LidGuardPipeRequest
-            {
-                Command = LidGuardPipeCommands.RemoveSession,
-                Provider = provider ?? AgentProvider.Unknown,
-                ProviderName = normalizedProviderName,
-                SessionIdentifier = sessionIdentifier,
-                MatchAllProvidersForSessionIdentifier = provider is null,
-                MatchAllProviderNamesForSessionIdentifier = provider == AgentProvider.Mcp && string.IsNullOrWhiteSpace(normalizedProviderName)
-            },
-            false,
-            cancellationToken);
+        var removeRequest = new LidGuardPipeRequest
+        {
+            Command = LidGuardPipeCommands.RemoveSession,
+            Provider = provider ?? AgentProvider.Unknown,
+            ProviderName = normalizedProviderName,
+            SessionIdentifier = sessionIdentifier,
+            MatchAllProvidersForSessionIdentifier = provider is null,
+            MatchAllProviderNamesForSessionIdentifier = provider == AgentProvider.Mcp && string.IsNullOrWhiteSpace(normalizedProviderName)
+        };
+        var removeResponse = await _runtimeClient.SendAsync(removeRequest, false, cancellationToken);
         if (!removeResponse.Succeeded && !removeResponse.RuntimeUnavailable) return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Failure(removeResponse.Message);
 
-        return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Success(new LidGuardSessionRemovalOutcome
+        var removalOutcome = new LidGuardSessionRemovalOutcome
         {
             RequestedSessionIdentifier = sessionIdentifier,
             HasProviderFilter = provider is not null,
@@ -89,109 +59,44 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             RequestedProviderName = normalizedProviderName,
             RemovedSessions = removedSessions,
             Snapshot = CreateSnapshot(normalizedStoredSettings, removeResponse)
-        });
+        };
+        return LidGuardOperationResult<LidGuardSessionRemovalOutcome>.Success(removalOutcome);
     }
 
-    public Task<LidGuardOperationResult<LidGuardSessionCommandOutcome>> SetSessionSoftLockAsync(
-        string sessionIdentifier,
-        AgentProvider provider,
-        string providerName = "",
-        string sessionStateReason = "",
-        CancellationToken cancellationToken = default)
-        => SendSessionCommandAsync(
-            LidGuardPipeCommands.MarkSessionSoftLocked,
-            provider,
-            providerName,
-            sessionIdentifier,
-            string.Empty,
-            0,
-            sessionStateReason,
-            false,
-            string.Empty,
-            false,
-            false,
-            false,
-            cancellationToken);
+    public Task<LidGuardOperationResult<LidGuardSessionCommandOutcome>> SetSessionSoftLockAsync(string sessionIdentifier, AgentProvider provider, string providerName = "", string sessionStateReason = "", CancellationToken cancellationToken = default)
+        => SendSessionCommandAsync(LidGuardPipeCommands.MarkSessionSoftLocked, provider, providerName, sessionIdentifier, string.Empty, 0, sessionStateReason, false, string.Empty, false, false, false, cancellationToken);
 
-    public Task<LidGuardOperationResult<LidGuardSessionCommandOutcome>> StartSessionAsync(
-        string sessionIdentifier,
-        AgentProvider provider,
-        string providerName = "",
-        string workingDirectory = "",
-        int watchedProcessIdentifier = 0,
-        CancellationToken cancellationToken = default)
-        => SendSessionCommandAsync(
-            LidGuardPipeCommands.Start,
-            provider,
-            providerName,
-            sessionIdentifier,
-            workingDirectory,
-            watchedProcessIdentifier,
-            string.Empty,
-            false,
-            string.Empty,
-            true,
-            true,
-            false,
-            cancellationToken);
+    public Task<LidGuardOperationResult<LidGuardSessionCommandOutcome>> StartSessionAsync(string sessionIdentifier, AgentProvider provider, string providerName = "", string workingDirectory = "", int watchedProcessIdentifier = 0, CancellationToken cancellationToken = default)
+        => SendSessionCommandAsync(LidGuardPipeCommands.Start, provider, providerName, sessionIdentifier, workingDirectory, watchedProcessIdentifier, string.Empty, false, string.Empty, true, true, false, cancellationToken);
 
-    public Task<LidGuardOperationResult<LidGuardSessionCommandOutcome>> StopSessionAsync(
-        string sessionIdentifier,
-        AgentProvider provider,
-        string providerName = "",
-        bool isProviderSessionEnd = false,
-        string sessionEndReason = "",
-        CancellationToken cancellationToken = default)
-        => SendSessionCommandAsync(
-            LidGuardPipeCommands.Stop,
-            provider,
-            providerName,
-            sessionIdentifier,
-            string.Empty,
-            0,
-            string.Empty,
-            isProviderSessionEnd,
-            sessionEndReason,
-            false,
-            false,
-            true,
-            cancellationToken);
+    public Task<LidGuardOperationResult<LidGuardSessionCommandOutcome>> StopSessionAsync(string sessionIdentifier, AgentProvider provider, string providerName = "", bool isProviderSessionEnd = false, string sessionEndReason = "", CancellationToken cancellationToken = default)
+        => SendSessionCommandAsync(LidGuardPipeCommands.Stop, provider, providerName, sessionIdentifier, string.Empty, 0, string.Empty, isProviderSessionEnd, sessionEndReason, false, false, true, cancellationToken);
 
-    public async Task<LidGuardOperationResult<LidGuardSettingsUpdateOutcome>> UpdateSettingsAsync(
-        LidGuardSettingsPatch settingsPatch,
-        CancellationToken cancellationToken = default)
+    public async Task<LidGuardOperationResult<LidGuardSettingsUpdateOutcome>> UpdateSettingsAsync(LidGuardSettingsPatch settingsPatch, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(settingsPatch);
         if (settingsPatch.PostStopSuspendDelaySeconds < 0) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure("Post-stop suspend delay seconds must be a non-negative integer.");
         if (settingsPatch.ClosedLidStopFollowUpDelaySeconds < 0) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure("Closed-lid stop follow-up delay seconds must be a non-negative integer.");
         if (settingsPatch.HasPostStopSuspendSoundVolumeOverridePercent
-            && !PostStopSuspendSoundConfiguration.TryValidateVolumeOverridePercent(
-                settingsPatch.PostStopSuspendSoundVolumeOverridePercent,
-                out var volumeOverrideValidationMessage))
+            && !PostStopSuspendSoundConfiguration.TryValidateVolumeOverridePercent(settingsPatch.PostStopSuspendSoundVolumeOverridePercent, out var volumeOverrideValidationMessage))
         {
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(volumeOverrideValidationMessage);
         }
 
         if (settingsPatch.HasSuspendHistoryEntryCount
-            && !SuspendHistoryConfiguration.TryValidateEntryCount(
-                settingsPatch.SuspendHistoryEntryCount,
-                out var suspendHistoryValidationMessage))
+            && !SuspendHistoryConfiguration.TryValidateEntryCount(settingsPatch.SuspendHistoryEntryCount, out var suspendHistoryValidationMessage))
         {
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(suspendHistoryValidationMessage);
         }
 
         if (settingsPatch.HasSessionTimeoutMinutes
-            && !SessionTimeoutConfiguration.TryValidateMinutes(
-                settingsPatch.SessionTimeoutMinutes,
-                out var sessionTimeoutValidationMessage))
+            && !SessionTimeoutConfiguration.TryValidateMinutes(settingsPatch.SessionTimeoutMinutes, out var sessionTimeoutValidationMessage))
         {
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(sessionTimeoutValidationMessage);
         }
 
         if (settingsPatch.HasServerRuntimeCleanupDelayMinutes
-            && !ServerRuntimeCleanupConfiguration.TryValidateDelayMinutes(
-                settingsPatch.ServerRuntimeCleanupDelayMinutes,
-                out var serverRuntimeCleanupValidationMessage))
+            && !ServerRuntimeCleanupConfiguration.TryValidateDelayMinutes(settingsPatch.ServerRuntimeCleanupDelayMinutes, out var serverRuntimeCleanupValidationMessage))
         {
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(serverRuntimeCleanupValidationMessage);
         }
@@ -200,79 +105,56 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
 
         var previousStoredSettings = LidGuardSettings.Normalize(currentSettings);
         var updatedStoredSettings = ApplyPatch(previousStoredSettings, settingsPatch);
-        if (!PostStopSuspendSoundConfiguration.TryNormalize(
-            updatedStoredSettings,
-            postStopSuspendSoundPlayer,
-            out updatedStoredSettings,
-            out message))
+        if (!PostStopSuspendSoundConfiguration.TryNormalize(updatedStoredSettings, postStopSuspendSoundPlayer, out updatedStoredSettings, out message))
         {
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
         }
 
         if (settingsPatch.PreSuspendWebhookUrl is not null)
         {
-            if (!PreSuspendWebhookConfiguration.TryNormalizeConfiguredValue(
-                settingsPatch.PreSuspendWebhookUrl,
-                out var normalizedPreSuspendWebhookUrl,
-                out message))
+            if (!PreSuspendWebhookConfiguration.TryNormalizeConfiguredValue(settingsPatch.PreSuspendWebhookUrl, out var normalizedPreSuspendWebhookUrl, out message))
             {
                 return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
             }
 
-            updatedStoredSettings = PreSuspendWebhookConfiguration.WithPreSuspendWebhookUrl(
-                updatedStoredSettings,
-                normalizedPreSuspendWebhookUrl);
+            updatedStoredSettings = PreSuspendWebhookConfiguration.WithPreSuspendWebhookUrl(updatedStoredSettings, normalizedPreSuspendWebhookUrl);
         }
 
         if (settingsPatch.PostSessionEndWebhookUrl is not null)
         {
-            if (!PostSessionEndWebhookConfiguration.TryNormalizeConfiguredValue(
-                settingsPatch.PostSessionEndWebhookUrl,
-                out var normalizedPostSessionEndWebhookUrl,
-                out message))
+            if (!PostSessionEndWebhookConfiguration.TryNormalizeConfiguredValue(settingsPatch.PostSessionEndWebhookUrl, out var normalizedPostSessionEndWebhookUrl, out message))
             {
                 return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
             }
 
-            updatedStoredSettings = PostSessionEndWebhookConfiguration.WithPostSessionEndWebhookUrl(
-                updatedStoredSettings,
-                normalizedPostSessionEndWebhookUrl);
+            updatedStoredSettings = PostSessionEndWebhookConfiguration.WithPostSessionEndWebhookUrl(updatedStoredSettings, normalizedPostSessionEndWebhookUrl);
         }
 
         if (settingsPatch.ClosedLidStopFollowUpWebhookUrl is not null)
         {
-            if (!ClosedLidStopFollowUpWebhookConfiguration.TryNormalizeConfiguredValue(
-                settingsPatch.ClosedLidStopFollowUpWebhookUrl,
-                out var normalizedClosedLidStopFollowUpWebhookUrl,
-                out message))
+            if (!ClosedLidStopFollowUpWebhookConfiguration.TryNormalizeConfiguredValue(settingsPatch.ClosedLidStopFollowUpWebhookUrl, out var normalizedClosedLidStopFollowUpWebhookUrl, out message))
             {
                 return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
             }
 
-            updatedStoredSettings = ClosedLidStopFollowUpWebhookConfiguration.WithClosedLidStopFollowUpWebhookUrl(
-                updatedStoredSettings,
-                normalizedClosedLidStopFollowUpWebhookUrl);
+            updatedStoredSettings = ClosedLidStopFollowUpWebhookConfiguration.WithClosedLidStopFollowUpWebhookUrl(updatedStoredSettings, normalizedClosedLidStopFollowUpWebhookUrl);
         }
 
         updatedStoredSettings = LidGuardSettings.Normalize(updatedStoredSettings);
 
         if (!LidGuardSettingsStore.TrySave(updatedStoredSettings, out message)) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
-        var managedHookRefreshResult = LidGuardSettingsChangeDetector.RequiresManagedHookRefresh(previousStoredSettings, updatedStoredSettings)
-            ? ManagedHookStatusMessageRefresh.RefreshInstalledManagedHooks()
-            : null;
+        var managedHookRefreshResult = LidGuardSettingsChangeDetector.RequiresManagedHookRefresh(previousStoredSettings, updatedStoredSettings) ? ManagedHookStatusMessageRefresh.RefreshInstalledManagedHooks() : null;
 
-        var response = await _runtimeClient.SendAsync(
-            new LidGuardPipeRequest
-            {
-                Command = LidGuardPipeCommands.Settings,
-                HasSettings = true,
-                Settings = updatedStoredSettings
-            },
-            false,
-            cancellationToken);
+        var request = new LidGuardPipeRequest
+        {
+            Command = LidGuardPipeCommands.Settings,
+            HasSettings = true,
+            Settings = updatedStoredSettings
+        };
+        var response = await _runtimeClient.SendAsync(request, false, cancellationToken);
 
         var appliedChanges = LidGuardSettingsChangeDetector.DescribeChanges(previousStoredSettings, updatedStoredSettings);
-        return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Success(new LidGuardSettingsUpdateOutcome
+        var updateOutcome = new LidGuardSettingsUpdateOutcome
         {
             ResetToDefaults = settingsPatch.ResetToDefaults,
             HadEffectiveChanges = appliedChanges.Length > 0,
@@ -281,7 +163,8 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             UpdatedStoredSettings = updatedStoredSettings,
             ManagedHookRefreshResult = managedHookRefreshResult,
             Snapshot = CreateSnapshot(updatedStoredSettings, response)
-        });
+        };
+        return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Success(updateOutcome);
     }
 
     private static LidGuardControlSnapshot CreateSnapshot(LidGuardSettings storedSettings, LidGuardPipeResponse response)
@@ -347,20 +230,14 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
                 PreventAwayModeSleep = settingsPatch.PreventAwayModeSleep ?? basePowerRequest.PreventAwayModeSleep,
 #endif
                 PreventDisplaySleep = settingsPatch.PreventDisplaySleep ?? basePowerRequest.PreventDisplaySleep,
-                Reason = settingsPatch.PowerRequestReason is null
-                    ? basePowerRequest.Reason
-                    : NormalizePowerRequestReason(settingsPatch.PowerRequestReason)
+                Reason = settingsPatch.PowerRequestReason is null ? basePowerRequest.Reason : NormalizePowerRequestReason(settingsPatch.PowerRequestReason)
             },
             ChangeLidAction = settingsPatch.ChangeLidAction ?? normalizedBaseSettings.ChangeLidAction,
             SuspendMode = settingsPatch.SuspendMode ?? normalizedBaseSettings.SuspendMode,
             PostStopSuspendDelaySeconds = settingsPatch.PostStopSuspendDelaySeconds ?? normalizedBaseSettings.PostStopSuspendDelaySeconds,
             PostStopSuspendSound = settingsPatch.PostStopSuspendSound ?? normalizedBaseSettings.PostStopSuspendSound,
-            PostStopSuspendSoundVolumeOverridePercent = settingsPatch.HasPostStopSuspendSoundVolumeOverridePercent
-                ? settingsPatch.PostStopSuspendSoundVolumeOverridePercent
-                : normalizedBaseSettings.PostStopSuspendSoundVolumeOverridePercent,
-            SuspendHistoryEntryCount = settingsPatch.HasSuspendHistoryEntryCount
-                ? settingsPatch.SuspendHistoryEntryCount
-                : normalizedBaseSettings.SuspendHistoryEntryCount,
+            PostStopSuspendSoundVolumeOverridePercent = settingsPatch.HasPostStopSuspendSoundVolumeOverridePercent ? settingsPatch.PostStopSuspendSoundVolumeOverridePercent : normalizedBaseSettings.PostStopSuspendSoundVolumeOverridePercent,
+            SuspendHistoryEntryCount = settingsPatch.HasSuspendHistoryEntryCount ? settingsPatch.SuspendHistoryEntryCount : normalizedBaseSettings.SuspendHistoryEntryCount,
             PreSuspendWebhookUrl = settingsPatch.PreSuspendWebhookUrl ?? normalizedBaseSettings.PreSuspendWebhookUrl,
             PostSessionEndWebhookUrl = settingsPatch.PostSessionEndWebhookUrl ?? normalizedBaseSettings.PostSessionEndWebhookUrl,
             ClosedLidStopFollowUpWebhookUrl = settingsPatch.ClosedLidStopFollowUpWebhookUrl ?? normalizedBaseSettings.ClosedLidStopFollowUpWebhookUrl,
@@ -368,12 +245,8 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             RepeatClosedLidStopFollowUp = settingsPatch.RepeatClosedLidStopFollowUp ?? normalizedBaseSettings.RepeatClosedLidStopFollowUp,
             ClosedLidPermissionRequestDecision = settingsPatch.ClosedLidPermissionRequestDecision ?? normalizedBaseSettings.ClosedLidPermissionRequestDecision,
             WatchParentProcess = settingsPatch.WatchParentProcess ?? normalizedBaseSettings.WatchParentProcess,
-            SessionTimeoutMinutes = settingsPatch.HasSessionTimeoutMinutes
-                ? settingsPatch.SessionTimeoutMinutes
-                : normalizedBaseSettings.SessionTimeoutMinutes,
-            ServerRuntimeCleanupDelayMinutes = settingsPatch.HasServerRuntimeCleanupDelayMinutes
-                ? settingsPatch.ServerRuntimeCleanupDelayMinutes
-                : normalizedBaseSettings.ServerRuntimeCleanupDelayMinutes,
+            SessionTimeoutMinutes = settingsPatch.HasSessionTimeoutMinutes ? settingsPatch.SessionTimeoutMinutes : normalizedBaseSettings.SessionTimeoutMinutes,
+            ServerRuntimeCleanupDelayMinutes = settingsPatch.HasServerRuntimeCleanupDelayMinutes ? settingsPatch.ServerRuntimeCleanupDelayMinutes : normalizedBaseSettings.ServerRuntimeCleanupDelayMinutes,
             EmergencyHibernationOnHighTemperature = settingsPatch.EmergencyHibernationOnHighTemperature ?? normalizedBaseSettings.EmergencyHibernationOnHighTemperature,
             EmergencyHibernationTemperatureMode = settingsPatch.EmergencyHibernationTemperatureMode ?? normalizedBaseSettings.EmergencyHibernationTemperatureMode,
             EmergencyHibernationTemperatureCelsius = settingsPatch.EmergencyHibernationTemperatureCelsius ?? normalizedBaseSettings.EmergencyHibernationTemperatureCelsius
@@ -383,20 +256,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
     private static string NormalizePowerRequestReason(string powerRequestReason)
         => string.IsNullOrWhiteSpace(powerRequestReason) ? PowerRequestOptions.Default.Reason : powerRequestReason;
 
-    private async Task<LidGuardOperationResult<LidGuardSessionCommandOutcome>> SendSessionCommandAsync(
-        string commandName,
-        AgentProvider provider,
-        string providerName,
-        string sessionIdentifier,
-        string workingDirectory,
-        int watchedProcessIdentifier,
-        string sessionStateReason,
-        bool isProviderSessionEnd,
-        string sessionEndReason,
-        bool includeStoredSettings,
-        bool startRuntimeIfUnavailable,
-        bool allowRuntimeUnavailableAsSuccess,
-        CancellationToken cancellationToken)
+    private async Task<LidGuardOperationResult<LidGuardSessionCommandOutcome>> SendSessionCommandAsync(string commandName, AgentProvider provider, string providerName, string sessionIdentifier, string workingDirectory, int watchedProcessIdentifier, string sessionStateReason, bool isProviderSessionEnd, string sessionEndReason, bool includeStoredSettings, bool startRuntimeIfUnavailable, bool allowRuntimeUnavailableAsSuccess, CancellationToken cancellationToken)
     {
         if (!TryValidateSessionCommandArguments(provider, providerName, sessionIdentifier, out var message)) return LidGuardOperationResult<LidGuardSessionCommandOutcome>.Failure(message);
 
@@ -422,7 +282,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         var response = await _runtimeClient.SendAsync(request, startRuntimeIfUnavailable, cancellationToken);
         if (!response.Succeeded && !(allowRuntimeUnavailableAsSuccess && response.RuntimeUnavailable)) return LidGuardOperationResult<LidGuardSessionCommandOutcome>.Failure(response.Message);
 
-        return LidGuardOperationResult<LidGuardSessionCommandOutcome>.Success(new LidGuardSessionCommandOutcome
+        var commandOutcome = new LidGuardSessionCommandOutcome
         {
             RequestedCommand = commandName,
             RequestedSessionIdentifier = sessionIdentifier,
@@ -430,14 +290,11 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             RequestedProviderName = normalizedProviderName,
             RuntimeMessage = response.Message,
             Snapshot = CreateSnapshot(normalizedStoredSettings, response)
-        });
+        };
+        return LidGuardOperationResult<LidGuardSessionCommandOutcome>.Success(commandOutcome);
     }
 
-    private static LidGuardSessionStatus[] GetMatchingSessions(
-        LidGuardPipeResponse statusResponse,
-        string sessionIdentifier,
-        AgentProvider? provider,
-        string providerName)
+    private static LidGuardSessionStatus[] GetMatchingSessions(LidGuardPipeResponse statusResponse, string sessionIdentifier, AgentProvider? provider, string providerName)
     {
         if (!statusResponse.Succeeded) return [];
 
@@ -454,11 +311,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         return [.. matchingSessions];
     }
 
-    private static bool TryValidateSessionCommandArguments(
-        AgentProvider provider,
-        string providerName,
-        string sessionIdentifier,
-        out string message)
+    private static bool TryValidateSessionCommandArguments(AgentProvider provider, string providerName, string sessionIdentifier, out string message)
     {
         message = string.Empty;
         if (string.IsNullOrWhiteSpace(sessionIdentifier))
@@ -482,12 +335,13 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         var messages = new List<string>();
         foreach (var configurationIssue in configurationIssues)
         {
-            messages.Add(configurationIssue.Issue switch
+            var message = configurationIssue.Issue switch
             {
                 ClosedLidStopFollowUpConfigurationIssue.ReplyWaitTooShort => "The reply window is too short to notice the push notification and send a reply. Set it to 0 seconds to turn it off, or at least 20 seconds to use replies.",
                 ClosedLidStopFollowUpConfigurationIssue.PostStopDelayTooShort => "Sleep or reply waiting can start too early before immediately-following prompts are seen. Set postStopSuspendDelaySeconds to at least 10.",
                 _ => configurationIssue.Message
-            });
+            };
+            messages.Add(message);
         }
 
         return [.. messages.Where(static message => !string.IsNullOrWhiteSpace(message))];

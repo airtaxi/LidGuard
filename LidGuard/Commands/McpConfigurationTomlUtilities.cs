@@ -159,7 +159,7 @@ internal static class McpConfigurationTomlUtilities
             }
 
             var escapedCharacter = value[++characterIndex];
-            builder.Append(escapedCharacter switch
+            var unescapedCharacter = escapedCharacter switch
             {
                 'b' => '\b',
                 't' => '\t',
@@ -169,7 +169,8 @@ internal static class McpConfigurationTomlUtilities
                 '"' => '"',
                 '\\' => '\\',
                 _ => escapedCharacter
-            });
+            };
+            builder.Append(unescapedCharacter);
         }
 
         return builder.ToString();

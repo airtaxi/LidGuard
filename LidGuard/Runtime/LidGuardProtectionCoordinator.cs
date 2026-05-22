@@ -6,9 +6,7 @@ using LidGuard.Settings;
 
 namespace LidGuard.Runtime;
 
-internal sealed class LidGuardProtectionCoordinator(
-    IPowerRequestService powerRequestService,
-    LidActionPolicyController lidActionPolicyController)
+internal sealed class LidGuardProtectionCoordinator(IPowerRequestService powerRequestService, LidActionPolicyController lidActionPolicyController)
 {
     private readonly LidGuardPendingLidActionBackupManager _pendingLidActionBackupManager = new(lidActionPolicyController);
     private ILidGuardPowerRequest _powerRequest = InactiveLidGuardPowerRequest.Instance;
@@ -56,9 +54,7 @@ internal sealed class LidGuardProtectionCoordinator(
         DisposePowerRequest();
         IsApplied = false;
 
-        return restoreMessages.Count == 0
-            ? LidGuardOperationResult.Success()
-            : LidGuardOperationResult.Failure(string.Join(" ", restoreMessages));
+        return restoreMessages.Count == 0 ? LidGuardOperationResult.Success() : LidGuardOperationResult.Failure(string.Join(" ", restoreMessages));
     }
 
     private void DisposePowerRequest()
@@ -83,9 +79,6 @@ internal sealed class LidGuardProtectionCoordinator(
     {
         var backupFilePath = LidGuardPendingLidActionBackupStore.GetDefaultFilePath();
         var message = $"Skipped lid close policy restore because the pending backup JSON was missing at {backupFilePath}.";
-        LidGuardRuntimeLogWriter.AppendRuntimeLog(
-            "lid-action-restore-missing-backup",
-            "lid-action-restore",
-            LidGuardPipeResponse.Failure(message));
+        LidGuardRuntimeLogWriter.AppendRuntimeLog("lid-action-restore-missing-backup", "lid-action-restore", LidGuardPipeResponse.Failure(message));
     }
 }

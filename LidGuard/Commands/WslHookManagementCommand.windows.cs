@@ -109,9 +109,7 @@ internal static class WslHookManagementCommand
             return 0;
         }
 
-        var originalContent = currentInspection.ConfigurationFileExists
-            ? ReadRequiredConfigurationContent(context.DistroName, currentInspection.ConfigurationFilePath)
-            : string.Empty;
+        var originalContent = currentInspection.ConfigurationFileExists ? ReadRequiredConfigurationContent(context.DistroName, currentInspection.ConfigurationFilePath) : string.Empty;
         if (!TryCreateInstalledContent(provider, originalContent, currentInspection.HookCommand, out var updatedContent, out message))
         {
             HookManagementCommand.WriteHookInspection(currentInspection);
@@ -208,12 +206,7 @@ internal static class WslHookManagementCommand
         return 0;
     }
 
-    private static bool TryCreateInspection(
-        AgentProvider provider,
-        IReadOnlyDictionary<string, string> options,
-        WslCommandUtilities.WslContext context,
-        out HookInstallationInspection inspection,
-        out string message)
+    private static bool TryCreateInspection(AgentProvider provider, IReadOnlyDictionary<string, string> options, WslCommandUtilities.WslContext context, out HookInstallationInspection inspection, out string message)
     {
         inspection = new HookInstallationInspection();
         var configuredConfigurationFilePath = CommandOptionReader.GetOption(options, "config", "configuration", "configuration-file");
@@ -245,30 +238,13 @@ internal static class WslHookManagementCommand
         return false;
     }
 
-    private static HookInstallationInspection CreateGitHubCopilotInspection(
-        string configurationFilePath,
-        string hookExecutablePath,
-        string hookCommand,
-        string content,
-        bool configurationFileExists)
+    private static HookInstallationInspection CreateGitHubCopilotInspection(string configurationFilePath, string hookExecutablePath, string hookCommand, string content, bool configurationFileExists)
     {
         var hookCommandsByEvent = GitHubCopilotHookConfigurationJsonDocument.CreateManagedHookCommands(hookCommand);
-        return GitHubCopilotHookConfigurationJsonDocument.InspectConfigurationJson(
-            configurationFilePath,
-            hookExecutablePath,
-            hookCommand,
-            hookCommandsByEvent,
-            content,
-            configurationFileExists,
-            HookCommandUtilities.BashShellName);
+        return GitHubCopilotHookConfigurationJsonDocument.InspectConfigurationJson(configurationFilePath, hookExecutablePath, hookCommand, hookCommandsByEvent, content, configurationFileExists, HookCommandUtilities.BashShellName);
     }
 
-    private static bool TryCreateInstalledContent(
-        AgentProvider provider,
-        string originalContent,
-        string hookCommand,
-        out string updatedContent,
-        out string message)
+    private static bool TryCreateInstalledContent(AgentProvider provider, string originalContent, string hookCommand, out string updatedContent, out string message)
     {
         updatedContent = string.Empty;
         message = string.Empty;
@@ -289,12 +265,7 @@ internal static class WslHookManagementCommand
         }
     }
 
-    private static bool TryCreateRemovedContent(
-        AgentProvider provider,
-        string originalContent,
-        out string updatedContent,
-        out bool changed,
-        out string message)
+    private static bool TryCreateRemovedContent(AgentProvider provider, string originalContent, out string updatedContent, out bool changed, out string message)
     {
         updatedContent = originalContent;
         changed = false;
@@ -309,13 +280,7 @@ internal static class WslHookManagementCommand
         };
     }
 
-    private static bool TrySelectHookProviders(
-        IReadOnlyDictionary<string, string> options,
-        string prompt,
-        bool rejectSharedConfigurationFile,
-        string distroName,
-        out IReadOnlyList<AgentProvider> providers,
-        out string message)
+    private static bool TrySelectHookProviders(IReadOnlyDictionary<string, string> options, string prompt, bool rejectSharedConfigurationFile, string distroName, out IReadOnlyList<AgentProvider> providers, out string message)
     {
         providers = [];
         message = string.Empty;
@@ -327,12 +292,7 @@ internal static class WslHookManagementCommand
             return false;
         }
 
-        WslManagedProviderSelection.ResolveAvailableProviders(
-            distroName,
-            selectedProviders,
-            WslManagedProviderSelection.TryHasHookProviderConfigurationRoot,
-            out providers,
-            out var skippedProviderMessages);
+        WslManagedProviderSelection.ResolveAvailableProviders(distroName, selectedProviders, WslManagedProviderSelection.TryHasHookProviderConfigurationRoot, out providers, out var skippedProviderMessages);
 
         ManagedProviderSelection.WriteSkippedProviderMessages(skippedProviderMessages);
         if (providers.Count > 0) return true;
@@ -343,9 +303,7 @@ internal static class WslHookManagementCommand
 
     private static bool ShouldSkipInstall(HookInstallationInspection inspection, out string message)
     {
-        message = LocalizationService.GetFormattedString(
-            "HookManagementAlreadyInstalledOutsideManagedBlock",
-            ManagedProviderSelection.GetProviderDisplayName(inspection.Provider));
+        message = LocalizationService.GetFormattedString("HookManagementAlreadyInstalledOutsideManagedBlock", ManagedProviderSelection.GetProviderDisplayName(inspection.Provider));
         return inspection.Provider == AgentProvider.Codex && inspection.IsInstalled && !inspection.HasCheck(HookInstallationCheck.ManagedBlock);
     }
 

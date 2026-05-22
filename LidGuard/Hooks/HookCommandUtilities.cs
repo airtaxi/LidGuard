@@ -35,9 +35,7 @@ public static class HookCommandUtilities
         if (TryResolveExecutableReferencePath(executableReference, out var executablePath)
             && TryResolveExecutableReferencePath(expectedExecutableReference, out var expectedExecutablePath))
         {
-            return executablePath.Equals(
-                expectedExecutablePath,
-                OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+            return executablePath.Equals(expectedExecutablePath, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         }
 
         var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
@@ -60,9 +58,7 @@ public static class HookCommandUtilities
     {
         if (commandName != LidGuardPipeCommands.Start) return 0;
         if (!settings.WatchParentProcess) return 0;
-        return HookParentProcessResolver.TryResolveWatchedProcessIdentifier(provider, out var watchedProcessIdentifier)
-            ? watchedProcessIdentifier
-            : 0;
+        return HookParentProcessResolver.TryResolveWatchedProcessIdentifier(provider, out var watchedProcessIdentifier) ? watchedProcessIdentifier : 0;
     }
 
     public static string NormalizeHookExecutableReference(string executableReference)

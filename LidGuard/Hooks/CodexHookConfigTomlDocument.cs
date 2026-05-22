@@ -51,12 +51,7 @@ public static class CodexHookConfigTomlDocument
         return builder.ToString().TrimEnd();
     }
 
-    public static HookInstallationInspection InspectConfigToml(
-        string configurationFilePath,
-        string hookExecutablePath,
-        string hookCommand,
-        string content,
-        bool configurationFileExists)
+    public static HookInstallationInspection InspectConfigToml(string configurationFilePath, string hookExecutablePath, string hookCommand, string content, bool configurationFileExists)
     {
         var hasHooksFeatureFlag = HasHooksFeatureFlag(content);
         var hasDeprecatedCodexHooksFeatureFlag = HasDeprecatedCodexHooksFeatureFlag(content);
@@ -127,21 +122,9 @@ public static class CodexHookConfigTomlDocument
     }
 
     public static bool TryRefreshManagedHookStatusMessages(string content, out string updatedContent, out bool changed, out string message)
-        => TryRefreshManagedHookConfiguration(
-            content,
-            string.Empty,
-            false,
-            out updatedContent,
-            out changed,
-            out message);
+        => TryRefreshManagedHookConfiguration(content, string.Empty, false, out updatedContent, out changed, out message);
 
-    public static bool TryRefreshManagedHookConfiguration(
-        string content,
-        string hookCommand,
-        bool refreshCommand,
-        out string updatedContent,
-        out bool changed,
-        out string message)
+    public static bool TryRefreshManagedHookConfiguration(string content, string hookCommand, bool refreshCommand, out string updatedContent, out bool changed, out string message)
     {
         updatedContent = content;
         changed = false;
@@ -583,7 +566,7 @@ public static class CodexHookConfigTomlDocument
             }
 
             var escapedCharacter = value[++characterIndex];
-            builder.Append(escapedCharacter switch
+            var unescapedCharacter = escapedCharacter switch
             {
                 'b' => '\b',
                 't' => '\t',
@@ -593,7 +576,8 @@ public static class CodexHookConfigTomlDocument
                 '"' => '"',
                 '\\' => '\\',
                 _ => escapedCharacter
-            });
+            };
+            builder.Append(unescapedCharacter);
         }
 
         return builder.ToString();

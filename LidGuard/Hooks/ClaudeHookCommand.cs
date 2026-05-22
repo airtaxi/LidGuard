@@ -19,8 +19,7 @@ internal static class ClaudeHookCommand
         var executablePath = HookCommandUtilities.GetDefaultHookExecutableReference();
         if (string.IsNullOrWhiteSpace(executablePath))
         {
-            Console.Error.WriteLine(LocalizationService.GetString(
-                "HookCommandDefaultExecutableNotResolved"));
+            Console.Error.WriteLine(LocalizationService.GetString("HookCommandDefaultExecutableNotResolved"));
             return 1;
         }
 
@@ -43,10 +42,7 @@ internal static class ClaudeHookCommand
             return 0;
         }
 
-        Console.Error.WriteLine(LocalizationService.GetFormattedString(
-            "HookCommandUnsupportedSnippetFormat",
-            "Claude",
-            "settings-json or hooks-json"));
+        Console.Error.WriteLine(LocalizationService.GetFormattedString("HookCommandUnsupportedSnippetFormat", "Claude", "settings-json or hooks-json"));
         return 1;
     }
 
@@ -57,11 +53,7 @@ internal static class ClaudeHookCommand
         public async Task<int> RunAsync()
         {
             var timing = new HookExecutionTiming();
-            var readResult = await ReadHookInputAsync(
-                timing,
-                "LidGuard Claude hook received empty input.",
-                ParseHookInput,
-                message => message);
+            var readResult = await ReadHookInputAsync(timing, "LidGuard Claude hook received empty input.", ParseHookInput, message => message);
             if (!readResult.Succeeded) return 0;
 
             var hookInput = readResult.HookInput;
@@ -101,9 +93,7 @@ internal static class ClaudeHookCommand
 
             if (hookEventName.Equals(ClaudeHookEventNames.PostToolUseFailure, StringComparison.Ordinal))
             {
-                return hookInput.IsInterrupt
-                    ? await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookEventName, hookInput, timing: timing)
-                    : await ReportActivityAsync(hookInput);
+                return hookInput.IsInterrupt ? await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookEventName, hookInput, timing: timing) : await ReportActivityAsync(hookInput);
             }
 
             if (hookEventName.Equals(ClaudeHookEventNames.UserPromptSubmit, StringComparison.Ordinal))
@@ -120,18 +110,8 @@ internal static class ClaudeHookCommand
                 var isProviderSessionEnd = IsProviderSessionEnd(hookInput);
                 if (ClaudeHookWorkTracker.TryCreatePendingWorkReason(hookInput, GetSessionIdentifier(hookInput), out var pendingProviderWorkReason))
                 {
-                    ClaudeHookWorkTracker.RecordDeferredStop(
-                        GetSessionIdentifier(hookInput),
-                        isProviderSessionEnd,
-                        CreateSessionEndReason(hookEventName, hookInput, string.Empty),
-                        pendingProviderWorkReason);
-                    return await SendRuntimeRequestAsync(
-                        LidGuardPipeCommands.Stop,
-                        hookEventName,
-                        hookInput,
-                        hasPendingProviderWork: true,
-                        pendingProviderWorkReason: pendingProviderWorkReason,
-                        timing: timing);
+                    ClaudeHookWorkTracker.RecordDeferredStop(GetSessionIdentifier(hookInput), isProviderSessionEnd, CreateSessionEndReason(hookEventName, hookInput, string.Empty), pendingProviderWorkReason);
+                    return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookEventName, hookInput, hasPendingProviderWork: true, pendingProviderWorkReason: pendingProviderWorkReason, timing: timing);
                 }
 
                 return await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookEventName, hookInput, isProviderSessionEnd, timing: timing);
@@ -142,21 +122,9 @@ internal static class ClaudeHookCommand
 
         protected override void AppendMessage(string message) => ClaudeHookEventLog.AppendMessage(message);
 
-        protected override void AppendRuntimeResult(
-            string hookEventName,
-            ClaudeHookInput hookInput,
-            string commandName,
-            LidGuardPipeResponse response,
-            string details)
+        protected override void AppendRuntimeResult(string hookEventName, ClaudeHookInput hookInput, string commandName, LidGuardPipeResponse response, string details)
         {
-            ClaudeHookEventLog.AppendRuntimeResult(
-                hookInput,
-                commandName,
-                response.Succeeded,
-                response.RuntimeUnavailable,
-                response.ActiveSessionCount,
-                response.Message,
-                details);
+            ClaudeHookEventLog.AppendRuntimeResult(hookInput, commandName, response.Succeeded, response.RuntimeUnavailable, response.ActiveSessionCount, response.Message, details);
         }
 
         protected override void ClearSessionState(ClaudeHookInput hookInput) => ClaudeHookWorkTracker.ClearSessionState(GetSessionIdentifier(hookInput));
@@ -181,9 +149,7 @@ internal static class ClaudeHookCommand
             try
             {
                 var hookInput = JsonSerializer.Deserialize(hookInputJson, LidGuardJsonSerializerContext.Default.ClaudeHookInput);
-                return hookInput is null
-                    ? HookCommandInputParseResult<ClaudeHookInput>.Failure("LidGuard Claude hook could not parse input.")
-                    : HookCommandInputParseResult<ClaudeHookInput>.Success(hookInput);
+                return hookInput is null ? HookCommandInputParseResult<ClaudeHookInput>.Failure("LidGuard Claude hook could not parse input.") : HookCommandInputParseResult<ClaudeHookInput>.Success(hookInput);
             }
             catch (JsonException exception)
             {
@@ -193,25 +159,12 @@ internal static class ClaudeHookCommand
 
         private Task<int> WriteClosedLidPermissionRequestDecisionAsync(ClaudeHookInput hookInput)
         {
-            return WriteClosedLidDecisionAsync(
-                ClaudeHookEventNames.PermissionRequest,
-                hookInput,
-                response => $"LidGuard Claude hook skipped PermissionRequest decision because runtime status is unavailable: {response.Message}",
-                response => $"LidGuard Claude hook left PermissionRequest to Claude because {ClosedLidPolicyStatus.DescribeInactiveReason(response)}.",
-                response => $"LidGuard Claude hook handled closed-lid PermissionRequest with {response.Settings.ClosedLidPermissionRequestDecision}.",
-                response => ClaudeClosedLidPermissionRequestDecisionOutput.Write(response.Settings),
-                true);
+            return WriteClosedLidDecisionAsync(ClaudeHookEventNames.PermissionRequest, hookInput, response => $"LidGuard Claude hook skipped PermissionRequest decision because runtime status is unavailable: {response.Message}", response => $"LidGuard Claude hook left PermissionRequest to Claude because {ClosedLidPolicyStatus.DescribeInactiveReason(response)}.", response => $"LidGuard Claude hook handled closed-lid PermissionRequest with {response.Settings.ClosedLidPermissionRequestDecision}.", response => ClaudeClosedLidPermissionRequestDecisionOutput.Write(response.Settings), true);
         }
 
         private Task<int> WriteClosedLidElicitationDecisionAsync(ClaudeHookInput hookInput)
         {
-            return WriteClosedLidDecisionAsync(
-                ClaudeHookEventNames.Elicitation,
-                hookInput,
-                response => $"LidGuard Claude hook skipped Elicitation decision because runtime status is unavailable: {response.Message}",
-                response => $"LidGuard Claude hook left Elicitation to Claude because {ClosedLidPolicyStatus.DescribeInactiveReason(response)}.",
-                _ => "LidGuard Claude hook canceled closed-lid Elicitation.",
-                _ => ClaudeClosedLidElicitationOutput.Write());
+            return WriteClosedLidDecisionAsync(ClaudeHookEventNames.Elicitation, hookInput, response => $"LidGuard Claude hook skipped Elicitation decision because runtime status is unavailable: {response.Message}", response => $"LidGuard Claude hook left Elicitation to Claude because {ClosedLidPolicyStatus.DescribeInactiveReason(response)}.", _ => "LidGuard Claude hook canceled closed-lid Elicitation.", _ => ClaudeClosedLidElicitationOutput.Write());
         }
 
         private async Task<int> HandleNotificationAsync(ClaudeHookInput hookInput)
@@ -225,19 +178,11 @@ internal static class ClaudeHookCommand
         private Task<int> ReportActivityAsync(ClaudeHookInput hookInput)
         {
             if (!ClaudeSoftLockSignalSource.IsActivityEvent(hookInput)) return Task.FromResult(0);
-            return SendSessionStateRequestAsync(
-                LidGuardPipeCommands.MarkSessionActive,
-                hookInput.HookEventName,
-                hookInput,
-                DescribeActivityReason(hookInput.HookEventName, hookInput.ToolName));
+            return SendSessionStateRequestAsync(LidGuardPipeCommands.MarkSessionActive, hookInput.HookEventName, hookInput, DescribeActivityReason(hookInput.HookEventName, hookInput.ToolName));
         }
 
         private Task<int> ReportActivityAsync(ClaudeHookInput hookInput, string activityDetail)
-            => SendSessionStateRequestAsync(
-                LidGuardPipeCommands.MarkSessionActive,
-                hookInput.HookEventName,
-                hookInput,
-                DescribeActivityReason(hookInput.HookEventName, activityDetail));
+            => SendSessionStateRequestAsync(LidGuardPipeCommands.MarkSessionActive, hookInput.HookEventName, hookInput, DescribeActivityReason(hookInput.HookEventName, activityDetail));
 
         private static bool IsProviderSessionEnd(ClaudeHookInput hookInput)
         {

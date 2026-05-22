@@ -3,9 +3,7 @@ using LidGuard.Settings;
 
 namespace LidGuard.Runtime;
 
-internal sealed class EmergencyHibernationThermalMonitor(
-    Func<EmergencyHibernationThermalMonitorState> emergencyHibernationThermalMonitorStateProvider,
-    Func<EmergencyHibernationThermalThresholdReachedContext, Task> emergencyHibernationThresholdReachedAsync)
+internal sealed class EmergencyHibernationThermalMonitor(Func<EmergencyHibernationThermalMonitorState> emergencyHibernationThermalMonitorStateProvider, Func<EmergencyHibernationThermalThresholdReachedContext, Task> emergencyHibernationThresholdReachedAsync)
 {
     private static readonly TimeSpan s_pollInterval = TimeSpan.FromSeconds(10);
     private readonly object _gate = new();
@@ -51,19 +49,13 @@ internal sealed class EmergencyHibernationThermalMonitor(
                 if (!emergencyHibernationThermalMonitorState.ClosedLidPolicyActive) continue;
                 if (!OperatingSystem.IsWindowsVersionAtLeast(6, 1) && !OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS()) continue;
 
-                var emergencyHibernationTemperatureCelsius = LidGuardSettings.ClampEmergencyHibernationTemperatureCelsius(
-                    emergencyHibernationThermalMonitorState.EmergencyHibernationTemperatureCelsius);
+                var emergencyHibernationTemperatureCelsius = LidGuardSettings.ClampEmergencyHibernationTemperatureCelsius(emergencyHibernationThermalMonitorState.EmergencyHibernationTemperatureCelsius);
                 var emergencyHibernationTemperatureMode = emergencyHibernationThermalMonitorState.TemperatureMode;
                 var observedTemperatureCelsius = SystemThermalInformation.GetSystemTemperatureCelsius(emergencyHibernationTemperatureMode);
                 if (!observedTemperatureCelsius.HasValue) continue;
                 if (observedTemperatureCelsius.Value < emergencyHibernationTemperatureCelsius) continue;
 
-                await NotifyEmergencyHibernationThresholdReachedAsync(
-                    new EmergencyHibernationThermalThresholdReachedContext(
-                        observedTemperatureCelsius.Value,
-                        emergencyHibernationTemperatureCelsius,
-                        emergencyHibernationTemperatureMode),
-                    emergencyHibernationThresholdReachedAsync);
+                await NotifyEmergencyHibernationThresholdReachedAsync(new EmergencyHibernationThermalThresholdReachedContext(observedTemperatureCelsius.Value, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode), emergencyHibernationThresholdReachedAsync);
             }
         }
         catch (OperationCanceledException)
@@ -71,9 +63,7 @@ internal sealed class EmergencyHibernationThermalMonitor(
         }
     }
 
-    private static async Task NotifyEmergencyHibernationThresholdReachedAsync(
-        EmergencyHibernationThermalThresholdReachedContext emergencyHibernationThermalThresholdReachedContext,
-        Func<EmergencyHibernationThermalThresholdReachedContext, Task> emergencyHibernationThresholdReachedAsync)
+    private static async Task NotifyEmergencyHibernationThresholdReachedAsync(EmergencyHibernationThermalThresholdReachedContext emergencyHibernationThermalThresholdReachedContext, Func<EmergencyHibernationThermalThresholdReachedContext, Task> emergencyHibernationThresholdReachedAsync)
     {
         try
         {
@@ -85,16 +75,6 @@ internal sealed class EmergencyHibernationThermalMonitor(
     }
 }
 
-internal readonly record struct EmergencyHibernationThermalMonitorState(
-    bool ProtectionApplied,
-    bool EmergencyHibernationOnHighTemperature,
-    bool ClosedLidPolicyActive,
-    LidSwitchState LidSwitchState,
-    int VisibleDisplayMonitorCount,
-    EmergencyHibernationTemperatureMode TemperatureMode,
-    int EmergencyHibernationTemperatureCelsius);
+internal readonly record struct EmergencyHibernationThermalMonitorState(bool ProtectionApplied, bool EmergencyHibernationOnHighTemperature, bool ClosedLidPolicyActive, LidSwitchState LidSwitchState, int VisibleDisplayMonitorCount, EmergencyHibernationTemperatureMode TemperatureMode, int EmergencyHibernationTemperatureCelsius);
 
-internal readonly record struct EmergencyHibernationThermalThresholdReachedContext(
-    int ObservedTemperatureCelsius,
-    int ThresholdTemperatureCelsius,
-    EmergencyHibernationTemperatureMode ObservedTemperatureMode);
+internal readonly record struct EmergencyHibernationThermalThresholdReachedContext(int ObservedTemperatureCelsius, int ThresholdTemperatureCelsius, EmergencyHibernationTemperatureMode ObservedTemperatureMode);

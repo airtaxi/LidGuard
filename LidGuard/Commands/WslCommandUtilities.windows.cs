@@ -80,12 +80,7 @@ internal static class WslCommandUtilities
         var distroResult = RunWslProcess(validationArguments);
         if (distroResult.ExitCode == 0) return true;
 
-        message = string.IsNullOrWhiteSpace(distroName)
-            ? LocalizationService.GetString("WslDefaultDistroUnavailable")
-                .Replace("{0}", distroResult.GetDisplayError(), StringComparison.Ordinal)
-            : LocalizationService.GetString("WslNamedDistroUnavailable")
-                .Replace("{0}", distroName, StringComparison.Ordinal)
-                .Replace("{1}", distroResult.GetDisplayError(), StringComparison.Ordinal);
+        message = string.IsNullOrWhiteSpace(distroName) ? LocalizationService.GetString("WslDefaultDistroUnavailable").Replace("{0}", distroResult.GetDisplayError(), StringComparison.Ordinal) : LocalizationService.GetString("WslNamedDistroUnavailable").Replace("{0}", distroName, StringComparison.Ordinal).Replace("{1}", distroResult.GetDisplayError(), StringComparison.Ordinal);
         return false;
     }
 
@@ -170,10 +165,7 @@ internal static class WslCommandUtilities
         normalizedPath = string.Empty;
         message = string.Empty;
 
-        var result = RunShell(
-            distroName,
-            "case \"$1\" in \"~\") printf '%s' \"$HOME\" ;; \"~/\"*) printf '%s/%s' \"$HOME\" \"${1#~/}\" ;; /*) printf '%s' \"$1\" ;; *) printf '%s/%s' \"$PWD\" \"$1\" ;; esac",
-            [path]);
+        var result = RunShell(distroName, "case \"$1\" in \"~\") printf '%s' \"$HOME\" ;; \"~/\"*) printf '%s/%s' \"$HOME\" \"${1#~/}\" ;; /*) printf '%s' \"$1\" ;; *) printf '%s/%s' \"$PWD\" \"$1\" ;; esac", [path]);
         if (result.ExitCode != 0)
         {
             message = result.GetDisplayError();
@@ -238,11 +230,7 @@ internal static class WslCommandUtilities
         };
     }
 
-    public static bool TryResolveProviderCliDisplayText(
-        string distroName,
-        AgentProvider provider,
-        out bool hasProviderCli,
-        out string providerCliDisplayText)
+    public static bool TryResolveProviderCliDisplayText(string distroName, AgentProvider provider, out bool hasProviderCli, out string providerCliDisplayText)
     {
         var executableName = GetProviderCliExecutableName(provider);
         hasProviderCli = false;
@@ -314,11 +302,7 @@ internal static class WslCommandUtilities
             var standardErrorTask = process.StandardError.ReadToEndAsync();
             process.WaitForExit();
 
-            return new WslCommandResult(
-                process.ExitCode,
-                standardOutputTask.GetAwaiter().GetResult(),
-                standardErrorTask.GetAwaiter().GetResult(),
-                false);
+            return new WslCommandResult(process.ExitCode, standardOutputTask.GetAwaiter().GetResult(), standardErrorTask.GetAwaiter().GetResult(), false);
         }
         catch (Win32Exception exception)
         {
@@ -352,11 +336,7 @@ internal static class WslCommandUtilities
     }
 }
 
-internal readonly record struct WslCommandResult(
-    int ExitCode,
-    string StandardOutput,
-    string StandardError,
-    bool StartFailed)
+internal readonly record struct WslCommandResult(int ExitCode, string StandardOutput, string StandardError, bool StartFailed)
 {
     public static WslCommandResult FailedToStart(string message) => new(1, string.Empty, message, true);
 

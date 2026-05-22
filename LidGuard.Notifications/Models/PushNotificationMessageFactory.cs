@@ -95,14 +95,10 @@ internal static class PushNotificationMessageFactory
 
     private static string CreateSessionEndDetails(PendingWebhookEvent webhookEvent, string statusText)
     {
-        var providerText = string.IsNullOrWhiteSpace(webhookEvent.ProviderName)
-            ? webhookEvent.Provider
-            : $"{webhookEvent.Provider}:{webhookEvent.ProviderName}";
+        var providerText = string.IsNullOrWhiteSpace(webhookEvent.ProviderName) ? webhookEvent.Provider : $"{webhookEvent.Provider}:{webhookEvent.ProviderName}";
         if (string.IsNullOrWhiteSpace(providerText)) providerText = LidGuardNotificationText.PushProviderFallback;
 
-        var sessionText = string.IsNullOrWhiteSpace(webhookEvent.SessionIdentifier)
-            ? LidGuardNotificationText.PushSessionFallback
-            : LidGuardNotificationText.PushSession(webhookEvent.SessionIdentifier);
+        var sessionText = string.IsNullOrWhiteSpace(webhookEvent.SessionIdentifier) ? LidGuardNotificationText.PushSessionFallback : LidGuardNotificationText.PushSession(webhookEvent.SessionIdentifier);
         var details = new List<string> { $"{providerText} {sessionText} {statusText}" };
         if (!string.IsNullOrWhiteSpace(webhookEvent.EndReason)) details.Add(LidGuardNotificationText.PushEndReason(webhookEvent.EndReason));
         if (webhookEvent.ActiveSessionCount is not null) details.Add(LidGuardNotificationText.PushActiveSessionsRemaining(webhookEvent.ActiveSessionCount.Value));

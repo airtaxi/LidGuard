@@ -25,9 +25,7 @@ internal static class LidGuardSettingsUpdateCommand
         var settings = LidGuardSettings.Default;
         var settingsMessage = string.Empty;
         var isInteractiveSettings = options.Count == 0;
-        var settingsCreated = isInteractiveSettings
-            ? LidGuardSettingsInteractiveFactory.TryCreateSettings(currentSettings, out settings, out settingsMessage)
-            : LidGuardSettingsCommandLineFactory.TryCreateSettings(options, currentSettings, out settings, out settingsMessage);
+        var settingsCreated = isInteractiveSettings ? LidGuardSettingsInteractiveFactory.TryCreateSettings(currentSettings, out settings, out settingsMessage) : LidGuardSettingsCommandLineFactory.TryCreateSettings(options, currentSettings, out settings, out settingsMessage);
 
         if (!settingsCreated)
         {
@@ -35,11 +33,7 @@ internal static class LidGuardSettingsUpdateCommand
             return 1;
         }
 
-        if (!PostStopSuspendSoundConfiguration.TryNormalize(
-            settings,
-            postStopSuspendSoundPlayerResult.Value,
-            out settings,
-            out settingsMessage))
+        if (!PostStopSuspendSoundConfiguration.TryNormalize(settings, postStopSuspendSoundPlayerResult.Value, out settings, out settingsMessage))
         {
             Console.Error.WriteLine(settingsMessage);
             return 1;
@@ -53,9 +47,7 @@ internal static class LidGuardSettingsUpdateCommand
 
         var shouldRefreshManagedHooks = RequiresManagedHookRefresh(options, currentSettings, settings);
         LidGuardCulture.ApplyEffectiveCulture(settings);
-        var managedHookStatusMessageRefreshResult = shouldRefreshManagedHooks
-            ? ManagedHookStatusMessageRefresh.RefreshInstalledManagedHooks()
-            : null;
+        var managedHookStatusMessageRefreshResult = shouldRefreshManagedHooks ? ManagedHookStatusMessageRefresh.RefreshInstalledManagedHooks() : null;
 
         var request = new LidGuardPipeRequest
         {
@@ -94,10 +86,7 @@ internal static class LidGuardSettingsUpdateCommand
         return 1;
     }
 
-    private static bool RequiresManagedHookRefresh(
-        IReadOnlyDictionary<string, string> options,
-        LidGuardSettings currentSettings,
-        LidGuardSettings settings)
+    private static bool RequiresManagedHookRefresh(IReadOnlyDictionary<string, string> options, LidGuardSettings currentSettings, LidGuardSettings settings)
     {
         if (CommandOptionReader.TryGetOption(options, out _, "ui-culture", "user-interface-culture")) return true;
         return LidGuardSettingsChangeDetector.RequiresManagedHookRefresh(currentSettings, settings);
@@ -105,9 +94,7 @@ internal static class LidGuardSettingsUpdateCommand
 
     internal static void WriteManagedHookRefreshResult(ManagedHookStatusMessageRefreshResult result)
     {
-        var message = result.ChangedProviderNames.Count > 0
-            ? LocalizationService.GetFormattedString("SettingsManagedHookStatusMessageRefreshChanged", string.Join(", ", result.ChangedProviderNames))
-            : LocalizationService.GetString("SettingsManagedHookStatusMessageRefreshUnchanged");
+        var message = result.ChangedProviderNames.Count > 0 ? LocalizationService.GetFormattedString("SettingsManagedHookStatusMessageRefreshChanged", string.Join(", ", result.ChangedProviderNames)) : LocalizationService.GetString("SettingsManagedHookStatusMessageRefreshUnchanged");
 
         Console.WriteLine(message);
         foreach (var warningMessage in result.WarningMessages) Console.WriteLine(LocalizationService.GetFormattedString("TextWarning", LocalizationService.GetFormattedString("SettingsManagedHookStatusMessageRefreshFailed", warningMessage)));

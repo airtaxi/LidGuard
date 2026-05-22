@@ -15,11 +15,7 @@ internal static class McpManagementCommand
             return 1;
         }
 
-        ManagedProviderSelection.ResolveAvailableProviders(
-            selectedProviders,
-            ManagedProviderConfigurationRoots.GetMcpCandidatePaths,
-            out var providers,
-            out var skippedProviderMessages);
+        ManagedProviderSelection.ResolveAvailableProviders(selectedProviders, ManagedProviderConfigurationRoots.GetMcpCandidatePaths, out var providers, out var skippedProviderMessages);
 
         ManagedProviderSelection.WriteSkippedProviderMessages(skippedProviderMessages);
         if (providers.Count == 0) return ManagedProviderSelection.WriteNoAvailableProvidersFound();
@@ -29,9 +25,7 @@ internal static class McpManagementCommand
         {
             if (providers.Count > 1) Console.WriteLine(LocalizationService.GetFormattedString("ManagementMcpStatusTitle", ManagedProviderSelection.GetProviderDisplayName(provider)));
 
-            var providerExitCode = TryInspectProviderMcp(provider, out var inspectionResult)
-                ? ManagedMcpInspectionResult.WriteProviderMcpStatus(inspectionResult)
-                : WriteUnsupportedProvider();
+            var providerExitCode = TryInspectProviderMcp(provider, out var inspectionResult) ? ManagedMcpInspectionResult.WriteProviderMcpStatus(inspectionResult) : WriteUnsupportedProvider();
 
             if (providerExitCode != 0) exitCode = providerExitCode;
             if (providers.Count > 1) Console.WriteLine();
@@ -48,11 +42,7 @@ internal static class McpManagementCommand
             return 1;
         }
 
-        ManagedProviderSelection.ResolveAvailableProviders(
-            selectedProviders,
-            ManagedProviderConfigurationRoots.GetMcpCandidatePaths,
-            out var providers,
-            out var skippedProviderMessages);
+        ManagedProviderSelection.ResolveAvailableProviders(selectedProviders, ManagedProviderConfigurationRoots.GetMcpCandidatePaths, out var providers, out var skippedProviderMessages);
 
         ManagedProviderSelection.WriteSkippedProviderMessages(skippedProviderMessages);
         if (providers.Count == 0) return ManagedProviderSelection.WriteNoAvailableProvidersFound();
@@ -68,9 +58,7 @@ internal static class McpManagementCommand
         foreach (var provider in providers)
         {
             if (providers.Count > 1) Console.WriteLine(LocalizationService.GetFormattedString("ManagementInstallingMcpServer", ManagedProviderSelection.GetProviderDisplayName(provider)));
-            var providerExitCode = TryInspectProviderMcp(provider, out var inspectionResult)
-                ? InstallProviderMcp(provider, managedExecutableReference, inspectionResult)
-                : WriteUnsupportedProvider();
+            var providerExitCode = TryInspectProviderMcp(provider, out var inspectionResult) ? InstallProviderMcp(provider, managedExecutableReference, inspectionResult) : WriteUnsupportedProvider();
             if (providerExitCode != 0) exitCode = providerExitCode;
             if (providers.Count > 1) Console.WriteLine();
         }
@@ -86,11 +74,7 @@ internal static class McpManagementCommand
             return 1;
         }
 
-        ManagedProviderSelection.ResolveAvailableProviders(
-            selectedProviders,
-            ManagedProviderConfigurationRoots.GetMcpCandidatePaths,
-            out var providers,
-            out var skippedProviderMessages);
+        ManagedProviderSelection.ResolveAvailableProviders(selectedProviders, ManagedProviderConfigurationRoots.GetMcpCandidatePaths, out var providers, out var skippedProviderMessages);
 
         ManagedProviderSelection.WriteSkippedProviderMessages(skippedProviderMessages);
         if (providers.Count == 0) return ManagedProviderSelection.WriteNoAvailableProvidersFound();
@@ -129,23 +113,16 @@ internal static class McpManagementCommand
         };
     }
 
-    private static int InstallProviderMcp(
-        AgentProvider provider,
-        string managedExecutableReference,
-        ManagedMcpInspectionResult inspectionResult)
+    private static int InstallProviderMcp(AgentProvider provider, string managedExecutableReference, ManagedMcpInspectionResult inspectionResult)
     {
         if (inspectionResult.ShouldRefreshManagedMcpServer)
         {
-            Console.WriteLine(
-                LocalizationService.GetString("ManagementExistingMcpServerRefreshing")
-                    .Replace("{0}", ManagedProviderSelection.GetProviderDisplayName(provider), StringComparison.Ordinal));
+            Console.WriteLine(LocalizationService.GetString("ManagementExistingMcpServerRefreshing").Replace("{0}", ManagedProviderSelection.GetProviderDisplayName(provider), StringComparison.Ordinal));
 
             var removeExitCode = RemoveProviderMcp(provider);
             if (removeExitCode != 0)
             {
-                Console.Error.WriteLine(
-                    LocalizationService.GetString("ManagementSkippingMcpInstallAfterRemoveFailure")
-                        .Replace("{0}", ManagedProviderSelection.GetProviderDisplayName(provider), StringComparison.Ordinal));
+                Console.Error.WriteLine(LocalizationService.GetString("ManagementSkippingMcpInstallAfterRemoveFailure").Replace("{0}", ManagedProviderSelection.GetProviderDisplayName(provider), StringComparison.Ordinal));
                 return removeExitCode;
             }
         }
@@ -222,25 +199,10 @@ internal static class McpManagementCommand
             message = LocalizationService.GetFormattedString("ManagementConfigurationFileDoesNotExist", configurationFilePath);
         }
 
-        return new ManagedMcpInspectionResult(
-            AgentProvider.Codex,
-            configurationFilePath,
-            configurationFileExists,
-            hasProviderCli,
-            providerCliDisplayText,
-            hasServerEntry,
-            matchesCurrentLidGuardExecutable,
-            containsExpectedServerCommand,
-            string.Empty,
-            serverCommand,
-            serverArguments,
-            string.Empty,
-            ManagedMcpInspectionResult.GetStatusMessage(configurationFilePath, configurationFileExists, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, message));
+        return new ManagedMcpInspectionResult(AgentProvider.Codex, configurationFilePath, configurationFileExists, hasProviderCli, providerCliDisplayText, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, string.Empty, serverCommand, serverArguments, string.Empty, ManagedMcpInspectionResult.GetStatusMessage(configurationFilePath, configurationFileExists, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, message));
     }
 
-    private static ManagedMcpInspectionResult InspectJsonProviderMcp(
-        AgentProvider provider,
-        string configurationFilePath)
+    private static ManagedMcpInspectionResult InspectJsonProviderMcp(AgentProvider provider, string configurationFilePath)
     {
         var configurationFileExists = File.Exists(configurationFilePath);
         ManagedProviderCliResolver.TryResolveProviderCliDisplayText(provider, out var hasProviderCli, out var providerCliDisplayText);
@@ -268,20 +230,7 @@ internal static class McpManagementCommand
             }
         }
 
-        return new ManagedMcpInspectionResult(
-            provider,
-            configurationFilePath,
-            configurationFileExists,
-            hasProviderCli,
-            providerCliDisplayText,
-            hasServerEntry,
-            matchesCurrentLidGuardExecutable,
-            containsExpectedServerCommand,
-            serverType,
-            serverCommand,
-            serverArguments,
-            serverUrl,
-            ManagedMcpInspectionResult.GetStatusMessage(configurationFilePath, configurationFileExists, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, message));
+        return new ManagedMcpInspectionResult(provider, configurationFilePath, configurationFileExists, hasProviderCli, providerCliDisplayText, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, serverType, serverCommand, serverArguments, serverUrl, ManagedMcpInspectionResult.GetStatusMessage(configurationFilePath, configurationFileExists, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, message));
     }
 
     private static bool TryInspectProviderMcp(AgentProvider provider, out ManagedMcpInspectionResult inspectionResult)

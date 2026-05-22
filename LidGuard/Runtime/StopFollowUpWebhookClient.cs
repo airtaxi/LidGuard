@@ -8,11 +8,7 @@ internal static class StopFollowUpWebhookClient
 {
     private static readonly HttpClient s_httpClient = new();
 
-    public static async Task<LidGuardOperationResult<StopFollowUpWebhookStartResponse>> StartAsync(
-        string webhookUrl,
-        LidGuardWebhookRequest request,
-        CancellationToken cancellationToken,
-        TimeSpan? timeout = null)
+    public static async Task<LidGuardOperationResult<StopFollowUpWebhookStartResponse>> StartAsync(string webhookUrl, LidGuardWebhookRequest request, CancellationToken cancellationToken, TimeSpan? timeout = null)
     {
         var requestContent = JsonSerializer.Serialize(request, SuspendWebhookJsonSerializerContext.Default.LidGuardWebhookRequest);
         using var requestMessage = new HttpRequestMessage(HttpMethod.Post, webhookUrl)
@@ -25,15 +21,11 @@ internal static class StopFollowUpWebhookClient
             using var response = await SendAsync(requestMessage, cancellationToken, timeout);
             if (!response.IsSuccessStatusCode)
             {
-                return LidGuardOperationResult<StopFollowUpWebhookStartResponse>.Failure(
-                    $"The closed-lid stop follow-up webhook returned {(int)response.StatusCode} ({response.ReasonPhrase}).");
+                return LidGuardOperationResult<StopFollowUpWebhookStartResponse>.Failure($"The closed-lid stop follow-up webhook returned {(int)response.StatusCode} ({response.ReasonPhrase}).");
             }
 
             await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-            var startResponse = await JsonSerializer.DeserializeAsync(
-                responseStream,
-                SuspendWebhookJsonSerializerContext.Default.StopFollowUpWebhookStartResponse,
-                cancellationToken);
+            var startResponse = await JsonSerializer.DeserializeAsync(responseStream, SuspendWebhookJsonSerializerContext.Default.StopFollowUpWebhookStartResponse, cancellationToken);
             if (startResponse is null) return LidGuardOperationResult<StopFollowUpWebhookStartResponse>.Failure("The closed-lid stop follow-up webhook returned an empty response body.");
 
             return LidGuardOperationResult<StopFollowUpWebhookStartResponse>.Success(startResponse);
@@ -52,10 +44,7 @@ internal static class StopFollowUpWebhookClient
         }
     }
 
-    public static async Task<LidGuardOperationResult<StopFollowUpWebhookPollResponse>> PollAsync(
-        Uri pollUri,
-        CancellationToken cancellationToken,
-        TimeSpan? timeout = null)
+    public static async Task<LidGuardOperationResult<StopFollowUpWebhookPollResponse>> PollAsync(Uri pollUri, CancellationToken cancellationToken, TimeSpan? timeout = null)
     {
         using var requestMessage = new HttpRequestMessage(HttpMethod.Get, pollUri);
         try
@@ -63,15 +52,11 @@ internal static class StopFollowUpWebhookClient
             using var response = await SendAsync(requestMessage, cancellationToken, timeout);
             if (!response.IsSuccessStatusCode)
             {
-                return LidGuardOperationResult<StopFollowUpWebhookPollResponse>.Failure(
-                    $"The closed-lid stop follow-up poll returned {(int)response.StatusCode} ({response.ReasonPhrase}).");
+                return LidGuardOperationResult<StopFollowUpWebhookPollResponse>.Failure($"The closed-lid stop follow-up poll returned {(int)response.StatusCode} ({response.ReasonPhrase}).");
             }
 
             await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-            var pollResponse = await JsonSerializer.DeserializeAsync(
-                responseStream,
-                SuspendWebhookJsonSerializerContext.Default.StopFollowUpWebhookPollResponse,
-                cancellationToken);
+            var pollResponse = await JsonSerializer.DeserializeAsync(responseStream, SuspendWebhookJsonSerializerContext.Default.StopFollowUpWebhookPollResponse, cancellationToken);
             if (pollResponse is null) return LidGuardOperationResult<StopFollowUpWebhookPollResponse>.Failure("The closed-lid stop follow-up poll returned an empty response body.");
 
             return LidGuardOperationResult<StopFollowUpWebhookPollResponse>.Success(pollResponse);
@@ -90,10 +75,7 @@ internal static class StopFollowUpWebhookClient
         }
     }
 
-    private static async Task<HttpResponseMessage> SendAsync(
-        HttpRequestMessage requestMessage,
-        CancellationToken cancellationToken,
-        TimeSpan? timeout)
+    private static async Task<HttpResponseMessage> SendAsync(HttpRequestMessage requestMessage, CancellationToken cancellationToken, TimeSpan? timeout)
     {
         using var timeoutCancellationTokenSource = timeout.HasValue ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken) : null;
         var effectiveCancellationToken = cancellationToken;

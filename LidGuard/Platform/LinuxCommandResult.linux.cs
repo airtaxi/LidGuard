@@ -37,9 +37,7 @@ internal sealed class LinuxCommandResult
     {
         if (!string.IsNullOrWhiteSpace(Message)) return Message;
 
-        var failureDetail = !string.IsNullOrWhiteSpace(StandardError)
-            ? StandardError.Trim()
-            : StandardOutput.Trim();
+        var failureDetail = !string.IsNullOrWhiteSpace(StandardError) ? StandardError.Trim() : StandardOutput.Trim();
         if (string.IsNullOrWhiteSpace(failureDetail)) return $"{commandDisplayName} exited with code {ExitCode}.";
         return $"{commandDisplayName} exited with code {ExitCode}: {failureDetail}";
     }

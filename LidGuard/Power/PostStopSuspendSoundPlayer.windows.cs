@@ -55,8 +55,7 @@ public sealed partial class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPl
         if (!string.Equals(Path.GetExtension(fullWaveFilePath), ".wav", StringComparison.OrdinalIgnoreCase))
         {
             var supportedSystemSounds = string.Join(", ", s_systemSoundAliases.Keys.OrderBy(static key => key, StringComparer.Ordinal));
-            return LidGuardOperationResult<string>.Failure(
-                $"The post-stop suspend sound must be off, one of {supportedSystemSounds}, or a path to a .wav file.");
+            return LidGuardOperationResult<string>.Failure($"The post-stop suspend sound must be off, one of {supportedSystemSounds}, or a path to a .wav file.");
         }
 
         if (Directory.Exists(fullWaveFilePath)) return LidGuardOperationResult<string>.Failure($"The configured WAV path points to a directory, not a file: {fullWaveFilePath}");

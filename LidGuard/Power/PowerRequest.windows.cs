@@ -7,11 +7,7 @@ using Windows.Win32.System.Power;
 namespace LidGuard.Power;
 
 [SupportedOSPlatform("windows6.1")]
-internal sealed class PowerRequest(
-    SafeFileHandle handle,
-    bool hasSystemRequest,
-    bool hasAwayModeRequest,
-    bool hasDisplayRequest) : ILidGuardPowerRequest
+internal sealed class PowerRequest(SafeFileHandle handle, bool hasSystemRequest, bool hasAwayModeRequest, bool hasDisplayRequest) : ILidGuardPowerRequest
 {
     public bool IsActive { get; private set; } = true;
 

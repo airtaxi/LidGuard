@@ -16,10 +16,7 @@ internal static class UserInterfaceCultureConfiguration
     public static string NormalizeStoredValue(string userInterfaceCulture)
         => string.IsNullOrWhiteSpace(userInterfaceCulture) ? AutomaticCultureName : userInterfaceCulture.Trim();
 
-    public static bool TryNormalizeConfiguredValue(
-        string userInterfaceCulture,
-        out string normalizedUserInterfaceCulture,
-        out string message)
+    public static bool TryNormalizeConfiguredValue(string userInterfaceCulture, out string normalizedUserInterfaceCulture, out string message)
     {
         normalizedUserInterfaceCulture = NormalizeStoredValue(userInterfaceCulture);
         message = string.Empty;
@@ -40,9 +37,7 @@ internal static class UserInterfaceCultureConfiguration
         var normalizedUserInterfaceCulture = NormalizeStoredValue(userInterfaceCulture);
         if (IsAutomatic(normalizedUserInterfaceCulture))
         {
-            message = LocalizationService.GetFormattedString("CultureInvalidUserInterfaceCulture",
-                normalizedUserInterfaceCulture,
-                LocalizationService.GetString("CultureAutomaticStoredValueCannotBeExplicitCultureName"));
+            message = LocalizationService.GetFormattedString("CultureInvalidUserInterfaceCulture", normalizedUserInterfaceCulture, LocalizationService.GetString("CultureAutomaticStoredValueCannotBeExplicitCultureName"));
             return false;
         }
 

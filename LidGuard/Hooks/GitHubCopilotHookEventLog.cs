@@ -12,40 +12,15 @@ public static class GitHubCopilotHookEventLog
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
-        var details = HookEventLog.CreateDetails(
-            ("tool", hookInput.ToolName),
-            ("source", hookInput.Source),
-            ("stopReason", hookInput.StopReason),
-            ("sessionEndReason", hookInput.SessionEndReason),
-            ("notificationType", hookInput.NotificationType),
-            ("agentName", hookInput.AgentName),
-            ("agentDisplayName", hookInput.AgentDisplayName),
-            ("errorContext", hookInput.ErrorContext),
-            ("recoverable", hookInput.Recoverable?.ToString() ?? string.Empty));
+        var details = HookEventLog.CreateDetails(("tool", hookInput.ToolName), ("source", hookInput.Source), ("stopReason", hookInput.StopReason), ("sessionEndReason", hookInput.SessionEndReason), ("notificationType", hookInput.NotificationType), ("agentName", hookInput.AgentName), ("agentDisplayName", hookInput.AgentDisplayName), ("errorContext", hookInput.ErrorContext), ("recoverable", hookInput.Recoverable?.ToString() ?? string.Empty));
         return s_eventLog.AppendReceived(configuredHookEventName, hookInput, details, IsUserPromptSubmittedEvent(configuredHookEventName));
     }
 
-    public static TimeSpan AppendRuntimeResult(
-        string configuredHookEventName,
-        GitHubCopilotHookInput hookInput,
-        string commandName,
-        bool succeeded,
-        bool runtimeUnavailable,
-        int activeSessionCount,
-        string message,
-        string timingDetails = "")
+    public static TimeSpan AppendRuntimeResult(string configuredHookEventName, GitHubCopilotHookInput hookInput, string commandName, bool succeeded, bool runtimeUnavailable, int activeSessionCount, string message, string timingDetails = "")
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
-        return s_eventLog.AppendRuntimeResult(
-            configuredHookEventName,
-            hookInput,
-            commandName,
-            succeeded,
-            runtimeUnavailable,
-            activeSessionCount,
-            message,
-            timingDetails: timingDetails);
+        return s_eventLog.AppendRuntimeResult(configuredHookEventName, hookInput, commandName, succeeded, runtimeUnavailable, activeSessionCount, message, timingDetails: timingDetails);
     }
 
     public static string GetDefaultLogFilePath() => s_eventLog.GetDefaultLogFilePath();

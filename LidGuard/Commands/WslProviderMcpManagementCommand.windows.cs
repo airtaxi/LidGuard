@@ -143,9 +143,7 @@ internal static class WslProviderMcpManagementCommand
                 hasManagedServerEntry = true;
                 serverCommand = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "command");
                 serverArguments = McpConfigurationJsonUtilities.DescribeJsonArray(serverObject, "args");
-                configuredProviderName = ProviderMcpManagementCommand.TryGetConfiguredProviderName(serverObject, out var extractedProviderName)
-                    ? extractedProviderName
-                    : string.Empty;
+                configuredProviderName = ProviderMcpManagementCommand.TryGetConfiguredProviderName(serverObject, out var extractedProviderName) ? extractedProviderName : string.Empty;
                 matchesCurrentLidGuardExecutable = WslCommandUtilities.ExecutableReferencesMatch(serverCommand, context.WslExecutablePath);
                 containsProviderMcpServerCommand = McpConfigurationJsonUtilities.JsonArrayContainsStringValue(serverObject, "args", ProviderMcpServerCommand.CommandName);
                 installed = matchesCurrentLidGuardExecutable && containsProviderMcpServerCommand;
@@ -167,11 +165,7 @@ internal static class WslProviderMcpManagementCommand
         return 0;
     }
 
-    private static bool TryGetConfigurationFilePath(
-        IReadOnlyDictionary<string, string> options,
-        string distroName,
-        out string configurationFilePath,
-        out string message)
+    private static bool TryGetConfigurationFilePath(IReadOnlyDictionary<string, string> options, string distroName, out string configurationFilePath, out string message)
     {
         if (!CommandOptionReader.TryGetRequiredOption(options, "config", out var configuredConfigurationFilePath, out message))
         {

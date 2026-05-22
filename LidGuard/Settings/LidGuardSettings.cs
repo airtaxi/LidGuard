@@ -70,10 +70,7 @@ public sealed record LidGuardSettings
     public string UserInterfaceCulture { get; init; } = DefaultUserInterfaceCulture;
 
     public static int ClampEmergencyHibernationTemperatureCelsius(int emergencyHibernationTemperatureCelsius)
-        => Math.Clamp(
-            emergencyHibernationTemperatureCelsius,
-            MinimumEmergencyHibernationTemperatureCelsius,
-            MaximumEmergencyHibernationTemperatureCelsius);
+        => Math.Clamp(emergencyHibernationTemperatureCelsius, MinimumEmergencyHibernationTemperatureCelsius, MaximumEmergencyHibernationTemperatureCelsius);
 
     public static bool IsValidPostStopSuspendSoundVolumeOverridePercent(int? postStopSuspendSoundVolumeOverridePercent)
         => postStopSuspendSoundVolumeOverridePercent is null
@@ -95,15 +92,9 @@ public sealed record LidGuardSettings
         var powerRequest = settings.PowerRequest ?? PowerRequestOptions.Default;
         var emergencyHibernationTemperatureMode = NormalizeEmergencyHibernationTemperatureMode(settings.EmergencyHibernationTemperatureMode);
         var emergencyHibernationTemperatureCelsius = ClampEmergencyHibernationTemperatureCelsius(settings.EmergencyHibernationTemperatureCelsius);
-        var suspendHistoryEntryCount = settings.SuspendHistoryEntryCount is null
-            ? (int?)null
-            : Math.Max(MinimumSuspendHistoryEntryCount, settings.SuspendHistoryEntryCount.Value);
-        var sessionTimeoutMinutes = settings.SessionTimeoutMinutes is null
-            ? (int?)null
-            : Math.Max(MinimumSessionTimeoutMinutes, settings.SessionTimeoutMinutes.Value);
-        var serverRuntimeCleanupDelayMinutes = settings.ServerRuntimeCleanupDelayMinutes is null
-            ? (int?)null
-            : Math.Max(MinimumServerRuntimeCleanupDelayMinutes, settings.ServerRuntimeCleanupDelayMinutes.Value);
+        var suspendHistoryEntryCount = settings.SuspendHistoryEntryCount is null ? (int? )null : Math.Max(MinimumSuspendHistoryEntryCount, settings.SuspendHistoryEntryCount.Value);
+        var sessionTimeoutMinutes = settings.SessionTimeoutMinutes is null ? (int? )null : Math.Max(MinimumSessionTimeoutMinutes, settings.SessionTimeoutMinutes.Value);
+        var serverRuntimeCleanupDelayMinutes = settings.ServerRuntimeCleanupDelayMinutes is null ? (int? )null : Math.Max(MinimumServerRuntimeCleanupDelayMinutes, settings.ServerRuntimeCleanupDelayMinutes.Value);
         var userInterfaceCulture = UserInterfaceCultureConfiguration.NormalizeStoredValue(settings.UserInterfaceCulture);
         var normalizedPowerRequest = powerRequest with
         {

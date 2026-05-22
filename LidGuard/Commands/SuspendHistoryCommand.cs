@@ -41,11 +41,7 @@ internal static class SuspendHistoryCommand
         return 0;
     }
 
-    private static bool TryResolveHistoryEntryCount(
-        string historyEntryCountText,
-        LidGuardSettings settings,
-        out int historyEntryCount,
-        out string message)
+    private static bool TryResolveHistoryEntryCount(string historyEntryCountText, LidGuardSettings settings, out int historyEntryCount, out string message)
     {
         historyEntryCount = settings.SuspendHistoryEntryCount ?? LidGuardSettings.DefaultSuspendHistoryEntryCount;
         message = string.Empty;
@@ -61,46 +57,29 @@ internal static class SuspendHistoryCommand
     private static void WriteHistoryEntry(SuspendHistoryEntry historyEntry)
     {
         var recordedAt = LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(historyEntry.RecordedAt);
-        Console.WriteLine(
-            LocalizationService.GetString(
-                "SuspendHistoryEntryLine")
-                .Replace("{0}", recordedAt, StringComparison.Ordinal)
-                .Replace("{1}", LocalizationService.DisplaySuspendMode(historyEntry.SuspendMode), StringComparison.Ordinal)
-                .Replace("{2}", DisplaySuspendWebhookReason(historyEntry.Reason), StringComparison.Ordinal)
-                .Replace("{3}", LocalizationService.DisplayBoolean(historyEntry.Succeeded), StringComparison.Ordinal)
-                .Replace("{4}", historyEntry.ActiveSessionCount.ToString(), StringComparison.Ordinal)
-                .Replace("{5}", historyEntry.SuspendTriggerSessionCount.ToString(), StringComparison.Ordinal));
+        Console.WriteLine(LocalizationService.GetString("SuspendHistoryEntryLine").Replace("{0}", recordedAt, StringComparison.Ordinal).Replace("{1}", LocalizationService.DisplaySuspendMode(historyEntry.SuspendMode), StringComparison.Ordinal).Replace("{2}", DisplaySuspendWebhookReason(historyEntry.Reason), StringComparison.Ordinal).Replace("{3}", LocalizationService.DisplayBoolean(historyEntry.Succeeded), StringComparison.Ordinal).Replace("{4}", historyEntry.ActiveSessionCount.ToString(), StringComparison.Ordinal).Replace("{5}", historyEntry.SuspendTriggerSessionCount.ToString(), StringComparison.Ordinal));
 
         if (!string.IsNullOrWhiteSpace(historyEntry.SessionIdentifier))
         {
             var providerDisplayText = AgentProviderDisplay.CreateProviderDisplayText(historyEntry.Provider, historyEntry.ProviderName);
-            Console.WriteLine(LocalizationService.GetString("SuspendHistorySession")
-                .Replace("{0}", providerDisplayText, StringComparison.Ordinal)
-                .Replace("{1}", historyEntry.SessionIdentifier, StringComparison.Ordinal));
+            Console.WriteLine(LocalizationService.GetString("SuspendHistorySession").Replace("{0}", providerDisplayText, StringComparison.Ordinal).Replace("{1}", historyEntry.SessionIdentifier, StringComparison.Ordinal));
         }
 
         if (historyEntry.ObservedTemperatureCelsius is not null)
         {
-            var temperatureMode = historyEntry.EmergencyHibernationTemperatureMode is { } emergencyHibernationTemperatureMode
-                ? LocalizationService.DisplayEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode)
-                : LocalizationService.GetString("TextDisplayNone");
+            var temperatureMode = historyEntry.EmergencyHibernationTemperatureMode is { } emergencyHibernationTemperatureMode ? LocalizationService.DisplayEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureMode) : LocalizationService.GetString("TextDisplayNone");
             var threshold = historyEntry.EmergencyHibernationTemperatureCelsius?.ToString() ?? LocalizationService.GetString("TextDisplayNone");
-            Console.WriteLine(LocalizationService.GetString("SuspendHistoryTemperature")
-                .Replace("{0}", historyEntry.ObservedTemperatureCelsius.Value.ToString(), StringComparison.Ordinal)
-                .Replace("{1}", temperatureMode, StringComparison.Ordinal)
-                .Replace("{2}", threshold, StringComparison.Ordinal));
+            Console.WriteLine(LocalizationService.GetString("SuspendHistoryTemperature").Replace("{0}", historyEntry.ObservedTemperatureCelsius.Value.ToString(), StringComparison.Ordinal).Replace("{1}", temperatureMode, StringComparison.Ordinal).Replace("{2}", threshold, StringComparison.Ordinal));
         }
 
         if (!string.IsNullOrWhiteSpace(historyEntry.WorkingDirectory))
         {
-            Console.WriteLine(LocalizationService.GetString("SuspendHistoryWorkingDirectory")
-                .Replace("{0}", historyEntry.WorkingDirectory, StringComparison.Ordinal));
+            Console.WriteLine(LocalizationService.GetString("SuspendHistoryWorkingDirectory").Replace("{0}", historyEntry.WorkingDirectory, StringComparison.Ordinal));
         }
 
         if (!string.IsNullOrWhiteSpace(historyEntry.Message))
         {
-            Console.WriteLine(LocalizationService.GetString("SuspendHistoryMessage")
-                .Replace("{0}", historyEntry.Message, StringComparison.Ordinal));
+            Console.WriteLine(LocalizationService.GetString("SuspendHistoryMessage").Replace("{0}", historyEntry.Message, StringComparison.Ordinal));
         }
     }
 

@@ -7,10 +7,7 @@ internal enum PushNotificationSendStatus
     TransientFailure = 2
 }
 
-internal sealed record PushNotificationSendResult(
-    PushNotificationSendStatus Status,
-    int? HttpStatusCode,
-    string? ErrorMessage)
+internal sealed record PushNotificationSendResult(PushNotificationSendStatus Status, int? HttpStatusCode, string? ErrorMessage)
 {
     public static PushNotificationSendResult Succeeded()
         => new(PushNotificationSendStatus.Succeeded, null, null);

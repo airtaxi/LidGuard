@@ -45,9 +45,7 @@ public sealed class LidActionService : ILidActionService, IDisposable
         if (_lidSwitchInhibitor is not null && _lidSwitchInhibitor.IsActive) return LidGuardOperationResult.Success();
 
         DisposeLidSwitchInhibitor();
-        var inhibitorResult = SystemdInhibitor.TryAcquire(
-            "handle-lid-switch",
-            "LidGuard is temporarily inhibiting lid-close handling while an agent session is running.");
+        var inhibitorResult = SystemdInhibitor.TryAcquire("handle-lid-switch", "LidGuard is temporarily inhibiting lid-close handling while an agent session is running.");
         if (!inhibitorResult.Succeeded) return LidGuardOperationResult.Failure(inhibitorResult.Message, inhibitorResult.NativeErrorCode);
 
         _lidSwitchInhibitor = inhibitorResult.Value;

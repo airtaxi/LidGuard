@@ -50,17 +50,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
     public LiveStatusEventHub LiveStatusEvents { get; } = new();
 
-    public LidGuardRuntimeCoordinator(
-        LidGuardSettings initialSettings,
-        IPowerRequestService powerRequestService,
-        IProcessExitWatcher processExitWatcher,
-        LidActionPolicyController lidActionPolicyController,
-        ISystemSuspendService systemSuspendService,
-        IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer,
-        ISystemAudioVolumeController systemAudioVolumeController,
-        ILidStateSource lidStateSource,
-        IVisibleDisplayMonitorCountProvider visibleDisplayMonitorCountProvider,
-        Action requestRuntimeStop = null)
+    public LidGuardRuntimeCoordinator(LidGuardSettings initialSettings, IPowerRequestService powerRequestService, IProcessExitWatcher processExitWatcher, LidActionPolicyController lidActionPolicyController, ISystemSuspendService systemSuspendService, IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer, ISystemAudioVolumeController systemAudioVolumeController, ILidStateSource lidStateSource, IVisibleDisplayMonitorCountProvider visibleDisplayMonitorCountProvider, Action requestRuntimeStop = null)
     {
         _processExitWatcher = processExitWatcher;
         _postStopSuspendSoundPlaybackCoordinator = new PostStopSuspendSoundPlaybackCoordinator(postStopSuspendSoundPlayer, systemAudioVolumeController);
@@ -68,24 +58,10 @@ internal sealed class LidGuardRuntimeCoordinator
         _lidStateSource = lidStateSource;
         _visibleDisplayMonitorCountProvider = visibleDisplayMonitorCountProvider;
         _protectionCoordinator = new LidGuardProtectionCoordinator(powerRequestService, lidActionPolicyController);
-        _codexTranscriptMonitor = new AgentTranscriptMonitor(
-            CreateCodexTranscriptMonitoringProfile(),
-            HandleTranscriptActivityDetectedAsync,
-            HandleTranscriptStopDetectedAsync,
-            HandleTranscriptSoftLockDetectedAsync);
-        _claudeTranscriptMonitor = new AgentTranscriptMonitor(
-            CreateClaudeTranscriptMonitoringProfile(),
-            HandleTranscriptActivityDetectedAsync,
-            HandleTranscriptStopDetectedAsync,
-            HandleTranscriptSoftLockDetectedAsync);
-        _gitHubCopilotTranscriptMonitor = new AgentTranscriptMonitor(
-            CreateGitHubCopilotTranscriptMonitoringProfile(),
-            HandleTranscriptActivityDetectedAsync,
-            HandleTranscriptStopDetectedAsync,
-            HandleTranscriptSoftLockDetectedAsync);
-        _emergencyHibernationThermalMonitor = new EmergencyHibernationThermalMonitor(
-            CreateEmergencyHibernationThermalMonitorState,
-            HandleEmergencyHibernationThresholdReachedAsync);
+        _codexTranscriptMonitor = new AgentTranscriptMonitor(CreateCodexTranscriptMonitoringProfile(), HandleTranscriptActivityDetectedAsync, HandleTranscriptStopDetectedAsync, HandleTranscriptSoftLockDetectedAsync);
+        _claudeTranscriptMonitor = new AgentTranscriptMonitor(CreateClaudeTranscriptMonitoringProfile(), HandleTranscriptActivityDetectedAsync, HandleTranscriptStopDetectedAsync, HandleTranscriptSoftLockDetectedAsync);
+        _gitHubCopilotTranscriptMonitor = new AgentTranscriptMonitor(CreateGitHubCopilotTranscriptMonitoringProfile(), HandleTranscriptActivityDetectedAsync, HandleTranscriptStopDetectedAsync, HandleTranscriptSoftLockDetectedAsync);
+        _emergencyHibernationThermalMonitor = new EmergencyHibernationThermalMonitor(CreateEmergencyHibernationThermalMonitorState, HandleEmergencyHibernationThresholdReachedAsync);
         _requestRuntimeStop = requestRuntimeStop;
         _settings = LidGuardSettings.Normalize(initialSettings);
     }
@@ -116,9 +92,7 @@ internal sealed class LidGuardRuntimeCoordinator
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            response = CreateSuccessResponse(
-                "LidGuard runtime is running.",
-                LidGuardPipeResponseMessageCodes.RuntimeIsRunning);
+            response = CreateSuccessResponse("LidGuard runtime is running.", LidGuardPipeResponseMessageCodes.RuntimeIsRunning);
         }
         finally
         {
@@ -191,14 +165,13 @@ internal sealed class LidGuardRuntimeCoordinator
             if (!protectionResult.Succeeded)
             {
                 RemoveTranscriptMonitorSession(snapshot.Key);
-                _sessionRegistry.Stop(
-                    new LidGuardSessionStopRequest
-                    {
-                        SessionIdentifier = request.SessionIdentifier,
-                        Provider = request.Provider,
-                        ProviderName = request.ProviderName
-                    },
-                    out _);
+                var stopRequest = new LidGuardSessionStopRequest
+                {
+                    SessionIdentifier = request.SessionIdentifier,
+                    Provider = request.Provider,
+                    ProviderName = request.ProviderName
+                };
+                _sessionRegistry.Stop(stopRequest, out _);
                 var response = CreateFailureResponse(protectionResult);
                 LidGuardRuntimeLogWriter.AppendSessionLog("session-start-failed", request, response);
                 return response;
@@ -211,14 +184,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
             var watcherStatusKind = CreateWatcherStatusKind(snapshot);
             var watchMessage = CreateWatcherStatusMessage(watcherStatusKind, snapshot);
-            var successResponse = CreateSuccessResponse(
-                $"Started {snapshot.Key}.{watchMessage}",
-                LidGuardPipeResponseMessageCodes.SessionStarted,
-                [
-                    snapshot.Key.ToString(),
-                    watcherStatusKind,
-                    snapshot.WatchedProcessIdentifier.ToString()
-                ]);
+            var successResponse = CreateSuccessResponse($"Started {snapshot.Key}.{watchMessage}", LidGuardPipeResponseMessageCodes.SessionStarted, [snapshot.Key.ToString(), watcherStatusKind, snapshot.WatchedProcessIdentifier.ToString()]);
             LidGuardRuntimeLogWriter.AppendSessionLog("session-started", request, successResponse, snapshot);
             return successResponse;
         }
@@ -248,9 +214,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 return response;
             }
 
-            var successResponse = CreateSuccessResponse(
-                "Updated LidGuard runtime settings.",
-                LidGuardPipeResponseMessageCodes.SettingsRuntimeUpdated);
+            var successResponse = CreateSuccessResponse("Updated LidGuard runtime settings.", LidGuardPipeResponseMessageCodes.SettingsRuntimeUpdated);
             LidGuardRuntimeLogWriter.AppendSessionLog("settings-updated", request, successResponse);
             return successResponse;
         }
@@ -278,13 +242,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 PendingProviderWorkReason = request.PendingProviderWorkReason
             };
             var sessionKey = new LidGuardSessionKey(stopRequest.Provider, stopRequest.SessionIdentifier, stopRequest.ProviderName);
-            response = StopInsideGate(
-                stopRequest,
-                $"Stopped {sessionKey}.",
-                request,
-                out stopFollowUpAwaitContext,
-                successMessageCode: LidGuardPipeResponseMessageCodes.SessionStopped,
-                successMessageArguments: [sessionKey.ToString()]);
+            response = StopInsideGate(stopRequest, $"Stopped {sessionKey}.", request, out stopFollowUpAwaitContext, successMessageCode: LidGuardPipeResponseMessageCodes.SessionStopped, successMessageArguments: [sessionKey.ToString()]);
         }
         finally
         {
@@ -321,14 +279,7 @@ internal sealed class LidGuardRuntimeCoordinator
             }
 
             var key = new LidGuardSessionKey(request.Provider, request.SessionIdentifier, request.ProviderName);
-            return MarkSessionSoftLockedInsideGate(
-                LidGuardPipeCommands.MarkSessionSoftLocked,
-                "session-softlock-recorded",
-                request.Provider,
-                request.ProviderName,
-                request.SessionIdentifier,
-                request.SessionStateReason,
-                key);
+            return MarkSessionSoftLockedInsideGate(LidGuardPipeCommands.MarkSessionSoftLocked, "session-softlock-recorded", request.Provider, request.ProviderName, request.SessionIdentifier, request.SessionStateReason, key);
         }
         finally
         {
@@ -336,14 +287,7 @@ internal sealed class LidGuardRuntimeCoordinator
         }
     }
 
-    private LidGuardPipeResponse MarkSessionSoftLockedInsideGate(
-        string commandName,
-        string eventName,
-        AgentProvider provider,
-        string providerName,
-        string sessionIdentifier,
-        string sessionStateReason,
-        LidGuardSessionKey sessionKey)
+    private LidGuardPipeResponse MarkSessionSoftLockedInsideGate(string commandName, string eventName, AgentProvider provider, string providerName, string sessionIdentifier, string sessionStateReason, LidGuardSessionKey sessionKey)
     {
         var request = new LidGuardPipeRequest
         {
@@ -354,14 +298,7 @@ internal sealed class LidGuardRuntimeCoordinator
             SessionStateReason = sessionStateReason
         };
 
-        if (!_sessionRegistry.TryMarkSoftLocked(
-            provider,
-            sessionIdentifier,
-            providerName,
-            request.SessionStateReason,
-            DateTimeOffset.UtcNow,
-            out var snapshot,
-            out var changed))
+        if (!_sessionRegistry.TryMarkSoftLocked(provider, sessionIdentifier, providerName, request.SessionStateReason, DateTimeOffset.UtcNow, out var snapshot, out var changed))
         {
             var ignoredResponse = CreateSuccessResponse($"Session {sessionKey} is not active; ignored soft-lock signal.");
             LidGuardRuntimeLogWriter.AppendSessionLog("session-softlock-ignored", request, ignoredResponse);
@@ -369,9 +306,7 @@ internal sealed class LidGuardRuntimeCoordinator
         }
 
         ResetTranscriptMonitorSession(sessionKey);
-        var successMessage = changed
-            ? $"Marked {sessionKey} as soft-locked from {request.SessionStateReason}."
-            : $"Session {sessionKey} is already soft-locked from {snapshot.SoftLockReason}.";
+        var successMessage = changed ? $"Marked {sessionKey} as soft-locked from {request.SessionStateReason}." : $"Session {sessionKey} is already soft-locked from {snapshot.SoftLockReason}.";
         if (HasSessionsKeepingProtectionAppliedInsideGate())
         {
             var successResponse = CreateSuccessResponse(successMessage);
@@ -380,16 +315,7 @@ internal sealed class LidGuardRuntimeCoordinator
         }
 
         var pendingSuspendContext = CreatePendingSuspendContext(request, snapshot);
-        var successResponseWithSuspendPlan = HandleSuspendAfterProtectionRetainedOrReleased(
-            pendingSuspendContext,
-            snapshot,
-            eventName,
-            successMessage,
-            string.Empty,
-            null,
-            _sessionRegistry.ActiveSessionCount,
-            out _,
-            out _);
+        var successResponseWithSuspendPlan = HandleSuspendAfterProtectionRetainedOrReleased(pendingSuspendContext, snapshot, eventName, successMessage, string.Empty, null, _sessionRegistry.ActiveSessionCount, out _, out _);
         if (!successResponseWithSuspendPlan.Succeeded)
         {
             LidGuardRuntimeLogWriter.AppendSessionLog("session-softlock-failed", request, successResponseWithSuspendPlan, snapshot);
@@ -405,9 +331,7 @@ internal sealed class LidGuardRuntimeCoordinator
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            return CreateSuccessResponse(
-                "LidGuard runtime is running.",
-                LidGuardPipeResponseMessageCodes.RuntimeIsRunning);
+            return CreateSuccessResponse("LidGuard runtime is running.", LidGuardPipeResponseMessageCodes.RuntimeIsRunning);
         }
         finally
         {
@@ -431,15 +355,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 ProviderName = request.ProviderName
             };
             var sessionKey = new LidGuardSessionKey(stopRequest.Provider, stopRequest.SessionIdentifier, stopRequest.ProviderName);
-            return StopInsideGate(
-                stopRequest,
-                $"Removed {sessionKey}.",
-                null,
-                out _,
-                "session-removed",
-                LidGuardPipeCommands.RemoveSession,
-                LidGuardPipeResponseMessageCodes.SessionRemoved,
-                [sessionKey.ToString()]);
+            return StopInsideGate(stopRequest, $"Removed {sessionKey}.", null, out _, "session-removed", LidGuardPipeCommands.RemoveSession, LidGuardPipeResponseMessageCodes.SessionRemoved, [sessionKey.ToString()]);
         }
         finally
         {
@@ -452,19 +368,12 @@ internal sealed class LidGuardRuntimeCoordinator
         var activeSnapshots = _sessionRegistry.GetSnapshots().ToArray();
         if (activeSnapshots.Length == 0)
         {
-            var alreadyStoppedResponse = CreateSuccessResponse(
-                "There are no active sessions to remove.",
-                LidGuardPipeResponseMessageCodes.SessionRemoveNoActiveSessions);
+            var alreadyStoppedResponse = CreateSuccessResponse("There are no active sessions to remove.", LidGuardPipeResponseMessageCodes.SessionRemoveNoActiveSessions);
             LidGuardRuntimeLogWriter.AppendSessionLog("session-remove-already-stopped", request, alreadyStoppedResponse);
             return alreadyStoppedResponse;
         }
 
-        return RemoveSnapshotsInsideGate(
-            request,
-            activeSnapshots,
-            $"Removed all {activeSnapshots.Length} active session(s).",
-            LidGuardPipeResponseMessageCodes.SessionRemovedAll,
-            [activeSnapshots.Length.ToString()]);
+        return RemoveSnapshotsInsideGate(request, activeSnapshots, $"Removed all {activeSnapshots.Length} active session(s).", LidGuardPipeResponseMessageCodes.SessionRemovedAll, [activeSnapshots.Length.ToString()]);
     }
 
     private async Task<LidGuardPipeResponse> CleanupOrphansAsync(CancellationToken cancellationToken)
@@ -493,10 +402,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 return response;
             }
 
-            var successResponse = CreateSuccessResponse(
-                $"Cleaned {cleanupCount} orphan session(s).",
-                LidGuardPipeResponseMessageCodes.CleanupOrphansCompleted,
-                [cleanupCount.ToString()]);
+            var successResponse = CreateSuccessResponse($"Cleaned {cleanupCount} orphan session(s).", LidGuardPipeResponseMessageCodes.CleanupOrphansCompleted, [cleanupCount.ToString()]);
             LidGuardRuntimeLogWriter.AppendRuntimeLog("cleanup-orphans-completed", LidGuardPipeCommands.CleanupOrphans, successResponse);
             return successResponse;
         }
@@ -642,10 +548,7 @@ internal sealed class LidGuardRuntimeCoordinator
         return restoreResult;
     }
 
-    private void LogSuspendProtectionRetainedInsideGate(
-        string eventName,
-        PendingSuspendContext pendingSuspendContext,
-        LidGuardSessionSnapshot snapshot)
+    private void LogSuspendProtectionRetainedInsideGate(string eventName, PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot)
     {
         if (!_protectionCoordinator.IsApplied) return;
 
@@ -653,21 +556,13 @@ internal sealed class LidGuardRuntimeCoordinator
         LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-suspend-protection-retained", pendingSuspendContext, response, snapshot);
     }
 
-    private LidGuardOperationResult ReleaseProtectionIfNoSessionRequiresItInsideGate(
-        string eventName,
-        PendingSuspendContext pendingSuspendContext,
-        LidGuardSessionSnapshot snapshot,
-        string successMessage)
+    private LidGuardOperationResult ReleaseProtectionIfNoSessionRequiresItInsideGate(string eventName, PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot, string successMessage)
     {
         if (HasSessionsKeepingProtectionAppliedInsideGate()) return LidGuardOperationResult.Success();
         return ReleaseSuspendProtectionInsideGate(eventName, pendingSuspendContext, snapshot, successMessage);
     }
 
-    private LidGuardOperationResult ReleaseSuspendProtectionInsideGate(
-        string eventName,
-        PendingSuspendContext pendingSuspendContext,
-        LidGuardSessionSnapshot snapshot,
-        string successMessage)
+    private LidGuardOperationResult ReleaseSuspendProtectionInsideGate(string eventName, PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot, string successMessage)
     {
         if (!_protectionCoordinator.IsApplied) return LidGuardOperationResult.Success();
 
@@ -749,10 +644,7 @@ internal sealed class LidGuardRuntimeCoordinator
         var delay = TimeSpan.FromMinutes(serverRuntimeCleanupDelayMinutes);
         var cancellationTokenSource = new CancellationTokenSource();
         _serverRuntimeCleanupCancellationTokenSource = cancellationTokenSource;
-        LidGuardRuntimeLogWriter.AppendRuntimeLog(
-            "server-runtime-cleanup-scheduled",
-            ServerRuntimeCleanupCommandName,
-            CreateSuccessResponse($"Scheduled server runtime cleanup in {serverRuntimeCleanupDelayMinutes} minute(s)."));
+        LidGuardRuntimeLogWriter.AppendRuntimeLog("server-runtime-cleanup-scheduled", ServerRuntimeCleanupCommandName, CreateSuccessResponse($"Scheduled server runtime cleanup in {serverRuntimeCleanupDelayMinutes} minute(s)."));
         _ = StopServerRuntimeAfterCleanupDelayAsync(delay, cancellationTokenSource);
     }
 
@@ -766,9 +658,7 @@ internal sealed class LidGuardRuntimeCoordinator
         cancellationTokenSource.Cancel();
     }
 
-    private async Task StopServerRuntimeAfterCleanupDelayAsync(
-        TimeSpan delay,
-        CancellationTokenSource cancellationTokenSource)
+    private async Task StopServerRuntimeAfterCleanupDelayAsync(TimeSpan delay, CancellationTokenSource cancellationTokenSource)
     {
         try
         {
@@ -800,16 +690,11 @@ internal sealed class LidGuardRuntimeCoordinator
     private void RequestServerRuntimeStopInsideGate(bool deferImmediateStopUntilCurrentResponse)
     {
         _serverRuntimeStopRequested = true;
-        LidGuardRuntimeLogWriter.AppendRuntimeLog(
-            "server-runtime-cleanup-requested",
-            ServerRuntimeCleanupCommandName,
-            CreateSuccessResponse("Requested server runtime cleanup because no active sessions remain."));
+        LidGuardRuntimeLogWriter.AppendRuntimeLog("server-runtime-cleanup-requested", ServerRuntimeCleanupCommandName, CreateSuccessResponse("Requested server runtime cleanup because no active sessions remain."));
         if (!deferImmediateStopUntilCurrentResponse) _requestRuntimeStop?.Invoke();
     }
 
-    private async Task WaitForSessionTimeoutAsync(
-        TimeSpan delay,
-        CancellationTokenSource cancellationTokenSource)
+    private async Task WaitForSessionTimeoutAsync(TimeSpan delay, CancellationTokenSource cancellationTokenSource)
     {
         try
         {
@@ -860,22 +745,13 @@ internal sealed class LidGuardRuntimeCoordinator
 
         foreach (var expiredSnapshot in expiredSnapshots)
         {
-            MarkSessionSoftLockedInsideGate(
-                SessionTimeoutCommandName,
-                "session-timeout-softlock-recorded",
-                expiredSnapshot.Provider,
-                expiredSnapshot.ProviderName,
-                expiredSnapshot.SessionIdentifier,
-                $"session-timeout-expired:{sessionTimeoutMinutes} minutes",
-                expiredSnapshot.Key);
+            MarkSessionSoftLockedInsideGate(SessionTimeoutCommandName, "session-timeout-softlock-recorded", expiredSnapshot.Provider, expiredSnapshot.ProviderName, expiredSnapshot.SessionIdentifier, $"session-timeout-expired:{sessionTimeoutMinutes} minutes", expiredSnapshot.Key);
         }
 
         ReconfigureSessionTimeoutMonitorInsideGate();
     }
 
-    private static DateTimeOffset AddSessionTimeoutDuration(
-        DateTimeOffset lastActivityAt,
-        TimeSpan sessionTimeoutDuration)
+    private static DateTimeOffset AddSessionTimeoutDuration(DateTimeOffset lastActivityAt, TimeSpan sessionTimeoutDuration)
     {
         try { return lastActivityAt + sessionTimeoutDuration; }
         catch (ArgumentOutOfRangeException) { return DateTimeOffset.MaxValue; }
@@ -929,20 +805,12 @@ internal sealed class LidGuardRuntimeCoordinator
             .ToArray();
         if (matchingSnapshots.Length == 0)
         {
-            var alreadyStoppedResponse = CreateSuccessResponse(
-                $"Session id {request.SessionIdentifier} is already stopped.",
-                LidGuardPipeResponseMessageCodes.SessionIdAlreadyStopped,
-                [request.SessionIdentifier]);
+            var alreadyStoppedResponse = CreateSuccessResponse($"Session id {request.SessionIdentifier} is already stopped.", LidGuardPipeResponseMessageCodes.SessionIdAlreadyStopped, [request.SessionIdentifier]);
             LidGuardRuntimeLogWriter.AppendSessionLog("session-remove-already-stopped", request, alreadyStoppedResponse);
             return alreadyStoppedResponse;
         }
 
-        return RemoveSnapshotsInsideGate(
-            request,
-            matchingSnapshots,
-            $"Removed {matchingSnapshots.Length} session(s) matching session id \"{request.SessionIdentifier}\".",
-            LidGuardPipeResponseMessageCodes.SessionRemovedMatchingSessionId,
-            [matchingSnapshots.Length.ToString(), request.SessionIdentifier]);
+        return RemoveSnapshotsInsideGate(request, matchingSnapshots, $"Removed {matchingSnapshots.Length} session(s) matching session id \"{request.SessionIdentifier}\".", LidGuardPipeResponseMessageCodes.SessionRemovedMatchingSessionId, [matchingSnapshots.Length.ToString(), request.SessionIdentifier]);
     }
 
     private LidGuardPipeResponse RemoveSessionsMatchingProviderInsideGate(LidGuardPipeRequest request)
@@ -962,29 +830,16 @@ internal sealed class LidGuardRuntimeCoordinator
         if (matchingSnapshots.Length == 0)
         {
             var providerDisplayText = AgentProviderDisplay.CreateProviderDisplayText(request.Provider, request.ProviderName);
-            var alreadyStoppedResponse = CreateSuccessResponse(
-                $"Session id {request.SessionIdentifier} is already stopped for {providerDisplayText}.",
-                LidGuardPipeResponseMessageCodes.SessionIdAlreadyStoppedForProvider,
-                [request.SessionIdentifier, providerDisplayText]);
+            var alreadyStoppedResponse = CreateSuccessResponse($"Session id {request.SessionIdentifier} is already stopped for {providerDisplayText}.", LidGuardPipeResponseMessageCodes.SessionIdAlreadyStoppedForProvider, [request.SessionIdentifier, providerDisplayText]);
             LidGuardRuntimeLogWriter.AppendSessionLog("session-remove-already-stopped", request, alreadyStoppedResponse);
             return alreadyStoppedResponse;
         }
 
         var matchingProviderDisplayText = AgentProviderDisplay.CreateProviderDisplayText(request.Provider, request.ProviderName);
-        return RemoveSnapshotsInsideGate(
-            request,
-            matchingSnapshots,
-            $"Removed {matchingSnapshots.Length} session(s) matching {matchingProviderDisplayText} session id \"{request.SessionIdentifier}\".",
-            LidGuardPipeResponseMessageCodes.SessionRemovedMatchingProviderSessionId,
-            [matchingSnapshots.Length.ToString(), matchingProviderDisplayText, request.SessionIdentifier]);
+        return RemoveSnapshotsInsideGate(request, matchingSnapshots, $"Removed {matchingSnapshots.Length} session(s) matching {matchingProviderDisplayText} session id \"{request.SessionIdentifier}\".", LidGuardPipeResponseMessageCodes.SessionRemovedMatchingProviderSessionId, [matchingSnapshots.Length.ToString(), matchingProviderDisplayText, request.SessionIdentifier]);
     }
 
-    private LidGuardPipeResponse RemoveSnapshotsInsideGate(
-        LidGuardPipeRequest request,
-        LidGuardSessionSnapshot[] matchingSnapshots,
-        string multipleRemovalSuccessMessage,
-        string multipleRemovalSuccessMessageCode,
-        string[] multipleRemovalSuccessMessageArguments)
+    private LidGuardPipeResponse RemoveSnapshotsInsideGate(LidGuardPipeRequest request, LidGuardSessionSnapshot[] matchingSnapshots, string multipleRemovalSuccessMessage, string multipleRemovalSuccessMessageCode, string[] multipleRemovalSuccessMessageArguments)
     {
         var lastResponse = CreateSuccessResponse(string.Empty);
         foreach (var matchingSnapshot in matchingSnapshots)
@@ -996,15 +851,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 Provider = matchingSnapshot.Provider,
                 ProviderName = matchingSnapshot.ProviderName
             };
-            lastResponse = StopInsideGate(
-                stopRequest,
-                $"Removed {sessionKey}.",
-                null,
-                out _,
-                "session-removed",
-                LidGuardPipeCommands.RemoveSession,
-                LidGuardPipeResponseMessageCodes.SessionRemoved,
-                [sessionKey]);
+            lastResponse = StopInsideGate(stopRequest, $"Removed {sessionKey}.", null, out _, "session-removed", LidGuardPipeCommands.RemoveSession, LidGuardPipeResponseMessageCodes.SessionRemoved, [sessionKey]);
             if (!lastResponse.Succeeded) return lastResponse;
         }
 
@@ -1012,25 +859,10 @@ internal sealed class LidGuardRuntimeCoordinator
         var successMessageCode = matchingSnapshots.Length == 1 ? lastResponse.MessageCode : multipleRemovalSuccessMessageCode;
         var successMessageArguments = matchingSnapshots.Length == 1 ? lastResponse.MessageArguments : multipleRemovalSuccessMessageArguments;
         if (matchingSnapshots.Length > 1 && TryExtractPostStopScheduleMessage(lastResponse.Message, out var postStopScheduleMessage)) successMessage = $"{successMessage} {postStopScheduleMessage}";
-        return CreateSuccessResponse(
-            successMessage,
-            successMessageCode,
-            successMessageArguments,
-            lastResponse.SuspendScheduled,
-            lastResponse.SuspendMode,
-            lastResponse.SuspendDelaySeconds,
-            lastResponse.SuspendReasonCode);
+        return CreateSuccessResponse(successMessage, successMessageCode, successMessageArguments, lastResponse.SuspendScheduled, lastResponse.SuspendMode, lastResponse.SuspendDelaySeconds, lastResponse.SuspendReasonCode);
     }
 
-    private LidGuardPipeResponse StopInsideGate(
-        LidGuardSessionStopRequest request,
-        string successMessage,
-        LidGuardPipeRequest runtimeRequest,
-        out StopFollowUpAwaitContext stopFollowUpAwaitContext,
-        string eventName = "session-stopped",
-        string commandName = LidGuardPipeCommands.Stop,
-        string successMessageCode = "",
-        string[] successMessageArguments = null)
+    private LidGuardPipeResponse StopInsideGate(LidGuardSessionStopRequest request, string successMessage, LidGuardPipeRequest runtimeRequest, out StopFollowUpAwaitContext stopFollowUpAwaitContext, string eventName = "session-stopped", string commandName = LidGuardPipeCommands.Stop, string successMessageCode = "", string[] successMessageArguments = null)
     {
         stopFollowUpAwaitContext = null;
         if (string.IsNullOrWhiteSpace(request.SessionIdentifier))
@@ -1048,10 +880,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
         if (!_sessionRegistry.Stop(request, out var stoppedSnapshot))
         {
-            var response = CreateSuccessResponse(
-                $"Session {key} is already stopped.",
-                LidGuardPipeResponseMessageCodes.SessionAlreadyStopped,
-                [key.ToString()]);
+            var response = CreateSuccessResponse($"Session {key} is already stopped.", LidGuardPipeResponseMessageCodes.SessionAlreadyStopped, [key.ToString()]);
             LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-already-stopped", request, response, commandName);
             return response;
         }
@@ -1075,16 +904,7 @@ internal sealed class LidGuardRuntimeCoordinator
         }
 
         var pendingSuspendContext = CreatePendingSuspendContext(request, runtimeRequest, stoppedSnapshot, commandName);
-        var successResponse = HandleSuspendAfterProtectionRetainedOrReleased(
-            pendingSuspendContext,
-            stoppedSnapshot,
-            eventName,
-            successMessage,
-            successMessageCode,
-            successMessageArguments,
-            _sessionRegistry.ActiveSessionCount,
-            out stopFollowUpAwaitContext,
-            out var suspendScheduled);
+        var successResponse = HandleSuspendAfterProtectionRetainedOrReleased(pendingSuspendContext, stoppedSnapshot, eventName, successMessage, successMessageCode, successMessageArguments, _sessionRegistry.ActiveSessionCount, out stopFollowUpAwaitContext, out var suspendScheduled);
         if (!successResponse.Succeeded)
         {
             ReconfigureSessionTimeoutMonitorInsideGate();
@@ -1100,10 +920,7 @@ internal sealed class LidGuardRuntimeCoordinator
         return successResponse;
     }
 
-    private LidGuardPipeResponse DeferStopForPendingProviderWorkInsideGate(
-        LidGuardSessionStopRequest request,
-        LidGuardSessionKey key,
-        string commandName)
+    private LidGuardPipeResponse DeferStopForPendingProviderWorkInsideGate(LidGuardSessionStopRequest request, LidGuardSessionKey key, string commandName)
     {
         CancelWatcher(key);
 
@@ -1116,12 +933,7 @@ internal sealed class LidGuardRuntimeCoordinator
             SessionStateReason = request.PendingProviderWorkReason
         };
 
-        if (!_sessionRegistry.TryMarkPendingProviderWork(
-            request.Provider,
-            request.SessionIdentifier,
-            request.ProviderName,
-            request.PendingProviderWorkReason,
-            out var snapshot))
+        if (!_sessionRegistry.TryMarkPendingProviderWork(request.Provider, request.SessionIdentifier, request.ProviderName, request.PendingProviderWorkReason, out var snapshot))
         {
             var ignoredResponse = CreateSuccessResponse($"Session {key} is not active; ignored deferred stop for pending provider work.");
             LidGuardRuntimeLogWriter.AppendSessionLog("session-stop-deferred-ignored", request, ignoredResponse, commandName);
@@ -1140,46 +952,24 @@ internal sealed class LidGuardRuntimeCoordinator
             return failedResponse;
         }
 
-        var pendingProviderWorkReason = string.IsNullOrWhiteSpace(request.PendingProviderWorkReason)
-            ? "pending provider work remains"
-            : request.PendingProviderWorkReason.Trim();
+        var pendingProviderWorkReason = string.IsNullOrWhiteSpace(request.PendingProviderWorkReason) ? "pending provider work remains" : request.PendingProviderWorkReason.Trim();
         var response = CreateSuccessResponse($"Deferred stop for {key} because {pendingProviderWorkReason}.");
         LidGuardRuntimeLogWriter.AppendSessionLog("session-stop-deferred", syntheticRequest, response, snapshot);
         return response;
     }
 
-    private StopFollowUpAwaitContext TryCreateStopFollowUpAwaitContextInsideGate(
-        PendingSuspendContext pendingSuspendContext,
-        LidGuardSessionSnapshot snapshot,
-        string eventName,
-        LidGuardPipeResponse scheduledResponse,
-        int activeSessionCount,
-        CancellationTokenSource pendingSuspendCancellationTokenSource)
+    private StopFollowUpAwaitContext TryCreateStopFollowUpAwaitContextInsideGate(PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot, string eventName, LidGuardPipeResponse scheduledResponse, int activeSessionCount, CancellationTokenSource pendingSuspendCancellationTokenSource)
     {
         if (!pendingSuspendContext.CanReturnStopContinuation) return null;
         if (pendingSuspendContext.StopHookAlreadyActive && !_settings.RepeatClosedLidStopFollowUp) return null;
         if (!ClosedLidStopFollowUpConfiguration.IsEnabled(_settings, out var followUpWebhookUrl)) return null;
 
-        return new StopFollowUpAwaitContext(
-            pendingSuspendContext,
-            snapshot,
-            eventName,
-            scheduledResponse,
-            activeSessionCount,
-            followUpWebhookUrl,
-            _settings.ClosedLidStopFollowUpDelaySeconds,
-            pendingSuspendCancellationTokenSource,
-            new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously),
-            new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously));
+        return new StopFollowUpAwaitContext(pendingSuspendContext, snapshot, eventName, scheduledResponse, activeSessionCount, followUpWebhookUrl, _settings.ClosedLidStopFollowUpDelaySeconds, pendingSuspendCancellationTokenSource, new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously), new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously));
     }
 
-    private async Task<LidGuardPipeResponse> AwaitStopFollowUpReplyAsync(
-        StopFollowUpAwaitContext stopFollowUpAwaitContext,
-        CancellationToken cancellationToken)
+    private async Task<LidGuardPipeResponse> AwaitStopFollowUpReplyAsync(StopFollowUpAwaitContext stopFollowUpAwaitContext, CancellationToken cancellationToken)
     {
-        using var followUpCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
-            cancellationToken,
-            stopFollowUpAwaitContext.PendingSuspendCancellationTokenSource.Token);
+        using var followUpCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, stopFollowUpAwaitContext.PendingSuspendCancellationTokenSource.Token);
         try
         {
             var canStartFollowUp = await stopFollowUpAwaitContext.FollowUpStartReadySource.Task.WaitAsync(followUpCancellationTokenSource.Token);
@@ -1203,18 +993,8 @@ internal sealed class LidGuardRuntimeCoordinator
                 _gate.Release();
             }
 
-            var stopFollowUpWebhookRequest = CreateStopFollowUpWebhookRequest(
-                stopFollowUpAwaitContext.PendingSuspendContext,
-                stopFollowUpAwaitContext.Snapshot,
-                stopFollowUpAwaitContext.ActiveSessionCount,
-                stopFollowUpAwaitContext.ReplyWaitSeconds,
-                replyDeadlineUtc,
-                userInterfaceCulture);
-            var startResult = await StopFollowUpWebhookClient.StartAsync(
-                stopFollowUpAwaitContext.FollowUpWebhookUrl,
-                stopFollowUpWebhookRequest,
-                followUpCancellationTokenSource.Token,
-                s_stopFollowUpWebhookTimeout);
+            var stopFollowUpWebhookRequest = CreateStopFollowUpWebhookRequest(stopFollowUpAwaitContext.PendingSuspendContext, stopFollowUpAwaitContext.Snapshot, stopFollowUpAwaitContext.ActiveSessionCount, stopFollowUpAwaitContext.ReplyWaitSeconds, replyDeadlineUtc, userInterfaceCulture);
+            var startResult = await StopFollowUpWebhookClient.StartAsync(stopFollowUpAwaitContext.FollowUpWebhookUrl, stopFollowUpWebhookRequest, followUpCancellationTokenSource.Token, s_stopFollowUpWebhookTimeout);
             if (!startResult.Succeeded)
             {
                 await ContinueSuspendAfterStopFollowUpAwaitAsync(stopFollowUpAwaitContext);
@@ -1222,11 +1002,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 return CreateStopFollowUpResponse(stopFollowUpAwaitContext.ScheduledResponse, StopFollowUpStatuses.WebhookFailed);
             }
 
-            if (!TryResolveStopFollowUpPollUri(
-                stopFollowUpAwaitContext.FollowUpWebhookUrl,
-                startResult.Value.ReplyPollUrl,
-                out var replyPollUri,
-                out var pollUriMessage))
+            if (!TryResolveStopFollowUpPollUri(stopFollowUpAwaitContext.FollowUpWebhookUrl, startResult.Value.ReplyPollUrl, out var replyPollUri, out var pollUriMessage))
             {
                 await ContinueSuspendAfterStopFollowUpAwaitAsync(stopFollowUpAwaitContext);
                 await AppendStopFollowUpFailureAsync(stopFollowUpAwaitContext, StopFollowUpStatuses.PollFailed, pollUriMessage);
@@ -1237,10 +1013,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
             while (DateTimeOffset.UtcNow <= replyDeadlineUtc)
             {
-                var pollResult = await StopFollowUpWebhookClient.PollAsync(
-                    replyPollUri,
-                    followUpCancellationTokenSource.Token,
-                    s_stopFollowUpWebhookTimeout);
+                var pollResult = await StopFollowUpWebhookClient.PollAsync(replyPollUri, followUpCancellationTokenSource.Token, s_stopFollowUpWebhookTimeout);
                 if (!pollResult.Succeeded)
                 {
                     await ContinueSuspendAfterStopFollowUpAwaitAsync(stopFollowUpAwaitContext);
@@ -1304,38 +1077,16 @@ internal sealed class LidGuardRuntimeCoordinator
         await _gate.WaitAsync(CancellationToken.None);
         try
         {
-            var pendingSuspendStillMatches = ReferenceEquals(
-                _pendingSuspendCancellationTokenSource,
-                stopFollowUpAwaitContext.PendingSuspendCancellationTokenSource);
+            var pendingSuspendStillMatches = ReferenceEquals(_pendingSuspendCancellationTokenSource, stopFollowUpAwaitContext.PendingSuspendCancellationTokenSource);
             if (!pendingSuspendStillMatches) return CreateStopFollowUpResponse(stopFollowUpAwaitContext.ScheduledResponse, StopFollowUpStatuses.Canceled);
 
             CancelPendingSuspend(true);
             var immediatePendingSuspendCancellationTokenSource = new CancellationTokenSource();
             _pendingSuspendCancellationTokenSource = immediatePendingSuspendCancellationTokenSource;
             _pendingStopFollowUpStatus = string.Empty;
-            var response = CreateSuccessResponse(
-                $"Canceled the ask-before-sleep reply wait. Scheduled {stopFollowUpAwaitContext.ScheduledResponse.SuspendMode} {DescribePostStopSuspendDelay(0)} {DescribeSuspendReason(stopFollowUpAwaitContext.ActiveSessionCount)}",
-                stopFollowUpAwaitContext.ScheduledResponse.MessageCode,
-                stopFollowUpAwaitContext.ScheduledResponse.MessageArguments,
-                true,
-                stopFollowUpAwaitContext.ScheduledResponse.SuspendMode,
-                0,
-                stopFollowUpAwaitContext.ScheduledResponse.SuspendReasonCode,
-                stopFollowUpStatus: StopFollowUpStatuses.Canceled);
-            LidGuardRuntimeLogWriter.AppendSessionLog(
-                $"{stopFollowUpAwaitContext.EventName}-stop-follow-up-canceled-suspend-immediate",
-                stopFollowUpAwaitContext.PendingSuspendContext,
-                response,
-                stopFollowUpAwaitContext.Snapshot);
-            _ = SuspendAfterDelayAsync(
-                stopFollowUpAwaitContext.PendingSuspendContext,
-                stopFollowUpAwaitContext.Snapshot,
-                stopFollowUpAwaitContext.EventName,
-                CreateSuspendWebhookReason(stopFollowUpAwaitContext.ActiveSessionCount),
-                stopFollowUpAwaitContext.ActiveSessionCount,
-                0,
-                immediatePendingSuspendCancellationTokenSource,
-                null);
+            var response = CreateSuccessResponse($"Canceled the ask-before-sleep reply wait. Scheduled {stopFollowUpAwaitContext.ScheduledResponse.SuspendMode} {DescribePostStopSuspendDelay(0)} {DescribeSuspendReason(stopFollowUpAwaitContext.ActiveSessionCount)}", stopFollowUpAwaitContext.ScheduledResponse.MessageCode, stopFollowUpAwaitContext.ScheduledResponse.MessageArguments, true, stopFollowUpAwaitContext.ScheduledResponse.SuspendMode, 0, stopFollowUpAwaitContext.ScheduledResponse.SuspendReasonCode, stopFollowUpStatus: StopFollowUpStatuses.Canceled);
+            LidGuardRuntimeLogWriter.AppendSessionLog($"{stopFollowUpAwaitContext.EventName}-stop-follow-up-canceled-suspend-immediate", stopFollowUpAwaitContext.PendingSuspendContext, response, stopFollowUpAwaitContext.Snapshot);
+            _ = SuspendAfterDelayAsync(stopFollowUpAwaitContext.PendingSuspendContext, stopFollowUpAwaitContext.Snapshot, stopFollowUpAwaitContext.EventName, CreateSuspendWebhookReason(stopFollowUpAwaitContext.ActiveSessionCount), stopFollowUpAwaitContext.ActiveSessionCount, 0, immediatePendingSuspendCancellationTokenSource, null);
             return response;
         }
         finally
@@ -1344,9 +1095,7 @@ internal sealed class LidGuardRuntimeCoordinator
         }
     }
 
-    private async Task<LidGuardPipeResponse> ResumeSessionAfterStopFollowUpReplyAsync(
-        StopFollowUpAwaitContext stopFollowUpAwaitContext,
-        string reply)
+    private async Task<LidGuardPipeResponse> ResumeSessionAfterStopFollowUpReplyAsync(StopFollowUpAwaitContext stopFollowUpAwaitContext, string reply)
     {
         await _gate.WaitAsync(CancellationToken.None);
         try
@@ -1355,7 +1104,7 @@ internal sealed class LidGuardRuntimeCoordinator
             CancelPendingSuspend(true);
 
             RestoreTranscriptMonitorSession(stopFollowUpAwaitContext.Snapshot);
-            var restoredSnapshot = _sessionRegistry.StartOrUpdate(new LidGuardSessionStartRequest
+            var startRequest = new LidGuardSessionStartRequest
             {
                 SessionIdentifier = stopFollowUpAwaitContext.Snapshot.SessionIdentifier,
                 Provider = stopFollowUpAwaitContext.Snapshot.Provider,
@@ -1367,25 +1116,16 @@ internal sealed class LidGuardRuntimeCoordinator
                 InputPromptPreview = stopFollowUpAwaitContext.Snapshot.InputPromptPreview,
                 WorkingDirectory = stopFollowUpAwaitContext.Snapshot.WorkingDirectory,
                 TranscriptPath = stopFollowUpAwaitContext.Snapshot.TranscriptPath
-            });
+            };
+            var restoredSnapshot = _sessionRegistry.StartOrUpdate(startRequest);
             CancelServerRuntimeCleanupInsideGate();
             StartWatcher(restoredSnapshot);
             ReconfigureSessionTimeoutMonitorInsideGate();
             EnsureEmergencyHibernationThermalMonitor();
             var protectionResult = EnsureProtection();
-            var responseMessage = protectionResult.Succeeded
-                ? $"Blocked stop for {restoredSnapshot.Key} because a closed-lid stop follow-up reply arrived."
-                : $"Blocked stop for {restoredSnapshot.Key} because a closed-lid stop follow-up reply arrived. {CreateResultMessage(protectionResult)}";
-            var response = CreateSuccessResponse(
-                responseMessage,
-                stopContinuationRequested: true,
-                stopContinuationPrompt: reply,
-                stopFollowUpStatus: StopFollowUpStatuses.ReplyReceived);
-            LidGuardRuntimeLogWriter.AppendSessionLog(
-                $"{stopFollowUpAwaitContext.EventName}-stop-follow-up-reply-received",
-                stopFollowUpAwaitContext.PendingSuspendContext,
-                response,
-                restoredSnapshot);
+            var responseMessage = protectionResult.Succeeded ? $"Blocked stop for {restoredSnapshot.Key} because a closed-lid stop follow-up reply arrived." : $"Blocked stop for {restoredSnapshot.Key} because a closed-lid stop follow-up reply arrived. {CreateResultMessage(protectionResult)}";
+            var response = CreateSuccessResponse(responseMessage, stopContinuationRequested: true, stopContinuationPrompt: reply, stopFollowUpStatus: StopFollowUpStatuses.ReplyReceived);
+            LidGuardRuntimeLogWriter.AppendSessionLog($"{stopFollowUpAwaitContext.EventName}-stop-follow-up-reply-received", stopFollowUpAwaitContext.PendingSuspendContext, response, restoredSnapshot);
             return response;
         }
         finally
@@ -1394,27 +1134,14 @@ internal sealed class LidGuardRuntimeCoordinator
         }
     }
 
-    private LidGuardPipeResponse HandleSuspendAfterProtectionRetainedOrReleased(
-        PendingSuspendContext pendingSuspendContext,
-        LidGuardSessionSnapshot snapshot,
-        string eventName,
-        string successMessage,
-        string successMessageCode,
-        string[] successMessageArguments,
-        int activeSessionCount,
-        out StopFollowUpAwaitContext stopFollowUpAwaitContext,
-        out bool suspendScheduled)
+    private LidGuardPipeResponse HandleSuspendAfterProtectionRetainedOrReleased(PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot, string eventName, string successMessage, string successMessageCode, string[] successMessageArguments, int activeSessionCount, out StopFollowUpAwaitContext stopFollowUpAwaitContext, out bool suspendScheduled)
     {
         stopFollowUpAwaitContext = null;
         suspendScheduled = false;
         var closedLidPolicyApplicability = EvaluateClosedLidPolicyApplicability("suspend");
         if (!closedLidPolicyApplicability.IsApplicable)
         {
-            var releaseResult = ReleaseProtectionIfNoSessionRequiresItInsideGate(
-                eventName,
-                pendingSuspendContext,
-                snapshot,
-                "Released LidGuard protection because pending suspend is not applicable.");
+            var releaseResult = ReleaseProtectionIfNoSessionRequiresItInsideGate(eventName, pendingSuspendContext, snapshot, "Released LidGuard protection because pending suspend is not applicable.");
             if (!releaseResult.Succeeded) return CreateFailureResponse(releaseResult);
 
             var response = CreateSuccessResponse(closedLidPolicyApplicability.Message);
@@ -1425,52 +1152,20 @@ internal sealed class LidGuardRuntimeCoordinator
         LogSuspendProtectionRetainedInsideGate(eventName, pendingSuspendContext, snapshot);
         var suspendMode = _settings.SuspendMode;
         var postStopSuspendDelaySeconds = GetPostStopSuspendDelaySeconds(pendingSuspendContext);
-        var scheduledResponse = CreateSuccessResponse(
-            $"Scheduled {suspendMode} {DescribePostStopSuspendDelay(postStopSuspendDelaySeconds)} {DescribeSuspendReason(activeSessionCount)}");
+        var scheduledResponse = CreateSuccessResponse($"Scheduled {suspendMode} {DescribePostStopSuspendDelay(postStopSuspendDelaySeconds)} {DescribeSuspendReason(activeSessionCount)}");
         LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-suspend-scheduled", pendingSuspendContext, scheduledResponse, snapshot);
         suspendScheduled = true;
         CancelPendingSuspend();
         var pendingSuspendCancellationTokenSource = new CancellationTokenSource();
         _pendingSuspendCancellationTokenSource = pendingSuspendCancellationTokenSource;
         _pendingStopFollowUpStatus = string.Empty;
-        stopFollowUpAwaitContext = TryCreateStopFollowUpAwaitContextInsideGate(
-            pendingSuspendContext,
-            snapshot,
-            eventName,
-            scheduledResponse,
-            activeSessionCount,
-            pendingSuspendCancellationTokenSource);
-        _ = SuspendAfterDelayAsync(
-            pendingSuspendContext,
-            snapshot,
-            eventName,
-            CreateSuspendWebhookReason(activeSessionCount),
-            activeSessionCount,
-            postStopSuspendDelaySeconds,
-            pendingSuspendCancellationTokenSource,
-            stopFollowUpAwaitContext);
-        var suspendReasonCode = activeSessionCount == 0
-            ? LidGuardPipeResponseMessageCodes.SuspendReasonCompleted
-            : LidGuardPipeResponseMessageCodes.SuspendReasonSoftLocked;
-        return CreateSuccessResponse(
-            $"{successMessage} Scheduled {suspendMode} {DescribePostStopSuspendDelay(postStopSuspendDelaySeconds)} {DescribeSuspendReason(activeSessionCount)}",
-            successMessageCode,
-            successMessageArguments,
-            true,
-            suspendMode,
-            postStopSuspendDelaySeconds,
-            suspendReasonCode);
+        stopFollowUpAwaitContext = TryCreateStopFollowUpAwaitContextInsideGate(pendingSuspendContext, snapshot, eventName, scheduledResponse, activeSessionCount, pendingSuspendCancellationTokenSource);
+        _ = SuspendAfterDelayAsync(pendingSuspendContext, snapshot, eventName, CreateSuspendWebhookReason(activeSessionCount), activeSessionCount, postStopSuspendDelaySeconds, pendingSuspendCancellationTokenSource, stopFollowUpAwaitContext);
+        var suspendReasonCode = activeSessionCount == 0 ? LidGuardPipeResponseMessageCodes.SuspendReasonCompleted : LidGuardPipeResponseMessageCodes.SuspendReasonSoftLocked;
+        return CreateSuccessResponse($"{successMessage} Scheduled {suspendMode} {DescribePostStopSuspendDelay(postStopSuspendDelaySeconds)} {DescribeSuspendReason(activeSessionCount)}", successMessageCode, successMessageArguments, true, suspendMode, postStopSuspendDelaySeconds, suspendReasonCode);
     }
 
-    private async Task SuspendAfterDelayAsync(
-        PendingSuspendContext pendingSuspendContext,
-        LidGuardSessionSnapshot snapshot,
-        string eventName,
-        SuspendWebhookReason suspendWebhookReason,
-        int suspendTriggerSessionCount,
-        int postStopSuspendDelaySeconds,
-        CancellationTokenSource pendingSuspendCancellationTokenSource,
-        StopFollowUpAwaitContext stopFollowUpAwaitContext)
+    private async Task SuspendAfterDelayAsync(PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot, string eventName, SuspendWebhookReason suspendWebhookReason, int suspendTriggerSessionCount, int postStopSuspendDelaySeconds, CancellationTokenSource pendingSuspendCancellationTokenSource, StopFollowUpAwaitContext stopFollowUpAwaitContext)
     {
         var preSuspendWebhookAttempted = false;
         try
@@ -1495,11 +1190,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 if (!closedLidPolicyApplicability.IsApplicable)
                 {
                     CancelStopFollowUpBeforeStart(stopFollowUpAwaitContext);
-                    var releaseResult = ReleaseProtectionIfNoSessionRequiresItInsideGate(
-                        eventName,
-                        pendingSuspendContext,
-                        snapshot,
-                        "Released LidGuard protection because pending suspend was canceled before the pre-suspend webhook.");
+                    var releaseResult = ReleaseProtectionIfNoSessionRequiresItInsideGate(eventName, pendingSuspendContext, snapshot, "Released LidGuard protection because pending suspend was canceled before the pre-suspend webhook.");
                     if (!releaseResult.Succeeded)
                     {
                         var failedResponse = CreateFailureResponse(releaseResult);
@@ -1525,27 +1216,9 @@ internal sealed class LidGuardRuntimeCoordinator
             if (stopFollowUpAwaitContext is not null) await stopFollowUpAwaitContext.FollowUpCompletedSource.Task.WaitAsync(pendingSuspendCancellationTokenSource.Token);
 
             preSuspendWebhookAttempted = true;
-            await SendPreSuspendWebhookAsync(
-                pendingSuspendContext,
-                snapshot,
-                eventName,
-                suspendWebhookReason,
-                suspendTriggerSessionCount,
-                pendingSuspendCancellationTokenSource.Token);
-            await PlayPostStopSuspendSoundAsync(
-                pendingSuspendContext,
-                snapshot,
-                eventName,
-                postStopSuspendSound,
-                postStopSuspendSoundVolumeOverridePercent,
-                pendingSuspendCancellationTokenSource.Token);
-            await RequestSuspendAsync(
-                pendingSuspendContext,
-                snapshot,
-                eventName,
-                suspendWebhookReason,
-                suspendTriggerSessionCount,
-                pendingSuspendCancellationTokenSource.Token);
+            await SendPreSuspendWebhookAsync(pendingSuspendContext, snapshot, eventName, suspendWebhookReason, suspendTriggerSessionCount, pendingSuspendCancellationTokenSource.Token);
+            await PlayPostStopSuspendSoundAsync(pendingSuspendContext, snapshot, eventName, postStopSuspendSound, postStopSuspendSoundVolumeOverridePercent, pendingSuspendCancellationTokenSource.Token);
+            await RequestSuspendAsync(pendingSuspendContext, snapshot, eventName, suspendWebhookReason, suspendTriggerSessionCount, pendingSuspendCancellationTokenSource.Token);
         }
         catch (OperationCanceledException) when (!preSuspendWebhookAttempted)
         {
@@ -1559,13 +1232,7 @@ internal sealed class LidGuardRuntimeCoordinator
         }
     }
 
-    private async Task RequestSuspendAsync(
-        PendingSuspendContext pendingSuspendContext,
-        LidGuardSessionSnapshot snapshot,
-        string eventName,
-        SuspendWebhookReason suspendWebhookReason,
-        int suspendTriggerSessionCount,
-        CancellationToken cancellationToken)
+    private async Task RequestSuspendAsync(PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot, string eventName, SuspendWebhookReason suspendWebhookReason, int suspendTriggerSessionCount, CancellationToken cancellationToken)
     {
         var suspendMode = SystemSuspendMode.Sleep;
         var suspendHistoryEntryCount = (int?)null;
@@ -1583,11 +1250,7 @@ internal sealed class LidGuardRuntimeCoordinator
             var closedLidPolicyApplicability = EvaluateClosedLidPolicyApplicability("suspend");
             if (!closedLidPolicyApplicability.IsApplicable)
             {
-                var releaseResult = ReleaseProtectionIfNoSessionRequiresItInsideGate(
-                    eventName,
-                    pendingSuspendContext,
-                    snapshot,
-                    "Released LidGuard protection because pending suspend was canceled before the suspend request.");
+                var releaseResult = ReleaseProtectionIfNoSessionRequiresItInsideGate(eventName, pendingSuspendContext, snapshot, "Released LidGuard protection because pending suspend was canceled before the suspend request.");
                 if (!releaseResult.Succeeded)
                 {
                     var failedResponse = CreateFailureResponse(releaseResult);
@@ -1600,11 +1263,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 return;
             }
 
-            ReleaseSuspendProtectionInsideGate(
-                eventName,
-                pendingSuspendContext,
-                snapshot,
-                "Released LidGuard protection immediately before requesting suspend.");
+            ReleaseSuspendProtectionInsideGate(eventName, pendingSuspendContext, snapshot, "Released LidGuard protection immediately before requesting suspend.");
             suspendMode = _settings.SuspendMode;
             suspendHistoryEntryCount = _settings.SuspendHistoryEntryCount;
             activeSessionCount = _sessionRegistry.ActiveSessionCount;
@@ -1617,27 +1276,24 @@ internal sealed class LidGuardRuntimeCoordinator
         }
 
         var suspendResult = _systemSuspendService.Suspend(suspendMode);
-        SuspendHistoryLogStore.Append(
-            new SuspendHistoryEntry
-            {
-                RecordedAt = DateTimeOffset.UtcNow,
-                SuspendMode = suspendMode,
-                Reason = suspendWebhookReason,
-                Succeeded = suspendResult.Succeeded,
-                Message = suspendResult.Succeeded
-                    ? CreateSuspendHistorySuccessMessage(suspendResult, $"Requested {suspendMode} {DescribeSuspendReason(activeSessionCount)}")
-                    : CreateResultMessage(suspendResult),
-                EventName = suspendResult.Succeeded ? $"{eventName}-suspend-requested" : $"{eventName}-suspend-failed",
-                CommandName = pendingSuspendContext.CommandName,
-                Provider = pendingSuspendContext.Provider,
-                ProviderName = pendingSuspendContext.ProviderName,
-                SessionIdentifier = pendingSuspendContext.SessionIdentifier,
-                WorkingDirectory = pendingSuspendContext.WorkingDirectory,
-                SessionStateReason = pendingSuspendContext.SessionStateReason,
-                ActiveSessionCount = activeSessionCount,
-                SuspendTriggerSessionCount = suspendTriggerSessionCount
-            },
-            suspendHistoryEntryCount);
+        var suspendHistoryEntry = new SuspendHistoryEntry
+        {
+            RecordedAt = DateTimeOffset.UtcNow,
+            SuspendMode = suspendMode,
+            Reason = suspendWebhookReason,
+            Succeeded = suspendResult.Succeeded,
+            Message = suspendResult.Succeeded ? CreateSuspendHistorySuccessMessage(suspendResult, $"Requested {suspendMode} {DescribeSuspendReason(activeSessionCount)}") : CreateResultMessage(suspendResult),
+            EventName = suspendResult.Succeeded ? $"{eventName}-suspend-requested" : $"{eventName}-suspend-failed",
+            CommandName = pendingSuspendContext.CommandName,
+            Provider = pendingSuspendContext.Provider,
+            ProviderName = pendingSuspendContext.ProviderName,
+            SessionIdentifier = pendingSuspendContext.SessionIdentifier,
+            WorkingDirectory = pendingSuspendContext.WorkingDirectory,
+            SessionStateReason = pendingSuspendContext.SessionStateReason,
+            ActiveSessionCount = activeSessionCount,
+            SuspendTriggerSessionCount = suspendTriggerSessionCount
+        };
+        SuspendHistoryLogStore.Append(suspendHistoryEntry, suspendHistoryEntryCount);
         if (suspendResult.Succeeded)
         {
             await _gate.WaitAsync(CancellationToken.None);
@@ -1703,27 +1359,14 @@ internal sealed class LidGuardRuntimeCoordinator
         pendingSuspendCancellationTokenSource.Dispose();
     }
 
-    private async Task PlayPostStopSuspendSoundAsync(
-        PendingSuspendContext pendingSuspendContext,
-        LidGuardSessionSnapshot snapshot,
-        string eventName,
-        string postStopSuspendSound,
-        int? postStopSuspendSoundVolumeOverridePercent,
-        CancellationToken cancellationToken)
+    private async Task PlayPostStopSuspendSoundAsync(PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot, string eventName, string postStopSuspendSound, int? postStopSuspendSoundVolumeOverridePercent, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(postStopSuspendSound)) return;
 
-        var playbackResult = await _postStopSuspendSoundPlaybackCoordinator.PlayAsync(
-            postStopSuspendSound,
-            postStopSuspendSoundVolumeOverridePercent,
-            cancellationToken);
+        var playbackResult = await _postStopSuspendSoundPlaybackCoordinator.PlayAsync(postStopSuspendSound, postStopSuspendSoundVolumeOverridePercent, cancellationToken);
         foreach (var volumeWarningResult in playbackResult.VolumeWarningResults)
         {
-            await AppendPostStopSuspendSoundVolumeWarningAsync(
-                pendingSuspendContext,
-                snapshot,
-                eventName,
-                volumeWarningResult);
+            await AppendPostStopSuspendSoundVolumeWarningAsync(pendingSuspendContext, snapshot, eventName, volumeWarningResult);
         }
 
         if (playbackResult.PlaybackResult.Succeeded)
@@ -1754,11 +1397,7 @@ internal sealed class LidGuardRuntimeCoordinator
         }
     }
 
-    private async Task AppendPostStopSuspendSoundVolumeWarningAsync(
-        PendingSuspendContext pendingSuspendContext,
-        LidGuardSessionSnapshot snapshot,
-        string eventName,
-        LidGuardOperationResult volumeWarningResult)
+    private async Task AppendPostStopSuspendSoundVolumeWarningAsync(PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot, string eventName, LidGuardOperationResult volumeWarningResult)
     {
         await _gate.WaitAsync(CancellationToken.None);
         try
@@ -1772,13 +1411,7 @@ internal sealed class LidGuardRuntimeCoordinator
         }
     }
 
-    private async Task SendPreSuspendWebhookAsync(
-        PendingSuspendContext pendingSuspendContext,
-        LidGuardSessionSnapshot snapshot,
-        string eventName,
-        SuspendWebhookReason suspendWebhookReason,
-        int suspendTriggerSessionCount,
-        CancellationToken cancellationToken)
+    private async Task SendPreSuspendWebhookAsync(PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot, string eventName, SuspendWebhookReason suspendWebhookReason, int suspendTriggerSessionCount, CancellationToken cancellationToken)
     {
         if (pendingSuspendContext.SuppressWebhooks) return;
 
@@ -1796,11 +1429,7 @@ internal sealed class LidGuardRuntimeCoordinator
         }
 
         var webhookRequest = CreatePreSuspendWebhookRequest(pendingSuspendContext, snapshot, suspendWebhookReason, suspendTriggerSessionCount, userInterfaceCulture);
-        var sendResult = await SuspendWebhookSender.SendAsync(
-            preSuspendWebhookUrl,
-            webhookRequest,
-            cancellationToken,
-            s_preSuspendWebhookTimeout);
+        var sendResult = await SuspendWebhookSender.SendAsync(preSuspendWebhookUrl, webhookRequest, cancellationToken, s_preSuspendWebhookTimeout);
         if (sendResult.Succeeded)
         {
             if (!string.IsNullOrWhiteSpace(preSuspendWebhookUrl))
@@ -1832,12 +1461,7 @@ internal sealed class LidGuardRuntimeCoordinator
         }
     }
 
-    private static LidGuardWebhookRequest CreatePreSuspendWebhookRequest(
-        PendingSuspendContext pendingSuspendContext,
-        LidGuardSessionSnapshot snapshot,
-        SuspendWebhookReason suspendWebhookReason,
-        int suspendTriggerSessionCount,
-        string userInterfaceCulture)
+    private static LidGuardWebhookRequest CreatePreSuspendWebhookRequest(PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot, SuspendWebhookReason suspendWebhookReason, int suspendTriggerSessionCount, string userInterfaceCulture)
     {
         var webhookRequest = new LidGuardWebhookRequest
         {
@@ -1849,35 +1473,12 @@ internal sealed class LidGuardRuntimeCoordinator
 
         if (!pendingSuspendContext.IsProviderSessionEnd) return webhookRequest;
 
-        return CreateSessionEndWebhookRequest(
-            LidGuardWebhookEventTypes.PreSuspend,
-            suspendWebhookReason.ToString(),
-            snapshot,
-            string.IsNullOrWhiteSpace(pendingSuspendContext.SessionEndReason) ? pendingSuspendContext.CommandName : pendingSuspendContext.SessionEndReason,
-            suspendTriggerSessionCount,
-            pendingSuspendContext.ProviderSessionEndedAt ?? DateTimeOffset.UtcNow,
-            userInterfaceCulture,
-            suspendWebhookReason == SuspendWebhookReason.SoftLocked ? suspendTriggerSessionCount : null);
+        return CreateSessionEndWebhookRequest(LidGuardWebhookEventTypes.PreSuspend, suspendWebhookReason.ToString(), snapshot, string.IsNullOrWhiteSpace(pendingSuspendContext.SessionEndReason) ? pendingSuspendContext.CommandName : pendingSuspendContext.SessionEndReason, suspendTriggerSessionCount, pendingSuspendContext.ProviderSessionEndedAt ?? DateTimeOffset.UtcNow, userInterfaceCulture, suspendWebhookReason == SuspendWebhookReason.SoftLocked ? suspendTriggerSessionCount : null);
     }
 
-    private static LidGuardWebhookRequest CreateStopFollowUpWebhookRequest(
-        PendingSuspendContext pendingSuspendContext,
-        LidGuardSessionSnapshot snapshot,
-        int activeSessionCount,
-        int replyWaitSeconds,
-        DateTimeOffset replyDeadlineUtc,
-        string userInterfaceCulture)
+    private static LidGuardWebhookRequest CreateStopFollowUpWebhookRequest(PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot, int activeSessionCount, int replyWaitSeconds, DateTimeOffset replyDeadlineUtc, string userInterfaceCulture)
     {
-        var webhookRequest = CreateSessionEndWebhookRequest(
-            LidGuardWebhookEventTypes.StopFollowUp,
-            LidGuardWebhookReasons.AwaitingReply,
-            snapshot,
-            string.IsNullOrWhiteSpace(pendingSuspendContext.SessionEndReason) ? pendingSuspendContext.CommandName : pendingSuspendContext.SessionEndReason,
-            activeSessionCount,
-            pendingSuspendContext.ProviderSessionEndedAt ?? DateTimeOffset.UtcNow,
-            userInterfaceCulture,
-            null,
-            pendingSuspendContext.LastAssistantMessage);
+        var webhookRequest = CreateSessionEndWebhookRequest(LidGuardWebhookEventTypes.StopFollowUp, LidGuardWebhookReasons.AwaitingReply, snapshot, string.IsNullOrWhiteSpace(pendingSuspendContext.SessionEndReason) ? pendingSuspendContext.CommandName : pendingSuspendContext.SessionEndReason, activeSessionCount, pendingSuspendContext.ProviderSessionEndedAt ?? DateTimeOffset.UtcNow, userInterfaceCulture, null, pendingSuspendContext.LastAssistantMessage);
         return new LidGuardWebhookRequest
         {
             EventType = webhookRequest.EventType,
@@ -1902,16 +1503,7 @@ internal sealed class LidGuardRuntimeCoordinator
         };
     }
 
-    private static LidGuardWebhookRequest CreateSessionEndWebhookRequest(
-        string eventType,
-        string reason,
-        LidGuardSessionSnapshot snapshot,
-        string endReason,
-        int activeSessionCount,
-        DateTimeOffset endedAtUtc,
-        string userInterfaceCulture,
-        int? softLockedSessionCount = null,
-        string lastAssistantMessage = "")
+    private static LidGuardWebhookRequest CreateSessionEndWebhookRequest(string eventType, string reason, LidGuardSessionSnapshot snapshot, string endReason, int activeSessionCount, DateTimeOffset endedAtUtc, string userInterfaceCulture, int? softLockedSessionCount = null, string lastAssistantMessage = "")
         => new()
         {
             EventType = eventType,
@@ -1933,11 +1525,7 @@ internal sealed class LidGuardRuntimeCoordinator
             TranscriptPath = string.IsNullOrWhiteSpace(snapshot.TranscriptPath) ? null : snapshot.TranscriptPath
         };
 
-    private static bool TryResolveStopFollowUpPollUri(
-        string webhookUrl,
-        string replyPollUrl,
-        out Uri replyPollUri,
-        out string message)
+    private static bool TryResolveStopFollowUpPollUri(string webhookUrl, string replyPollUrl, out Uri replyPollUri, out string message)
     {
         replyPollUri = null;
         message = string.Empty;
@@ -2000,9 +1588,7 @@ internal sealed class LidGuardRuntimeCoordinator
         try
         {
             _pendingStopFollowUpStatus = string.Empty;
-            var pendingSuspendStillMatches = ReferenceEquals(
-                _pendingSuspendCancellationTokenSource,
-                stopFollowUpAwaitContext.PendingSuspendCancellationTokenSource);
+            var pendingSuspendStillMatches = ReferenceEquals(_pendingSuspendCancellationTokenSource, stopFollowUpAwaitContext.PendingSuspendCancellationTokenSource);
             if (pendingSuspendStillMatches && !stopFollowUpAwaitContext.PendingSuspendCancellationTokenSource.IsCancellationRequested) stopFollowUpAwaitContext.FollowUpCompletedSource.TrySetResult();
         }
         finally
@@ -2031,26 +1617,15 @@ internal sealed class LidGuardRuntimeCoordinator
     }
 
     private int GetPostStopSuspendDelaySeconds(PendingSuspendContext pendingSuspendContext)
-        => pendingSuspendContext.CanReturnStopContinuation
-            && pendingSuspendContext.StopHookAlreadyActive
-            && !_settings.RepeatClosedLidStopFollowUp
-                ? 0
-                : _settings.PostStopSuspendDelaySeconds;
+        => pendingSuspendContext.CanReturnStopContinuation && pendingSuspendContext.StopHookAlreadyActive && !_settings.RepeatClosedLidStopFollowUp ? 0 : _settings.PostStopSuspendDelaySeconds;
 
-    private async Task AppendStopFollowUpFailureAsync(
-        StopFollowUpAwaitContext stopFollowUpAwaitContext,
-        string stopFollowUpStatus,
-        string message)
+    private async Task AppendStopFollowUpFailureAsync(StopFollowUpAwaitContext stopFollowUpAwaitContext, string stopFollowUpStatus, string message)
     {
         await _gate.WaitAsync(CancellationToken.None);
         try
         {
             var response = CreateSuccessResponse(message, stopFollowUpStatus: stopFollowUpStatus);
-            LidGuardRuntimeLogWriter.AppendSessionLog(
-                $"{stopFollowUpAwaitContext.EventName}-stop-follow-up-{stopFollowUpStatus}",
-                stopFollowUpAwaitContext.PendingSuspendContext,
-                response,
-                stopFollowUpAwaitContext.Snapshot);
+            LidGuardRuntimeLogWriter.AppendSessionLog($"{stopFollowUpAwaitContext.EventName}-stop-follow-up-{stopFollowUpStatus}", stopFollowUpAwaitContext.PendingSuspendContext, response, stopFollowUpAwaitContext.Snapshot);
         }
         finally
         {
@@ -2059,20 +1634,9 @@ internal sealed class LidGuardRuntimeCoordinator
     }
 
     private LidGuardPipeResponse CreateStopFollowUpResponse(LidGuardPipeResponse scheduledResponse, string stopFollowUpStatus)
-        => CreateSuccessResponse(
-            scheduledResponse.Message,
-            scheduledResponse.MessageCode,
-            scheduledResponse.MessageArguments,
-            scheduledResponse.SuspendScheduled,
-            scheduledResponse.SuspendMode,
-            scheduledResponse.SuspendDelaySeconds,
-            scheduledResponse.SuspendReasonCode,
-            stopFollowUpStatus: stopFollowUpStatus);
+        => CreateSuccessResponse(scheduledResponse.Message, scheduledResponse.MessageCode, scheduledResponse.MessageArguments, scheduledResponse.SuspendScheduled, scheduledResponse.SuspendMode, scheduledResponse.SuspendDelaySeconds, scheduledResponse.SuspendReasonCode, stopFollowUpStatus: stopFollowUpStatus);
 
-    private async Task QueuePostSessionEndWebhookForCanceledSuspendAsync(
-        PendingSuspendContext pendingSuspendContext,
-        LidGuardSessionSnapshot snapshot,
-        string eventName)
+    private async Task QueuePostSessionEndWebhookForCanceledSuspendAsync(PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot, string eventName)
     {
         await _gate.WaitAsync(CancellationToken.None);
         try
@@ -2085,11 +1649,7 @@ internal sealed class LidGuardRuntimeCoordinator
         }
     }
 
-    private void QueuePostSessionEndWebhookForCanceledSuspendInsideGate(
-        PendingSuspendContext pendingSuspendContext,
-        LidGuardSessionSnapshot snapshot,
-        string eventName,
-        int activeSessionCount)
+    private void QueuePostSessionEndWebhookForCanceledSuspendInsideGate(PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot, string eventName, int activeSessionCount)
     {
         if (pendingSuspendContext.SuppressWebhooks) return;
         if (!pendingSuspendContext.IsProviderSessionEnd) return;
@@ -2102,78 +1662,36 @@ internal sealed class LidGuardRuntimeCoordinator
             IsProviderSessionEnd = true,
             SessionEndReason = pendingSuspendContext.SessionEndReason
         };
-        QueuePostSessionEndWebhookInsideGate(
-            stopRequest,
-            snapshot,
-            eventName,
-            pendingSuspendContext.CommandName,
-            activeSessionCount,
-            pendingSuspendContext.ProviderSessionEndedAt ?? DateTimeOffset.UtcNow);
+        QueuePostSessionEndWebhookInsideGate(stopRequest, snapshot, eventName, pendingSuspendContext.CommandName, activeSessionCount, pendingSuspendContext.ProviderSessionEndedAt ?? DateTimeOffset.UtcNow);
     }
 
-    private void QueuePostSessionEndWebhookIfRequired(
-        LidGuardSessionStopRequest request,
-        LidGuardSessionSnapshot snapshot,
-        string eventName,
-        string commandName,
-        int activeSessionCount)
+    private void QueuePostSessionEndWebhookIfRequired(LidGuardSessionStopRequest request, LidGuardSessionSnapshot snapshot, string eventName, string commandName, int activeSessionCount)
     {
         if (request.SuppressWebhooks) return;
         if (!request.IsProviderSessionEnd) return;
         QueuePostSessionEndWebhookInsideGate(request, snapshot, eventName, commandName, activeSessionCount, DateTimeOffset.UtcNow);
     }
 
-    private void QueuePostSessionEndWebhookInsideGate(
-        LidGuardSessionStopRequest request,
-        LidGuardSessionSnapshot snapshot,
-        string eventName,
-        string commandName,
-        int activeSessionCount,
-        DateTimeOffset endedAtUtc)
+    private void QueuePostSessionEndWebhookInsideGate(LidGuardSessionStopRequest request, LidGuardSessionSnapshot snapshot, string eventName, string commandName, int activeSessionCount, DateTimeOffset endedAtUtc)
     {
         if (string.IsNullOrWhiteSpace(_settings.PostSessionEndWebhookUrl)) return;
 
         var postSessionEndWebhookUrl = _settings.PostSessionEndWebhookUrl;
         var userInterfaceCulture = LidGuardCulture.ResolveEffectiveCultureName(_settings);
-        var webhookRequest = CreateSessionEndWebhookRequest(
-            LidGuardWebhookEventTypes.PostSessionEnd,
-            LidGuardWebhookReasons.SessionEnded,
-            snapshot,
-            string.IsNullOrWhiteSpace(request.SessionEndReason) ? commandName : request.SessionEndReason,
-            activeSessionCount,
-            endedAtUtc,
-            userInterfaceCulture);
+        var webhookRequest = CreateSessionEndWebhookRequest(LidGuardWebhookEventTypes.PostSessionEnd, LidGuardWebhookReasons.SessionEnded, snapshot, string.IsNullOrWhiteSpace(request.SessionEndReason) ? commandName : request.SessionEndReason, activeSessionCount, endedAtUtc, userInterfaceCulture);
 
         _pendingPostSessionEndWebhookCount++;
-        _ = SendPostSessionEndWebhookAsync(
-            postSessionEndWebhookUrl,
-            webhookRequest,
-            request,
-            snapshot,
-            eventName,
-            commandName,
-            activeSessionCount);
+        _ = SendPostSessionEndWebhookAsync(postSessionEndWebhookUrl, webhookRequest, request, snapshot, eventName, commandName, activeSessionCount);
     }
 
-    private async Task SendPostSessionEndWebhookAsync(
-        string postSessionEndWebhookUrl,
-        LidGuardWebhookRequest webhookRequest,
-        LidGuardSessionStopRequest request,
-        LidGuardSessionSnapshot snapshot,
-        string eventName,
-        string commandName,
-        int activeSessionCount)
+    private async Task SendPostSessionEndWebhookAsync(string postSessionEndWebhookUrl, LidGuardWebhookRequest webhookRequest, LidGuardSessionStopRequest request, LidGuardSessionSnapshot snapshot, string eventName, string commandName, int activeSessionCount)
     {
         try
         {
             LidGuardOperationResult sendResult;
             try
             {
-                sendResult = await SuspendWebhookSender.SendPostSessionEndAsync(
-                    postSessionEndWebhookUrl,
-                    webhookRequest,
-                    CancellationToken.None,
-                    s_postSessionEndWebhookTimeout);
+                sendResult = await SuspendWebhookSender.SendPostSessionEndAsync(postSessionEndWebhookUrl, webhookRequest, CancellationToken.None, s_postSessionEndWebhookTimeout);
             }
             catch (Exception exception)
             {
@@ -2182,11 +1700,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
             if (sendResult.Succeeded)
             {
-                var successResponse = LidGuardPipeResponse.Success(
-                    "Sent post-session-end webhook.",
-                    activeSessionCount,
-                    [],
-                    _settings);
+                var successResponse = LidGuardPipeResponse.Success("Sent post-session-end webhook.", activeSessionCount, [], _settings);
                 LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-post-session-end-webhook-sent", request, successResponse, snapshot, commandName);
                 return;
             }
@@ -2214,8 +1728,7 @@ internal sealed class LidGuardRuntimeCoordinator
         }
     }
 
-    private async Task HandleEmergencyHibernationThresholdReachedAsync(
-        EmergencyHibernationThermalThresholdReachedContext emergencyHibernationThermalThresholdReachedContext)
+    private async Task HandleEmergencyHibernationThresholdReachedAsync(EmergencyHibernationThermalThresholdReachedContext emergencyHibernationThermalThresholdReachedContext)
     {
         var emergencyHibernationTemperatureCelsius = emergencyHibernationThermalThresholdReachedContext.ThresholdTemperatureCelsius;
         var emergencyHibernationTemperatureMode = emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureMode;
@@ -2223,49 +1736,25 @@ internal sealed class LidGuardRuntimeCoordinator
         await _gate.WaitAsync(CancellationToken.None);
         try
         {
-            if (!TryValidateEmergencyHibernationStateInsideGate(
-                emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius,
-                out emergencyHibernationTemperatureCelsius,
-                out emergencyHibernationTemperatureMode,
-                out var canceledMessage))
+            if (!TryValidateEmergencyHibernationStateInsideGate(emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius, out emergencyHibernationTemperatureCelsius, out emergencyHibernationTemperatureMode, out var canceledMessage))
             {
-                LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
-                    "emergency-hibernation-canceled",
-                    CreateSuccessResponse(canceledMessage),
-                    emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius,
-                    emergencyHibernationTemperatureCelsius,
-                    emergencyHibernationTemperatureMode);
+                LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog("emergency-hibernation-canceled", CreateSuccessResponse(canceledMessage), emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode);
                 return;
             }
 
             CancelPendingSuspend(true);
-            LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
-                "emergency-hibernation-thermal-detected",
-                CreateSuccessResponse(
-                    $"Detected high system temperature {DescribeEmergencyHibernationTemperature(emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode)}. Requesting Emergency Hibernation."),
-                emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius,
-                emergencyHibernationTemperatureCelsius,
-                emergencyHibernationTemperatureMode);
+            LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog("emergency-hibernation-thermal-detected", CreateSuccessResponse($"Detected high system temperature {DescribeEmergencyHibernationTemperature(emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode)}. Requesting Emergency Hibernation."), emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode);
         }
         finally
         {
             _gate.Release();
         }
 
-        await SendEmergencyHibernationWebhookAsync(
-            emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius,
-            emergencyHibernationTemperatureCelsius,
-            emergencyHibernationTemperatureMode);
-        await RequestEmergencyHibernationAsync(
-            emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius,
-            emergencyHibernationTemperatureCelsius,
-            emergencyHibernationTemperatureMode);
+        await SendEmergencyHibernationWebhookAsync(emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode);
+        await RequestEmergencyHibernationAsync(emergencyHibernationThermalThresholdReachedContext.ObservedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode);
     }
 
-    private async Task SendEmergencyHibernationWebhookAsync(
-        int observedTemperatureCelsius,
-        int emergencyHibernationTemperatureCelsius,
-        EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
+    private async Task SendEmergencyHibernationWebhookAsync(int observedTemperatureCelsius, int emergencyHibernationTemperatureCelsius, EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
     {
         string preSuspendWebhookUrl;
         string userInterfaceCulture;
@@ -2281,13 +1770,7 @@ internal sealed class LidGuardRuntimeCoordinator
             _gate.Release();
         }
 
-        var sendResult = await SuspendWebhookSender.SendAsync(
-            preSuspendWebhookUrl,
-            SuspendWebhookReason.EmergencyHibernation,
-            0,
-            userInterfaceCulture,
-            CancellationToken.None,
-            s_emergencyHibernationWebhookTimeout);
+        var sendResult = await SuspendWebhookSender.SendAsync(preSuspendWebhookUrl, SuspendWebhookReason.EmergencyHibernation, 0, userInterfaceCulture, CancellationToken.None, s_emergencyHibernationWebhookTimeout);
         if (sendResult.Succeeded)
         {
             if (!string.IsNullOrWhiteSpace(preSuspendWebhookUrl))
@@ -2295,12 +1778,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 await _gate.WaitAsync(CancellationToken.None);
                 try
                 {
-                    LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
-                        "emergency-hibernation-webhook-sent",
-                        CreateSuccessResponse("Sent Emergency Hibernation webhook."),
-                        observedTemperatureCelsius,
-                        emergencyHibernationTemperatureCelsius,
-                        emergencyHibernationTemperatureMode);
+                    LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog("emergency-hibernation-webhook-sent", CreateSuccessResponse("Sent Emergency Hibernation webhook."), observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode);
                 }
                 finally
                 {
@@ -2314,12 +1792,7 @@ internal sealed class LidGuardRuntimeCoordinator
         await _gate.WaitAsync(CancellationToken.None);
         try
         {
-            LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
-                "emergency-hibernation-webhook-failed",
-                CreateFailureResponse(sendResult),
-                observedTemperatureCelsius,
-                emergencyHibernationTemperatureCelsius,
-                emergencyHibernationTemperatureMode);
+            LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog("emergency-hibernation-webhook-failed", CreateFailureResponse(sendResult), observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode);
         }
         finally
         {
@@ -2327,97 +1800,48 @@ internal sealed class LidGuardRuntimeCoordinator
         }
     }
 
-    private LidGuardOperationResult ReleaseEmergencyHibernationProtectionInsideGate(
-        int observedTemperatureCelsius,
-        int emergencyHibernationTemperatureCelsius,
-        EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
+    private LidGuardOperationResult ReleaseEmergencyHibernationProtectionInsideGate(int observedTemperatureCelsius, int emergencyHibernationTemperatureCelsius, EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
     {
         if (!_protectionCoordinator.IsApplied) return LidGuardOperationResult.Success();
 
         var restoreResult = RestoreProtection();
-        var response = restoreResult.Succeeded
-            ? CreateSuccessResponse("Released LidGuard protection immediately before requesting Emergency Hibernation.")
-            : CreateFailureResponse(restoreResult);
-        LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
-            "emergency-hibernation-suspend-protection-released",
-            response,
-            observedTemperatureCelsius,
-            emergencyHibernationTemperatureCelsius,
-            emergencyHibernationTemperatureMode);
+        var response = restoreResult.Succeeded ? CreateSuccessResponse("Released LidGuard protection immediately before requesting Emergency Hibernation.") : CreateFailureResponse(restoreResult);
+        LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog("emergency-hibernation-suspend-protection-released", response, observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode);
         return restoreResult;
     }
 
-    private async Task RequestEmergencyHibernationAsync(
-        int observedTemperatureCelsius,
-        int emergencyHibernationTemperatureCelsius,
-        EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
+    private async Task RequestEmergencyHibernationAsync(int observedTemperatureCelsius, int emergencyHibernationTemperatureCelsius, EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
     {
         var suspendHistoryEntryCount = (int?)null;
         var activeSessionCount = 0;
         await _gate.WaitAsync(CancellationToken.None);
         try
         {
-            if (!TryValidateEmergencyHibernationStateInsideGate(
-                observedTemperatureCelsius,
-                out emergencyHibernationTemperatureCelsius,
-                out emergencyHibernationTemperatureMode,
-                out var canceledMessage))
+            if (!TryValidateEmergencyHibernationStateInsideGate(observedTemperatureCelsius, out emergencyHibernationTemperatureCelsius, out emergencyHibernationTemperatureMode, out var canceledMessage))
             {
-                LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
-                    "emergency-hibernation-canceled",
-                    CreateSuccessResponse(canceledMessage),
-                    observedTemperatureCelsius,
-                    emergencyHibernationTemperatureCelsius,
-                    emergencyHibernationTemperatureMode);
+                LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog("emergency-hibernation-canceled", CreateSuccessResponse(canceledMessage), observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode);
                 return;
             }
 
             suspendHistoryEntryCount = _settings.SuspendHistoryEntryCount;
             activeSessionCount = _sessionRegistry.ActiveSessionCount;
-            ReleaseEmergencyHibernationProtectionInsideGate(
-                observedTemperatureCelsius,
-                emergencyHibernationTemperatureCelsius,
-                emergencyHibernationTemperatureMode);
-            LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
-                "emergency-hibernation-requesting",
-                CreateSuccessResponse(
-                    $"Requesting Emergency Hibernation because system temperature reached {DescribeEmergencyHibernationTemperature(observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode)}."),
-                observedTemperatureCelsius,
-                emergencyHibernationTemperatureCelsius,
-                emergencyHibernationTemperatureMode);
+            ReleaseEmergencyHibernationProtectionInsideGate(observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode);
+            LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog("emergency-hibernation-requesting", CreateSuccessResponse($"Requesting Emergency Hibernation because system temperature reached {DescribeEmergencyHibernationTemperature(observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode)}."), observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode);
         }
         finally
         {
             _gate.Release();
         }
 
-        var emergencyHibernationTemperatureDescription = DescribeEmergencyHibernationTemperature(
-            observedTemperatureCelsius,
-            emergencyHibernationTemperatureCelsius,
-            emergencyHibernationTemperatureMode);
+        var emergencyHibernationTemperatureDescription = DescribeEmergencyHibernationTemperature(observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode);
         var hibernationResult = _systemSuspendService.Suspend(SystemSuspendMode.Hibernate);
-        AppendEmergencyHibernationSuspendHistory(
-            suspendHistoryEntryCount,
-            activeSessionCount,
-            observedTemperatureCelsius,
-            emergencyHibernationTemperatureCelsius,
-            emergencyHibernationTemperatureMode,
-            SystemSuspendMode.Hibernate,
-            hibernationResult,
-            $"Requested Emergency Hibernation because system temperature reached {emergencyHibernationTemperatureDescription}.",
-            "emergency-hibernation-requested",
-            "emergency-hibernation-failed");
+        AppendEmergencyHibernationSuspendHistory(suspendHistoryEntryCount, activeSessionCount, observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode, SystemSuspendMode.Hibernate, hibernationResult, $"Requested Emergency Hibernation because system temperature reached {emergencyHibernationTemperatureDescription}.", "emergency-hibernation-requested", "emergency-hibernation-failed");
         if (hibernationResult.Succeeded)
         {
             await _gate.WaitAsync(CancellationToken.None);
             try
             {
-                LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
-                    "emergency-hibernation-requested",
-                    CreateSuccessResponse(CreateSuspendHistorySuccessMessage(hibernationResult, $"Requested Emergency Hibernation because system temperature reached {emergencyHibernationTemperatureDescription}.")),
-                    observedTemperatureCelsius,
-                    emergencyHibernationTemperatureCelsius,
-                    emergencyHibernationTemperatureMode);
+                LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog("emergency-hibernation-requested", CreateSuccessResponse(CreateSuspendHistorySuccessMessage(hibernationResult, $"Requested Emergency Hibernation because system temperature reached {emergencyHibernationTemperatureDescription}.")), observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode);
             }
             finally
             {
@@ -2430,12 +1854,7 @@ internal sealed class LidGuardRuntimeCoordinator
         await _gate.WaitAsync(CancellationToken.None);
         try
         {
-            LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
-                "emergency-hibernation-failed",
-                CreateFailureResponse(hibernationResult),
-                observedTemperatureCelsius,
-                emergencyHibernationTemperatureCelsius,
-                emergencyHibernationTemperatureMode);
+            LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog("emergency-hibernation-failed", CreateFailureResponse(hibernationResult), observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode);
         }
         finally
         {
@@ -2445,13 +1864,7 @@ internal sealed class LidGuardRuntimeCoordinator
         await _gate.WaitAsync(CancellationToken.None);
         try
         {
-            LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
-                "emergency-hibernation-sleep-fallback-requesting",
-                CreateSuccessResponse(
-                    $"Emergency Hibernation failed. Requesting Sleep fallback because system temperature reached {emergencyHibernationTemperatureDescription}."),
-                observedTemperatureCelsius,
-                emergencyHibernationTemperatureCelsius,
-                emergencyHibernationTemperatureMode);
+            LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog("emergency-hibernation-sleep-fallback-requesting", CreateSuccessResponse($"Emergency Hibernation failed. Requesting Sleep fallback because system temperature reached {emergencyHibernationTemperatureDescription}."), observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode);
         }
         finally
         {
@@ -2459,28 +1872,13 @@ internal sealed class LidGuardRuntimeCoordinator
         }
 
         var sleepFallbackResult = _systemSuspendService.Suspend(SystemSuspendMode.Sleep);
-        AppendEmergencyHibernationSuspendHistory(
-            suspendHistoryEntryCount,
-            activeSessionCount,
-            observedTemperatureCelsius,
-            emergencyHibernationTemperatureCelsius,
-            emergencyHibernationTemperatureMode,
-            SystemSuspendMode.Sleep,
-            sleepFallbackResult,
-            $"Requested Sleep fallback after Emergency Hibernation failed because system temperature reached {emergencyHibernationTemperatureDescription}.",
-            "emergency-hibernation-sleep-fallback-requested",
-            "emergency-hibernation-sleep-fallback-failed");
+        AppendEmergencyHibernationSuspendHistory(suspendHistoryEntryCount, activeSessionCount, observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode, SystemSuspendMode.Sleep, sleepFallbackResult, $"Requested Sleep fallback after Emergency Hibernation failed because system temperature reached {emergencyHibernationTemperatureDescription}.", "emergency-hibernation-sleep-fallback-requested", "emergency-hibernation-sleep-fallback-failed");
         if (sleepFallbackResult.Succeeded)
         {
             await _gate.WaitAsync(CancellationToken.None);
             try
             {
-                LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
-                    "emergency-hibernation-sleep-fallback-requested",
-                    CreateSuccessResponse(CreateSuspendHistorySuccessMessage(sleepFallbackResult, $"Requested Sleep fallback after Emergency Hibernation failed because system temperature reached {emergencyHibernationTemperatureDescription}.")),
-                    observedTemperatureCelsius,
-                    emergencyHibernationTemperatureCelsius,
-                    emergencyHibernationTemperatureMode);
+                LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog("emergency-hibernation-sleep-fallback-requested", CreateSuccessResponse(CreateSuspendHistorySuccessMessage(sleepFallbackResult, $"Requested Sleep fallback after Emergency Hibernation failed because system temperature reached {emergencyHibernationTemperatureDescription}.")), observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode);
             }
             finally
             {
@@ -2493,12 +1891,7 @@ internal sealed class LidGuardRuntimeCoordinator
         await _gate.WaitAsync(CancellationToken.None);
         try
         {
-            LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog(
-                "emergency-hibernation-sleep-fallback-failed",
-                CreateFailureResponse(sleepFallbackResult),
-                observedTemperatureCelsius,
-                emergencyHibernationTemperatureCelsius,
-                emergencyHibernationTemperatureMode);
+            LidGuardRuntimeLogWriter.AppendEmergencyHibernationLog("emergency-hibernation-sleep-fallback-failed", CreateFailureResponse(sleepFallbackResult), observedTemperatureCelsius, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode);
         }
         finally
         {
@@ -2506,58 +1899,34 @@ internal sealed class LidGuardRuntimeCoordinator
         }
     }
 
-    private static void AppendEmergencyHibernationSuspendHistory(
-        int? suspendHistoryEntryCount,
-        int activeSessionCount,
-        int observedTemperatureCelsius,
-        int emergencyHibernationTemperatureCelsius,
-        EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode,
-        SystemSuspendMode suspendMode,
-        LidGuardOperationResult suspendResult,
-        string successMessage,
-        string successEventName,
-        string failureEventName)
+    private static void AppendEmergencyHibernationSuspendHistory(int? suspendHistoryEntryCount, int activeSessionCount, int observedTemperatureCelsius, int emergencyHibernationTemperatureCelsius, EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode, SystemSuspendMode suspendMode, LidGuardOperationResult suspendResult, string successMessage, string successEventName, string failureEventName)
     {
-        var message = suspendResult.Succeeded
-            ? CreateSuspendHistorySuccessMessage(suspendResult, successMessage)
-            : CreateResultMessage(suspendResult);
+        var message = suspendResult.Succeeded ? CreateSuspendHistorySuccessMessage(suspendResult, successMessage) : CreateResultMessage(suspendResult);
         var eventName = suspendResult.Succeeded ? successEventName : failureEventName;
-        SuspendHistoryLogStore.Append(
-            new SuspendHistoryEntry
-            {
-                RecordedAt = DateTimeOffset.UtcNow,
-                SuspendMode = suspendMode,
-                Reason = SuspendWebhookReason.EmergencyHibernation,
-                Succeeded = suspendResult.Succeeded,
-                Message = message,
-                EventName = eventName,
-                CommandName = "emergency-hibernation-monitor",
-                ActiveSessionCount = activeSessionCount,
-                ObservedTemperatureCelsius = observedTemperatureCelsius,
-                EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius,
-                EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode
-            },
-            suspendHistoryEntryCount);
+        var suspendHistoryEntry = new SuspendHistoryEntry
+        {
+            RecordedAt = DateTimeOffset.UtcNow,
+            SuspendMode = suspendMode,
+            Reason = SuspendWebhookReason.EmergencyHibernation,
+            Succeeded = suspendResult.Succeeded,
+            Message = message,
+            EventName = eventName,
+            CommandName = "emergency-hibernation-monitor",
+            ActiveSessionCount = activeSessionCount,
+            ObservedTemperatureCelsius = observedTemperatureCelsius,
+            EmergencyHibernationTemperatureCelsius = emergencyHibernationTemperatureCelsius,
+            EmergencyHibernationTemperatureMode = emergencyHibernationTemperatureMode
+        };
+        SuspendHistoryLogStore.Append(suspendHistoryEntry, suspendHistoryEntryCount);
     }
 
     private EmergencyHibernationThermalMonitorState CreateEmergencyHibernationThermalMonitorState()
     {
         var closedLidPolicyApplicability = EvaluateClosedLidPolicyApplicability("Emergency Hibernation");
-        return new EmergencyHibernationThermalMonitorState(
-            _protectionCoordinator.IsApplied,
-            _settings.EmergencyHibernationOnHighTemperature,
-            closedLidPolicyApplicability.IsApplicable,
-            closedLidPolicyApplicability.LidSwitchState,
-            closedLidPolicyApplicability.VisibleDisplayMonitorCount,
-            _settings.EmergencyHibernationTemperatureMode,
-            LidGuardSettings.ClampEmergencyHibernationTemperatureCelsius(_settings.EmergencyHibernationTemperatureCelsius));
+        return new EmergencyHibernationThermalMonitorState(_protectionCoordinator.IsApplied, _settings.EmergencyHibernationOnHighTemperature, closedLidPolicyApplicability.IsApplicable, closedLidPolicyApplicability.LidSwitchState, closedLidPolicyApplicability.VisibleDisplayMonitorCount, _settings.EmergencyHibernationTemperatureMode, LidGuardSettings.ClampEmergencyHibernationTemperatureCelsius(_settings.EmergencyHibernationTemperatureCelsius));
     }
 
-    private bool TryValidateEmergencyHibernationStateInsideGate(
-        int observedTemperatureCelsius,
-        out int emergencyHibernationTemperatureCelsius,
-        out EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode,
-        out string message)
+    private bool TryValidateEmergencyHibernationStateInsideGate(int observedTemperatureCelsius, out int emergencyHibernationTemperatureCelsius, out EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode, out string message)
     {
         emergencyHibernationTemperatureCelsius = LidGuardSettings.ClampEmergencyHibernationTemperatureCelsius(_settings.EmergencyHibernationTemperatureCelsius);
         emergencyHibernationTemperatureMode = _settings.EmergencyHibernationTemperatureMode;
@@ -2592,48 +1961,18 @@ internal sealed class LidGuardRuntimeCoordinator
         return true;
     }
 
-    private LidGuardPipeResponse CreateSuccessResponse(
-        string message,
-        string messageCode = "",
-        string[] messageArguments = null,
-        bool suspendScheduled = false,
-        SystemSuspendMode suspendMode = SystemSuspendMode.Sleep,
-        int suspendDelaySeconds = 0,
-        string suspendReasonCode = "",
-        bool stopContinuationRequested = false,
-        string stopContinuationPrompt = "",
-        string stopFollowUpStatus = "")
+    private LidGuardPipeResponse CreateSuccessResponse(string message, string messageCode = "", string[] messageArguments = null, bool suspendScheduled = false, SystemSuspendMode suspendMode = SystemSuspendMode.Sleep, int suspendDelaySeconds = 0, string suspendReasonCode = "", bool stopContinuationRequested = false, string stopContinuationPrompt = "", string stopFollowUpStatus = "")
     {
         var snapshots = _sessionRegistry.GetSnapshots();
         var currentLidAndDisplayState = GetCurrentLidAndDisplayState();
-        return LidGuardPipeResponse.Success(
-            message,
-            snapshots.Count,
-            CreateSessionStatuses(snapshots),
-            _settings,
-            currentLidAndDisplayState.LidSwitchState,
-            currentLidAndDisplayState.VisibleDisplayMonitorCount,
-            messageCode,
-            messageArguments,
-            suspendScheduled,
-            suspendMode,
-            suspendDelaySeconds,
-            suspendReasonCode,
-            stopContinuationRequested,
-            stopContinuationPrompt,
-            string.IsNullOrWhiteSpace(stopFollowUpStatus) ? _pendingStopFollowUpStatus : stopFollowUpStatus);
+        return LidGuardPipeResponse.Success(message, snapshots.Count, CreateSessionStatuses(snapshots), _settings, currentLidAndDisplayState.LidSwitchState, currentLidAndDisplayState.VisibleDisplayMonitorCount, messageCode, messageArguments, suspendScheduled, suspendMode, suspendDelaySeconds, suspendReasonCode, stopContinuationRequested, stopContinuationPrompt, string.IsNullOrWhiteSpace(stopFollowUpStatus) ? _pendingStopFollowUpStatus : stopFollowUpStatus);
     }
 
     private LidGuardPipeResponse CreateFailureResponse(LidGuardOperationResult result)
     {
         var snapshots = _sessionRegistry.GetSnapshots();
         var currentLidAndDisplayState = GetCurrentLidAndDisplayState();
-        return LidGuardPipeResponse.Failure(
-            CreateResultMessage(result),
-            snapshots.Count,
-            false,
-            currentLidAndDisplayState.LidSwitchState,
-            currentLidAndDisplayState.VisibleDisplayMonitorCount);
+        return LidGuardPipeResponse.Failure(CreateResultMessage(result), snapshots.Count, false, currentLidAndDisplayState.LidSwitchState, currentLidAndDisplayState.VisibleDisplayMonitorCount);
     }
 
     private static LidGuardSessionStatus[] CreateSessionStatuses(IReadOnlyList<LidGuardSessionSnapshot> snapshots)
@@ -2672,8 +2011,7 @@ internal sealed class LidGuardRuntimeCoordinator
     private ClosedLidPolicyApplicability EvaluateClosedLidPolicyApplicability(string actionName)
     {
         var lidSwitchState = _lidStateSource.CurrentState;
-        var visibleDisplayMonitorCount = _visibleDisplayMonitorCountProvider.GetVisibleDisplayMonitorCount(
-            excludeInternalDisplayMonitors: lidSwitchState == LidSwitchState.Closed);
+        var visibleDisplayMonitorCount = _visibleDisplayMonitorCountProvider.GetVisibleDisplayMonitorCount(excludeInternalDisplayMonitors: lidSwitchState == LidSwitchState.Closed);
         return EvaluateClosedLidPolicyApplicability(actionName, new CurrentLidAndDisplayState(lidSwitchState, visibleDisplayMonitorCount));
     }
 
@@ -2683,42 +2021,24 @@ internal sealed class LidGuardRuntimeCoordinator
         return new(lidSwitchState, _visibleDisplayMonitorCountProvider.GetVisibleDisplayMonitorCount());
     }
 
-    private static ClosedLidPolicyApplicability EvaluateClosedLidPolicyApplicability(
-        string actionName,
-        CurrentLidAndDisplayState currentLidAndDisplayState)
+    private static ClosedLidPolicyApplicability EvaluateClosedLidPolicyApplicability(string actionName, CurrentLidAndDisplayState currentLidAndDisplayState)
     {
         if (currentLidAndDisplayState.LidSwitchState == LidSwitchState.Open)
         {
-            return new ClosedLidPolicyApplicability(
-                false,
-                currentLidAndDisplayState.LidSwitchState,
-                currentLidAndDisplayState.VisibleDisplayMonitorCount,
-                $"Skipped {actionName} because the lid is open.");
+            return new ClosedLidPolicyApplicability(false, currentLidAndDisplayState.LidSwitchState, currentLidAndDisplayState.VisibleDisplayMonitorCount, $"Skipped {actionName} because the lid is open.");
         }
 
         if (currentLidAndDisplayState.LidSwitchState != LidSwitchState.Closed)
         {
-            return new ClosedLidPolicyApplicability(
-                false,
-                currentLidAndDisplayState.LidSwitchState,
-                currentLidAndDisplayState.VisibleDisplayMonitorCount,
-                $"Skipped {actionName} because the lid state is {currentLidAndDisplayState.LidSwitchState}.");
+            return new ClosedLidPolicyApplicability(false, currentLidAndDisplayState.LidSwitchState, currentLidAndDisplayState.VisibleDisplayMonitorCount, $"Skipped {actionName} because the lid state is {currentLidAndDisplayState.LidSwitchState}.");
         }
 
         if (currentLidAndDisplayState.VisibleDisplayMonitorCount > 0)
         {
-            return new ClosedLidPolicyApplicability(
-                false,
-                currentLidAndDisplayState.LidSwitchState,
-                currentLidAndDisplayState.VisibleDisplayMonitorCount,
-                $"Skipped {actionName} because {currentLidAndDisplayState.VisibleDisplayMonitorCount} visible display monitor(s) are active while the lid is closed.");
+            return new ClosedLidPolicyApplicability(false, currentLidAndDisplayState.LidSwitchState, currentLidAndDisplayState.VisibleDisplayMonitorCount, $"Skipped {actionName} because {currentLidAndDisplayState.VisibleDisplayMonitorCount} visible display monitor(s) are active while the lid is closed.");
         }
 
-        return new ClosedLidPolicyApplicability(
-            true,
-            currentLidAndDisplayState.LidSwitchState,
-            currentLidAndDisplayState.VisibleDisplayMonitorCount,
-            string.Empty);
+        return new ClosedLidPolicyApplicability(true, currentLidAndDisplayState.LidSwitchState, currentLidAndDisplayState.VisibleDisplayMonitorCount, string.Empty);
     }
 
     private static string DescribePostStopSuspendDelay(int postStopSuspendDelaySeconds)
@@ -2728,40 +2048,24 @@ internal sealed class LidGuardRuntimeCoordinator
         => activeSessionCount == 0 ? SuspendWebhookReason.Completed : SuspendWebhookReason.SoftLocked;
 
     private static string DescribeSuspendReason(int activeSessionCount)
-        => activeSessionCount == 0
-            ? "because the lid is closed, no suspend-blocking visible display monitors remain, and the last session stopped."
-            : "because the lid is closed, no suspend-blocking visible display monitors remain, and all remaining sessions are soft-locked.";
+        => activeSessionCount == 0 ? "because the lid is closed, no suspend-blocking visible display monitors remain, and the last session stopped." : "because the lid is closed, no suspend-blocking visible display monitors remain, and all remaining sessions are soft-locked.";
 
-    private static string DescribeEmergencyHibernationTemperature(
-        int observedTemperatureCelsius,
-        int emergencyHibernationTemperatureCelsius,
-        EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
+    private static string DescribeEmergencyHibernationTemperature(int observedTemperatureCelsius, int emergencyHibernationTemperatureCelsius, EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
         => $"{observedTemperatureCelsius} Celsius using {emergencyHibernationTemperatureMode} mode (threshold: {emergencyHibernationTemperatureCelsius} Celsius)";
 
     private CleanupResult CleanupWatchedProcessExitInsideGate(LidGuardSessionSnapshot snapshot, string commandName, string eventName)
     {
         var sessionKey = snapshot.Key.ToString();
-        var successMessage = eventName == "watched-process-exited"
-            ? $"Watched process exited for {sessionKey}."
-            : $"Cleaned orphan session {sessionKey}.";
-        var successMessageCode = eventName == "watched-process-exited"
-            ? LidGuardPipeResponseMessageCodes.WatchedProcessExited
-            : LidGuardPipeResponseMessageCodes.WatchedProcessOrphanCleaned;
-        var stopResponse = StopInsideGate(
-            new LidGuardSessionStopRequest
-            {
-                SessionIdentifier = snapshot.SessionIdentifier,
-                Provider = snapshot.Provider,
-                ProviderName = snapshot.ProviderName,
-                SuppressWebhooks = true
-            },
-            successMessage,
-            null,
-            out _,
-            eventName,
-            commandName,
-            successMessageCode,
-            [sessionKey]);
+        var successMessage = eventName == "watched-process-exited" ? $"Watched process exited for {sessionKey}." : $"Cleaned orphan session {sessionKey}.";
+        var successMessageCode = eventName == "watched-process-exited" ? LidGuardPipeResponseMessageCodes.WatchedProcessExited : LidGuardPipeResponseMessageCodes.WatchedProcessOrphanCleaned;
+        var stopRequest = new LidGuardSessionStopRequest
+        {
+            SessionIdentifier = snapshot.SessionIdentifier,
+            Provider = snapshot.Provider,
+            ProviderName = snapshot.ProviderName,
+            SuppressWebhooks = true
+        };
+        var stopResponse = StopInsideGate(stopRequest, successMessage, null, out _, eventName, commandName, successMessageCode, [sessionKey]);
         var removedSessionCount = stopResponse.Succeeded && !stopResponse.Message.Contains("already stopped", StringComparison.Ordinal) ? 1 : 0;
         return new CleanupResult(stopResponse, removedSessionCount);
     }
@@ -2807,9 +2111,7 @@ internal sealed class LidGuardRuntimeCoordinator
             return failedResponse;
         }
 
-        var successMessage = changed
-            ? $"Cleared soft-lock for {key} because activity was detected from {request.SessionStateReason}."
-            : $"Session {key} was already active.";
+        var successMessage = changed ? $"Cleared soft-lock for {key} because activity was detected from {request.SessionStateReason}." : $"Session {key} was already active.";
         var successResponse = CreateSuccessResponse(successMessage);
         LidGuardRuntimeLogWriter.AppendSessionLog("session-activity-recorded", request, successResponse, snapshot);
         return successResponse;
@@ -2834,11 +2136,7 @@ internal sealed class LidGuardRuntimeCoordinator
     private void RestoreTranscriptMonitorSession(LidGuardSessionSnapshot snapshot)
     {
         if (!TryGetTranscriptMonitor(snapshot.Provider, out var transcriptMonitor)) return;
-        transcriptMonitor.RegisterOrUpdateSession(
-            snapshot.SessionIdentifier,
-            snapshot.ProviderName,
-            snapshot.WorkingDirectory,
-            snapshot.TranscriptPath);
+        transcriptMonitor.RegisterOrUpdateSession(snapshot.SessionIdentifier, snapshot.ProviderName, snapshot.WorkingDirectory, snapshot.TranscriptPath);
     }
 
     private bool TryGetTranscriptMonitor(AgentProvider provider, out AgentTranscriptMonitor transcriptMonitor)
@@ -2865,19 +2163,14 @@ internal sealed class LidGuardRuntimeCoordinator
         return false;
     }
 
-    private void AppendTranscriptMonitorRegistration(
-        LidGuardPipeRequest request,
-        LidGuardSessionSnapshot snapshot,
-        AgentTranscriptMonitoringRegistrationResult transcriptMonitoringRegistrationResult)
+    private void AppendTranscriptMonitorRegistration(LidGuardPipeRequest request, LidGuardSessionSnapshot snapshot, AgentTranscriptMonitoringRegistrationResult transcriptMonitoringRegistrationResult)
     {
         if (!IsTranscriptMonitoringProvider(request.Provider)) return;
         if (string.IsNullOrWhiteSpace(transcriptMonitoringRegistrationResult.Message)) return;
 
         var response = CreateSuccessResponse(transcriptMonitoringRegistrationResult.Message);
         var eventNamePrefix = GetTranscriptMonitorEventNamePrefix(request.Provider);
-        var eventName = transcriptMonitoringRegistrationResult.MonitoringEnabled
-            ? $"{eventNamePrefix}-transcript-monitor-configured"
-            : $"{eventNamePrefix}-transcript-monitor-skipped";
+        var eventName = transcriptMonitoringRegistrationResult.MonitoringEnabled ? $"{eventNamePrefix}-transcript-monitor-configured" : $"{eventNamePrefix}-transcript-monitor-skipped";
         LidGuardRuntimeLogWriter.AppendSessionLog(eventName, request, response, snapshot);
     }
 
@@ -2923,13 +2216,7 @@ internal sealed class LidGuardRuntimeCoordinator
         await _gate.WaitAsync(CancellationToken.None);
         try
         {
-            StopInsideGate(
-                request,
-                $"Stopped {transcriptStopDetectedContext.SessionKey} because {transcriptStopDetectedContext.StopReasonDescription}.",
-                null,
-                out _,
-                transcriptStopDetectedContext.StopCommandName,
-                transcriptStopDetectedContext.StopCommandName);
+            StopInsideGate(request, $"Stopped {transcriptStopDetectedContext.SessionKey} because {transcriptStopDetectedContext.StopReasonDescription}.", null, out _, transcriptStopDetectedContext.StopCommandName, transcriptStopDetectedContext.StopCommandName);
         }
         finally
         {
@@ -2942,14 +2229,7 @@ internal sealed class LidGuardRuntimeCoordinator
         await _gate.WaitAsync(CancellationToken.None);
         try
         {
-            MarkSessionSoftLockedInsideGate(
-                transcriptSoftLockDetectedContext.SoftLockCommandName,
-                transcriptSoftLockDetectedContext.SoftLockEventName,
-                transcriptSoftLockDetectedContext.SessionKey.Provider,
-                transcriptSoftLockDetectedContext.SessionKey.ProviderName,
-                transcriptSoftLockDetectedContext.SessionKey.SessionIdentifier,
-                transcriptSoftLockDetectedContext.SoftLockReason,
-                transcriptSoftLockDetectedContext.SessionKey);
+            MarkSessionSoftLockedInsideGate(transcriptSoftLockDetectedContext.SoftLockCommandName, transcriptSoftLockDetectedContext.SoftLockEventName, transcriptSoftLockDetectedContext.SessionKey.Provider, transcriptSoftLockDetectedContext.SessionKey.ProviderName, transcriptSoftLockDetectedContext.SessionKey.SessionIdentifier, transcriptSoftLockDetectedContext.SoftLockReason, transcriptSoftLockDetectedContext.SessionKey);
         }
         finally
         {
@@ -3052,73 +2332,22 @@ internal sealed class LidGuardRuntimeCoordinator
         catch (InvalidOperationException) { return false; }
     }
 
-    private static PendingSuspendContext CreatePendingSuspendContext(
-        LidGuardPipeRequest request,
-        LidGuardSessionSnapshot snapshot)
-        => new(
-            request.Provider,
-            AgentProviderDisplay.NormalizeProviderName(request.Provider, request.ProviderName),
-            request.SessionIdentifier,
-            snapshot.WorkingDirectory,
-            request.Command,
-            request.SessionStateReason,
-            false,
-            false,
-            string.Empty,
-            null,
-            string.Empty,
-            false,
-            false);
+    private static PendingSuspendContext CreatePendingSuspendContext(LidGuardPipeRequest request, LidGuardSessionSnapshot snapshot)
+        => new(request.Provider, AgentProviderDisplay.NormalizeProviderName(request.Provider, request.ProviderName), request.SessionIdentifier, snapshot.WorkingDirectory, request.Command, request.SessionStateReason, false, false, string.Empty, null, string.Empty, false, false);
 
-    private static PendingSuspendContext CreatePendingSuspendContext(
-        LidGuardSessionStopRequest request,
-        LidGuardPipeRequest runtimeRequest,
-        LidGuardSessionSnapshot snapshot,
-        string commandName)
-        => new(
-            request.Provider,
-            AgentProviderDisplay.NormalizeProviderName(request.Provider, request.ProviderName),
-            request.SessionIdentifier,
-            snapshot.WorkingDirectory,
-            commandName,
-            string.Empty,
-            request.IsProviderSessionEnd,
-            request.SuppressWebhooks,
-            request.SessionEndReason,
-            request.IsProviderSessionEnd ? DateTimeOffset.UtcNow : null,
-            runtimeRequest?.LastAssistantMessage ?? string.Empty,
-            runtimeRequest?.CanReturnStopContinuation ?? false,
-            runtimeRequest?.StopHookAlreadyActive ?? false);
+    private static PendingSuspendContext CreatePendingSuspendContext(LidGuardSessionStopRequest request, LidGuardPipeRequest runtimeRequest, LidGuardSessionSnapshot snapshot, string commandName)
+        => new(request.Provider, AgentProviderDisplay.NormalizeProviderName(request.Provider, request.ProviderName), request.SessionIdentifier, snapshot.WorkingDirectory, commandName, string.Empty, request.IsProviderSessionEnd, request.SuppressWebhooks, request.SessionEndReason, request.IsProviderSessionEnd ? DateTimeOffset.UtcNow : null, runtimeRequest?.LastAssistantMessage ?? string.Empty, runtimeRequest?.CanReturnStopContinuation ?? false, runtimeRequest?.StopHookAlreadyActive ?? false);
 
     private readonly record struct CleanupResult(LidGuardPipeResponse Response, int RemovedSessionCount);
 
-    private sealed record StopFollowUpAwaitContext(
-        PendingSuspendContext PendingSuspendContext,
-        LidGuardSessionSnapshot Snapshot,
-        string EventName,
-        LidGuardPipeResponse ScheduledResponse,
-        int ActiveSessionCount,
-        string FollowUpWebhookUrl,
-        int ReplyWaitSeconds,
-        CancellationTokenSource PendingSuspendCancellationTokenSource,
-        TaskCompletionSource<bool> FollowUpStartReadySource,
-        TaskCompletionSource FollowUpCompletedSource);
+    private sealed record StopFollowUpAwaitContext(PendingSuspendContext PendingSuspendContext, LidGuardSessionSnapshot Snapshot, string EventName, LidGuardPipeResponse ScheduledResponse, int ActiveSessionCount, string FollowUpWebhookUrl, int ReplyWaitSeconds, CancellationTokenSource PendingSuspendCancellationTokenSource, TaskCompletionSource<bool> FollowUpStartReadySource, TaskCompletionSource FollowUpCompletedSource);
 
-    private readonly record struct ClosedLidPolicyApplicability(
-        bool IsApplicable,
-        LidSwitchState LidSwitchState,
-        int VisibleDisplayMonitorCount,
-        string Message);
+    private readonly record struct ClosedLidPolicyApplicability(bool IsApplicable, LidSwitchState LidSwitchState, int VisibleDisplayMonitorCount, string Message);
 
-    private readonly record struct CurrentLidAndDisplayState(
-        LidSwitchState LidSwitchState,
-        int VisibleDisplayMonitorCount);
+    private readonly record struct CurrentLidAndDisplayState(LidSwitchState LidSwitchState, int VisibleDisplayMonitorCount);
 
-    private readonly record struct WatchedProcessResolution(
-        int ProcessIdentifier,
-        LidGuardSessionWatchRegistrationKind WatchRegistrationKind)
+    private readonly record struct WatchedProcessResolution(int ProcessIdentifier, LidGuardSessionWatchRegistrationKind WatchRegistrationKind)
     {
         public static WatchedProcessResolution None { get; } = new(0, LidGuardSessionWatchRegistrationKind.None);
     }
 }
-

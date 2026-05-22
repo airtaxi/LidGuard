@@ -64,9 +64,7 @@ internal sealed class CaffeinateAssertion : IDisposable
         process.Dispose();
 
         var detail = !string.IsNullOrWhiteSpace(standardError) ? standardError.Trim() : standardOutput.Trim();
-        var message = string.IsNullOrWhiteSpace(detail)
-            ? $"caffeinate exited before acquiring the assertion. Exit code: {exitCode}."
-            : $"caffeinate exited before acquiring the assertion. Exit code: {exitCode}. {detail}";
+        var message = string.IsNullOrWhiteSpace(detail) ? $"caffeinate exited before acquiring the assertion. Exit code: {exitCode}." : $"caffeinate exited before acquiring the assertion. Exit code: {exitCode}. {detail}";
         return LidGuardOperationResult<CaffeinateAssertion>.Failure(message, exitCode);
     }
 

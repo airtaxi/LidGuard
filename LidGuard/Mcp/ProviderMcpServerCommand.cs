@@ -30,10 +30,7 @@ internal static class ProviderMcpServerCommand
 
         var applicationBuilder = Host.CreateApplicationBuilder(commandLineArguments);
         applicationBuilder.Logging.ClearProviders();
-        applicationBuilder.Logging.AddConsole(consoleLoggerOptions =>
-        {
-            consoleLoggerOptions.LogToStandardErrorThreshold = LogLevel.Trace;
-        });
+        applicationBuilder.Logging.AddConsole(consoleLoggerOptions => consoleLoggerOptions.LogToStandardErrorThreshold = LogLevel.Trace);
 
         var toolSerializerOptions = LidGuardMcpJsonUtilities.CreateToolSerializerOptions();
 

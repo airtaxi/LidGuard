@@ -69,9 +69,7 @@ internal sealed class SystemdInhibitor : IDisposable
         process.Dispose();
 
         var detail = !string.IsNullOrWhiteSpace(standardError) ? standardError.Trim() : standardOutput.Trim();
-        var message = string.IsNullOrWhiteSpace(detail)
-            ? $"systemd-inhibit exited before acquiring the inhibitor. Exit code: {exitCode}."
-            : $"systemd-inhibit exited before acquiring the inhibitor. Exit code: {exitCode}. {detail}";
+        var message = string.IsNullOrWhiteSpace(detail) ? $"systemd-inhibit exited before acquiring the inhibitor. Exit code: {exitCode}." : $"systemd-inhibit exited before acquiring the inhibitor. Exit code: {exitCode}. {detail}";
         return LidGuardOperationResult<SystemdInhibitor>.Failure(message, exitCode);
     }
 

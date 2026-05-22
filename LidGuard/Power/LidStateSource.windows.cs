@@ -37,11 +37,7 @@ internal sealed unsafe partial class LidStateSource : ILidStateSource, IDisposab
         var lidSwitchStateChangeIdentifierPointer = &lidSwitchStateChangeIdentifier;
         {
             var registrationHandleValue = (void*)null;
-            var registrationResult = PInvoke.PowerSettingRegisterNotification(
-                lidSwitchStateChangeIdentifierPointer,
-                REGISTER_NOTIFICATION_FLAGS.DEVICE_NOTIFY_CALLBACK,
-                (HANDLE)(IntPtr)(&subscribeParameters),
-                &registrationHandleValue);
+            var registrationResult = PInvoke.PowerSettingRegisterNotification(lidSwitchStateChangeIdentifierPointer, REGISTER_NOTIFICATION_FLAGS.DEVICE_NOTIFY_CALLBACK, (HANDLE)(IntPtr)(&subscribeParameters), &registrationHandleValue);
 
             if (Succeeded(registrationResult))
             {

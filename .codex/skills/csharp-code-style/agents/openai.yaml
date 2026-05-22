@@ -1,3 +1,4 @@
 interface:
-  display_name: "Csharp Code Style"
-  short_description: "Help with Csharp Code Style tasks"
+  display_name: "C# Code Style"
+  short_description: "Mandatory C# formatting and cleanup rules"
+  default_prompt: "Use $csharp-code-style when modifying C# code."

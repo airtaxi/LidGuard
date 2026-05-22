@@ -51,12 +51,7 @@ internal static class LidGuardSettingsSoundPreviewCommand
             return 1;
         }
 
-        return PreviewPostStopSuspendSound(
-            normalizeResult.Value,
-            normalizedStoredSettings.PostStopSuspendSoundVolumeOverridePercent,
-            postStopSuspendSoundPlayerResult.Value,
-            systemAudioVolumeControllerResult.Value,
-            LocalizationService.GetFormattedString("SettingsPreviewPlayedCurrentPostStopSuspendSound", PostStopSuspendSoundConfiguration.GetDisplayValue(normalizeResult.Value)));
+        return PreviewPostStopSuspendSound(normalizeResult.Value, normalizedStoredSettings.PostStopSuspendSoundVolumeOverridePercent, postStopSuspendSoundPlayerResult.Value, systemAudioVolumeControllerResult.Value, LocalizationService.GetFormattedString("SettingsPreviewPlayedCurrentPostStopSuspendSound", PostStopSuspendSoundConfiguration.GetDisplayValue(normalizeResult.Value)));
     }
 
     public static int PreviewSystemSound(string systemSoundName, ILidGuardRuntimePlatform runtimePlatform)
@@ -88,8 +83,7 @@ internal static class LidGuardSettingsSoundPreviewCommand
         }
 
         var normalizedSystemSoundName = systemSoundName.Trim();
-        if (!LidGuardSupportedSystemSounds.Names.Any(
-            supportedSystemSoundName => supportedSystemSoundName.Equals(normalizedSystemSoundName, StringComparison.OrdinalIgnoreCase)))
+        if (!LidGuardSupportedSystemSounds.Names.Any(supportedSystemSoundName => supportedSystemSoundName.Equals(normalizedSystemSoundName, StringComparison.OrdinalIgnoreCase)))
         {
             Console.Error.WriteLine(LocalizationService.GetFormattedString("SettingsPreviewUnsupportedSystemSoundName", normalizedSystemSoundName));
             Console.Error.WriteLine(LocalizationService.GetFormattedString("SettingsPreviewSupportedSystemSounds", LidGuardSupportedSystemSounds.Describe()));
@@ -97,28 +91,13 @@ internal static class LidGuardSettingsSoundPreviewCommand
         }
 
         var normalizedStoredSettings = LidGuardSettings.Normalize(storedSettings);
-        return PreviewPostStopSuspendSound(
-            normalizedSystemSoundName,
-            normalizedStoredSettings.PostStopSuspendSoundVolumeOverridePercent,
-            postStopSuspendSoundPlayerResult.Value,
-            systemAudioVolumeControllerResult.Value,
-            LocalizationService.GetFormattedString("SettingsPreviewPlayedSystemSound", normalizedSystemSoundName));
+        return PreviewPostStopSuspendSound(normalizedSystemSoundName, normalizedStoredSettings.PostStopSuspendSoundVolumeOverridePercent, postStopSuspendSoundPlayerResult.Value, systemAudioVolumeControllerResult.Value, LocalizationService.GetFormattedString("SettingsPreviewPlayedSystemSound", normalizedSystemSoundName));
     }
 
-    private static int PreviewPostStopSuspendSound(
-        string postStopSuspendSound,
-        int? postStopSuspendSoundVolumeOverridePercent,
-        IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer,
-        ISystemAudioVolumeController systemAudioVolumeController,
-        string successMessage)
+    private static int PreviewPostStopSuspendSound(string postStopSuspendSound, int? postStopSuspendSoundVolumeOverridePercent, IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer, ISystemAudioVolumeController systemAudioVolumeController, string successMessage)
     {
-        var playbackCoordinator = new PostStopSuspendSoundPlaybackCoordinator(
-            postStopSuspendSoundPlayer,
-            systemAudioVolumeController);
-        var playbackResult = playbackCoordinator.PlayAsync(
-                postStopSuspendSound,
-                postStopSuspendSoundVolumeOverridePercent,
-                CancellationToken.None)
+        var playbackCoordinator = new PostStopSuspendSoundPlaybackCoordinator(postStopSuspendSoundPlayer, systemAudioVolumeController);
+        var playbackResult = playbackCoordinator.PlayAsync(postStopSuspendSound, postStopSuspendSoundVolumeOverridePercent, CancellationToken.None)
             .GetAwaiter()
             .GetResult();
 

@@ -4,12 +4,7 @@ namespace LidGuard.Notifications.Services;
 
 internal sealed class WebhookEventProcessingSignal
 {
-    private readonly Channel<bool> _channel = Channel.CreateBounded<bool>(new BoundedChannelOptions(1)
-    {
-        FullMode = BoundedChannelFullMode.DropWrite,
-        SingleReader = true,
-        SingleWriter = false
-    });
+    private readonly Channel<bool> _channel = Channel.CreateBounded<bool>(new BoundedChannelOptions(1) { FullMode = BoundedChannelFullMode.DropWrite, SingleReader = true, SingleWriter = false });
 
     public void Signal() => _channel.Writer.TryWrite(true);
 

@@ -17,10 +17,7 @@ internal static class MacOSCommandRunner
         catch (OperationCanceledException) { return MacOSCommandResult.Failure($"Command timed out after {timeout.TotalSeconds:0} second(s): {fileName}"); }
     }
 
-    public static async Task<MacOSCommandResult> RunAsync(
-        string fileName,
-        IEnumerable<string> arguments,
-        CancellationToken cancellationToken = default)
+    public static async Task<MacOSCommandResult> RunAsync(string fileName, IEnumerable<string> arguments, CancellationToken cancellationToken = default)
     {
         var processStartInformation = new ProcessStartInfo
         {

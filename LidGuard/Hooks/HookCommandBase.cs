@@ -13,11 +13,7 @@ internal abstract class HookCommandBase<THookInput>
 
     protected abstract AgentProvider Provider { get; }
 
-    protected async Task<HookCommandInputReadResult<THookInput>> ReadHookInputAsync(
-        HookExecutionTiming timing,
-        string emptyInputMessage,
-        Func<string, HookCommandInputParseResult<THookInput>> parseHookInput,
-        Func<string, string> createParseFailureMessage)
+    protected async Task<HookCommandInputReadResult<THookInput>> ReadHookInputAsync(HookExecutionTiming timing, string emptyInputMessage, Func<string, HookCommandInputParseResult<THookInput>> parseHookInput, Func<string, string> createParseFailureMessage)
     {
         var inputReadStopwatch = Stopwatch.StartNew();
         var hookInputJson = await Console.In.ReadToEndAsync();
@@ -39,15 +35,7 @@ internal abstract class HookCommandBase<THookInput>
         return HookCommandInputReadResult<THookInput>.Failure();
     }
 
-    protected async Task<int> SendRuntimeRequestAsync(
-        string commandName,
-        string hookEventName,
-        THookInput hookInput,
-        bool isProviderSessionEnd = false,
-        string sessionEndReason = "",
-        bool hasPendingProviderWork = false,
-        string pendingProviderWorkReason = "",
-        HookExecutionTiming timing = null)
+    protected async Task<int> SendRuntimeRequestAsync(string commandName, string hookEventName, THookInput hookInput, bool isProviderSessionEnd = false, string sessionEndReason = "", bool hasPendingProviderWork = false, string pendingProviderWorkReason = "", HookExecutionTiming timing = null)
     {
         var hasSettings = false;
         var settings = LidGuardSettings.Default;
@@ -100,12 +88,7 @@ internal abstract class HookCommandBase<THookInput>
         interprocessCommunicationStopwatch.Stop();
         if (timing is not null) timing.InterprocessCommunicationDuration = interprocessCommunicationStopwatch.Elapsed;
 
-        AppendRuntimeResult(
-            hookEventName,
-            hookInput,
-            commandName,
-            response,
-            timing?.CreateRuntimeResultDetails(runtimeClientDiagnostics) ?? string.Empty);
+        AppendRuntimeResult(hookEventName, hookInput, commandName, response, timing?.CreateRuntimeResultDetails(runtimeClientDiagnostics) ?? string.Empty);
         if (response.StopContinuationRequested)
         {
             WriteStopContinuationDecision(response.StopContinuationPrompt);
@@ -116,11 +99,7 @@ internal abstract class HookCommandBase<THookInput>
         return 0;
     }
 
-    protected async Task<int> SendSessionStateRequestAsync(
-        string commandName,
-        string hookEventName,
-        THookInput hookInput,
-        string sessionStateReason)
+    protected async Task<int> SendSessionStateRequestAsync(string commandName, string hookEventName, THookInput hookInput, string sessionStateReason)
     {
         var request = new LidGuardPipeRequest
         {
@@ -137,14 +116,7 @@ internal abstract class HookCommandBase<THookInput>
         return 0;
     }
 
-    protected async Task<int> WriteClosedLidDecisionAsync(
-        string hookEventName,
-        THookInput hookInput,
-        Func<LidGuardPipeResponse, string> createRuntimeUnavailableMessage,
-        Func<LidGuardPipeResponse, string> createInactivePolicyMessage,
-        Func<LidGuardPipeResponse, string> createDecisionMessage,
-        Func<LidGuardPipeResponse, int> writeDecision,
-        bool softLockWhenPermissionRequestAsk = false)
+    protected async Task<int> WriteClosedLidDecisionAsync(string hookEventName, THookInput hookInput, Func<LidGuardPipeResponse, string> createRuntimeUnavailableMessage, Func<LidGuardPipeResponse, string> createInactivePolicyMessage, Func<LidGuardPipeResponse, string> createDecisionMessage, Func<LidGuardPipeResponse, int> writeDecision, bool softLockWhenPermissionRequestAsk = false)
     {
         var response = await new LidGuardRuntimeClient().SendAsync(new LidGuardPipeRequest { Command = LidGuardPipeCommands.Status }, false);
         if (!response.Succeeded)
@@ -200,12 +172,7 @@ internal abstract class HookCommandBase<THookInput>
 
     protected abstract void AppendMessage(string message);
 
-    protected abstract void AppendRuntimeResult(
-        string hookEventName,
-        THookInput hookInput,
-        string commandName,
-        LidGuardPipeResponse response,
-        string details);
+    protected abstract void AppendRuntimeResult(string hookEventName, THookInput hookInput, string commandName, LidGuardPipeResponse response, string details);
 
     protected abstract string CreateSessionEndReason(string hookEventName, THookInput hookInput, string sessionEndReason);
 

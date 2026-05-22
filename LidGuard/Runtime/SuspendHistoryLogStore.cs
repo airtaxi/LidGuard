@@ -27,9 +27,7 @@ internal static class SuspendHistoryLogStore
                 if (!string.IsNullOrWhiteSpace(logDirectoryPath)) Directory.CreateDirectory(logDirectoryPath);
 
                 var entryJson = JsonSerializer.Serialize(entry, SuspendHistoryJsonSerializerContext.Default.SuspendHistoryEntry);
-                var logLines = File.Exists(logFilePath)
-                    ? File.ReadAllLines(logFilePath).Where(line => !string.IsNullOrWhiteSpace(line)).ToList()
-                    : [];
+                var logLines = File.Exists(logFilePath) ? File.ReadAllLines(logFilePath).Where(line => !string.IsNullOrWhiteSpace(line)).ToList() : [];
 
                 logLines.Add(entryJson);
                 if (logLines.Count > normalizedMaximumEntryCount) logLines = logLines.Skip(logLines.Count - normalizedMaximumEntryCount).ToList();
@@ -65,9 +63,7 @@ internal static class SuspendHistoryLogStore
             {
                 try
                 {
-                    var historyEntry = JsonSerializer.Deserialize(
-                        logLines[lineIndex],
-                        SuspendHistoryJsonSerializerContext.Default.SuspendHistoryEntry);
+                    var historyEntry = JsonSerializer.Deserialize(logLines[lineIndex], SuspendHistoryJsonSerializerContext.Default.SuspendHistoryEntry);
                     if (historyEntry is not null) historyEntries.Add(historyEntry);
                 }
                 catch (JsonException) { }

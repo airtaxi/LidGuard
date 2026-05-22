@@ -16,12 +16,7 @@ internal sealed class LidGuardPendingLidActionBackupState
 
     public LidAction DirectCurrentAction { get; init; } = LidAction.DoNothing;
 
-    public LidActionBackup ToBackup() => new(
-        PowerSchemeIdentifier,
-        IncludesAlternatingCurrent,
-        AlternatingCurrentAction,
-        IncludesDirectCurrent,
-        DirectCurrentAction);
+    public LidActionBackup ToBackup() => new(PowerSchemeIdentifier, IncludesAlternatingCurrent, AlternatingCurrentAction, IncludesDirectCurrent, DirectCurrentAction);
 
     public static LidGuardPendingLidActionBackupState Create(LidActionBackup backup) => new()
     {

@@ -3,15 +3,7 @@ using LidGuard.Services;
 
 namespace LidGuard.Platform;
 
-public sealed class LidGuardRuntimeServiceSet(
-    IPowerRequestService powerRequestService,
-    IProcessExitWatcher processExitWatcher,
-    LidActionPolicyController lidActionPolicyController,
-    ISystemSuspendService systemSuspendService,
-    IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer,
-    ISystemAudioVolumeController systemAudioVolumeController,
-    ILidStateSource lidStateSource,
-    IVisibleDisplayMonitorCountProvider visibleDisplayMonitorCountProvider) : IDisposable
+public sealed class LidGuardRuntimeServiceSet(IPowerRequestService powerRequestService, IProcessExitWatcher processExitWatcher, LidActionPolicyController lidActionPolicyController, ISystemSuspendService systemSuspendService, IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer, ISystemAudioVolumeController systemAudioVolumeController, ILidStateSource lidStateSource, IVisibleDisplayMonitorCountProvider visibleDisplayMonitorCountProvider) : IDisposable
 {
     public IPowerRequestService PowerRequestService { get; } = powerRequestService;
 

@@ -5,6 +5,7 @@ using LidGuard.Notifications.Security;
 using LidGuard.Notifications.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Options;
 using WebPush;
 
@@ -17,25 +18,10 @@ builder.Services.AddOptions<LidGuardNotificationsOptions>()
 builder.Services.PostConfigure<LidGuardNotificationsOptions>(options => options.Normalize());
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.Cookie.HttpOnly = true;
-        options.Cookie.Name = DashboardAuthenticationConstants.AccessCookieName;
-        options.Cookie.Path = "/";
-        options.Cookie.SameSite = SameSiteMode.Strict;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-        options.ExpireTimeSpan = DashboardAuthenticationConstants.AccessTokenLifetime;
-        options.LoginPath = "/login";
-        options.LogoutPath = "/logout";
-        options.SlidingExpiration = false;
-    });
+    .AddCookie(ConfigureAuthenticationCookie);
 builder.Services.AddAuthorization();
 builder.Services.AddLocalization();
-builder.Services.AddRazorPages(options =>
-{
-    options.Conventions.AuthorizeFolder("/");
-    options.Conventions.AllowAnonymousToPage("/Login");
-});
+builder.Services.AddRazorPages(ConfigureRazorPages);
 
 builder.Services.AddSingleton<SqliteConnectionFactory>();
 builder.Services.AddSingleton<NotificationDatabaseInitializer>();
@@ -71,13 +57,38 @@ app.UseAuthorization();
 app.MapRazorPages();
 LidGuardNotificationApiEndpoints.Map(app);
 
-app.MapPost("/logout", async (HttpContext httpContext, DashboardAuthenticationService authenticationService) =>
+app.MapPost("/logout", (Delegate)SignOutAsync).RequireAuthorization();
+
+app.MapPost("/language", (Delegate)SetLanguageAsync);
+
+await app.RunAsync();
+
+static void ConfigureAuthenticationCookie(CookieAuthenticationOptions options)
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.Name = DashboardAuthenticationConstants.AccessCookieName;
+    options.Cookie.Path = "/";
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.ExpireTimeSpan = DashboardAuthenticationConstants.AccessTokenLifetime;
+    options.LoginPath = "/login";
+    options.LogoutPath = "/logout";
+    options.SlidingExpiration = false;
+}
+
+static void ConfigureRazorPages(RazorPagesOptions options)
+{
+    options.Conventions.AuthorizeFolder("/");
+    options.Conventions.AllowAnonymousToPage("/Login");
+}
+
+static async Task<IResult> SignOutAsync(HttpContext httpContext, DashboardAuthenticationService authenticationService)
 {
     await authenticationService.SignOutAsync(httpContext, httpContext.RequestAborted);
     return Results.Redirect("/login");
-}).RequireAuthorization();
+}
 
-app.MapPost("/language", async (HttpContext httpContext) =>
+static async Task<IResult> SetLanguageAsync(HttpContext httpContext)
 {
     var form = await httpContext.Request.ReadFormAsync(httpContext.RequestAborted);
     var culture = form["culture"].ToString();
@@ -85,19 +96,15 @@ app.MapPost("/language", async (HttpContext httpContext) =>
     if (LidGuardNotificationCulture.TryCreateSelectableCultureInfo(culture, out var cultureInfo))
     {
         var requestCulture = new RequestCulture(cultureInfo);
-        httpContext.Response.Cookies.Append(
-            CookieRequestCultureProvider.DefaultCookieName,
-            CookieRequestCultureProvider.MakeCookieValue(requestCulture),
-            new CookieOptions
-            {
-                Expires = DateTimeOffset.UtcNow.AddYears(1),
-                IsEssential = true,
-                SameSite = SameSiteMode.Lax,
-                Secure = httpContext.Request.IsHttps
-            });
+        var cookieOptions = new CookieOptions
+        {
+            Expires = DateTimeOffset.UtcNow.AddYears(1),
+            IsEssential = true,
+            SameSite = SameSiteMode.Lax,
+            Secure = httpContext.Request.IsHttps
+        };
+        httpContext.Response.Cookies.Append(CookieRequestCultureProvider.DefaultCookieName, CookieRequestCultureProvider.MakeCookieValue(requestCulture), cookieOptions);
     }
 
     return Results.Redirect(LocalRedirectPath.Normalize(returnUrl));
-});
-
-await app.RunAsync();
+}

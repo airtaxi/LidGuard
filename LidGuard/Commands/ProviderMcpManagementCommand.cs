@@ -138,9 +138,7 @@ internal static class ProviderMcpManagementCommand
                 hasManagedServerEntry = true;
                 serverCommand = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "command");
                 serverArguments = McpConfigurationJsonUtilities.DescribeJsonArray(serverObject, "args");
-                configuredProviderName = TryGetConfiguredProviderName(serverObject, out var extractedProviderName)
-                    ? extractedProviderName
-                    : string.Empty;
+                configuredProviderName = TryGetConfiguredProviderName(serverObject, out var extractedProviderName) ? extractedProviderName : string.Empty;
                 matchesCurrentLidGuardExecutable = HookCommandUtilities.ExecutableReferencesMatch(serverCommand, HookCommandUtilities.GetDefaultMcpExecutableReference());
                 containsProviderMcpServerCommand = McpConfigurationJsonUtilities.JsonArrayContainsStringValue(serverObject, "args", ProviderMcpServerCommand.CommandName);
                 installed = matchesCurrentLidGuardExecutable && containsProviderMcpServerCommand;
@@ -164,20 +162,11 @@ internal static class ProviderMcpManagementCommand
 
     internal static JsonArray CreateProviderServerArguments(string providerName)
     {
-        var argumentsNode = JsonSerializer.SerializeToNode(
-            [ProviderMcpServerCommand.CommandName, "--provider-name", providerName],
-            ProviderMcpManagementJsonSerializerContext.Default.StringArray);
+        var argumentsNode = JsonSerializer.SerializeToNode([ProviderMcpServerCommand.CommandName, "--provider-name", providerName], ProviderMcpManagementJsonSerializerContext.Default.StringArray);
         return argumentsNode as JsonArray ?? [];
     }
 
-    internal static string CreateStatusMessage(
-        string configurationFilePath,
-        bool configurationFileExists,
-        bool hasManagedServerEntry,
-        bool matchesCurrentLidGuardExecutable,
-        bool containsProviderMcpServerCommand,
-        string managedServerName,
-        string message)
+    internal static string CreateStatusMessage(string configurationFilePath, bool configurationFileExists, bool hasManagedServerEntry, bool matchesCurrentLidGuardExecutable, bool containsProviderMcpServerCommand, string managedServerName, string message)
     {
         if (!configurationFileExists) return LocalizationService.GetFormattedString("ManagementConfigurationFileDoesNotExist", configurationFilePath);
         if (!string.IsNullOrWhiteSpace(message)) return message;

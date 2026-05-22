@@ -88,10 +88,7 @@ internal static class LiveStatusCommand
         }
     }
 
-    private static async Task<bool> RenderLiveStatusSubscriptionAsync(
-        IAsyncEnumerator<LiveStatusSnapshot> snapshotEnumerator,
-        CancellationTokenSource cancellationTokenSource,
-        LiveStatusRenderState renderState)
+    private static async Task<bool> RenderLiveStatusSubscriptionAsync(IAsyncEnumerator<LiveStatusSnapshot> snapshotEnumerator, CancellationTokenSource cancellationTokenSource, LiveStatusRenderState renderState)
     {
         while (!cancellationTokenSource.IsCancellationRequested)
         {
@@ -171,28 +168,16 @@ internal static class LiveStatusCommand
         var response = snapshot.Response;
         var runtimeState = CreateRuntimeStateText(response, enableStyles);
         var responseMessage = LidGuardRuntimeResponseLocalizer.Localize(response);
-        var pendingSuspend = response.SuspendScheduled
-            ? StyleWarning(CreatePendingSuspendText(response), enableStyles)
-            : StyleMuted(Text("LiveStatusNone"), enableStyles);
+        var pendingSuspend = response.SuspendScheduled ? StyleWarning(CreatePendingSuspendText(response), enableStyles) : StyleMuted(Text("LiveStatusNone"), enableStyles);
 
         return
         [
             Format("LiveStatusRuntimeStateLine", runtimeState, StyleMuted(FormatCompactTimestamp(snapshot.UpdatedAt), enableStyles)),
-            Format(
-                "LiveStatusRuntimeCountsLine",
-                CreateActiveSessionCountText(response.ActiveSessionCount, enableStyles),
-                DisplayLidSwitchState(response, enableStyles),
-                CreateVisibleDisplayMonitorCountText(response, enableStyles)),
+            Format("LiveStatusRuntimeCountsLine", CreateActiveSessionCountText(response.ActiveSessionCount, enableStyles), DisplayLidSwitchState(response, enableStyles), CreateVisibleDisplayMonitorCountText(response, enableStyles)),
             Format("LiveStatusPendingSuspendLine", pendingSuspend),
-            Format(
-                "LiveStatusStopFollowUpFeatureStateLine",
-                CreateClosedLidStopFollowUpFeatureStateText(response.Settings, enableStyles)),
-            Format(
-                "LiveStatusStopFollowUpDelayLine",
-                CreateClosedLidStopFollowUpDelayText(response.Settings)),
-            Format(
-                "LiveStatusStopFollowUpRepeatLine",
-                LocalizationService.DisplayBoolean(response.Settings.RepeatClosedLidStopFollowUp)),
+            Format("LiveStatusStopFollowUpFeatureStateLine", CreateClosedLidStopFollowUpFeatureStateText(response.Settings, enableStyles)),
+            Format("LiveStatusStopFollowUpDelayLine", CreateClosedLidStopFollowUpDelayText(response.Settings)),
+            Format("LiveStatusStopFollowUpRepeatLine", LocalizationService.DisplayBoolean(response.Settings.RepeatClosedLidStopFollowUp)),
             string.IsNullOrWhiteSpace(responseMessage) ? Text("LiveStatusNoRuntimeMessage") : Format("LiveStatusRuntimeMessageLine", responseMessage)
         ];
     }
@@ -215,19 +200,13 @@ internal static class LiveStatusCommand
             _ => Text("DisplayClosedLidStopFollowUpFeatureStateOff")
         };
 
-        return featureState == ClosedLidStopFollowUpConfiguration.FeatureStateConfigurationError
-            ? StyleFailure(featureStateText, enableStyles)
-            : featureState == ClosedLidStopFollowUpConfiguration.FeatureStateOn
-                ? StyleSuccess(featureStateText, enableStyles)
-                : StyleMuted(featureStateText, enableStyles);
+        return featureState == ClosedLidStopFollowUpConfiguration.FeatureStateConfigurationError ? StyleFailure(featureStateText, enableStyles) : featureState == ClosedLidStopFollowUpConfiguration.FeatureStateOn ? StyleSuccess(featureStateText, enableStyles) : StyleMuted(featureStateText, enableStyles);
     }
 
     private static string CreateClosedLidStopFollowUpDelayText(LidGuardSettings settings)
     {
         var normalizedSettings = LidGuardSettings.Normalize(settings);
-        return normalizedSettings.ClosedLidStopFollowUpDelaySeconds == 0
-            ? Text("TextDisplayOff")
-            : Format("LiveStatusDelaySeconds", normalizedSettings.ClosedLidStopFollowUpDelaySeconds);
+        return normalizedSettings.ClosedLidStopFollowUpDelaySeconds == 0 ? Text("TextDisplayOff") : Format("LiveStatusDelaySeconds", normalizedSettings.ClosedLidStopFollowUpDelaySeconds);
     }
 
     private static string CreateActiveSessionCountText(int activeSessionCount, bool enableStyles)
@@ -253,15 +232,7 @@ internal static class LiveStatusCommand
         {
             var providerDisplayText = StyleStrong(AgentProviderDisplay.CreateProviderDisplayText(session.Provider, session.ProviderName), enableStyles);
             var processText = session.WatchedProcessIdentifier > 0 ? session.WatchedProcessIdentifier.ToString(CultureInfo.InvariantCulture) : LocalizationService.GetString("SessionProcessNone");
-            sessionLines.Add(Format(
-                "LiveStatusSessionLine",
-                providerDisplayText,
-                StyleCyan(DisplayValue(session.SessionIdentifier), enableStyles),
-                processText,
-                DescribeSoftLockStatus(session, enableStyles),
-                FormatCompactTimestamp(session.StartedAt),
-                FormatCompactTimestamp(session.LastActivityAt),
-                DisplayValue(session.WorkingDirectory)));
+            sessionLines.Add(Format("LiveStatusSessionLine", providerDisplayText, StyleCyan(DisplayValue(session.SessionIdentifier), enableStyles), processText, DescribeSoftLockStatus(session, enableStyles), FormatCompactTimestamp(session.StartedAt), FormatCompactTimestamp(session.LastActivityAt), DisplayValue(session.WorkingDirectory)));
         }
 
         return sessionLines;
@@ -405,14 +376,8 @@ internal static class LiveStatusCommand
 
     private static string CreatePendingSuspendText(LidGuardPipeResponse response)
     {
-        var suspendDelayText = response.SuspendDelaySeconds == 0
-            ? Text("LiveStatusImmediate")
-            : Format("LiveStatusDelaySeconds", response.SuspendDelaySeconds);
-        return Format(
-            "LiveStatusPendingSuspendDetails",
-            LocalizationService.DisplaySuspendMode(response.SuspendMode),
-            suspendDelayText,
-            DisplaySuspendReason(response.SuspendReasonCode));
+        var suspendDelayText = response.SuspendDelaySeconds == 0 ? Text("LiveStatusImmediate") : Format("LiveStatusDelaySeconds", response.SuspendDelaySeconds);
+        return Format("LiveStatusPendingSuspendDetails", LocalizationService.DisplaySuspendMode(response.SuspendMode), suspendDelayText, DisplaySuspendReason(response.SuspendReasonCode));
     }
 
     private static string DisplaySuspendReason(string suspendReasonCode)
@@ -460,13 +425,7 @@ internal static class LiveStatusCommand
         return timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentCulture);
     }
 
-    private static void AppendPanel(
-        List<string> screenLines,
-        string title,
-        IReadOnlyList<string> contentLines,
-        int maximumHeight,
-        int screenWidth,
-        bool enableStyles)
+    private static void AppendPanel(List<string> screenLines, string title, IReadOnlyList<string> contentLines, int maximumHeight, int screenWidth, bool enableStyles)
     {
         if (maximumHeight <= 0) return;
 
@@ -615,10 +574,7 @@ internal static class LiveStatusCommand
         return false;
     }
 
-    private static async Task<bool> TryReadNextSnapshotOrExitAsync(
-        IAsyncEnumerator<LiveStatusSnapshot> snapshotEnumerator,
-        CancellationTokenSource cancellationTokenSource,
-        LiveStatusRenderState renderState)
+    private static async Task<bool> TryReadNextSnapshotOrExitAsync(IAsyncEnumerator<LiveStatusSnapshot> snapshotEnumerator, CancellationTokenSource cancellationTokenSource, LiveStatusRenderState renderState)
     {
         var moveNextTask = snapshotEnumerator.MoveNextAsync().AsTask();
         while (!moveNextTask.IsCompleted)
@@ -652,9 +608,7 @@ internal static class LiveStatusCommand
         catch (NotSupportedException) { }
     }
 
-    private static async Task<bool> WaitForLiveStatusReconnectAsync(
-        CancellationTokenSource cancellationTokenSource,
-        LiveStatusRenderState renderState)
+    private static async Task<bool> WaitForLiveStatusReconnectAsync(CancellationTokenSource cancellationTokenSource, LiveStatusRenderState renderState)
     {
         var reconnectAt = DateTimeOffset.UtcNow.Add(s_runtimeReconnectInterval);
         while (!cancellationTokenSource.IsCancellationRequested && DateTimeOffset.UtcNow < reconnectAt)

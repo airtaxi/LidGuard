@@ -103,12 +103,7 @@ internal sealed class AuthenticationRefreshTokenStore(SqliteConnectionFactory co
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private static async Task<long?> FindValidTokenIdentifierAsync(
-        SqliteConnection connection,
-        SqliteTransaction transaction,
-        string refreshTokenHash,
-        DateTimeOffset now,
-        CancellationToken cancellationToken)
+    private static async Task<long?> FindValidTokenIdentifierAsync(SqliteConnection connection, SqliteTransaction transaction, string refreshTokenHash, DateTimeOffset now, CancellationToken cancellationToken)
     {
         using var command = connection.CreateCommand();
         command.Transaction = transaction;

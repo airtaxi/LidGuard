@@ -58,12 +58,8 @@ internal static class LidGuardRuntimeResponseLocalizer
     private static string CreateSuspendScheduleMessage(LidGuardPipeResponse response)
     {
         var suspendMode = LocalizationService.DisplaySuspendMode(response.SuspendMode);
-        var suspendDelay = response.SuspendDelaySeconds == 0
-            ? Get("RuntimeResponseSuspendDelayImmediate")
-            : Format("RuntimeResponseSuspendDelaySeconds", response.SuspendDelaySeconds);
-        var suspendReason = response.SuspendReasonCode == LidGuardPipeResponseMessageCodes.SuspendReasonSoftLocked
-            ? Get("RuntimeResponseSuspendReasonSoftLocked")
-            : Get("RuntimeResponseSuspendReasonCompleted");
+        var suspendDelay = response.SuspendDelaySeconds == 0 ? Get("RuntimeResponseSuspendDelayImmediate") : Format("RuntimeResponseSuspendDelaySeconds", response.SuspendDelaySeconds);
+        var suspendReason = response.SuspendReasonCode == LidGuardPipeResponseMessageCodes.SuspendReasonSoftLocked ? Get("RuntimeResponseSuspendReasonSoftLocked") : Get("RuntimeResponseSuspendReasonCompleted");
         return Format("RuntimeResponseSuspendScheduled", suspendMode, suspendDelay, suspendReason);
     }
 

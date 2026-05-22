@@ -30,9 +30,7 @@ public sealed class LidActionService : ILidActionService
 
     public LidGuardOperationResult<LidAction> ReadLidAction(Guid powerSchemeIdentifier, PowerLine powerLine)
     {
-        var nativeErrorCode = powerLine == PowerLine.AlternatingCurrent
-            ? ReadAlternatingCurrentLidAction(powerSchemeIdentifier, out var value)
-            : ReadDirectCurrentLidAction(powerSchemeIdentifier, out value);
+        var nativeErrorCode = powerLine == PowerLine.AlternatingCurrent ? ReadAlternatingCurrentLidAction(powerSchemeIdentifier, out var value) : ReadDirectCurrentLidAction(powerSchemeIdentifier, out value);
 
         if (nativeErrorCode != 0) return LidGuardOperationResult<LidAction>.Failure("Failed to read the Windows lid close action.", (int)nativeErrorCode);
         return LidGuardOperationResult<LidAction>.Success((LidAction)value);
@@ -40,9 +38,7 @@ public sealed class LidActionService : ILidActionService
 
     public LidGuardOperationResult WriteLidAction(Guid powerSchemeIdentifier, PowerLine powerLine, LidAction lidAction)
     {
-        var nativeErrorCode = powerLine == PowerLine.AlternatingCurrent
-            ? WriteAlternatingCurrentLidAction(powerSchemeIdentifier, lidAction)
-            : WriteDirectCurrentLidAction(powerSchemeIdentifier, lidAction);
+        var nativeErrorCode = powerLine == PowerLine.AlternatingCurrent ? WriteAlternatingCurrentLidAction(powerSchemeIdentifier, lidAction) : WriteDirectCurrentLidAction(powerSchemeIdentifier, lidAction);
 
         if (nativeErrorCode != 0) return LidGuardOperationResult.Failure("Failed to write the Windows lid close action.", (int)nativeErrorCode);
         return LidGuardOperationResult.Success();

@@ -106,9 +106,5 @@ internal static partial class HookParentProcessResolver
         }
     }
 
-    private readonly record struct HookParentProcessInfo(
-        int ProcessIdentifier,
-        int ParentProcessIdentifier,
-        string ProcessName,
-        string CommandLine);
+    private readonly record struct HookParentProcessInfo(int ProcessIdentifier, int ParentProcessIdentifier, string ProcessName, string CommandLine);
 }

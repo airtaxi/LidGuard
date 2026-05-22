@@ -23,10 +23,6 @@ internal static class LidGuardSettingsCommand
     public static int PreviewSystemSound(string systemSoundName, ILidGuardRuntimePlatform runtimePlatform)
         => LidGuardSettingsSoundPreviewCommand.PreviewSystemSound(systemSoundName, runtimePlatform);
 
-    public static bool TryParseEmergencyHibernationTemperatureMode(
-        string emergencyHibernationTemperatureModeText,
-        out EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
-        => LidGuardSettingsValueParser.TryParseEmergencyHibernationTemperatureMode(
-            emergencyHibernationTemperatureModeText,
-            out emergencyHibernationTemperatureMode);
+    public static bool TryParseEmergencyHibernationTemperatureMode(string emergencyHibernationTemperatureModeText, out EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
+        => LidGuardSettingsValueParser.TryParseEmergencyHibernationTemperatureMode(emergencyHibernationTemperatureModeText, out emergencyHibernationTemperatureMode);
 }

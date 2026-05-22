@@ -4,12 +4,7 @@ namespace LidGuard.Commands;
 
 internal static class WslProviderConfigurationRoots
 {
-    public static bool TryGetHookConfigurationFilePath(
-        string distroName,
-        AgentProvider provider,
-        string configuredConfigurationFilePath,
-        out string configurationFilePath,
-        out string message)
+    public static bool TryGetHookConfigurationFilePath(string distroName, AgentProvider provider, string configuredConfigurationFilePath, out string configurationFilePath, out string message)
     {
         if (!string.IsNullOrWhiteSpace(configuredConfigurationFilePath)) return WslCommandUtilities.TryNormalizeWslPath(distroName, configuredConfigurationFilePath, out configurationFilePath, out message);
 
@@ -22,11 +17,7 @@ internal static class WslProviderConfigurationRoots
         };
     }
 
-    public static bool TryGetMcpConfigurationFilePath(
-        string distroName,
-        AgentProvider provider,
-        out string configurationFilePath,
-        out string message)
+    public static bool TryGetMcpConfigurationFilePath(string distroName, AgentProvider provider, out string configurationFilePath, out string message)
     {
         return provider switch
         {

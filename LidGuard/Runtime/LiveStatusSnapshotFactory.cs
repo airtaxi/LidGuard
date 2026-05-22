@@ -37,21 +37,19 @@ internal static class LiveStatusSnapshotFactory
         return [.. hookEventLines.OrderByDescending(static hookEventLine => hookEventLine.Timestamp)];
     }
 
-    private static void AddProviderHookEventLines(
-        AgentProvider provider,
-        IReadOnlyList<string> eventLines,
-        List<LiveStatusHookEventLine> hookEventLines)
+    private static void AddProviderHookEventLines(AgentProvider provider, IReadOnlyList<string> eventLines, List<LiveStatusHookEventLine> hookEventLines)
     {
         var providerDisplayText = AgentProviderDisplay.CreateProviderDisplayText(provider, string.Empty);
         foreach (var eventLine in eventLines)
         {
             if (!eventLine.Contains("kind=received", StringComparison.Ordinal) && !eventLine.Contains("kind=runtime-result", StringComparison.Ordinal)) continue;
-            hookEventLines.Add(new LiveStatusHookEventLine
+            var hookEventLine = new LiveStatusHookEventLine
             {
                 Timestamp = ParseLogLineTimestamp(eventLine),
                 ProviderDisplayText = providerDisplayText,
                 Line = eventLine
-            });
+            };
+            hookEventLines.Add(hookEventLine);
         }
     }
 
@@ -59,8 +57,6 @@ internal static class LiveStatusSnapshotFactory
     {
         var separatorIndex = eventLine.IndexOf(' ', StringComparison.Ordinal);
         var timestampText = separatorIndex < 0 ? eventLine : eventLine[..separatorIndex];
-        return DateTimeOffset.TryParseExact(timestampText, "O", CultureInfo.InvariantCulture, DateTimeStyles.None, out var timestamp)
-            ? timestamp
-            : DateTimeOffset.MinValue;
+        return DateTimeOffset.TryParseExact(timestampText, "O", CultureInfo.InvariantCulture, DateTimeStyles.None, out var timestamp) ? timestamp : DateTimeOffset.MinValue;
     }
 }

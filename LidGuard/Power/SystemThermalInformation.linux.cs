@@ -23,12 +23,8 @@ public static class SystemThermalInformation
                 var celsiusTemperature = TryReadThermalZoneTemperatureCelsius(temperatureFilePath);
                 if (!celsiusTemperature.HasValue) continue;
 
-                lowestCelsiusTemperature = !lowestCelsiusTemperature.HasValue || celsiusTemperature.Value < lowestCelsiusTemperature.Value
-                    ? celsiusTemperature.Value
-                    : lowestCelsiusTemperature.Value;
-                highestCelsiusTemperature = !highestCelsiusTemperature.HasValue || celsiusTemperature.Value > highestCelsiusTemperature.Value
-                    ? celsiusTemperature.Value
-                    : highestCelsiusTemperature.Value;
+                lowestCelsiusTemperature = !lowestCelsiusTemperature.HasValue || celsiusTemperature.Value < lowestCelsiusTemperature.Value ? celsiusTemperature.Value : lowestCelsiusTemperature.Value;
+                highestCelsiusTemperature = !highestCelsiusTemperature.HasValue || celsiusTemperature.Value > highestCelsiusTemperature.Value ? celsiusTemperature.Value : highestCelsiusTemperature.Value;
                 celsiusTemperatureSum += celsiusTemperature.Value;
                 celsiusTemperatureCount++;
             }
