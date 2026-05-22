@@ -100,10 +100,6 @@ internal static class LidGuardSettingsUpdateCommand
         LidGuardSettings settings)
     {
         if (CommandOptionReader.TryGetOption(options, out _, "ui-culture", "user-interface-culture")) return true;
-        if (CommandOptionReader.TryGetOption(options, out _, "post-stop-suspend-delay-seconds")) return true;
-        if (CommandOptionReader.TryGetOption(options, out _, "closed-lid-stop-follow-up-delay-seconds")) return true;
-        if (CommandOptionReader.TryGetOption(options, out _, "closed-lid-stop-follow-up-webhook-url")) return true;
-
         return LidGuardSettingsChangeDetector.RequiresManagedHookRefresh(currentSettings, settings);
     }
 

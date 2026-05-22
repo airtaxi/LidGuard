@@ -76,11 +76,8 @@ internal static class LidGuardSettingsChangeDetector
         var normalizedPreviousSettings = LidGuardSettings.Normalize(previousSettings);
         var normalizedUpdatedSettings = LidGuardSettings.Normalize(updatedSettings);
         if (!normalizedPreviousSettings.UserInterfaceCulture.Equals(normalizedUpdatedSettings.UserInterfaceCulture, StringComparison.OrdinalIgnoreCase)) return true;
-        if (normalizedPreviousSettings.PostStopSuspendDelaySeconds != normalizedUpdatedSettings.PostStopSuspendDelaySeconds) return true;
-        if (normalizedPreviousSettings.ClosedLidStopFollowUpDelaySeconds != normalizedUpdatedSettings.ClosedLidStopFollowUpDelaySeconds) return true;
-        return !normalizedPreviousSettings.ClosedLidStopFollowUpWebhookUrl.Equals(
-            normalizedUpdatedSettings.ClosedLidStopFollowUpWebhookUrl,
-            StringComparison.OrdinalIgnoreCase);
+        return ClosedLidStopFollowUpConfiguration.GetManagedHookTimeoutSeconds(normalizedPreviousSettings)
+            != ClosedLidStopFollowUpConfiguration.GetManagedHookTimeoutSeconds(normalizedUpdatedSettings);
     }
 
     private static bool ArePowerRequestOptionsEquivalent(PowerRequestOptions firstPowerRequestOptions, PowerRequestOptions secondPowerRequestOptions)
