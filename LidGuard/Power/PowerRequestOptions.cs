@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace LidGuard.Power;
 
-public sealed class PowerRequestOptions
+public sealed record PowerRequestOptions
 {
     public static PowerRequestOptions Default { get; } = new();
 

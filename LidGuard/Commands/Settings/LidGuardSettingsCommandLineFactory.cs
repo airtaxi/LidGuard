@@ -15,7 +15,7 @@ internal static class LidGuardSettingsCommandLineFactory
         settings = LidGuardSettings.Normalize(currentSettings);
         if (!CommandOptionReader.TryParseBooleanOption(options, false, out var resetSettings, out message, "reset", "default", "defaults")) return false;
 
-        var baseSettings = resetSettings ? LidGuardSettings.HeadlessRuntimeDefault : settings;
+        var baseSettings = LidGuardSettings.Normalize(resetSettings ? LidGuardSettings.HeadlessRuntimeDefault : settings);
         var basePowerRequest = baseSettings.PowerRequest ?? PowerRequestOptions.Default;
         settings = baseSettings;
         message = string.Empty;
@@ -99,9 +99,9 @@ internal static class LidGuardSettingsCommandLineFactory
         var reason = CommandOptionReader.GetOption(options, "power-request-reason", "reason");
         if (string.IsNullOrWhiteSpace(reason)) reason = basePowerRequest.Reason;
 
-        settings = new LidGuardSettings
+        settings = baseSettings with
         {
-            PowerRequest = new PowerRequestOptions
+            PowerRequest = basePowerRequest with
             {
                 PreventSystemSleep = preventSystemSleep,
                 PreventAwayModeSleep = preventAwayModeSleep,

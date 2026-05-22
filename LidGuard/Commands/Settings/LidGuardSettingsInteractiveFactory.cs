@@ -117,9 +117,9 @@ internal static class LidGuardSettingsInteractiveFactory
             out message))
             return false;
 
-        settings = new LidGuardSettings
+        settings = normalizedStoredSettings with
         {
-            PowerRequest = new PowerRequestOptions
+            PowerRequest = storedPowerRequest with
             {
                 PreventSystemSleep = preventSystemSleep,
                 PreventAwayModeSleep = preventAwayModeSleep,

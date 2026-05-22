@@ -1,5 +1,3 @@
-using LidGuard.Settings;
-
 namespace LidGuard.Settings;
 
 internal static class PreSuspendWebhookConfiguration
@@ -10,28 +8,9 @@ internal static class PreSuspendWebhookConfiguration
     public static LidGuardSettings WithPreSuspendWebhookUrl(LidGuardSettings settings, string preSuspendWebhookUrl)
     {
         var normalizedInputSettings = LidGuardSettings.Normalize(settings);
-        return new LidGuardSettings
+        return normalizedInputSettings with
         {
-            PowerRequest = normalizedInputSettings.PowerRequest,
-            ChangeLidAction = normalizedInputSettings.ChangeLidAction,
-            SuspendMode = normalizedInputSettings.SuspendMode,
-            PostStopSuspendDelaySeconds = normalizedInputSettings.PostStopSuspendDelaySeconds,
-            PostStopSuspendSound = normalizedInputSettings.PostStopSuspendSound,
-            PostStopSuspendSoundVolumeOverridePercent = normalizedInputSettings.PostStopSuspendSoundVolumeOverridePercent,
-            SuspendHistoryEntryCount = normalizedInputSettings.SuspendHistoryEntryCount,
-            PreSuspendWebhookUrl = preSuspendWebhookUrl,
-            PostSessionEndWebhookUrl = normalizedInputSettings.PostSessionEndWebhookUrl,
-            ClosedLidStopFollowUpWebhookUrl = normalizedInputSettings.ClosedLidStopFollowUpWebhookUrl,
-            ClosedLidStopFollowUpDelaySeconds = normalizedInputSettings.ClosedLidStopFollowUpDelaySeconds,
-            RepeatClosedLidStopFollowUp = normalizedInputSettings.RepeatClosedLidStopFollowUp,
-            ClosedLidPermissionRequestDecision = normalizedInputSettings.ClosedLidPermissionRequestDecision,
-            WatchParentProcess = normalizedInputSettings.WatchParentProcess,
-            SessionTimeoutMinutes = normalizedInputSettings.SessionTimeoutMinutes,
-            ServerRuntimeCleanupDelayMinutes = normalizedInputSettings.ServerRuntimeCleanupDelayMinutes,
-            EmergencyHibernationOnHighTemperature = normalizedInputSettings.EmergencyHibernationOnHighTemperature,
-            EmergencyHibernationTemperatureMode = normalizedInputSettings.EmergencyHibernationTemperatureMode,
-            EmergencyHibernationTemperatureCelsius = normalizedInputSettings.EmergencyHibernationTemperatureCelsius,
-            UserInterfaceCulture = normalizedInputSettings.UserInterfaceCulture
+            PreSuspendWebhookUrl = preSuspendWebhookUrl
         };
     }
 

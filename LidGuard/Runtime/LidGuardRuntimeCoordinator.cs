@@ -561,7 +561,7 @@ internal sealed class LidGuardRuntimeCoordinator
         }
 
         var normalizedSettings = LidGuardSettings.Normalize(settings);
-        if (SettingsAreEquivalent(_settings, normalizedSettings))
+        if (LidGuardSettingsChangeDetector.AreEquivalent(_settings, normalizedSettings))
         {
             if (!_sessionRegistry.HasActiveSessions) return LidGuardOperationResult.Success();
             if (!HasSessionsKeepingProtectionAppliedInsideGate()) return LidGuardOperationResult.Success();
@@ -613,44 +613,6 @@ internal sealed class LidGuardRuntimeCoordinator
         ReconfigureSessionTimeoutMonitorInsideGate();
         EnsureEmergencyHibernationThermalMonitor();
         return protectionResult;
-    }
-
-    private static bool SettingsAreEquivalent(LidGuardSettings firstSettings, LidGuardSettings secondSettings)
-    {
-        if (ReferenceEquals(firstSettings, secondSettings)) return true;
-        if (firstSettings is null || secondSettings is null) return false;
-
-        return PowerRequestOptionsAreEquivalent(firstSettings.PowerRequest, secondSettings.PowerRequest)
-            && firstSettings.ChangeLidAction == secondSettings.ChangeLidAction
-            && firstSettings.SuspendMode == secondSettings.SuspendMode
-            && firstSettings.PostStopSuspendDelaySeconds == secondSettings.PostStopSuspendDelaySeconds
-            && string.Equals(firstSettings.PostStopSuspendSound, secondSettings.PostStopSuspendSound, StringComparison.Ordinal)
-            && firstSettings.PostStopSuspendSoundVolumeOverridePercent == secondSettings.PostStopSuspendSoundVolumeOverridePercent
-            && firstSettings.SuspendHistoryEntryCount == secondSettings.SuspendHistoryEntryCount
-            && string.Equals(firstSettings.PreSuspendWebhookUrl, secondSettings.PreSuspendWebhookUrl, StringComparison.Ordinal)
-            && string.Equals(firstSettings.PostSessionEndWebhookUrl, secondSettings.PostSessionEndWebhookUrl, StringComparison.Ordinal)
-            && string.Equals(firstSettings.ClosedLidStopFollowUpWebhookUrl, secondSettings.ClosedLidStopFollowUpWebhookUrl, StringComparison.Ordinal)
-            && firstSettings.ClosedLidStopFollowUpDelaySeconds == secondSettings.ClosedLidStopFollowUpDelaySeconds
-            && firstSettings.RepeatClosedLidStopFollowUp == secondSettings.RepeatClosedLidStopFollowUp
-            && firstSettings.ClosedLidPermissionRequestDecision == secondSettings.ClosedLidPermissionRequestDecision
-            && firstSettings.WatchParentProcess == secondSettings.WatchParentProcess
-            && firstSettings.SessionTimeoutMinutes == secondSettings.SessionTimeoutMinutes
-            && firstSettings.ServerRuntimeCleanupDelayMinutes == secondSettings.ServerRuntimeCleanupDelayMinutes
-            && firstSettings.EmergencyHibernationOnHighTemperature == secondSettings.EmergencyHibernationOnHighTemperature
-            && firstSettings.EmergencyHibernationTemperatureMode == secondSettings.EmergencyHibernationTemperatureMode
-            && firstSettings.EmergencyHibernationTemperatureCelsius == secondSettings.EmergencyHibernationTemperatureCelsius
-            && string.Equals(firstSettings.UserInterfaceCulture, secondSettings.UserInterfaceCulture, StringComparison.Ordinal);
-    }
-
-    private static bool PowerRequestOptionsAreEquivalent(PowerRequestOptions firstPowerRequestOptions, PowerRequestOptions secondPowerRequestOptions)
-    {
-        if (ReferenceEquals(firstPowerRequestOptions, secondPowerRequestOptions)) return true;
-        if (firstPowerRequestOptions is null || secondPowerRequestOptions is null) return false;
-
-        return firstPowerRequestOptions.PreventSystemSleep == secondPowerRequestOptions.PreventSystemSleep
-            && firstPowerRequestOptions.PreventAwayModeSleep == secondPowerRequestOptions.PreventAwayModeSleep
-            && firstPowerRequestOptions.PreventDisplaySleep == secondPowerRequestOptions.PreventDisplaySleep
-            && string.Equals(firstPowerRequestOptions.Reason, secondPowerRequestOptions.Reason, StringComparison.Ordinal);
     }
 
     private bool HasSessionsKeepingProtectionAppliedInsideGate()

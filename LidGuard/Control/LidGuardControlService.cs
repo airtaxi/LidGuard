@@ -263,7 +263,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         updatedStoredSettings = LidGuardSettings.Normalize(updatedStoredSettings);
 
         if (!LidGuardSettingsStore.TrySave(updatedStoredSettings, out message)) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
-        var managedHookRefreshResult = ShouldRefreshManagedHooks(previousStoredSettings, updatedStoredSettings)
+        var managedHookRefreshResult = LidGuardSettingsChangeDetector.RequiresManagedHookRefresh(previousStoredSettings, updatedStoredSettings)
             ? ManagedHookStatusMessageRefresh.RefreshInstalledManagedHooks()
             : null;
 
@@ -277,7 +277,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             false,
             cancellationToken);
 
-        var appliedChanges = DescribeChanges(previousStoredSettings, updatedStoredSettings);
+        var appliedChanges = LidGuardSettingsChangeDetector.DescribeChanges(previousStoredSettings, updatedStoredSettings);
         return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Success(new LidGuardSettingsUpdateOutcome
         {
             ResetToDefaults = settingsPatch.ResetToDefaults,
@@ -342,9 +342,9 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         var normalizedBaseSettings = LidGuardSettings.Normalize(baseSettings);
         var basePowerRequest = normalizedBaseSettings.PowerRequest ?? PowerRequestOptions.Default;
 
-        return new LidGuardSettings
+        return normalizedBaseSettings with
         {
-            PowerRequest = new PowerRequestOptions
+            PowerRequest = basePowerRequest with
             {
                 PreventSystemSleep = settingsPatch.PreventSystemSleep ?? basePowerRequest.PreventSystemSleep,
 #if LIDGUARD_LINUX || LIDGUARD_MACOS
@@ -382,8 +382,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
                 : normalizedBaseSettings.ServerRuntimeCleanupDelayMinutes,
             EmergencyHibernationOnHighTemperature = settingsPatch.EmergencyHibernationOnHighTemperature ?? normalizedBaseSettings.EmergencyHibernationOnHighTemperature,
             EmergencyHibernationTemperatureMode = settingsPatch.EmergencyHibernationTemperatureMode ?? normalizedBaseSettings.EmergencyHibernationTemperatureMode,
-            EmergencyHibernationTemperatureCelsius = settingsPatch.EmergencyHibernationTemperatureCelsius ?? normalizedBaseSettings.EmergencyHibernationTemperatureCelsius,
-            UserInterfaceCulture = normalizedBaseSettings.UserInterfaceCulture
+            EmergencyHibernationTemperatureCelsius = settingsPatch.EmergencyHibernationTemperatureCelsius ?? normalizedBaseSettings.EmergencyHibernationTemperatureCelsius
         };
     }
 
@@ -484,41 +483,6 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         return false;
     }
 
-    private static string[] DescribeChanges(LidGuardSettings previousStoredSettings, LidGuardSettings updatedStoredSettings)
-    {
-        var previousPowerRequest = previousStoredSettings.PowerRequest ?? PowerRequestOptions.Default;
-        var updatedPowerRequest = updatedStoredSettings.PowerRequest ?? PowerRequestOptions.Default;
-        var changes = new List<string>();
-
-        AppendChange(changes, previousPowerRequest.PreventSystemSleep, updatedPowerRequest.PreventSystemSleep, "preventSystemSleep");
-#if !LIDGUARD_LINUX && !LIDGUARD_MACOS
-        AppendChange(changes, previousPowerRequest.PreventAwayModeSleep, updatedPowerRequest.PreventAwayModeSleep, "preventAwayModeSleep");
-#endif
-        AppendChange(changes, previousPowerRequest.PreventDisplaySleep, updatedPowerRequest.PreventDisplaySleep, "preventDisplaySleep");
-        AppendChange(changes, previousPowerRequest.Reason, updatedPowerRequest.Reason, "powerRequestReason");
-        AppendChange(changes, previousStoredSettings.ChangeLidAction, updatedStoredSettings.ChangeLidAction, "changeLidAction");
-        AppendChange(changes, previousStoredSettings.WatchParentProcess, updatedStoredSettings.WatchParentProcess, "watchParentProcess");
-        AppendChange(changes, previousStoredSettings.SuspendMode, updatedStoredSettings.SuspendMode, "suspendMode");
-        AppendChange(changes, previousStoredSettings.PostStopSuspendDelaySeconds, updatedStoredSettings.PostStopSuspendDelaySeconds, "postStopSuspendDelaySeconds");
-        AppendChange(changes, previousStoredSettings.PostStopSuspendSound, updatedStoredSettings.PostStopSuspendSound, "postStopSuspendSound");
-        AppendChange(changes, previousStoredSettings.PostStopSuspendSoundVolumeOverridePercent, updatedStoredSettings.PostStopSuspendSoundVolumeOverridePercent, "postStopSuspendSoundVolumeOverridePercent");
-        AppendChange(changes, previousStoredSettings.SuspendHistoryEntryCount, updatedStoredSettings.SuspendHistoryEntryCount, "suspendHistoryEntryCount");
-        AppendChange(changes, previousStoredSettings.PreSuspendWebhookUrl, updatedStoredSettings.PreSuspendWebhookUrl, "preSuspendWebhookUrl");
-        AppendChange(changes, previousStoredSettings.PostSessionEndWebhookUrl, updatedStoredSettings.PostSessionEndWebhookUrl, "postSessionEndWebhookUrl");
-        AppendChange(changes, previousStoredSettings.ClosedLidStopFollowUpWebhookUrl, updatedStoredSettings.ClosedLidStopFollowUpWebhookUrl, "closedLidStopFollowUpWebhookUrl");
-        AppendChange(changes, previousStoredSettings.ClosedLidStopFollowUpDelaySeconds, updatedStoredSettings.ClosedLidStopFollowUpDelaySeconds, "closedLidStopFollowUpDelaySeconds");
-        AppendChange(changes, previousStoredSettings.RepeatClosedLidStopFollowUp, updatedStoredSettings.RepeatClosedLidStopFollowUp, "repeatClosedLidStopFollowUp");
-        AppendChange(changes, previousStoredSettings.ClosedLidPermissionRequestDecision, updatedStoredSettings.ClosedLidPermissionRequestDecision, "closedLidPermissionRequestDecision");
-        AppendChange(changes, previousStoredSettings.SessionTimeoutMinutes, updatedStoredSettings.SessionTimeoutMinutes, "sessionTimeoutMinutes");
-        AppendChange(changes, previousStoredSettings.ServerRuntimeCleanupDelayMinutes, updatedStoredSettings.ServerRuntimeCleanupDelayMinutes, "serverRuntimeCleanupDelayMinutes");
-        AppendChange(changes, previousStoredSettings.EmergencyHibernationOnHighTemperature, updatedStoredSettings.EmergencyHibernationOnHighTemperature, "emergencyHibernationOnHighTemperature");
-        AppendChange(changes, previousStoredSettings.EmergencyHibernationTemperatureMode, updatedStoredSettings.EmergencyHibernationTemperatureMode, "emergencyHibernationTemperatureMode");
-        AppendChange(changes, previousStoredSettings.EmergencyHibernationTemperatureCelsius, updatedStoredSettings.EmergencyHibernationTemperatureCelsius, "emergencyHibernationTemperatureCelsius");
-        AppendChange(changes, previousStoredSettings.UserInterfaceCulture, updatedStoredSettings.UserInterfaceCulture, "userInterfaceCulture");
-
-        return [.. changes];
-    }
-
     private static string[] CreateClosedLidStopFollowUpConfigurationIssueMessages(LidGuardSettings settings)
     {
         var configurationIssues = ClosedLidStopFollowUpConfiguration.GetConfigurationIssues(settings);
@@ -538,19 +502,4 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         return [.. messages.Where(static message => !string.IsNullOrWhiteSpace(message))];
     }
 
-    private static void AppendChange<TValue>(List<string> changes, TValue previousValue, TValue updatedValue, string changeName)
-    {
-        if (EqualityComparer<TValue>.Default.Equals(previousValue, updatedValue)) return;
-        changes.Add(changeName);
-    }
-
-    private static bool ShouldRefreshManagedHooks(LidGuardSettings previousStoredSettings, LidGuardSettings updatedStoredSettings)
-    {
-        if (!previousStoredSettings.UserInterfaceCulture.Equals(updatedStoredSettings.UserInterfaceCulture, StringComparison.OrdinalIgnoreCase)) return true;
-        if (previousStoredSettings.PostStopSuspendDelaySeconds != updatedStoredSettings.PostStopSuspendDelaySeconds) return true;
-        if (previousStoredSettings.ClosedLidStopFollowUpDelaySeconds != updatedStoredSettings.ClosedLidStopFollowUpDelaySeconds) return true;
-        return !previousStoredSettings.ClosedLidStopFollowUpWebhookUrl.Equals(
-            updatedStoredSettings.ClosedLidStopFollowUpWebhookUrl,
-            StringComparison.OrdinalIgnoreCase);
-    }
 }

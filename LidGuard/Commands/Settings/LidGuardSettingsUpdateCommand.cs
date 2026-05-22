@@ -51,7 +51,7 @@ internal static class LidGuardSettingsUpdateCommand
             return 1;
         }
 
-        var shouldRefreshManagedHooks = ShouldRefreshManagedHooks(options, currentSettings, settings);
+        var shouldRefreshManagedHooks = RequiresManagedHookRefresh(options, currentSettings, settings);
         LidGuardCulture.ApplyEffectiveCulture(settings);
         var managedHookStatusMessageRefreshResult = shouldRefreshManagedHooks
             ? ManagedHookStatusMessageRefresh.RefreshInstalledManagedHooks()
@@ -94,7 +94,7 @@ internal static class LidGuardSettingsUpdateCommand
         return 1;
     }
 
-    private static bool ShouldRefreshManagedHooks(
+    private static bool RequiresManagedHookRefresh(
         IReadOnlyDictionary<string, string> options,
         LidGuardSettings currentSettings,
         LidGuardSettings settings)
@@ -104,14 +104,7 @@ internal static class LidGuardSettingsUpdateCommand
         if (CommandOptionReader.TryGetOption(options, out _, "closed-lid-stop-follow-up-delay-seconds")) return true;
         if (CommandOptionReader.TryGetOption(options, out _, "closed-lid-stop-follow-up-webhook-url")) return true;
 
-        var normalizedCurrentSettings = LidGuardSettings.Normalize(currentSettings);
-        var normalizedSettings = LidGuardSettings.Normalize(settings);
-        if (!normalizedCurrentSettings.UserInterfaceCulture.Equals(normalizedSettings.UserInterfaceCulture, StringComparison.OrdinalIgnoreCase)) return true;
-        if (normalizedCurrentSettings.PostStopSuspendDelaySeconds != normalizedSettings.PostStopSuspendDelaySeconds) return true;
-        if (normalizedCurrentSettings.ClosedLidStopFollowUpDelaySeconds != normalizedSettings.ClosedLidStopFollowUpDelaySeconds) return true;
-        return !normalizedCurrentSettings.ClosedLidStopFollowUpWebhookUrl.Equals(
-            normalizedSettings.ClosedLidStopFollowUpWebhookUrl,
-            StringComparison.OrdinalIgnoreCase);
+        return LidGuardSettingsChangeDetector.RequiresManagedHookRefresh(currentSettings, settings);
     }
 
     internal static void WriteManagedHookRefreshResult(ManagedHookStatusMessageRefreshResult result)

@@ -1,6 +1,4 @@
-using LidGuard.Power;
 using LidGuard.Services;
-using LidGuard.Settings;
 
 namespace LidGuard.Settings;
 
@@ -37,35 +35,9 @@ internal static class PostStopSuspendSoundConfiguration
             return false;
         }
 
-        var powerRequest = normalizedInputSettings.PowerRequest ?? PowerRequestOptions.Default;
-        normalizedSettings = new LidGuardSettings
+        normalizedSettings = normalizedInputSettings with
         {
-            PowerRequest = new PowerRequestOptions
-            {
-                PreventSystemSleep = powerRequest.PreventSystemSleep,
-                PreventAwayModeSleep = powerRequest.PreventAwayModeSleep,
-                PreventDisplaySleep = powerRequest.PreventDisplaySleep,
-                Reason = powerRequest.Reason
-            },
-            ChangeLidAction = normalizedInputSettings.ChangeLidAction,
-            SuspendMode = normalizedInputSettings.SuspendMode,
-            PostStopSuspendDelaySeconds = normalizedInputSettings.PostStopSuspendDelaySeconds,
-            PostStopSuspendSound = normalizeResult.Value,
-            PostStopSuspendSoundVolumeOverridePercent = normalizedInputSettings.PostStopSuspendSoundVolumeOverridePercent,
-            SuspendHistoryEntryCount = normalizedInputSettings.SuspendHistoryEntryCount,
-            PreSuspendWebhookUrl = normalizedInputSettings.PreSuspendWebhookUrl,
-            PostSessionEndWebhookUrl = normalizedInputSettings.PostSessionEndWebhookUrl,
-            ClosedLidStopFollowUpWebhookUrl = normalizedInputSettings.ClosedLidStopFollowUpWebhookUrl,
-            ClosedLidStopFollowUpDelaySeconds = normalizedInputSettings.ClosedLidStopFollowUpDelaySeconds,
-            RepeatClosedLidStopFollowUp = normalizedInputSettings.RepeatClosedLidStopFollowUp,
-            ClosedLidPermissionRequestDecision = normalizedInputSettings.ClosedLidPermissionRequestDecision,
-            WatchParentProcess = normalizedInputSettings.WatchParentProcess,
-            SessionTimeoutMinutes = normalizedInputSettings.SessionTimeoutMinutes,
-            ServerRuntimeCleanupDelayMinutes = normalizedInputSettings.ServerRuntimeCleanupDelayMinutes,
-            EmergencyHibernationOnHighTemperature = normalizedInputSettings.EmergencyHibernationOnHighTemperature,
-            EmergencyHibernationTemperatureMode = normalizedInputSettings.EmergencyHibernationTemperatureMode,
-            EmergencyHibernationTemperatureCelsius = normalizedInputSettings.EmergencyHibernationTemperatureCelsius,
-            UserInterfaceCulture = normalizedInputSettings.UserInterfaceCulture
+            PostStopSuspendSound = normalizeResult.Value
         };
 
         message = string.Empty;

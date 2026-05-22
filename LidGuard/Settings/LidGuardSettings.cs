@@ -3,7 +3,7 @@ using LidGuard.Power;
 
 namespace LidGuard.Settings;
 
-public sealed class LidGuardSettings
+public sealed record LidGuardSettings
 {
     public const int MinimumEmergencyHibernationTemperatureCelsius = 70;
     public const int MaximumEmergencyHibernationTemperatureCelsius = 110;
@@ -105,19 +105,21 @@ public sealed class LidGuardSettings
             ? (int?)null
             : Math.Max(MinimumServerRuntimeCleanupDelayMinutes, settings.ServerRuntimeCleanupDelayMinutes.Value);
         var userInterfaceCulture = UserInterfaceCultureConfiguration.NormalizeStoredValue(settings.UserInterfaceCulture);
-        return new LidGuardSettings
+        var normalizedPowerRequest = powerRequest with
         {
-            PowerRequest = new PowerRequestOptions
-            {
-                PreventSystemSleep = powerRequest.PreventSystemSleep,
+            PreventSystemSleep = powerRequest.PreventSystemSleep,
 #if LIDGUARD_LINUX || LIDGUARD_MACOS
-                PreventAwayModeSleep = false,
+            PreventAwayModeSleep = false,
 #else
-                PreventAwayModeSleep = powerRequest.PreventAwayModeSleep,
+            PreventAwayModeSleep = powerRequest.PreventAwayModeSleep,
 #endif
-                PreventDisplaySleep = powerRequest.PreventDisplaySleep,
-                Reason = string.IsNullOrWhiteSpace(powerRequest.Reason) ? PowerRequestOptions.Default.Reason : powerRequest.Reason
-            },
+            PreventDisplaySleep = powerRequest.PreventDisplaySleep,
+            Reason = string.IsNullOrWhiteSpace(powerRequest.Reason) ? PowerRequestOptions.Default.Reason : powerRequest.Reason
+        };
+
+        return settings with
+        {
+            PowerRequest = normalizedPowerRequest,
             ChangeLidAction = settings.ChangeLidAction,
             SuspendMode = settings.SuspendMode,
             PostStopSuspendDelaySeconds = Math.Max(0, settings.PostStopSuspendDelaySeconds),
