@@ -6,31 +6,25 @@ namespace LidGuard.Runtime;
 
 internal sealed class LidGuardPendingLidActionBackupManager(LidActionPolicyController lidActionPolicyController)
 {
-    public LidGuardOperationResult<LidActionBackup> ApplyTemporaryDoNothing(LidGuardSettings settings)
+    public LidGuardOperationResult ApplyTemporaryDoNothing(LidGuardSettings settings)
     {
+        if (!LidGuardPendingLidActionBackupStore.TryLoad(out var existingBackup, out var hasExistingBackup, out var loadMessage)) return LidGuardOperationResult.Failure(loadMessage);
+        if (hasExistingBackup) return ApplyExistingBackup(existingBackup);
+
         var captureResult = lidActionPolicyController.CaptureBackup(settings);
-        if (!captureResult.Succeeded) return captureResult;
+        if (!captureResult.Succeeded) return LidGuardOperationResult.Failure(captureResult.Message, captureResult.NativeErrorCode);
 
         var backup = captureResult.Value;
-        if (!LidGuardPendingLidActionBackupStore.TrySave(backup, out var saveMessage)) return LidGuardOperationResult<LidActionBackup>.Failure(saveMessage);
+        if (!LidGuardPendingLidActionBackupStore.TrySaveIfMissing(backup, out var saved, out var saveMessage)) return LidGuardOperationResult.Failure(saveMessage);
+        if (!saved) return ApplyExistingBackupFromStore();
 
         var applyResult = lidActionPolicyController.ApplyTemporaryDoNothing(backup);
-        if (applyResult.Succeeded) return LidGuardOperationResult<LidActionBackup>.Success(backup);
+        if (applyResult.Succeeded) return LidGuardOperationResult.Success();
 
         var rollbackResult = RollBackFailedApply(backup, applyResult);
-        if (!rollbackResult.Succeeded) return LidGuardOperationResult<LidActionBackup>.Failure(rollbackResult.Message, rollbackResult.NativeErrorCode);
+        if (!rollbackResult.Succeeded) return LidGuardOperationResult.Failure(rollbackResult.Message, rollbackResult.NativeErrorCode);
 
-        return LidGuardOperationResult<LidActionBackup>.Failure(CreateResultMessage(applyResult), applyResult.NativeErrorCode);
-    }
-
-    public LidGuardOperationResult Restore(LidActionBackup backup)
-    {
-        var restoreResult = lidActionPolicyController.Restore(backup);
-        if (!restoreResult.Succeeded) return restoreResult;
-
-        if (LidGuardPendingLidActionBackupStore.TryDelete(out var deleteMessage)) return LidGuardOperationResult.Success();
-
-        return LidGuardOperationResult.Failure(deleteMessage);
+        return LidGuardOperationResult.Failure(CreateResultMessage(applyResult), applyResult.NativeErrorCode);
     }
 
     public LidGuardOperationResult<bool> RestorePendingBackupIfPresent()
@@ -43,6 +37,32 @@ internal sealed class LidGuardPendingLidActionBackupManager(LidActionPolicyContr
         if (!restoreResult.Succeeded) return LidGuardOperationResult<bool>.Failure(CreateResultMessage(restoreResult), restoreResult.NativeErrorCode);
 
         return LidGuardOperationResult<bool>.Success(true);
+    }
+
+    private LidGuardOperationResult ApplyExistingBackupFromStore()
+    {
+        if (!LidGuardPendingLidActionBackupStore.TryLoad(out var backup, out var hasBackup, out var loadMessage)) return LidGuardOperationResult.Failure(loadMessage);
+        if (!hasBackup) return LidGuardOperationResult.Failure($"Skipped writing a new pending lid action backup, but no existing backup was found at {LidGuardPendingLidActionBackupStore.GetDefaultFilePath()}.");
+
+        return ApplyExistingBackup(backup);
+    }
+
+    private LidGuardOperationResult ApplyExistingBackup(LidActionBackup backup)
+    {
+        var applyResult = lidActionPolicyController.ApplyTemporaryDoNothing(backup);
+        if (applyResult.Succeeded) return LidGuardOperationResult.Success();
+
+        return LidGuardOperationResult.Failure(CreateResultMessage(applyResult), applyResult.NativeErrorCode);
+    }
+
+    private LidGuardOperationResult Restore(LidActionBackup backup)
+    {
+        var restoreResult = lidActionPolicyController.Restore(backup);
+        if (!restoreResult.Succeeded) return restoreResult;
+
+        if (LidGuardPendingLidActionBackupStore.TryDelete(out var deleteMessage)) return LidGuardOperationResult.Success();
+
+        return LidGuardOperationResult.Failure(deleteMessage);
     }
 
     private LidGuardOperationResult RollBackFailedApply(LidActionBackup backup, LidGuardOperationResult applyResult)

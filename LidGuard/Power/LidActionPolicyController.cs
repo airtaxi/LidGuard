@@ -66,17 +66,6 @@ public sealed class LidActionPolicyController(ILidActionService lidActionService
         return lidActionService.ApplyPowerScheme(backup.PowerSchemeIdentifier);
     }
 
-    public LidGuardOperationResult<LidActionBackup> ApplyTemporaryDoNothing(LidGuardSettings settings)
-    {
-        var captureResult = CaptureBackup(settings);
-        if (!captureResult.Succeeded) return captureResult;
-
-        var applyResult = ApplyTemporaryDoNothing(captureResult.Value);
-        if (!applyResult.Succeeded) return LidGuardOperationResult<LidActionBackup>.Failure(applyResult.Message, applyResult.NativeErrorCode);
-
-        return LidGuardOperationResult<LidActionBackup>.Success(captureResult.Value);
-    }
-
     public LidGuardOperationResult Restore(LidActionBackup backup)
     {
         if (backup.IncludesAlternatingCurrent)

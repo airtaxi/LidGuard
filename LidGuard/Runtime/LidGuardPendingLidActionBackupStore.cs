@@ -1,6 +1,6 @@
 using System.Text.Json;
-using LidGuard.Settings;
 using LidGuard.Power;
+using LidGuard.Settings;
 
 namespace LidGuard.Runtime;
 
@@ -46,8 +46,9 @@ internal static class LidGuardPendingLidActionBackupStore
         }
     }
 
-    public static bool TrySave(LidActionBackup backup, out string message)
+    public static bool TrySaveIfMissing(LidActionBackup backup, out bool saved, out string message)
     {
+        saved = false;
         var pendingBackupFilePath = GetDefaultFilePath();
         var temporaryFilePath = pendingBackupFilePath + TemporaryFileExtension;
 
@@ -55,13 +56,20 @@ internal static class LidGuardPendingLidActionBackupStore
         {
             lock (s_gate)
             {
+                if (File.Exists(pendingBackupFilePath))
+                {
+                    message = string.Empty;
+                    return true;
+                }
+
                 var pendingBackupDirectoryPath = Path.GetDirectoryName(pendingBackupFilePath);
                 if (!string.IsNullOrWhiteSpace(pendingBackupDirectoryPath)) Directory.CreateDirectory(pendingBackupDirectoryPath);
 
                 var state = LidGuardPendingLidActionBackupState.Create(backup);
                 var content = JsonSerializer.Serialize(state, LidGuardPendingLidActionBackupJsonSerializerContext.Default.LidGuardPendingLidActionBackupState);
                 File.WriteAllText(temporaryFilePath, content);
-                File.Move(temporaryFilePath, pendingBackupFilePath, true);
+                File.Move(temporaryFilePath, pendingBackupFilePath);
+                saved = true;
             }
 
             message = string.Empty;

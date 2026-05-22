@@ -1,3 +1,4 @@
+using LidGuard.Ipc;
 using LidGuard.Power;
 using LidGuard.Results;
 using LidGuard.Services;
@@ -11,8 +12,7 @@ internal sealed class LidGuardProtectionCoordinator(
 {
     private readonly LidGuardPendingLidActionBackupManager _pendingLidActionBackupManager = new(lidActionPolicyController);
     private ILidGuardPowerRequest _powerRequest = InactiveLidGuardPowerRequest.Instance;
-    private LidActionBackup _lidActionBackup;
-    private bool _hasLidActionBackup;
+    private bool _hasTemporaryLidActionPolicy;
 
     public bool IsApplied { get; private set; }
 
@@ -34,8 +34,7 @@ internal sealed class LidGuardProtectionCoordinator(
                 return LidGuardOperationResult.Failure(lidActionResult.Message, lidActionResult.NativeErrorCode);
             }
 
-            _lidActionBackup = lidActionResult.Value;
-            _hasLidActionBackup = true;
+            _hasTemporaryLidActionPolicy = true;
         }
 
         IsApplied = true;
@@ -46,11 +45,12 @@ internal sealed class LidGuardProtectionCoordinator(
     {
         var restoreMessages = new List<string>();
 
-        if (_hasLidActionBackup)
+        if (_hasTemporaryLidActionPolicy)
         {
-            var restoreResult = _pendingLidActionBackupManager.Restore(_lidActionBackup);
+            var restoreResult = _pendingLidActionBackupManager.RestorePendingBackupIfPresent();
             if (!restoreResult.Succeeded) restoreMessages.Add(CreateResultMessage(restoreResult));
-            _hasLidActionBackup = false;
+            else if (!restoreResult.Value) AppendMissingPendingBackupRestoreLog();
+            _hasTemporaryLidActionPolicy = false;
         }
 
         DisposePowerRequest();
@@ -71,5 +71,21 @@ internal sealed class LidGuardProtectionCoordinator(
     {
         if (result.NativeErrorCode == 0) return result.Message;
         return $"{result.Message} Native error: {result.NativeErrorCode}.";
+    }
+
+    private static string CreateResultMessage(LidGuardOperationResult<bool> result)
+    {
+        if (result.NativeErrorCode == 0) return result.Message;
+        return $"{result.Message} Native error: {result.NativeErrorCode}.";
+    }
+
+    private static void AppendMissingPendingBackupRestoreLog()
+    {
+        var backupFilePath = LidGuardPendingLidActionBackupStore.GetDefaultFilePath();
+        var message = $"Skipped lid close policy restore because the pending backup JSON was missing at {backupFilePath}.";
+        LidGuardRuntimeLogWriter.AppendRuntimeLog(
+            "lid-action-restore-missing-backup",
+            "lid-action-restore",
+            LidGuardPipeResponse.Failure(message));
     }
 }

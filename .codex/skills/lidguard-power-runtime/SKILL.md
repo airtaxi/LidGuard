@@ -54,6 +54,7 @@ description: "LidGuard power, lid, suspend, and thermal behavior reference. Use 
 - During active sessions, write AC/DC values to `0 = Do Nothing` when the setting is enabled.
 - After the last active session stops, restore the backed-up AC/DC values.
 - Restore the scheme that was active at backup time.
+- Treat the pending lid-action backup JSON as the authoritative restore source. If it already exists, do not overwrite it with a new capture, and restore from that JSON instead of any in-memory value. If restore is expected but the JSON is missing, skip lid policy writes and append a failure entry to the runtime session log.
 - On Linux, `ChangeLidAction=true` means LidGuard holds a systemd/logind `handle-lid-switch` inhibitor while protection is applied. Do not edit distribution power configuration files.
 - On macOS, `ChangeLidAction=true` means LidGuard temporarily applies `pmset -a disablesleep 1`, records the original `SleepDisabled` value in pending backup state, and restores it after protection ends or during crash recovery.
 
