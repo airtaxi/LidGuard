@@ -538,6 +538,22 @@ button:disabled {
     gap: 12px;
 }
 
+.load-more-row {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+}
+
+.load-more-events {
+    min-width: 132px;
+}
+
+.event-load-error {
+    margin: 0;
+}
+
 .event-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -653,6 +669,10 @@ button:disabled {
     color: var(--accent);
     cursor: pointer;
     font-weight: 750;
+}
+
+.event-details-placeholder {
+    margin-top: 12px;
 }
 
 .event-detail-grid {

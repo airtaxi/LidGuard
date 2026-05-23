@@ -1,260 +1,43 @@
 @page
-@using LidGuard.Notifications.Data
-@using LidGuard.Notifications.Models
 @model EventsModel
 @{
     ViewData["Title"] = LidGuardNotificationText.EventsTitle;
+    var nextBeforeWebhookEventIdentifier = Model.EventPage.NextBeforeWebhookEventIdentifier?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
 }
 
-<section class="events-page">
+<section
+    class="events-page"
+    data-events-page
+    data-more-url="@Url.Page("/Events", "More")"
+    data-details-url="@Url.Page("/Events", "Details")"
+    data-events-loading="@LidGuardNotificationText.EventsLoading"
+    data-events-load-more="@LidGuardNotificationText.EventsLoadMore"
+    data-events-load-failed="@LidGuardNotificationText.EventsLoadFailed"
+    data-event-details-load-failed="@LidGuardNotificationText.EventDetailsLoadFailed"
+    data-recent-events-format="@LidGuardNotificationText.RecentEventsFormat">
     <div class="page-heading">
         <h1>@LidGuardNotificationText.WebhookEventsHeading</h1>
-        <span class="muted">@LidGuardNotificationText.RecentEvents(Model.Events.Count)</span>
+        <span class="muted" data-recent-events-count>@LidGuardNotificationText.RecentEvents(Model.EventPage.Events.Count)</span>
     </div>
     @if (!string.IsNullOrWhiteSpace(Model.EventMessage))
     {
         <p class="muted">@Model.EventMessage</p>
     }
-    @if (Model.Events.Count == 0)
+    @if (Model.EventPage.Events.Count == 0)
     {
         <p class="muted">@LidGuardNotificationText.NoEventsRecorded</p>
     }
     else
     {
-        <div class="event-list">
-            @foreach (var webhookEvent in Model.Events)
-            {
-                var receivedAtUniversalTime = webhookEvent.ReceivedAtUtc.ToUniversalTime();
-                var receivedAtDateTimeAttribute = receivedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
-                var receivedAtFallbackText = receivedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
-                var lastResponsePreview = WebhookTextPreview.Create(webhookEvent.LastResponse);
-                var statusClass = webhookEvent.Status.ToLowerInvariant();
-                var providerDisplayText = string.Empty;
-                if (!string.IsNullOrWhiteSpace(webhookEvent.Provider) && !string.IsNullOrWhiteSpace(webhookEvent.ProviderName)) providerDisplayText = $"{webhookEvent.Provider}:{webhookEvent.ProviderName}";
-                else if (!string.IsNullOrWhiteSpace(webhookEvent.Provider)) providerDisplayText = webhookEvent.Provider;
-                else if (!string.IsNullOrWhiteSpace(webhookEvent.ProviderName)) providerDisplayText = webhookEvent.ProviderName;
-                var followUpAnchorIdentifier = string.IsNullOrWhiteSpace(webhookEvent.StopFollowUpPublicIdentifier)
-                    ? $"event-{webhookEvent.WebhookEventIdentifier}"
-                    : $"followup-{webhookEvent.StopFollowUpPublicIdentifier}";
-                var isStopFollowUpEvent = webhookEvent.EventType == LidGuardWebhookEventTypes.StopFollowUp;
-
-                <article class="event-card" id="@followUpAnchorIdentifier">
-                    <div class="event-card-header">
-                        <div>
-                            <div class="event-title-row">
-                                <span class="event-type" title="@webhookEvent.EventType">@LidGuardNotificationText.DisplayWebhookEventType(webhookEvent.EventType)</span>
-                                <span class="reason-badge" title="@webhookEvent.Reason">@LidGuardNotificationText.DisplayWebhookReason(webhookEvent.Reason)</span>
-                                @if (webhookEvent.SoftLockedSessionCount is not null)
-                                {
-                                    <span class="reason-badge secondary">@LidGuardNotificationText.SoftLockedSessionCount(webhookEvent.SoftLockedSessionCount.Value)</span>
-                                }
-                                @if (!string.IsNullOrWhiteSpace(webhookEvent.StopFollowUpStatus))
-                                {
-                                    <span class="reason-badge secondary">@LidGuardNotificationText.DisplayStopFollowUpStatus(webhookEvent.StopFollowUpStatus)</span>
-                                }
-                            </div>
-                            <div class="event-meta">
-                                <time datetime="@receivedAtDateTimeAttribute" data-device-time="true">@receivedAtFallbackText</time>
-                                @if (!string.IsNullOrWhiteSpace(providerDisplayText))
-                                {
-                                    <span>@providerDisplayText</span>
-                                }
-                                @if (!string.IsNullOrWhiteSpace(webhookEvent.SessionIdentifier))
-                                {
-                                    <span>@webhookEvent.SessionIdentifier</span>
-                                }
-                            </div>
-                        </div>
-                        <span class="status-pill status-@statusClass" title="@webhookEvent.Status">@LidGuardNotificationText.DisplayWebhookStatus(webhookEvent.Status)</span>
-                    </div>
-
-                    <div class="event-preview-grid">
-                        <section class="event-preview-block">
-                            <span class="preview-label">@LidGuardNotificationText.StartingPromptLabel</span>
-                            @if (string.IsNullOrWhiteSpace(webhookEvent.InputPromptPreview))
-                            {
-                                <p class="muted">@LidGuardNotificationText.NoPromptCaptured</p>
-                            }
-                            else
-                            {
-                                <p>@webhookEvent.InputPromptPreview</p>
-                            }
-                        </section>
-                        <section class="event-preview-block">
-                            <span class="preview-label">@LidGuardNotificationText.LastResponseLabel</span>
-                            @if (string.IsNullOrWhiteSpace(lastResponsePreview))
-                            {
-                                <p class="muted">@LidGuardNotificationText.NoResponseCaptured</p>
-                            }
-                            else
-                            {
-                                <p>@lastResponsePreview</p>
-                            }
-                        </section>
-                        @if (isStopFollowUpEvent)
-                        {
-                            <section class="event-preview-block">
-                                <span class="preview-label">@LidGuardNotificationText.StopFollowUpSectionLabel</span>
-                                @if (string.Equals(webhookEvent.StopFollowUpStatus, StopFollowUpRequestStatuses.Pending, StringComparison.Ordinal))
-                                {
-                                    <p>@LidGuardNotificationText.StopFollowUpReplyHelp</p>
-                                }
-                                else if (!string.IsNullOrWhiteSpace(webhookEvent.StopFollowUpReplyText))
-                                {
-                                    <p>@webhookEvent.StopFollowUpReplyText</p>
-                                }
-                                else
-                                {
-                                    <p class="muted">@LidGuardNotificationText.DisplayStopFollowUpStatus(webhookEvent.StopFollowUpStatus ?? string.Empty)</p>
-                                }
-                            </section>
-                        }
-                    </div>
-
-                    @if (isStopFollowUpEvent)
-                    {
-                        <section class="event-preview-block">
-                            <span class="preview-label">@LidGuardNotificationText.StopFollowUpStatusLabel</span>
-                            <p>@LidGuardNotificationText.DisplayStopFollowUpStatus(webhookEvent.StopFollowUpStatus ?? string.Empty)</p>
-                            @if (webhookEvent.ReplyDeadlineUtc is not null)
-                            {
-                                var replyDeadlineUniversalTime = webhookEvent.ReplyDeadlineUtc.Value.ToUniversalTime();
-                                var replyDeadlineDateTimeAttribute = replyDeadlineUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
-                                var replyDeadlineFallbackText = replyDeadlineUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
-                                <p><span class="preview-label">@LidGuardNotificationText.StopFollowUpDeadlineLabel</span> <time datetime="@replyDeadlineDateTimeAttribute" data-device-time="true">@replyDeadlineFallbackText</time></p>
-                            }
-                            @if (string.Equals(webhookEvent.StopFollowUpStatus, StopFollowUpRequestStatuses.Pending, StringComparison.Ordinal)
-                                && !string.IsNullOrWhiteSpace(webhookEvent.StopFollowUpPublicIdentifier))
-                            {
-                                <form method="post" asp-page-handler="Reply" class="event-disclosure">
-                                    <input type="hidden" name="publicIdentifier" value="@webhookEvent.StopFollowUpPublicIdentifier" />
-                                    <label class="preview-label" for="reply-@webhookEvent.StopFollowUpPublicIdentifier">@LidGuardNotificationText.StopFollowUpReplyLabel</label>
-                                    <textarea
-                                        id="reply-@webhookEvent.StopFollowUpPublicIdentifier"
-                                        name="reply"
-                                        rows="4"
-                                        placeholder="@LidGuardNotificationText.StopFollowUpReplyPlaceholder"></textarea>
-                                    <div>
-                                        <button type="submit">@LidGuardNotificationText.StopFollowUpReplyButton</button>
-                                    </div>
-                                </form>
-                                <form method="post" asp-page-handler="Cancel" class="event-disclosure">
-                                    <input type="hidden" name="publicIdentifier" value="@webhookEvent.StopFollowUpPublicIdentifier" />
-                                    <p class="muted">@LidGuardNotificationText.StopFollowUpCancelHelp</p>
-                                    <button type="submit" class="danger">@LidGuardNotificationText.StopFollowUpCancelButton</button>
-                                </form>
-                            }
-                        </section>
-                    }
-
-                    <details class="event-disclosure">
-                        <summary>@LidGuardNotificationText.DetailsLabel</summary>
-                        <div class="event-detail-grid">
-                            <div class="detail-item">
-                                <span>@LidGuardNotificationText.WebhookIdLabel</span>
-                                <strong>@webhookEvent.WebhookEventIdentifier</strong>
-                            </div>
-                            <div class="detail-item">
-                                <span>@LidGuardNotificationText.DeliveriesLabel</span>
-                                <strong>@LidGuardNotificationText.DeliverySummary(webhookEvent.SuccessCount, webhookEvent.PermanentFailureCount, webhookEvent.TransientFailureCount)</strong>
-                            </div>
-                            <div class="detail-item">
-                                <span>@LidGuardNotificationText.AttemptsLabel</span>
-                                <strong>@webhookEvent.AttemptCount.ToString(CultureInfo.CurrentCulture)</strong>
-                            </div>
-                            <div class="detail-item">
-                                <span>@LidGuardNotificationText.ActiveSessionsLabel</span>
-                                <strong>@(webhookEvent.ActiveSessionCount?.ToString(CultureInfo.CurrentCulture) ?? "-")</strong>
-                            </div>
-                            <div class="detail-item">
-                                <span>@LidGuardNotificationText.UserInterfaceCultureLabel</span>
-                                <strong>@(webhookEvent.UserInterfaceCulture ?? "-")</strong>
-                            </div>
-                            <div class="detail-item">
-                                <span>@LidGuardNotificationText.EndReasonLabel</span>
-                                <strong>@(webhookEvent.EndReason ?? "-")</strong>
-                            </div>
-                            <div class="detail-item detail-item-wide">
-                                <span>@LidGuardNotificationText.LastErrorLabel</span>
-                                <strong>@(webhookEvent.LastError ?? "-")</strong>
-                            </div>
-                            @if (webhookEvent.StopFollowUpRepliedAtUtc is not null)
-                            {
-                                var repliedAtUniversalTime = webhookEvent.StopFollowUpRepliedAtUtc.Value.ToUniversalTime();
-                                var repliedAtDateTimeAttribute = repliedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
-                                var repliedAtFallbackText = repliedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
-                                <div class="detail-item">
-                                    <span>@LidGuardNotificationText.StopFollowUpReplySentAtLabel</span>
-                                    <strong><time datetime="@repliedAtDateTimeAttribute" data-device-time="true">@repliedAtFallbackText</time></strong>
-                                </div>
-                            }
-                            @if (webhookEvent.StartedAtUtc is not null)
-                            {
-                                var startedAtUniversalTime = webhookEvent.StartedAtUtc.Value.ToUniversalTime();
-                                var startedAtDateTimeAttribute = startedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
-                                var startedAtFallbackText = startedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
-                                <div class="detail-item">
-                                    <span>@LidGuardNotificationText.StartedLabel</span>
-                                    <strong><time datetime="@startedAtDateTimeAttribute" data-device-time="true">@startedAtFallbackText</time></strong>
-                                </div>
-                            }
-                            @if (webhookEvent.LastActivityAtUtc is not null)
-                            {
-                                var lastActivityAtUniversalTime = webhookEvent.LastActivityAtUtc.Value.ToUniversalTime();
-                                var lastActivityAtDateTimeAttribute = lastActivityAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
-                                var lastActivityAtFallbackText = lastActivityAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
-                                <div class="detail-item">
-                                    <span>@LidGuardNotificationText.LastActivityLabel</span>
-                                    <strong><time datetime="@lastActivityAtDateTimeAttribute" data-device-time="true">@lastActivityAtFallbackText</time></strong>
-                                </div>
-                            }
-                            @if (webhookEvent.EndedAtUtc is not null)
-                            {
-                                var endedAtUniversalTime = webhookEvent.EndedAtUtc.Value.ToUniversalTime();
-                                var endedAtDateTimeAttribute = endedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
-                                var endedAtFallbackText = endedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
-                                <div class="detail-item">
-                                    <span>@LidGuardNotificationText.EndedLabel</span>
-                                    <strong><time datetime="@endedAtDateTimeAttribute" data-device-time="true">@endedAtFallbackText</time></strong>
-                                </div>
-                            }
-                            @if (webhookEvent.ProcessedAtUtc is not null)
-                            {
-                                var processedAtUniversalTime = webhookEvent.ProcessedAtUtc.Value.ToUniversalTime();
-                                var processedAtDateTimeAttribute = processedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
-                                var processedAtFallbackText = processedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
-                                <div class="detail-item">
-                                    <span>@LidGuardNotificationText.ProcessedLabel</span>
-                                    <strong><time datetime="@processedAtDateTimeAttribute" data-device-time="true">@processedAtFallbackText</time></strong>
-                                </div>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(webhookEvent.WorkingDirectory))
-                            {
-                                <div class="detail-item detail-item-wide">
-                                    <span>@LidGuardNotificationText.WorkingDirectoryLabel</span>
-                                    <strong>@webhookEvent.WorkingDirectory</strong>
-                                </div>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(webhookEvent.TranscriptPath))
-                            {
-                                <div class="detail-item detail-item-wide">
-                                    <span>@LidGuardNotificationText.TranscriptLabel</span>
-                                    <strong>@webhookEvent.TranscriptPath</strong>
-                                </div>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(webhookEvent.LastResponse))
-                            {
-                                <div class="detail-item detail-item-wide">
-                                    <span>@LidGuardNotificationText.FullLastResponseLabel</span>
-                                    <pre class="response-body">@webhookEvent.LastResponse</pre>
-                                </div>
-                            }
-                        </div>
-                    </details>
-                </article>
-            }
+        <div class="event-list" data-event-list>
+            <partial name="_WebhookEventCardList" model="Model.EventPage" />
+        </div>
+        <div class="load-more-row">
+            <button type="button" class="secondary load-more-events" data-load-more-events data-before-webhook-event-identifier="@nextBeforeWebhookEventIdentifier" hidden="@(!Model.EventPage.HasMore)">@LidGuardNotificationText.EventsLoadMore</button>
+            <p class="muted event-load-error" data-events-error hidden></p>
         </div>
     }
 </section>
 
 <script src="~/local-time.js" asp-append-version="true"></script>
+<script src="~/events.js" asp-append-version="true"></script>

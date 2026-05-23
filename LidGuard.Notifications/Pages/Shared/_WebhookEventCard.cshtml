@@ -1,0 +1,130 @@
+@model WebhookEventListItem
+@{
+    var receivedAtUniversalTime = Model.ReceivedAtUtc.ToUniversalTime();
+    var receivedAtDateTimeAttribute = receivedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+    var receivedAtFallbackText = receivedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+    var statusClass = Model.Status.ToLowerInvariant();
+    var providerDisplayText = string.Empty;
+    if (!string.IsNullOrWhiteSpace(Model.Provider) && !string.IsNullOrWhiteSpace(Model.ProviderName)) providerDisplayText = $"{Model.Provider}:{Model.ProviderName}";
+    else if (!string.IsNullOrWhiteSpace(Model.Provider)) providerDisplayText = Model.Provider;
+    else if (!string.IsNullOrWhiteSpace(Model.ProviderName)) providerDisplayText = Model.ProviderName;
+    var followUpAnchorIdentifier = string.IsNullOrWhiteSpace(Model.StopFollowUpPublicIdentifier)
+        ? $"event-{Model.WebhookEventIdentifier}"
+        : $"followup-{Model.StopFollowUpPublicIdentifier}";
+    var isStopFollowUpEvent = Model.EventType == LidGuardWebhookEventTypes.StopFollowUp;
+}
+
+<article class="event-card" id="@followUpAnchorIdentifier" data-event-card data-webhook-event-identifier="@Model.WebhookEventIdentifier">
+    <div class="event-card-header">
+        <div>
+            <div class="event-title-row">
+                <span class="event-type" title="@Model.EventType">@LidGuardNotificationText.DisplayWebhookEventType(Model.EventType)</span>
+                <span class="reason-badge" title="@Model.Reason">@LidGuardNotificationText.DisplayWebhookReason(Model.Reason)</span>
+                @if (Model.SoftLockedSessionCount is not null)
+                {
+                    <span class="reason-badge secondary">@LidGuardNotificationText.SoftLockedSessionCount(Model.SoftLockedSessionCount.Value)</span>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.StopFollowUpStatus))
+                {
+                    <span class="reason-badge secondary">@LidGuardNotificationText.DisplayStopFollowUpStatus(Model.StopFollowUpStatus)</span>
+                }
+            </div>
+            <div class="event-meta">
+                <time datetime="@receivedAtDateTimeAttribute" data-device-time="true">@receivedAtFallbackText</time>
+                @if (!string.IsNullOrWhiteSpace(providerDisplayText))
+                {
+                    <span>@providerDisplayText</span>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.SessionIdentifier))
+                {
+                    <span>@Model.SessionIdentifier</span>
+                }
+            </div>
+        </div>
+        <span class="status-pill status-@statusClass" title="@Model.Status">@LidGuardNotificationText.DisplayWebhookStatus(Model.Status)</span>
+    </div>
+
+    <div class="event-preview-grid">
+        <section class="event-preview-block">
+            <span class="preview-label">@LidGuardNotificationText.StartingPromptLabel</span>
+            @if (string.IsNullOrWhiteSpace(Model.InputPromptPreview))
+            {
+                <p class="muted">@LidGuardNotificationText.NoPromptCaptured</p>
+            }
+            else
+            {
+                <p>@Model.InputPromptPreview</p>
+            }
+        </section>
+        <section class="event-preview-block">
+            <span class="preview-label">@LidGuardNotificationText.LastResponseLabel</span>
+            @if (string.IsNullOrWhiteSpace(Model.LastResponsePreview))
+            {
+                <p class="muted">@LidGuardNotificationText.NoResponseCaptured</p>
+            }
+            else
+            {
+                <p>@Model.LastResponsePreview</p>
+            }
+        </section>
+        @if (isStopFollowUpEvent)
+        {
+            <section class="event-preview-block">
+                <span class="preview-label">@LidGuardNotificationText.StopFollowUpSectionLabel</span>
+                @if (string.Equals(Model.StopFollowUpStatus, StopFollowUpRequestStatuses.Pending, StringComparison.Ordinal))
+                {
+                    <p>@LidGuardNotificationText.StopFollowUpReplyHelp</p>
+                }
+                else if (!string.IsNullOrWhiteSpace(Model.StopFollowUpReplyPreview))
+                {
+                    <p>@Model.StopFollowUpReplyPreview</p>
+                }
+                else
+                {
+                    <p class="muted">@LidGuardNotificationText.DisplayStopFollowUpStatus(Model.StopFollowUpStatus ?? string.Empty)</p>
+                }
+            </section>
+        }
+    </div>
+
+    @if (isStopFollowUpEvent)
+    {
+        <section class="event-preview-block">
+            <span class="preview-label">@LidGuardNotificationText.StopFollowUpStatusLabel</span>
+            <p>@LidGuardNotificationText.DisplayStopFollowUpStatus(Model.StopFollowUpStatus ?? string.Empty)</p>
+            @if (Model.ReplyDeadlineUtc is not null)
+            {
+                var replyDeadlineUniversalTime = Model.ReplyDeadlineUtc.Value.ToUniversalTime();
+                var replyDeadlineDateTimeAttribute = replyDeadlineUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+                var replyDeadlineFallbackText = replyDeadlineUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+                <p><span class="preview-label">@LidGuardNotificationText.StopFollowUpDeadlineLabel</span> <time datetime="@replyDeadlineDateTimeAttribute" data-device-time="true">@replyDeadlineFallbackText</time></p>
+            }
+            @if (string.Equals(Model.StopFollowUpStatus, StopFollowUpRequestStatuses.Pending, StringComparison.Ordinal)
+                && !string.IsNullOrWhiteSpace(Model.StopFollowUpPublicIdentifier))
+            {
+                <form method="post" asp-page-handler="Reply" class="event-disclosure">
+                    <input type="hidden" name="publicIdentifier" value="@Model.StopFollowUpPublicIdentifier" />
+                    <label class="preview-label" for="reply-@Model.StopFollowUpPublicIdentifier">@LidGuardNotificationText.StopFollowUpReplyLabel</label>
+                    <textarea
+                        id="reply-@Model.StopFollowUpPublicIdentifier"
+                        name="reply"
+                        rows="4"
+                        placeholder="@LidGuardNotificationText.StopFollowUpReplyPlaceholder"></textarea>
+                    <div>
+                        <button type="submit">@LidGuardNotificationText.StopFollowUpReplyButton</button>
+                    </div>
+                </form>
+                <form method="post" asp-page-handler="Cancel" class="event-disclosure">
+                    <input type="hidden" name="publicIdentifier" value="@Model.StopFollowUpPublicIdentifier" />
+                    <p class="muted">@LidGuardNotificationText.StopFollowUpCancelHelp</p>
+                    <button type="submit" class="danger">@LidGuardNotificationText.StopFollowUpCancelButton</button>
+                </form>
+            }
+        </section>
+    }
+
+    <details class="event-disclosure" data-event-details data-webhook-event-identifier="@Model.WebhookEventIdentifier">
+        <summary>@LidGuardNotificationText.DetailsLabel</summary>
+        <div class="event-details-placeholder muted" data-event-details-content></div>
+    </details>
+</article>

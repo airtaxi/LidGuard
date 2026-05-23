@@ -1,0 +1,3 @@
+namespace LidGuard.Notifications.Data;
+
+public sealed record WebhookEventDetails(long WebhookEventIdentifier, string? UserInterfaceCulture, DateTimeOffset? StartedAtUtc, DateTimeOffset? LastActivityAtUtc, DateTimeOffset? EndedAtUtc, string? EndReason, int? ActiveSessionCount, string? WorkingDirectory, string? TranscriptPath, DateTimeOffset? StopFollowUpRepliedAtUtc, DateTimeOffset? StopFollowUpConsumedAtUtc, DateTimeOffset? ProcessedAtUtc, int AttemptCount, int DeliveryCount, int SuccessCount, int PermanentFailureCount, int TransientFailureCount, string? LastError, string? LastResponse);

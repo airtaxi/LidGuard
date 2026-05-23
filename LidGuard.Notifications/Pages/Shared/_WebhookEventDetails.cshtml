@@ -1,0 +1,103 @@
+@model WebhookEventDetails
+
+<div class="event-detail-grid">
+    <div class="detail-item">
+        <span>@LidGuardNotificationText.WebhookIdLabel</span>
+        <strong>@Model.WebhookEventIdentifier</strong>
+    </div>
+    <div class="detail-item">
+        <span>@LidGuardNotificationText.DeliveriesLabel</span>
+        <strong>@LidGuardNotificationText.DeliverySummary(Model.SuccessCount, Model.PermanentFailureCount, Model.TransientFailureCount)</strong>
+    </div>
+    <div class="detail-item">
+        <span>@LidGuardNotificationText.AttemptsLabel</span>
+        <strong>@Model.AttemptCount.ToString(CultureInfo.CurrentCulture)</strong>
+    </div>
+    <div class="detail-item">
+        <span>@LidGuardNotificationText.ActiveSessionsLabel</span>
+        <strong>@(Model.ActiveSessionCount?.ToString(CultureInfo.CurrentCulture) ?? "-")</strong>
+    </div>
+    <div class="detail-item">
+        <span>@LidGuardNotificationText.UserInterfaceCultureLabel</span>
+        <strong>@(Model.UserInterfaceCulture ?? "-")</strong>
+    </div>
+    <div class="detail-item">
+        <span>@LidGuardNotificationText.EndReasonLabel</span>
+        <strong>@(Model.EndReason ?? "-")</strong>
+    </div>
+    <div class="detail-item detail-item-wide">
+        <span>@LidGuardNotificationText.LastErrorLabel</span>
+        <strong>@(Model.LastError ?? "-")</strong>
+    </div>
+    @if (Model.StopFollowUpRepliedAtUtc is not null)
+    {
+        var repliedAtUniversalTime = Model.StopFollowUpRepliedAtUtc.Value.ToUniversalTime();
+        var repliedAtDateTimeAttribute = repliedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+        var repliedAtFallbackText = repliedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+        <div class="detail-item">
+            <span>@LidGuardNotificationText.StopFollowUpReplySentAtLabel</span>
+            <strong><time datetime="@repliedAtDateTimeAttribute" data-device-time="true">@repliedAtFallbackText</time></strong>
+        </div>
+    }
+    @if (Model.StartedAtUtc is not null)
+    {
+        var startedAtUniversalTime = Model.StartedAtUtc.Value.ToUniversalTime();
+        var startedAtDateTimeAttribute = startedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+        var startedAtFallbackText = startedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+        <div class="detail-item">
+            <span>@LidGuardNotificationText.StartedLabel</span>
+            <strong><time datetime="@startedAtDateTimeAttribute" data-device-time="true">@startedAtFallbackText</time></strong>
+        </div>
+    }
+    @if (Model.LastActivityAtUtc is not null)
+    {
+        var lastActivityAtUniversalTime = Model.LastActivityAtUtc.Value.ToUniversalTime();
+        var lastActivityAtDateTimeAttribute = lastActivityAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+        var lastActivityAtFallbackText = lastActivityAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+        <div class="detail-item">
+            <span>@LidGuardNotificationText.LastActivityLabel</span>
+            <strong><time datetime="@lastActivityAtDateTimeAttribute" data-device-time="true">@lastActivityAtFallbackText</time></strong>
+        </div>
+    }
+    @if (Model.EndedAtUtc is not null)
+    {
+        var endedAtUniversalTime = Model.EndedAtUtc.Value.ToUniversalTime();
+        var endedAtDateTimeAttribute = endedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+        var endedAtFallbackText = endedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+        <div class="detail-item">
+            <span>@LidGuardNotificationText.EndedLabel</span>
+            <strong><time datetime="@endedAtDateTimeAttribute" data-device-time="true">@endedAtFallbackText</time></strong>
+        </div>
+    }
+    @if (Model.ProcessedAtUtc is not null)
+    {
+        var processedAtUniversalTime = Model.ProcessedAtUtc.Value.ToUniversalTime();
+        var processedAtDateTimeAttribute = processedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+        var processedAtFallbackText = processedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+        <div class="detail-item">
+            <span>@LidGuardNotificationText.ProcessedLabel</span>
+            <strong><time datetime="@processedAtDateTimeAttribute" data-device-time="true">@processedAtFallbackText</time></strong>
+        </div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.WorkingDirectory))
+    {
+        <div class="detail-item detail-item-wide">
+            <span>@LidGuardNotificationText.WorkingDirectoryLabel</span>
+            <strong>@Model.WorkingDirectory</strong>
+        </div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.TranscriptPath))
+    {
+        <div class="detail-item detail-item-wide">
+            <span>@LidGuardNotificationText.TranscriptLabel</span>
+            <strong>@Model.TranscriptPath</strong>
+        </div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.LastResponse))
+    {
+        <div class="detail-item detail-item-wide">
+            <span>@LidGuardNotificationText.FullLastResponseLabel</span>
+            <pre class="response-body">@Model.LastResponse</pre>
+        </div>
+    }
+</div>

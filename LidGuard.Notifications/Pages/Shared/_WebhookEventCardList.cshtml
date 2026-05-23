@@ -1,0 +1,7 @@
+@model WebhookEventListPage
+
+@foreach (var webhookEvent in Model.Events)
+{
+    <partial name="_WebhookEventCard" model="webhookEvent" />
+}
+<span hidden data-event-page-state data-has-more="@Model.HasMore.ToString().ToLowerInvariant()" data-next-before-webhook-event-identifier="@(Model.NextBeforeWebhookEventIdentifier?.ToString(CultureInfo.InvariantCulture) ?? string.Empty)"></span>

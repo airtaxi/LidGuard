@@ -360,4 +360,16 @@
   <data name="PushTitleStopFollowUp" xml:space="preserve">
     <value>절전 전에 답장이 필요합니다</value>
   </data>
+  <data name="EventDetailsLoadFailed" xml:space="preserve">
+    <value>이벤트 세부 정보를 불러오지 못했습니다.</value>
+  </data>
+  <data name="EventsLoadFailed" xml:space="preserve">
+    <value>이벤트를 더 불러오지 못했습니다.</value>
+  </data>
+  <data name="EventsLoadMore" xml:space="preserve">
+    <value>더 보기</value>
+  </data>
+  <data name="EventsLoading" xml:space="preserve">
+    <value>불러오는 중...</value>
+  </data>
 </root>

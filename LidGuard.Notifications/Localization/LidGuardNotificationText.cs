@@ -36,6 +36,10 @@ internal static class LidGuardNotificationText
     public static string DetailsLabel => Get(nameof(DetailsLabel));
     public static string EndReasonLabel => Get(nameof(EndReasonLabel));
     public static string EndedLabel => Get(nameof(EndedLabel));
+    public static string EventDetailsLoadFailed => Get(nameof(EventDetailsLoadFailed));
+    public static string EventsLoadFailed => Get(nameof(EventsLoadFailed));
+    public static string EventsLoadMore => Get(nameof(EventsLoadMore));
+    public static string EventsLoading => Get(nameof(EventsLoading));
     public static string EventsTitle => Get(nameof(EventsTitle));
     public static string FullLastResponseLabel => Get(nameof(FullLastResponseLabel));
     public static string InvalidAccessToken => Get(nameof(InvalidAccessToken));
@@ -91,6 +95,8 @@ internal static class LidGuardNotificationText
     public static string WebhookEventsHeading => Get(nameof(WebhookEventsHeading));
     public static string WebhookIdLabel => Get(nameof(WebhookIdLabel));
     public static string WorkingDirectoryLabel => Get(nameof(WorkingDirectoryLabel));
+
+    public static string RecentEventsFormat => Get(nameof(RecentEvents));
 
     public static string DeliverySummary(int successCount, int permanentFailureCount, int transientFailureCount)
         => Format(nameof(DeliverySummary), successCount, permanentFailureCount, transientFailureCount);

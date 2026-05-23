@@ -413,66 +413,117 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         };
     }
 
-    public async Task<IReadOnlyList<WebhookEventSummary>> ListRecentAsync(int limit, CancellationToken cancellationToken)
+    public async Task<WebhookEventListPage> ListRecentPageAsync(int pageSize, long? beforeWebhookEventIdentifier, CancellationToken cancellationToken)
     {
-        var events = new List<WebhookEventSummary>();
+        var normalizedPageSize = Math.Clamp(pageSize, 1, 100);
+        var fetchLimit = normalizedPageSize + 1;
+        var events = new List<WebhookEventListItem>();
+        await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+        using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            WITH SelectedEvents AS (
+                SELECT Id
+                FROM WebhookEvents
+                WHERE $beforeWebhookEventIdentifier IS NULL
+                    OR Id < $beforeWebhookEventIdentifier
+                ORDER BY Id DESC
+                LIMIT $fetchLimit
+            )
+            SELECT
+                events.Id,
+                events.EventType,
+                events.Reason,
+                events.SoftLockedSessionCount,
+                events.Provider,
+                events.ProviderName,
+                events.SessionIdentifier,
+                events.ReplyDeadlineUtc,
+                SUBSTR(events.InputPromptPreview, 1, $previewCharacterLimit),
+                SUBSTR(events.LastResponse, 1, $previewCharacterLimit),
+                followUps.PublicIdentifier,
+                followUps.Status,
+                SUBSTR(followUps.ReplyText, 1, $previewCharacterLimit),
+                events.ReceivedAtUtc,
+                events.Status
+            FROM SelectedEvents selectedEvents
+            JOIN WebhookEvents events ON events.Id = selectedEvents.Id
+            LEFT JOIN StopFollowUpRequests followUps ON followUps.WebhookEventId = events.Id
+            ORDER BY events.Id DESC;
+            """;
+        command.Parameters.AddWithValue("$beforeWebhookEventIdentifier", beforeWebhookEventIdentifier.HasValue ? beforeWebhookEventIdentifier.Value : (object)DBNull.Value);
+        command.Parameters.AddWithValue("$fetchLimit", fetchLimit);
+        command.Parameters.AddWithValue("$previewCharacterLimit", 240);
+        using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            events.Add(new WebhookEventListItem(reader.GetInt64(0), reader.GetString(1), reader.GetString(2), GetNullableInt32(reader, 3), GetNullableString(reader, 4), GetNullableString(reader, 5), GetNullableString(reader, 6), WebhookTextPreview.Create(GetNullableString(reader, 8)), WebhookTextPreview.Create(GetNullableString(reader, 9)), GetNullableTimestamp(reader, 7), GetNullableString(reader, 10), GetNullableString(reader, 11), WebhookTextPreview.Create(GetNullableString(reader, 12)), GetTimestamp(reader, 13), reader.GetString(14)));
+        }
+
+        var hasMore = events.Count > normalizedPageSize;
+        if (hasMore) events.RemoveAt(events.Count - 1);
+
+        var nextBeforeWebhookEventIdentifier = hasMore && events.Count > 0 ? events[^1].WebhookEventIdentifier : (long?)null;
+        return new WebhookEventListPage(events, hasMore, nextBeforeWebhookEventIdentifier);
+    }
+
+    public async Task<WebhookEventDetails?> GetDetailsAsync(long webhookEventIdentifier, CancellationToken cancellationToken)
+    {
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
         using var command = connection.CreateCommand();
         command.CommandText =
             """
             SELECT
                 events.Id,
-                events.EventType,
-                events.Reason,
                 events.UserInterfaceCulture,
-                events.SoftLockedSessionCount,
-                events.Provider,
-                events.ProviderName,
-                events.SessionIdentifier,
                 events.StartedAtUtc,
                 events.LastActivityAtUtc,
                 events.EndedAtUtc,
                 events.EndReason,
                 events.ActiveSessionCount,
-                events.InputPromptPreview,
-                events.LastResponse,
-                events.ReplyWaitSeconds,
-                events.ReplyDeadlineUtc,
                 events.WorkingDirectory,
                 events.TranscriptPath,
-                followUps.PublicIdentifier,
-                followUps.Status,
-                followUps.ReplyText,
                 followUps.RepliedAtUtc,
                 followUps.ConsumedAtUtc,
-                events.ReceivedAtUtc,
                 events.ProcessedAtUtc,
-                events.Status,
                 events.AttemptCount,
                 COUNT(deliveries.Id) AS DeliveryCount,
                 COALESCE(SUM(CASE WHEN deliveries.Status = $succeededStatus THEN 1 ELSE 0 END), 0) AS SuccessCount,
                 COALESCE(SUM(CASE WHEN deliveries.Status = $permanentFailureStatus THEN 1 ELSE 0 END), 0) AS PermanentFailureCount,
                 COALESCE(SUM(CASE WHEN deliveries.Status = $transientFailureStatus THEN 1 ELSE 0 END), 0) AS TransientFailureCount,
-                events.LastError
+                events.LastError,
+                events.LastResponse
             FROM WebhookEvents events
             LEFT JOIN NotificationDeliveries deliveries ON deliveries.WebhookEventId = events.Id
             LEFT JOIN StopFollowUpRequests followUps ON followUps.WebhookEventId = events.Id
+            WHERE events.Id = $webhookEventIdentifier
             GROUP BY events.Id
-            ORDER BY events.Id DESC
-            LIMIT $limit;
+            LIMIT 1;
             """;
         command.Parameters.AddWithValue("$succeededStatus", DeliveryStatuses.Succeeded);
         command.Parameters.AddWithValue("$permanentFailureStatus", DeliveryStatuses.PermanentFailure);
         command.Parameters.AddWithValue("$transientFailureStatus", DeliveryStatuses.TransientFailure);
-        command.Parameters.AddWithValue("$limit", limit);
+        command.Parameters.AddWithValue("$webhookEventIdentifier", webhookEventIdentifier);
         using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            events.Add(new WebhookEventSummary(reader.GetInt64(0), reader.GetString(1), reader.GetString(2), reader.IsDBNull(3) ? null : reader.GetString(3), reader.IsDBNull(4) ? null : reader.GetInt32(4), reader.IsDBNull(5) ? null : reader.GetString(5), reader.IsDBNull(6) ? null : reader.GetString(6), reader.IsDBNull(7) ? null : reader.GetString(7), reader.IsDBNull(8) ? null : DateTimeOffset.Parse(reader.GetString(8), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.IsDBNull(9) ? null : DateTimeOffset.Parse(reader.GetString(9), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.IsDBNull(10) ? null : DateTimeOffset.Parse(reader.GetString(10), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.IsDBNull(11) ? null : reader.GetString(11), reader.IsDBNull(12) ? null : reader.GetInt32(12), reader.IsDBNull(13) ? null : reader.GetString(13), reader.IsDBNull(14) ? null : reader.GetString(14), reader.IsDBNull(15) ? null : reader.GetInt32(15), reader.IsDBNull(16) ? null : DateTimeOffset.Parse(reader.GetString(16), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.IsDBNull(17) ? null : reader.GetString(17), reader.IsDBNull(18) ? null : reader.GetString(18), reader.IsDBNull(19) ? null : reader.GetString(19), reader.IsDBNull(20) ? null : reader.GetString(20), reader.IsDBNull(21) ? null : reader.GetString(21), reader.IsDBNull(22) ? null : DateTimeOffset.Parse(reader.GetString(22), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.IsDBNull(23) ? null : DateTimeOffset.Parse(reader.GetString(23), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), DateTimeOffset.Parse(reader.GetString(24), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.IsDBNull(25) ? null : DateTimeOffset.Parse(reader.GetString(25), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), reader.GetString(26), Convert.ToInt32(reader.GetValue(27), CultureInfo.InvariantCulture), Convert.ToInt32(reader.GetValue(28), CultureInfo.InvariantCulture), Convert.ToInt32(reader.GetValue(29), CultureInfo.InvariantCulture), Convert.ToInt32(reader.GetValue(30), CultureInfo.InvariantCulture), Convert.ToInt32(reader.GetValue(31), CultureInfo.InvariantCulture), reader.IsDBNull(32) ? null : reader.GetString(32)));
-        }
+        if (!await reader.ReadAsync(cancellationToken)) return null;
 
-        return events;
+        return new WebhookEventDetails(reader.GetInt64(0), GetNullableString(reader, 1), GetNullableTimestamp(reader, 2), GetNullableTimestamp(reader, 3), GetNullableTimestamp(reader, 4), GetNullableString(reader, 5), GetNullableInt32(reader, 6), GetNullableString(reader, 7), GetNullableString(reader, 8), GetNullableTimestamp(reader, 9), GetNullableTimestamp(reader, 10), GetNullableTimestamp(reader, 11), GetInt32(reader, 12), GetInt32(reader, 13), GetInt32(reader, 14), GetInt32(reader, 15), GetInt32(reader, 16), GetNullableString(reader, 17), GetNullableString(reader, 18));
     }
+
+    private static string? GetNullableString(SqliteDataReader reader, int ordinal)
+        => reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
+
+    private static int? GetNullableInt32(SqliteDataReader reader, int ordinal)
+        => reader.IsDBNull(ordinal) ? null : reader.GetInt32(ordinal);
+
+    private static int GetInt32(SqliteDataReader reader, int ordinal)
+        => Convert.ToInt32(reader.GetValue(ordinal), CultureInfo.InvariantCulture);
+
+    private static DateTimeOffset GetTimestamp(SqliteDataReader reader, int ordinal)
+        => DateTimeOffset.Parse(reader.GetString(ordinal), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+
+    private static DateTimeOffset? GetNullableTimestamp(SqliteDataReader reader, int ordinal)
+        => reader.IsDBNull(ordinal) ? null : GetTimestamp(reader, ordinal);
 
     private static async Task ExpirePendingStopFollowUpRequestsAsync(SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
     {

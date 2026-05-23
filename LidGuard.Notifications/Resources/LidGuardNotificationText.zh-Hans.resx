@@ -360,4 +360,16 @@
   <data name="PushTitleStopFollowUp" xml:space="preserve">
     <value>睡眠前需要回复</value>
   </data>
+  <data name="EventDetailsLoadFailed" xml:space="preserve">
+    <value>无法加载事件详细信息。</value>
+  </data>
+  <data name="EventsLoadFailed" xml:space="preserve">
+    <value>无法加载更多事件。</value>
+  </data>
+  <data name="EventsLoadMore" xml:space="preserve">
+    <value>加载更多</value>
+  </data>
+  <data name="EventsLoading" xml:space="preserve">
+    <value>正在加载...</value>
+  </data>
 </root>

@@ -118,6 +118,7 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
             "CREATE INDEX IF NOT EXISTS IX_Subscriptions_IsActive ON Subscriptions(IsActive);",
             "CREATE INDEX IF NOT EXISTS IX_WebhookEvents_Status_Id ON WebhookEvents(Status, Id);",
             "CREATE INDEX IF NOT EXISTS IX_NotificationDeliveries_WebhookEventId ON NotificationDeliveries(WebhookEventId);",
+            "CREATE INDEX IF NOT EXISTS IX_NotificationDeliveries_WebhookEventId_Status ON NotificationDeliveries(WebhookEventId, Status);",
             "CREATE INDEX IF NOT EXISTS IX_StopFollowUpRequests_PublicIdentifier ON StopFollowUpRequests(PublicIdentifier);",
             "CREATE INDEX IF NOT EXISTS IX_StopFollowUpRequests_Status_DeadlineAtUtc ON StopFollowUpRequests(Status, DeadlineAtUtc);",
             "CREATE INDEX IF NOT EXISTS IX_AuthenticationRefreshTokens_TokenHash ON AuthenticationRefreshTokens(TokenHash);",

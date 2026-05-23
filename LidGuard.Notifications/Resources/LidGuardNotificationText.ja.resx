@@ -360,4 +360,16 @@
   <data name="PushTitleStopFollowUp" xml:space="preserve">
     <value>スリープ前に返信が必要です</value>
   </data>
+  <data name="EventDetailsLoadFailed" xml:space="preserve">
+    <value>イベントの詳細を読み込めませんでした。</value>
+  </data>
+  <data name="EventsLoadFailed" xml:space="preserve">
+    <value>追加のイベントを読み込めませんでした。</value>
+  </data>
+  <data name="EventsLoadMore" xml:space="preserve">
+    <value>さらに表示</value>
+  </data>
+  <data name="EventsLoading" xml:space="preserve">
+    <value>読み込み中...</value>
+  </data>
 </root>
