@@ -101,16 +101,25 @@ catch (Exception exception) { LogException(exception); }
 ## Automated Guard
 
 - For C# formatting verification or automatic cleanup of the ternary-expression, logical/null-coalescing binary-expression, and parameter-list rules above, use the Roslyn-based guard in `tools/CSharpStyleGuard`.
+- Before reporting C# work as complete, and before any commit that includes C# changes, run the guard's `--fix` mode on the relevant project paths. If repository-local restrictions prevent running `dotnet run`, state that explicitly before finishing.
 - Check files or directories with:
 
 ```powershell
 dotnet run --project C:\Users\kck41\.codex\skills\csharp-code-style\tools\CSharpStyleGuard\CSharpStyleGuard.csproj -- --check <path>
 ```
 
-- Automatically rewrite safe cases with:
+- Automatically rewrite safe cases in the current git diff with:
 
 ```powershell
 dotnet run --project C:\Users\kck41\.codex\skills\csharp-code-style\tools\CSharpStyleGuard\CSharpStyleGuard.csproj -- --fix <path>
+```
+
+- In a git repository, `--fix` rewrites only diagnostics whose spans intersect staged or unstaged git diff lines by default. Untracked C# files under the input paths are treated as fully changed.
+- If no git repository is found for the input paths, `--fix` falls back to fixing the full input paths and prints a warning in the report.
+- To run the previous full-input fix behavior intentionally, pass `--all`:
+
+```powershell
+dotnet run --project C:\Users\kck41\.codex\skills\csharp-code-style\tools\CSharpStyleGuard\CSharpStyleGuard.csproj -- --fix --all <path>
 ```
 
 - The guard intentionally allows lines over 220 characters when enforcing these single-line rules.
