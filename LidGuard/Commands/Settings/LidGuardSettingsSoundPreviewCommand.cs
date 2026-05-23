@@ -96,8 +96,8 @@ internal static class LidGuardSettingsSoundPreviewCommand
 
     private static int PreviewPostStopSuspendSound(string postStopSuspendSound, int? postStopSuspendSoundVolumeOverridePercent, IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer, ISystemAudioVolumeController systemAudioVolumeController, string successMessage)
     {
-        var playbackCoordinator = new PostStopSuspendSoundPlaybackCoordinator(postStopSuspendSoundPlayer, systemAudioVolumeController);
-        var playbackResult = playbackCoordinator.PlayAsync(postStopSuspendSound, postStopSuspendSoundVolumeOverridePercent, CancellationToken.None)
+        var playbackCoordinator = new ConfiguredSoundPlaybackCoordinator(postStopSuspendSoundPlayer, systemAudioVolumeController);
+        var playbackResult = playbackCoordinator.PlayAsync(postStopSuspendSound, postStopSuspendSoundVolumeOverridePercent, "Post-stop suspend sound", CancellationToken.None)
             .GetAwaiter()
             .GetResult();
 

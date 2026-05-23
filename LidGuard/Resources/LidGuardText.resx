@@ -153,6 +153,12 @@
   <data name="SettingsPostStopSuspendSoundVolumeOverridePercent" xml:space="preserve">
     <value>  Warning sound temporary volume percent: {0}</value>
   </data>
+  <data name="SettingsClosedLidStopFollowUpSound" xml:space="preserve">
+    <value>  Ask-before-sleep reply wait sound: {0}</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpSoundVolumeOverridePercent" xml:space="preserve">
+    <value>  Reply wait sound temporary volume percent: {0}</value>
+  </data>
   <data name="SettingsPreSuspendWebhookUrl" xml:space="preserve">
     <value>  Before sleep/hibernate webhook URL: {0}</value>
   </data>
@@ -345,6 +351,9 @@
   <data name="HelpSettingsPostStopSuspendSoundOption" xml:space="preserve">
     <value>Disable the sleep/hibernate warning sound, use one supported SystemSound name ({0}), or supply an existing playable .wav path.</value>
   </data>
+  <data name="HelpSettingsClosedLidStopFollowUpSoundOption" xml:space="preserve">
+    <value>Disable the ask-before-sleep reply wait sound, use one supported SystemSound name ({0}), or supply an existing playable .wav path.</value>
+  </data>
   <data name="SettingsNameChangeLidAction" xml:space="preserve">
     <value>Lid close action override</value>
   </data>
@@ -440,6 +449,9 @@
   </data>
   <data name="SettingsOptionPostStopSuspendSoundVolumeOverrideValidation" xml:space="preserve">
     <value>The post-stop-suspend-sound-volume-override-percent option must be off or an integer from {0} through {1}.</value>
+  </data>
+  <data name="SettingsOptionClosedLidStopFollowUpSoundVolumeOverrideValidation" xml:space="preserve">
+    <value>The closed-lid-stop-follow-up-sound-volume-override-percent option must be off or an integer from {0} through {1}.</value>
   </data>
   <data name="SettingsInteractivePromptWithDetails" xml:space="preserve">
     <value>{0} (stored: {1}, default: {2}, {3}, press Enter to keep stored): </value>
@@ -714,6 +726,9 @@
   <data name="SettingsNamePostStopSuspendSoundVolumeOverridePercent" xml:space="preserve">
     <value>Warning sound temporary volume percent</value>
   </data>
+  <data name="SettingsNameClosedLidStopFollowUpSoundVolumeOverridePercent" xml:space="preserve">
+    <value>Reply wait sound temporary volume percent</value>
+  </data>
   <data name="ManagementLabelAgentStopHook" xml:space="preserve">
     <value>AgentStop hook</value>
   </data>
@@ -743,6 +758,9 @@
   </data>
   <data name="SettingsNamePostStopSuspendSound" xml:space="preserve">
     <value>Post-stop suspend sound</value>
+  </data>
+  <data name="SettingsNameClosedLidStopFollowUpSound" xml:space="preserve">
+    <value>Ask-before-sleep reply wait sound</value>
   </data>
   <data name="SettingsNamePostStopSuspendDelaySeconds" xml:space="preserve">
     <value>Post-stop suspend delay seconds</value>
@@ -998,6 +1016,12 @@
   </data>
   <data name="Help_Settings_PostStopSuspendSoundVolumeOption" xml:space="preserve">
     <value>Disable the temporary volume change, or set the default output volume while the sleep or hibernate warning sound plays. LidGuard restores the previous volume and mute state afterward.</value>
+  </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpSoundVolumeOption" xml:space="preserve">
+    <value>Disable the temporary volume change, or set the default output volume while the ask-before-sleep reply wait sound plays. LidGuard restores the previous volume and mute state afterward.</value>
+  </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpSoundVolumeOverrideAliasOption" xml:space="preserve">
+    <value>Alias for --closed-lid-stop-follow-up-sound-volume-override-percent. If both are provided, the longer option wins.</value>
   </data>
   <data name="Help_Settings_PostStopSuspendDelayOption" xml:space="preserve">
     <value>Set the safety delay after work ends so immediately-following prompts can arrive before sleep/hibernate or reply waiting starts. Use 0 only when reply waiting is off.</value>

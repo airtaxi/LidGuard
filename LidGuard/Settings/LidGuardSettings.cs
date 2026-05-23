@@ -39,6 +39,10 @@ public sealed record LidGuardSettings
 
     public int? PostStopSuspendSoundVolumeOverridePercent { get; init; }
 
+    public string ClosedLidStopFollowUpSound { get; init; } = string.Empty;
+
+    public int? ClosedLidStopFollowUpSoundVolumeOverridePercent { get; init; }
+
     public int? SuspendHistoryEntryCount { get; init; } = DefaultSuspendHistoryEntryCount;
 
     public string PreSuspendWebhookUrl { get; init; } = string.Empty;
@@ -74,6 +78,9 @@ public sealed record LidGuardSettings
 
     public static bool IsValidPostStopSuspendSoundVolumeOverridePercent(int? postStopSuspendSoundVolumeOverridePercent)
         => postStopSuspendSoundVolumeOverridePercent is null || postStopSuspendSoundVolumeOverridePercent is >= MinimumPostStopSuspendSoundVolumeOverridePercent and <= MaximumPostStopSuspendSoundVolumeOverridePercent;
+
+    public static bool IsValidClosedLidStopFollowUpSoundVolumeOverridePercent(int? closedLidStopFollowUpSoundVolumeOverridePercent)
+        => IsValidPostStopSuspendSoundVolumeOverridePercent(closedLidStopFollowUpSoundVolumeOverridePercent);
 
     public static bool IsValidSuspendHistoryEntryCount(int? suspendHistoryEntryCount)
         => suspendHistoryEntryCount is null || suspendHistoryEntryCount >= MinimumSuspendHistoryEntryCount;
@@ -115,6 +122,8 @@ public sealed record LidGuardSettings
             PostStopSuspendDelaySeconds = Math.Max(0, settings.PostStopSuspendDelaySeconds),
             PostStopSuspendSound = string.IsNullOrWhiteSpace(settings.PostStopSuspendSound) ? string.Empty : settings.PostStopSuspendSound.Trim(),
             PostStopSuspendSoundVolumeOverridePercent = settings.PostStopSuspendSoundVolumeOverridePercent,
+            ClosedLidStopFollowUpSound = string.IsNullOrWhiteSpace(settings.ClosedLidStopFollowUpSound) ? string.Empty : settings.ClosedLidStopFollowUpSound.Trim(),
+            ClosedLidStopFollowUpSoundVolumeOverridePercent = settings.ClosedLidStopFollowUpSoundVolumeOverridePercent,
             SuspendHistoryEntryCount = suspendHistoryEntryCount,
             PreSuspendWebhookUrl = string.IsNullOrWhiteSpace(settings.PreSuspendWebhookUrl) ? string.Empty : settings.PreSuspendWebhookUrl.Trim(),
             PostSessionEndWebhookUrl = string.IsNullOrWhiteSpace(settings.PostSessionEndWebhookUrl) ? string.Empty : settings.PostSessionEndWebhookUrl.Trim(),

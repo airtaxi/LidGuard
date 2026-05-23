@@ -31,7 +31,7 @@ public sealed class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPlayer
         if (!normalizeResult.Succeeded) return LidGuardOperationResult.Failure(normalizeResult.Message);
         if (string.IsNullOrWhiteSpace(normalizeResult.Value)) return LidGuardOperationResult.Success();
 
-        if (!MacOSCommandPathResolver.TryFindExecutable("afplay", out var audioPlayerPath)) return LidGuardOperationResult.Failure("afplay was not found on PATH. LidGuard macOS post-stop suspend sounds require /usr/bin/afplay.");
+        if (!MacOSCommandPathResolver.TryFindExecutable("afplay", out var audioPlayerPath)) return LidGuardOperationResult.Failure("afplay was not found on PATH. LidGuard macOS configured sounds require /usr/bin/afplay.");
 
         var soundPath = normalizeResult.Value;
         if (TryGetCanonicalSystemSoundName(normalizeResult.Value, out var canonicalSystemSoundName))
@@ -52,13 +52,13 @@ public sealed class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPlayer
         try { fullWaveFilePath = Path.GetFullPath(configuredValue); }
         catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
         {
-            return LidGuardOperationResult<string>.Failure($"The post-stop suspend sound path is invalid: {exception.Message}");
+            return LidGuardOperationResult<string>.Failure($"The configured sound path is invalid: {exception.Message}");
         }
 
         if (!string.Equals(Path.GetExtension(fullWaveFilePath), ".wav", StringComparison.OrdinalIgnoreCase))
         {
             var supportedSystemSounds = string.Join(", ", s_systemSoundFiles.Keys.OrderBy(static key => key, StringComparer.Ordinal));
-            return LidGuardOperationResult<string>.Failure($"The post-stop suspend sound must be off, one of {supportedSystemSounds}, or a path to a .wav file.");
+            return LidGuardOperationResult<string>.Failure($"The configured sound must be off, one of {supportedSystemSounds}, or a path to a .wav file.");
         }
 
         if (Directory.Exists(fullWaveFilePath)) return LidGuardOperationResult<string>.Failure($"The configured WAV path points to a directory, not a file: {fullWaveFilePath}");

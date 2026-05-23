@@ -171,6 +171,28 @@ internal static class LidGuardSettingsValueParser
         return false;
     }
 
+    public static bool TryParseClosedLidStopFollowUpSoundVolumeOverridePercentOption(IReadOnlyDictionary<string, string> options, int? defaultValue, out int? closedLidStopFollowUpSoundVolumeOverridePercent, out string message)
+    {
+        closedLidStopFollowUpSoundVolumeOverridePercent = defaultValue;
+        message = string.Empty;
+        if (!CommandOptionReader.TryGetOption(options, out var closedLidStopFollowUpSoundVolumeOverridePercentText, "closed-lid-stop-follow-up-sound-volume-override-percent", "override")) return true;
+
+        if (string.IsNullOrWhiteSpace(closedLidStopFollowUpSoundVolumeOverridePercentText) || closedLidStopFollowUpSoundVolumeOverridePercentText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
+        {
+            closedLidStopFollowUpSoundVolumeOverridePercent = null;
+            return true;
+        }
+
+        if (int.TryParse(closedLidStopFollowUpSoundVolumeOverridePercentText.Trim(), out var parsedValue) && LidGuardSettings.IsValidClosedLidStopFollowUpSoundVolumeOverridePercent(parsedValue))
+        {
+            closedLidStopFollowUpSoundVolumeOverridePercent = parsedValue;
+            return true;
+        }
+
+        message = LocalizationService.GetFormattedString("SettingsOptionClosedLidStopFollowUpSoundVolumeOverrideValidation", LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent, LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent);
+        return false;
+    }
+
     public static bool TryParseSuspendHistoryEntryCountOption(IReadOnlyDictionary<string, string> options, int? defaultValue, out int? suspendHistoryEntryCount, out string message)
     {
         suspendHistoryEntryCount = defaultValue;

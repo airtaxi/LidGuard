@@ -46,12 +46,13 @@ internal static class LidGuardSettingsCommandLineFactory
         if (!LidGuardSettingsValueParser.TryParsePostStopSuspendDelaySecondsOption(options, baseSettings.PostStopSuspendDelaySeconds, out var postStopSuspendDelaySeconds, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParseClosedLidStopFollowUpDelaySecondsOption(options, baseSettings.ClosedLidStopFollowUpDelaySeconds, out var closedLidStopFollowUpDelaySeconds, out message))
             return false;
-        if (!LidGuardSettingsValueParser.TryParsePostStopSuspendSoundVolumeOverridePercentOption(options, baseSettings.PostStopSuspendSoundVolumeOverridePercent, out var postStopSuspendSoundVolumeOverridePercent, out message))
-            return false;
-        if (!LidGuardSettingsValueParser.TryParseSuspendHistoryEntryCountOption(options, baseSettings.SuspendHistoryEntryCount, out var suspendHistoryEntryCount, out message))
-            return false;
+        if (!LidGuardSettingsValueParser.TryParsePostStopSuspendSoundVolumeOverridePercentOption(options, baseSettings.PostStopSuspendSoundVolumeOverridePercent, out var postStopSuspendSoundVolumeOverridePercent, out message)) return false;
+        if (!LidGuardSettingsValueParser.TryParseClosedLidStopFollowUpSoundVolumeOverridePercentOption(options, baseSettings.ClosedLidStopFollowUpSoundVolumeOverridePercent, out var closedLidStopFollowUpSoundVolumeOverridePercent, out message)) return false;
+        if (!LidGuardSettingsValueParser.TryParseSuspendHistoryEntryCountOption(options, baseSettings.SuspendHistoryEntryCount, out var suspendHistoryEntryCount, out message)) return false;
         var postStopSuspendSound = baseSettings.PostStopSuspendSound;
         if (CommandOptionReader.TryGetOption(options, out var postStopSuspendSoundText, "post-stop-suspend-sound")) postStopSuspendSound = postStopSuspendSoundText;
+        var closedLidStopFollowUpSound = baseSettings.ClosedLidStopFollowUpSound;
+        if (CommandOptionReader.TryGetOption(options, out var closedLidStopFollowUpSoundText, "closed-lid-stop-follow-up-sound")) closedLidStopFollowUpSound = closedLidStopFollowUpSoundText;
         if (!LidGuardSettingsValueParser.TryParsePreSuspendWebhookUrlOption(options, baseSettings.PreSuspendWebhookUrl, out var preSuspendWebhookUrl, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParsePostSessionEndWebhookUrlOption(options, baseSettings.PostSessionEndWebhookUrl, out var postSessionEndWebhookUrl, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParseClosedLidStopFollowUpWebhookUrlOption(options, baseSettings.ClosedLidStopFollowUpWebhookUrl, out var closedLidStopFollowUpWebhookUrl, out message)) return false;
@@ -76,6 +77,8 @@ internal static class LidGuardSettingsCommandLineFactory
             PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
             PostStopSuspendSound = postStopSuspendSound,
             PostStopSuspendSoundVolumeOverridePercent = postStopSuspendSoundVolumeOverridePercent,
+            ClosedLidStopFollowUpSound = closedLidStopFollowUpSound,
+            ClosedLidStopFollowUpSoundVolumeOverridePercent = closedLidStopFollowUpSoundVolumeOverridePercent,
             SuspendHistoryEntryCount = suspendHistoryEntryCount,
             PreSuspendWebhookUrl = preSuspendWebhookUrl,
             PostSessionEndWebhookUrl = postSessionEndWebhookUrl,

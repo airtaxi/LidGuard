@@ -48,8 +48,8 @@ internal static class LidGuardSettingsStore
     {
         var settingsFilePath = GetDefaultSettingsFilePath();
         var normalizedSettings = LidGuardSettings.Normalize(settings);
-        if (!PostStopSuspendSoundConfiguration.TryValidateVolumeOverridePercent(normalizedSettings.PostStopSuspendSoundVolumeOverridePercent, out message))
-            return false;
+        if (!PostStopSuspendSoundConfiguration.TryValidateVolumeOverridePercent(normalizedSettings.PostStopSuspendSoundVolumeOverridePercent, out message)) return false;
+        if (!PostStopSuspendSoundConfiguration.TryValidateClosedLidStopFollowUpVolumeOverridePercent(normalizedSettings.ClosedLidStopFollowUpSoundVolumeOverridePercent, out message)) return false;
         if (!SuspendHistoryConfiguration.TryValidateEntryCount(normalizedSettings.SuspendHistoryEntryCount, out message)) return false;
         if (!SessionTimeoutConfiguration.TryValidateMinutes(normalizedSettings.SessionTimeoutMinutes, out message)) return false;
         if (!ServerRuntimeCleanupConfiguration.TryValidateDelayMinutes(normalizedSettings.ServerRuntimeCleanupDelayMinutes, out message)) return false;
@@ -92,4 +92,3 @@ internal static class LidGuardSettingsStore
     }
 
 }
-

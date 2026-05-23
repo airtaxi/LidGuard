@@ -25,7 +25,7 @@ internal sealed class LidGuardRuntimeCoordinator
     private static readonly TimeSpan s_stopFollowUpWebhookTimeout = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan s_stopFollowUpPollInterval = TimeSpan.FromSeconds(1);
     private readonly IProcessExitWatcher _processExitWatcher;
-    private readonly PostStopSuspendSoundPlaybackCoordinator _postStopSuspendSoundPlaybackCoordinator;
+    private readonly ConfiguredSoundPlaybackCoordinator _soundPlaybackCoordinator;
     private readonly ISystemSuspendService _systemSuspendService;
     private readonly ILidStateSource _lidStateSource;
     private readonly IVisibleDisplayMonitorCountProvider _visibleDisplayMonitorCountProvider;
@@ -53,7 +53,7 @@ internal sealed class LidGuardRuntimeCoordinator
     public LidGuardRuntimeCoordinator(LidGuardSettings initialSettings, IPowerRequestService powerRequestService, IProcessExitWatcher processExitWatcher, LidActionPolicyController lidActionPolicyController, ISystemSuspendService systemSuspendService, IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer, ISystemAudioVolumeController systemAudioVolumeController, ILidStateSource lidStateSource, IVisibleDisplayMonitorCountProvider visibleDisplayMonitorCountProvider, Action requestRuntimeStop = null)
     {
         _processExitWatcher = processExitWatcher;
-        _postStopSuspendSoundPlaybackCoordinator = new PostStopSuspendSoundPlaybackCoordinator(postStopSuspendSoundPlayer, systemAudioVolumeController);
+        _soundPlaybackCoordinator = new ConfiguredSoundPlaybackCoordinator(postStopSuspendSoundPlayer, systemAudioVolumeController);
         _systemSuspendService = systemSuspendService;
         _lidStateSource = lidStateSource;
         _visibleDisplayMonitorCountProvider = visibleDisplayMonitorCountProvider;
@@ -444,6 +444,13 @@ internal sealed class LidGuardRuntimeCoordinator
         {
             var message =
                 $"Post-stop suspend sound volume override percent must be an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.";
+            return LidGuardOperationResult.Failure(message);
+        }
+
+        if (!LidGuardSettings.IsValidClosedLidStopFollowUpSoundVolumeOverridePercent(settings.ClosedLidStopFollowUpSoundVolumeOverridePercent))
+        {
+            var message =
+                $"Closed-lid stop follow-up sound volume override percent must be an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.";
             return LidGuardOperationResult.Failure(message);
         }
 
@@ -980,12 +987,16 @@ internal sealed class LidGuardRuntimeCoordinator
             }
 
             string userInterfaceCulture;
+            string closedLidStopFollowUpSound;
+            int? closedLidStopFollowUpSoundVolumeOverridePercent;
             DateTimeOffset replyDeadlineUtc;
             await _gate.WaitAsync(followUpCancellationTokenSource.Token);
             try
             {
                 _pendingStopFollowUpStatus = StopFollowUpStatuses.AwaitingReply;
                 userInterfaceCulture = LidGuardCulture.ResolveEffectiveCultureName(_settings);
+                closedLidStopFollowUpSound = _settings.ClosedLidStopFollowUpSound;
+                closedLidStopFollowUpSoundVolumeOverridePercent = _settings.ClosedLidStopFollowUpSoundVolumeOverridePercent;
                 replyDeadlineUtc = DateTimeOffset.UtcNow.AddSeconds(stopFollowUpAwaitContext.ReplyWaitSeconds);
             }
             finally
@@ -1010,6 +1021,8 @@ internal sealed class LidGuardRuntimeCoordinator
             }
 
             if (startResult.Value.ExpiresAtUtc < replyDeadlineUtc) replyDeadlineUtc = startResult.Value.ExpiresAtUtc;
+
+            await PlayClosedLidStopFollowUpSoundAsync(stopFollowUpAwaitContext.PendingSuspendContext, stopFollowUpAwaitContext.Snapshot, stopFollowUpAwaitContext.EventName, closedLidStopFollowUpSound, closedLidStopFollowUpSoundVolumeOverridePercent, followUpCancellationTokenSource.Token);
 
             while (DateTimeOffset.UtcNow <= replyDeadlineUtc)
             {
@@ -1365,7 +1378,7 @@ internal sealed class LidGuardRuntimeCoordinator
     {
         if (string.IsNullOrWhiteSpace(postStopSuspendSound)) return;
 
-        var playbackResult = await _postStopSuspendSoundPlaybackCoordinator.PlayAsync(postStopSuspendSound, postStopSuspendSoundVolumeOverridePercent, cancellationToken);
+        var playbackResult = await _soundPlaybackCoordinator.PlayAsync(postStopSuspendSound, postStopSuspendSoundVolumeOverridePercent, "Post-stop suspend sound", cancellationToken);
         foreach (var volumeWarningResult in playbackResult.VolumeWarningResults)
         {
             await AppendPostStopSuspendSoundVolumeWarningAsync(pendingSuspendContext, snapshot, eventName, volumeWarningResult);
@@ -1399,6 +1412,44 @@ internal sealed class LidGuardRuntimeCoordinator
         }
     }
 
+    private async Task PlayClosedLidStopFollowUpSoundAsync(PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot, string eventName, string closedLidStopFollowUpSound, int? closedLidStopFollowUpSoundVolumeOverridePercent, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(closedLidStopFollowUpSound)) return;
+
+        var playbackResult = await _soundPlaybackCoordinator.PlayAsync(closedLidStopFollowUpSound, closedLidStopFollowUpSoundVolumeOverridePercent, "Closed-lid stop follow-up sound", cancellationToken);
+        foreach (var volumeWarningResult in playbackResult.VolumeWarningResults)
+        {
+            await AppendClosedLidStopFollowUpSoundVolumeWarningAsync(pendingSuspendContext, snapshot, eventName, volumeWarningResult);
+        }
+
+        if (playbackResult.PlaybackResult.Succeeded)
+        {
+            await _gate.WaitAsync(CancellationToken.None);
+            try
+            {
+                var response = CreateSuccessResponse($"Played closed-lid stop follow-up sound: {closedLidStopFollowUpSound}.");
+                LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-stop-follow-up-sound-played", pendingSuspendContext, response, snapshot);
+            }
+            finally
+            {
+                _gate.Release();
+            }
+
+            return;
+        }
+
+        await _gate.WaitAsync(CancellationToken.None);
+        try
+        {
+            var response = CreateFailureResponse(playbackResult.PlaybackResult);
+            LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-stop-follow-up-sound-failed", pendingSuspendContext, response, snapshot);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     private async Task AppendPostStopSuspendSoundVolumeWarningAsync(PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot, string eventName, LidGuardOperationResult volumeWarningResult)
     {
         await _gate.WaitAsync(CancellationToken.None);
@@ -1406,6 +1457,20 @@ internal sealed class LidGuardRuntimeCoordinator
         {
             var response = CreateSuccessResponse($"Warning: {CreateResultMessage(volumeWarningResult)}");
             LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-suspend-sound-volume-warning", pendingSuspendContext, response, snapshot);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    private async Task AppendClosedLidStopFollowUpSoundVolumeWarningAsync(PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot, string eventName, LidGuardOperationResult volumeWarningResult)
+    {
+        await _gate.WaitAsync(CancellationToken.None);
+        try
+        {
+            var response = CreateSuccessResponse($"Warning: {CreateResultMessage(volumeWarningResult)}");
+            LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-stop-follow-up-sound-volume-warning", pendingSuspendContext, response, snapshot);
         }
         finally
         {

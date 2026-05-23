@@ -153,6 +153,12 @@
   <data name="SettingsPostStopSuspendSoundVolumeOverridePercent" xml:space="preserve">
     <value>  提示音临时音量百分比：{0}</value>
   </data>
+  <data name="SettingsClosedLidStopFollowUpSound" xml:space="preserve">
+    <value>  睡眠前回复等待提示音：{0}</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpSoundVolumeOverridePercent" xml:space="preserve">
+    <value>  回复等待提示音临时音量百分比：{0}</value>
+  </data>
   <data name="SettingsPreSuspendWebhookUrl" xml:space="preserve">
     <value>  睡眠（或休眠）前 Webhook URL：{0}</value>
   </data>
@@ -345,6 +351,9 @@
   <data name="HelpSettingsPostStopSuspendSoundOption" xml:space="preserve">
     <value>关闭睡眠/休眠前提示音，或使用受支持的 SystemSound 名称（{0}），或指定一个可播放的现有 .wav 路径。</value>
   </data>
+  <data name="HelpSettingsClosedLidStopFollowUpSoundOption" xml:space="preserve">
+    <value>关闭睡眠前回复等待提示音，或使用受支持的 SystemSound 名称（{0}），或指定一个可播放的现有 .wav 路径。</value>
+  </data>
   <data name="SettingsNameChangeLidAction" xml:space="preserve">
     <value>合盖操作覆盖</value>
   </data>
@@ -440,6 +449,9 @@
   </data>
   <data name="SettingsOptionPostStopSuspendSoundVolumeOverrideValidation" xml:space="preserve">
     <value>post-stop-suspend-sound-volume-override-percent 选项必须为 off 或 {0} 到 {1} 之间的整数。</value>
+  </data>
+  <data name="SettingsOptionClosedLidStopFollowUpSoundVolumeOverrideValidation" xml:space="preserve">
+    <value>closed-lid-stop-follow-up-sound-volume-override-percent 选项必须为 off 或 {0} 到 {1} 之间的整数。</value>
   </data>
   <data name="SettingsInteractivePromptWithDetails" xml:space="preserve">
     <value>{0}（当前值：{1}，默认值：{2}，{3}，按 Enter 保留当前值）: </value>
@@ -714,6 +726,9 @@
   <data name="SettingsNamePostStopSuspendSoundVolumeOverridePercent" xml:space="preserve">
     <value>提示音临时音量百分比</value>
   </data>
+  <data name="SettingsNameClosedLidStopFollowUpSoundVolumeOverridePercent" xml:space="preserve">
+    <value>回复等待提示音临时音量百分比</value>
+  </data>
   <data name="ManagementLabelAgentStopHook" xml:space="preserve">
     <value>AgentStop hook</value>
   </data>
@@ -743,6 +758,9 @@
   </data>
   <data name="SettingsNamePostStopSuspendSound" xml:space="preserve">
     <value>睡眠/休眠前提示音</value>
+  </data>
+  <data name="SettingsNameClosedLidStopFollowUpSound" xml:space="preserve">
+    <value>睡眠前回复等待提示音</value>
   </data>
   <data name="SettingsNamePostStopSuspendDelaySeconds" xml:space="preserve">
     <value>会话结束后进入睡眠/休眠前的等待时间（秒）</value>
@@ -998,6 +1016,12 @@
   </data>
   <data name="Help_Settings_PostStopSuspendSoundVolumeOption" xml:space="preserve">
     <value>关闭临时音量更改，或指定在播放睡眠/休眠前提示音期间使用的默认输出音量。播放结束后会恢复之前的音量和静音状态。</value>
+  </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpSoundVolumeOption" xml:space="preserve">
+    <value>关闭临时音量更改，或指定在播放睡眠前回复等待提示音期间使用的默认输出音量。播放结束后会恢复之前的音量和静音状态。</value>
+  </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpSoundVolumeOverrideAliasOption" xml:space="preserve">
+    <value>--closed-lid-stop-follow-up-sound-volume-override-percent 的别名。如果两者都提供，则优先使用较长选项的值。</value>
   </data>
   <data name="Help_Settings_PostStopSuspendDelayOption" xml:space="preserve">
     <value>设置工作结束后的安全等待时间，让紧接着到来的下一条消息能先被接收，然后才开始睡眠/休眠或回复等待。</value>

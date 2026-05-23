@@ -75,6 +75,8 @@ lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
 lidguard settings --post-session-end-webhook-url https://example.com/lidguard-session-ended
 lidguard settings --closed-lid-stop-follow-up-webhook-url https://example.com/lidguard-follow-up
 lidguard settings --closed-lid-stop-follow-up-delay-seconds 180
+lidguard settings --closed-lid-stop-follow-up-sound Asterisk --override 75
+lidguard settings --closed-lid-stop-follow-up-sound off --override off
 lidguard settings --repeat-closed-lid-stop-follow-up true
 lidguard settings --closed-lid-permission-request-decision ask
 lidguard remove-pre-suspend-webhook
@@ -86,9 +88,9 @@ lidguard preview-current-sound
 
 옵션 없이 `settings`를 실행하면 대화형 설정 편집을 시작합니다. 세션 타임아웃 기본값은 12분이고, 끄려면 `--session-timeout-minutes off`를 사용합니다. 런타임 자동 종료는 모든 정리가 끝난 뒤 10분이 기본값입니다. 즉시 종료하려면 `--server-runtime-cleanup-delay-minutes 0`, 계속 켜 두려면 `off`를 사용합니다. 덮개 닫힘 PermissionRequest 결정은 `deny`, `allow`, `ask`를 받습니다. `ask`는 보호를 잠시 풀고 provider의 일반 권한 요청 화면을 그대로 쓰게 합니다.
 
-절전 전 답장 알림은 "절전 전에 나에게 한 번 물어보기" 흐름입니다. `--closed-lid-stop-follow-up-webhook-url`은 알림을 보낼 URL이고, `--closed-lid-stop-follow-up-delay-seconds`는 답장을 기다릴 시간입니다. 기본값은 180초입니다. 0이면 답장 알림을 끄고, 답장 알림을 쓰려면 20초 이상으로 설정하세요. `--post-stop-suspend-delay-seconds`는 별도 안전 대기 시간입니다. 작업이 끝난 직후 바로 이어진 메시지를 받을 수 있도록 잠깐 기다린 뒤 절전이나 답장 대기를 시작합니다. 절전 전 답장 알림을 켰다면 10초 이상으로 두세요. `--repeat-closed-lid-stop-follow-up true`가 기본값입니다. 답장으로 작업을 이어간 뒤 그 작업이 다시 끝나려 할 때도 LidGuard가 한 번 더 물어볼 수 있다는 뜻입니다. 한 번만 물어보면 충분하면 `false`로 바꾸면 됩니다. 답장 알림 URL이나 두 대기 시간을 바꾸면 가능한 범위에서 AI 도구 쪽 제한 시간도 자동으로 맞춥니다.
+절전 전 답장 알림은 "절전 전에 나에게 한 번 물어보기" 흐름입니다. `--closed-lid-stop-follow-up-webhook-url`은 알림을 보낼 URL이고, `--closed-lid-stop-follow-up-delay-seconds`는 답장을 기다릴 시간입니다. 기본값은 180초입니다. 0이면 답장 알림을 끄고, 답장 알림을 쓰려면 20초 이상으로 설정하세요. `--closed-lid-stop-follow-up-sound`는 답장 webhook 시작과 poll URL 검증이 끝난 뒤 한 번 재생됩니다. `--override`는 `--closed-lid-stop-follow-up-sound-volume-override-percent`의 짧은 별칭이며, 둘 다 지정하면 긴 옵션 값이 우선합니다. `--post-stop-suspend-delay-seconds`는 별도 안전 대기 시간입니다. 작업이 끝난 직후 바로 이어진 메시지를 받을 수 있도록 잠깐 기다린 뒤 절전이나 답장 대기를 시작합니다. 절전 전 답장 알림을 켰다면 10초 이상으로 두세요. `--repeat-closed-lid-stop-follow-up true`가 기본값입니다. 답장으로 작업을 이어간 뒤 그 작업이 다시 끝나려 할 때도 LidGuard가 한 번 더 물어볼 수 있다는 뜻입니다. 한 번만 물어보면 충분하면 `false`로 바꾸면 됩니다. 답장 알림 URL이나 두 대기 시간을 바꾸면 가능한 범위에서 AI 도구 쪽 제한 시간도 자동으로 맞춥니다.
 
-Emergency Hibernation 온도 모드 기본값은 `Average`이며 `Low`, `Average`, `High`로 바꿀 수 있습니다. 선택 사항인 post-stop suspend sound volume override는 `off` 또는 1부터 100까지의 percent 값을 받습니다. 켜져 있으면 소리가 재생되는 동안 기본 출력 장치의 master volume을 임시로 설정한 뒤 이전 volume과 mute 상태를 복원합니다. `preview-system-sound`와 `preview-current-sound`는 저장된 override 설정을 사용하고 재생이 끝날 때까지 기다립니다. 설정된 webhook URL을 지우려면 `remove-pre-suspend-webhook`, `remove-post-session-end-webhook`, `remove-closed-lid-stop-follow-up-webhook`을 사용합니다.
+Emergency Hibernation 온도 모드 기본값은 `Average`이며 `Low`, `Average`, `High`로 바꿀 수 있습니다. 선택 사항인 사운드 volume override들은 `off` 또는 1부터 100까지의 percent 값을 받습니다. 켜져 있으면 해당 소리가 재생되는 동안 기본 출력 장치의 master volume을 임시로 설정한 뒤 이전 volume과 mute 상태를 복원합니다. `preview-system-sound`와 `preview-current-sound`는 저장된 post-stop suspend sound override 설정을 사용하고 재생이 끝날 때까지 기다립니다. 설정된 webhook URL을 지우려면 `remove-pre-suspend-webhook`, `remove-post-session-end-webhook`, `remove-closed-lid-stop-follow-up-webhook`을 사용합니다.
 
 ## 진단
 

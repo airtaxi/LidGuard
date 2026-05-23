@@ -153,6 +153,12 @@
   <data name="SettingsPostStopSuspendSoundVolumeOverridePercent" xml:space="preserve">
     <value>  警告音暫時音量百分比: {0}</value>
   </data>
+  <data name="SettingsClosedLidStopFollowUpSound" xml:space="preserve">
+    <value>  睡眠前回覆等待提示音: {0}</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpSoundVolumeOverridePercent" xml:space="preserve">
+    <value>  回覆等待提示音暫時音量百分比: {0}</value>
+  </data>
   <data name="SettingsPreSuspendWebhookUrl" xml:space="preserve">
     <value>  睡眠/休眠前 Webhook URL: {0}</value>
   </data>
@@ -345,6 +351,9 @@
   <data name="HelpSettingsPostStopSuspendSoundOption" xml:space="preserve">
     <value>停用睡眠/休眠警告音、使用一個支援的 SystemSound 名稱 ({0})，或提供現有可播放的 .wav 路徑。</value>
   </data>
+  <data name="HelpSettingsClosedLidStopFollowUpSoundOption" xml:space="preserve">
+    <value>停用睡眠前回覆等待提示音、使用一個支援的 SystemSound 名稱 ({0})，或提供現有可播放的 .wav 路徑。</value>
+  </data>
   <data name="SettingsNameChangeLidAction" xml:space="preserve">
     <value>上蓋關閉動作覆寫</value>
   </data>
@@ -440,6 +449,9 @@
   </data>
   <data name="SettingsOptionPostStopSuspendSoundVolumeOverrideValidation" xml:space="preserve">
     <value>post-stop-suspend-sound-volume-override-percent 選項必須是 off，或 {0} 到 {1} 之間的整數。</value>
+  </data>
+  <data name="SettingsOptionClosedLidStopFollowUpSoundVolumeOverrideValidation" xml:space="preserve">
+    <value>closed-lid-stop-follow-up-sound-volume-override-percent 選項必須是 off，或 {0} 到 {1} 之間的整數。</value>
   </data>
   <data name="SettingsInteractivePromptWithDetails" xml:space="preserve">
     <value>{0}（已儲存: {1}，預設: {2}，{3}，按 Enter 保留已儲存值）: </value>
@@ -714,6 +726,9 @@
   <data name="SettingsNamePostStopSuspendSoundVolumeOverridePercent" xml:space="preserve">
     <value>警告音暫時音量百分比</value>
   </data>
+  <data name="SettingsNameClosedLidStopFollowUpSoundVolumeOverridePercent" xml:space="preserve">
+    <value>回覆等待提示音暫時音量百分比</value>
+  </data>
   <data name="ManagementLabelAgentStopHook" xml:space="preserve">
     <value>AgentStop Hook</value>
   </data>
@@ -743,6 +758,9 @@
   </data>
   <data name="SettingsNamePostStopSuspendSound" xml:space="preserve">
     <value>工作階段結束後的睡眠/休眠警告音</value>
+  </data>
+  <data name="SettingsNameClosedLidStopFollowUpSound" xml:space="preserve">
+    <value>睡眠前回覆等待提示音</value>
   </data>
   <data name="SettingsNamePostStopSuspendDelaySeconds" xml:space="preserve">
     <value>工作階段結束後進入睡眠/休眠的延遲秒數</value>
@@ -998,6 +1016,12 @@
   </data>
   <data name="Help_Settings_PostStopSuspendSoundVolumeOption" xml:space="preserve">
     <value>停用暫時音量調整，或設定睡眠/休眠警告音播放時的預設輸出音量。之後 LidGuard 會還原先前的音量與靜音狀態。</value>
+  </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpSoundVolumeOption" xml:space="preserve">
+    <value>停用暫時音量調整，或設定睡眠前回覆等待提示音播放時的預設輸出音量。之後 LidGuard 會還原先前的音量與靜音狀態。</value>
+  </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpSoundVolumeOverrideAliasOption" xml:space="preserve">
+    <value>--closed-lid-stop-follow-up-sound-volume-override-percent 的別名。若兩者都提供，較長選項的值會優先。</value>
   </data>
   <data name="Help_Settings_PostStopSuspendDelayOption" xml:space="preserve">
     <value>設定工作結束後的安全等待時間，讓緊接著到來的下一則訊息能先被接收，然後才開始睡眠/休眠或回覆等待。</value>

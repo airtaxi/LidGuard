@@ -70,6 +70,8 @@ description: "LidGuard CLI, settings, permission commands, examples, and failure
 - Post-session-end webhook URL: off by default.
 - Ask-before-sleep reply webhook URL: off by default.
 - Ask-before-sleep reply wait: `closedLidStopFollowUpDelaySeconds`, default `180`; `0` disables reply waiting, and values `1` through `19` are configuration errors when a reply URL is configured because the user may not have enough time to notice the push notification and reply.
+- Ask-before-sleep reply wait sound: off by default, accepts `off`, supported system sound names, or a playable `.wav` path. It is separate from the post-stop suspend sound.
+- Ask-before-sleep reply wait sound volume override: off by default, accepts `off` or 1 through 100 percent, is rejected rather than clamped when out of range, and is exposed in the CLI as `--closed-lid-stop-follow-up-sound-volume-override-percent`. `--override` is a CLI alias for this value; when both are present, the long option wins.
 - Repeat ask-before-sleep replies: enabled by default. In user-facing text, explain this simply as "after a reply keeps the work going, ask again the next time that work tries to finish."
 - Emergency Hibernation on high temperature: enabled by default.
 - Emergency Hibernation temperature mode: Average by default, with Low and High optional.
@@ -165,6 +167,8 @@ lidguard settings --pre-suspend-webhook-url https://example.com/lidguard-webhook
 lidguard settings --post-session-end-webhook-url https://example.com/lidguard-session-ended
 lidguard settings --closed-lid-stop-follow-up-webhook-url https://example.com/lidguard-follow-up
 lidguard settings --closed-lid-stop-follow-up-delay-seconds 180
+lidguard settings --closed-lid-stop-follow-up-sound Asterisk --override 75
+lidguard settings --closed-lid-stop-follow-up-sound off --override off
 lidguard settings --repeat-closed-lid-stop-follow-up true
 lidguard settings --closed-lid-permission-request-decision allow
 lidguard settings --closed-lid-permission-request-decision ask

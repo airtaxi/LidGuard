@@ -153,6 +153,12 @@
   <data name="SettingsPostStopSuspendSoundVolumeOverridePercent" xml:space="preserve">
     <value>  警告音の一時ボリューム率: {0}</value>
   </data>
+  <data name="SettingsClosedLidStopFollowUpSound" xml:space="preserve">
+    <value>  スリープ前の返信待ち音: {0}</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpSoundVolumeOverridePercent" xml:space="preserve">
+    <value>  返信待ち音の一時ボリューム率: {0}</value>
+  </data>
   <data name="SettingsPreSuspendWebhookUrl" xml:space="preserve">
     <value>  スリープ/休止状態の前 Webhook URL: {0}</value>
   </data>
@@ -345,6 +351,9 @@
   <data name="HelpSettingsPostStopSuspendSoundOption" xml:space="preserve">
     <value>スリープ/休止状態の警告音を無効にするか、対応している SystemSound 名 ({0}) を使うか、再生可能な既存の .wav パスを指定します。</value>
   </data>
+  <data name="HelpSettingsClosedLidStopFollowUpSoundOption" xml:space="preserve">
+    <value>スリープ前の返信待ち音を無効にするか、対応している SystemSound 名 ({0}) を使うか、再生可能な既存の .wav パスを指定します。</value>
+  </data>
   <data name="SettingsNameChangeLidAction" xml:space="preserve">
     <value>ふたを閉じたときの動作の上書き</value>
   </data>
@@ -440,6 +449,9 @@
   </data>
   <data name="SettingsOptionPostStopSuspendSoundVolumeOverrideValidation" xml:space="preserve">
     <value>post-stop-suspend-sound-volume-override-percent オプションは、off または {0} から {1} までの整数である必要があります。</value>
+  </data>
+  <data name="SettingsOptionClosedLidStopFollowUpSoundVolumeOverrideValidation" xml:space="preserve">
+    <value>closed-lid-stop-follow-up-sound-volume-override-percent オプションは、off または {0} から {1} までの整数である必要があります。</value>
   </data>
   <data name="SettingsInteractivePromptWithDetails" xml:space="preserve">
     <value>{0} (保存値: {1}、既定値: {2}、{3}、Enter で保存値のまま): </value>
@@ -714,6 +726,9 @@
   <data name="SettingsNamePostStopSuspendSoundVolumeOverridePercent" xml:space="preserve">
     <value>警告音の一時ボリューム率</value>
   </data>
+  <data name="SettingsNameClosedLidStopFollowUpSoundVolumeOverridePercent" xml:space="preserve">
+    <value>返信待ち音の一時ボリューム率</value>
+  </data>
   <data name="ManagementLabelAgentStopHook" xml:space="preserve">
     <value>AgentStop フック</value>
   </data>
@@ -743,6 +758,9 @@
   </data>
   <data name="SettingsNamePostStopSuspendSound" xml:space="preserve">
     <value>セッション終了後のスリープ/休止状態の警告音</value>
+  </data>
+  <data name="SettingsNameClosedLidStopFollowUpSound" xml:space="preserve">
+    <value>スリープ前の返信待ち音</value>
   </data>
   <data name="SettingsNamePostStopSuspendDelaySeconds" xml:space="preserve">
     <value>セッション終了後にスリープ/休止状態に入るまでの待機時間 (秒)</value>
@@ -998,6 +1016,12 @@
   </data>
   <data name="Help_Settings_PostStopSuspendSoundVolumeOption" xml:space="preserve">
     <value>一時的なボリューム変更を無効にするか、スリープ/休止状態の警告音の再生中に使う既定の出力ボリュームを設定します。再生後、LidGuard は以前のボリュームとミュート状態を復元します。</value>
+  </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpSoundVolumeOption" xml:space="preserve">
+    <value>一時的なボリューム変更を無効にするか、スリープ前の返信待ち音の再生中に使う既定の出力ボリュームを設定します。再生後、LidGuard は以前のボリュームとミュート状態を復元します。</value>
+  </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpSoundVolumeOverrideAliasOption" xml:space="preserve">
+    <value>--closed-lid-stop-follow-up-sound-volume-override-percent の別名です。両方を指定した場合は長いオプションの値が優先されます。</value>
   </data>
   <data name="Help_Settings_PostStopSuspendDelayOption" xml:space="preserve">
     <value>作業終了直後に続けて届くメッセージを先に受け取れるよう、スリープ/休止状態または返信待ちを始める前の安全待機時間を設定します。</value>

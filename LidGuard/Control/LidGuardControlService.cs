@@ -82,6 +82,8 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(volumeOverrideValidationMessage);
         }
 
+        if (settingsPatch.HasClosedLidStopFollowUpSoundVolumeOverridePercent && !PostStopSuspendSoundConfiguration.TryValidateClosedLidStopFollowUpVolumeOverridePercent(settingsPatch.ClosedLidStopFollowUpSoundVolumeOverridePercent, out var closedLidStopFollowUpVolumeOverrideValidationMessage)) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(closedLidStopFollowUpVolumeOverrideValidationMessage);
+
         if (settingsPatch.HasSuspendHistoryEntryCount && !SuspendHistoryConfiguration.TryValidateEntryCount(settingsPatch.SuspendHistoryEntryCount, out var suspendHistoryValidationMessage))
         {
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(suspendHistoryValidationMessage);
@@ -233,6 +235,8 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
             PostStopSuspendDelaySeconds = settingsPatch.PostStopSuspendDelaySeconds ?? normalizedBaseSettings.PostStopSuspendDelaySeconds,
             PostStopSuspendSound = settingsPatch.PostStopSuspendSound ?? normalizedBaseSettings.PostStopSuspendSound,
             PostStopSuspendSoundVolumeOverridePercent = settingsPatch.HasPostStopSuspendSoundVolumeOverridePercent ? settingsPatch.PostStopSuspendSoundVolumeOverridePercent : normalizedBaseSettings.PostStopSuspendSoundVolumeOverridePercent,
+            ClosedLidStopFollowUpSound = settingsPatch.ClosedLidStopFollowUpSound ?? normalizedBaseSettings.ClosedLidStopFollowUpSound,
+            ClosedLidStopFollowUpSoundVolumeOverridePercent = settingsPatch.HasClosedLidStopFollowUpSoundVolumeOverridePercent ? settingsPatch.ClosedLidStopFollowUpSoundVolumeOverridePercent : normalizedBaseSettings.ClosedLidStopFollowUpSoundVolumeOverridePercent,
             SuspendHistoryEntryCount = settingsPatch.HasSuspendHistoryEntryCount ? settingsPatch.SuspendHistoryEntryCount : normalizedBaseSettings.SuspendHistoryEntryCount,
             PreSuspendWebhookUrl = settingsPatch.PreSuspendWebhookUrl ?? normalizedBaseSettings.PreSuspendWebhookUrl,
             PostSessionEndWebhookUrl = settingsPatch.PostSessionEndWebhookUrl ?? normalizedBaseSettings.PostSessionEndWebhookUrl,

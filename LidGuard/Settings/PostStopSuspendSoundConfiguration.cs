@@ -11,29 +11,44 @@ internal static class PostStopSuspendSoundConfiguration
         => postStopSuspendSoundVolumeOverridePercent is null ? "off" : $"{postStopSuspendSoundVolumeOverridePercent}%";
 
     public static bool TryValidateVolumeOverridePercent(int? postStopSuspendSoundVolumeOverridePercent, out string message)
+        => TryValidateVolumeOverridePercent(postStopSuspendSoundVolumeOverridePercent, "Post-stop suspend sound", out message);
+
+    public static bool TryValidateClosedLidStopFollowUpVolumeOverridePercent(int? closedLidStopFollowUpSoundVolumeOverridePercent, out string message)
+        => TryValidateVolumeOverridePercent(closedLidStopFollowUpSoundVolumeOverridePercent, "Closed-lid stop follow-up sound", out message);
+
+    public static bool TryValidateVolumeOverridePercent(int? soundVolumeOverridePercent, string soundDescription, out string message)
     {
         message = string.Empty;
-        if (LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(postStopSuspendSoundVolumeOverridePercent)) return true;
+        if (LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(soundVolumeOverridePercent)) return true;
 
         message =
-            $"Post-stop suspend sound volume override percent must be an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.";
+            $"{soundDescription} volume override percent must be an integer from {LidGuardSettings.MinimumPostStopSuspendSoundVolumeOverridePercent} through {LidGuardSettings.MaximumPostStopSuspendSoundVolumeOverridePercent}.";
         return false;
     }
 
     public static bool TryNormalize(LidGuardSettings settings, IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer, out LidGuardSettings normalizedSettings, out string message)
     {
         var normalizedInputSettings = LidGuardSettings.Normalize(settings);
-        var normalizeResult = postStopSuspendSoundPlayer.NormalizeConfiguration(normalizedInputSettings.PostStopSuspendSound);
-        if (!normalizeResult.Succeeded)
+        var postStopSuspendSoundNormalizeResult = postStopSuspendSoundPlayer.NormalizeConfiguration(normalizedInputSettings.PostStopSuspendSound);
+        if (!postStopSuspendSoundNormalizeResult.Succeeded)
         {
             normalizedSettings = normalizedInputSettings;
-            message = normalizeResult.Message;
+            message = postStopSuspendSoundNormalizeResult.Message;
+            return false;
+        }
+
+        var closedLidStopFollowUpSoundNormalizeResult = postStopSuspendSoundPlayer.NormalizeConfiguration(normalizedInputSettings.ClosedLidStopFollowUpSound);
+        if (!closedLidStopFollowUpSoundNormalizeResult.Succeeded)
+        {
+            normalizedSettings = normalizedInputSettings;
+            message = closedLidStopFollowUpSoundNormalizeResult.Message;
             return false;
         }
 
         normalizedSettings = normalizedInputSettings with
         {
-            PostStopSuspendSound = normalizeResult.Value
+            PostStopSuspendSound = postStopSuspendSoundNormalizeResult.Value,
+            ClosedLidStopFollowUpSound = closedLidStopFollowUpSoundNormalizeResult.Value
         };
 
         message = string.Empty;

@@ -41,6 +41,12 @@ public sealed class LidGuardSettingsPatch
 
     public int? PostStopSuspendSoundVolumeOverridePercent { get; init; }
 
+    public string ClosedLidStopFollowUpSound { get; init; }
+
+    public bool HasClosedLidStopFollowUpSoundVolumeOverridePercent { get; init; }
+
+    public int? ClosedLidStopFollowUpSoundVolumeOverridePercent { get; init; }
+
     public bool HasSuspendHistoryEntryCount { get; init; }
 
     public int? SuspendHistoryEntryCount { get; init; }

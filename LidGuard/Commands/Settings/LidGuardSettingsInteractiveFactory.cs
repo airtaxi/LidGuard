@@ -43,10 +43,10 @@ internal static class LidGuardSettingsInteractiveFactory
             return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadSuspendHistoryEntryCountSetting(LocalizationService.GetString("SettingsNameSuspendHistoryEntryCount"), normalizedStoredSettings.SuspendHistoryEntryCount, defaultSettings.SuspendHistoryEntryCount, out var suspendHistoryEntryCount, out message))
             return false;
-        if (!LidGuardSettingsInteractivePromptReader.TryReadNonNegativeIntegerSetting(LocalizationService.GetString("SettingsNameClosedLidStopFollowUpDelaySeconds"), normalizedStoredSettings.ClosedLidStopFollowUpDelaySeconds, defaultSettings.ClosedLidStopFollowUpDelaySeconds, out var closedLidStopFollowUpDelaySeconds, out message))
-            return false;
-        if (!LidGuardSettingsInteractivePromptReader.TryReadClosedLidPermissionRequestDecisionSetting(LocalizationService.GetString("SettingsNameClosedLidPermissionRequestDecision"), normalizedStoredSettings.ClosedLidPermissionRequestDecision, defaultSettings.ClosedLidPermissionRequestDecision, out var closedLidPermissionRequestDecision, out message))
-            return false;
+        if (!LidGuardSettingsInteractivePromptReader.TryReadNonNegativeIntegerSetting(LocalizationService.GetString("SettingsNameClosedLidStopFollowUpDelaySeconds"), normalizedStoredSettings.ClosedLidStopFollowUpDelaySeconds, defaultSettings.ClosedLidStopFollowUpDelaySeconds, out var closedLidStopFollowUpDelaySeconds, out message)) return false;
+        if (!LidGuardSettingsInteractivePromptReader.TryReadPostStopSuspendSoundSetting(LocalizationService.GetString("SettingsNameClosedLidStopFollowUpSound"), normalizedStoredSettings.ClosedLidStopFollowUpSound, defaultSettings.ClosedLidStopFollowUpSound, out var closedLidStopFollowUpSound, out message)) return false;
+        if (!LidGuardSettingsInteractivePromptReader.TryReadPostStopSuspendSoundVolumeOverridePercentSetting(LocalizationService.GetString("SettingsNameClosedLidStopFollowUpSoundVolumeOverridePercent"), normalizedStoredSettings.ClosedLidStopFollowUpSoundVolumeOverridePercent, defaultSettings.ClosedLidStopFollowUpSoundVolumeOverridePercent, out var closedLidStopFollowUpSoundVolumeOverridePercent, out message)) return false;
+        if (!LidGuardSettingsInteractivePromptReader.TryReadClosedLidPermissionRequestDecisionSetting(LocalizationService.GetString("SettingsNameClosedLidPermissionRequestDecision"), normalizedStoredSettings.ClosedLidPermissionRequestDecision, defaultSettings.ClosedLidPermissionRequestDecision, out var closedLidPermissionRequestDecision, out message)) return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting(LocalizationService.GetString("SettingsNameRepeatClosedLidStopFollowUp"), normalizedStoredSettings.RepeatClosedLidStopFollowUp, defaultSettings.RepeatClosedLidStopFollowUp, out var repeatClosedLidStopFollowUp, out message))
             return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadUserInterfaceCultureSetting(LocalizationService.GetString("SettingsNameUserInterfaceCulture"), normalizedStoredSettings.UserInterfaceCulture, defaultSettings.UserInterfaceCulture, out var userInterfaceCulture, out message))
@@ -66,6 +66,8 @@ internal static class LidGuardSettingsInteractiveFactory
             PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
             PostStopSuspendSound = postStopSuspendSound,
             PostStopSuspendSoundVolumeOverridePercent = postStopSuspendSoundVolumeOverridePercent,
+            ClosedLidStopFollowUpSound = closedLidStopFollowUpSound,
+            ClosedLidStopFollowUpSoundVolumeOverridePercent = closedLidStopFollowUpSoundVolumeOverridePercent,
             SuspendHistoryEntryCount = suspendHistoryEntryCount,
             PreSuspendWebhookUrl = normalizedStoredSettings.PreSuspendWebhookUrl,
             PostSessionEndWebhookUrl = normalizedStoredSettings.PostSessionEndWebhookUrl,
