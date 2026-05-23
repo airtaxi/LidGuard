@@ -308,6 +308,22 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         return new StopFollowUpReplySubmissionResult(true, StopFollowUpRequestStatuses.Answered, "Reply submitted.");
     }
 
+    public async Task<bool> WaitForStopFollowUpConsumptionAsync(string publicIdentifier, int pollCycleCount, TimeSpan pollInterval, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(publicIdentifier)) return false;
+
+        var normalizedPollCycleCount = Math.Max(0, pollCycleCount);
+        for (var pollCycleIndex = 0; pollCycleIndex <= normalizedPollCycleCount; pollCycleIndex++)
+        {
+            if (await IsStopFollowUpConsumedAsync(publicIdentifier, cancellationToken)) return true;
+            if (pollCycleIndex == normalizedPollCycleCount) return false;
+
+            await Task.Delay(pollInterval, cancellationToken);
+        }
+
+        return false;
+    }
+
     public async Task<StopFollowUpCancellationResult> CancelStopFollowUpAsync(string publicIdentifier, CancellationToken cancellationToken)
     {
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
@@ -411,6 +427,21 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
             Status = status,
             Reply = status.Equals(StopFollowUpRequestStatuses.Answered, StringComparison.Ordinal) ? replyText : null
         };
+    }
+
+    private async Task<bool> IsStopFollowUpConsumedAsync(string publicIdentifier, CancellationToken cancellationToken)
+    {
+        await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+        using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT ConsumedAtUtc
+            FROM StopFollowUpRequests
+            WHERE PublicIdentifier = $publicIdentifier;
+            """;
+        command.Parameters.AddWithValue("$publicIdentifier", publicIdentifier);
+        var consumedAtUtc = await command.ExecuteScalarAsync(cancellationToken);
+        return consumedAtUtc is string consumedTimestamp && !string.IsNullOrWhiteSpace(consumedTimestamp);
     }
 
     public async Task<WebhookEventListPage> ListRecentPageAsync(int pageSize, long? beforeWebhookEventIdentifier, CancellationToken cancellationToken)

@@ -372,4 +372,16 @@
   <data name="EventsLoading" xml:space="preserve">
     <value>正在載入...</value>
   </data>
+  <data name="StopFollowUpReplyAwaitingConsumptionMessage" xml:space="preserve">
+    <value>回覆已送出，但經過 4 次輪詢確認後 LidGuard 仍未取得。它可能很快會取得。</value>
+  </data>
+  <data name="StopFollowUpReplyConsumedMessage" xml:space="preserve">
+    <value>回覆已送出。LidGuard 已在後續輪詢中取得。</value>
+  </data>
+  <data name="StopFollowUpReplyCollectedAtLabel" xml:space="preserve">
+    <value>回覆取得時間</value>
+  </data>
+  <data name="StopFollowUpReplySendingMessage" xml:space="preserve">
+    <value>正在送出回覆...</value>
+  </data>
 </root>

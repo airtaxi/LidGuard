@@ -372,4 +372,16 @@
   <data name="EventsLoading" xml:space="preserve">
     <value>Loading...</value>
   </data>
+  <data name="StopFollowUpReplyAwaitingConsumptionMessage" xml:space="preserve">
+    <value>Reply sent, but LidGuard has not collected it after 4 poll checks. It may still pick it up shortly.</value>
+  </data>
+  <data name="StopFollowUpReplyConsumedMessage" xml:space="preserve">
+    <value>Reply sent. LidGuard collected it on a follow-up poll.</value>
+  </data>
+  <data name="StopFollowUpReplyCollectedAtLabel" xml:space="preserve">
+    <value>Reply collected at</value>
+  </data>
+  <data name="StopFollowUpReplySendingMessage" xml:space="preserve">
+    <value>Sending reply...</value>
+  </data>
 </root>

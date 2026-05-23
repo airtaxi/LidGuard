@@ -34,6 +34,28 @@
         window.lidGuardLocalTime?.refresh(root);
     }
 
+    function markReplyFormSubmitting(form) {
+        if (form.dataset.submitting === "true") return false;
+
+        form.dataset.submitting = "true";
+        form.setAttribute("aria-busy", "true");
+        const submittingText = form.dataset.submittingText || getText("eventsLoading", "Loading...");
+        const status = form.querySelector("[data-reply-submit-status]");
+        if (status) {
+            status.textContent = submittingText;
+            status.hidden = false;
+        }
+
+        const card = form.closest("[data-event-card]") || form;
+        for (const textarea of card.querySelectorAll("textarea")) textarea.readOnly = true;
+        for (const button of card.querySelectorAll("button")) {
+            button.disabled = true;
+            if (button.form === form && button.type === "submit") button.textContent = submittingText;
+        }
+
+        return true;
+    }
+
     async function loadMoreEvents() {
         if (!loadMoreButton || !eventList) return;
 
@@ -115,6 +137,14 @@
     }
 
     loadMoreButton?.addEventListener("click", loadMoreEvents);
+    page.addEventListener("submit", event => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement)) return;
+        if (!form.matches("[data-stop-follow-up-reply-form]")) return;
+        if (markReplyFormSubmitting(form)) return;
+
+        event.preventDefault();
+    });
     page.addEventListener("toggle", event => {
         if (!(event.target instanceof HTMLDetailsElement)) return;
         if (!event.target.matches("[data-event-details]")) return;

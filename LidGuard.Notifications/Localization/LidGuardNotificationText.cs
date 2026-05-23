@@ -74,10 +74,14 @@ internal static class LidGuardNotificationText
     public static string StopFollowUpCancelSucceededMessage => Get(nameof(StopFollowUpCancelSucceededMessage));
     public static string StopFollowUpDeadlineLabel => Get(nameof(StopFollowUpDeadlineLabel));
     public static string StopFollowUpReplyButton => Get(nameof(StopFollowUpReplyButton));
+    public static string StopFollowUpReplyAwaitingConsumptionMessage => Get(nameof(StopFollowUpReplyAwaitingConsumptionMessage));
+    public static string StopFollowUpReplyConsumedMessage => Get(nameof(StopFollowUpReplyConsumedMessage));
     public static string StopFollowUpReplyHelp => Get(nameof(StopFollowUpReplyHelp));
     public static string StopFollowUpReplyLabel => Get(nameof(StopFollowUpReplyLabel));
+    public static string StopFollowUpReplyCollectedAtLabel => Get(nameof(StopFollowUpReplyCollectedAtLabel));
     public static string StopFollowUpReplyPlaceholder => Get(nameof(StopFollowUpReplyPlaceholder));
     public static string StopFollowUpReplyRequiredMessage => Get(nameof(StopFollowUpReplyRequiredMessage));
+    public static string StopFollowUpReplySendingMessage => Get(nameof(StopFollowUpReplySendingMessage));
     public static string StopFollowUpReplySentAtLabel => Get(nameof(StopFollowUpReplySentAtLabel));
     public static string StopFollowUpSectionLabel => Get(nameof(StopFollowUpSectionLabel));
     public static string StopFollowUpStatusLabel => Get(nameof(StopFollowUpStatusLabel));

@@ -9,6 +9,8 @@ namespace LidGuard.Notifications.Pages;
 internal sealed class EventsModel(WebhookEventStore webhookEventStore) : PageModel
 {
     private const int EventPageSize = 10;
+    private const int StopFollowUpConsumptionPollCycleCount = 4;
+    private static readonly TimeSpan s_stopFollowUpConsumptionPollInterval = TimeSpan.FromSeconds(1);
 
     public WebhookEventListPage EventPage { get; private set; } = new([], false, null);
 
@@ -46,7 +48,14 @@ internal sealed class EventsModel(WebhookEventStore webhookEventStore) : PageMod
         }
 
         var submissionResult = await webhookEventStore.SubmitStopFollowUpReplyAsync(publicIdentifier, trimmedReply, cancellationToken);
-        EventMessage = submissionResult.Message;
+        if (!submissionResult.Succeeded)
+        {
+            EventMessage = submissionResult.Message;
+            return Redirect($"/events#followup-{publicIdentifier}");
+        }
+
+        var wasConsumed = await webhookEventStore.WaitForStopFollowUpConsumptionAsync(publicIdentifier, StopFollowUpConsumptionPollCycleCount, s_stopFollowUpConsumptionPollInterval, cancellationToken);
+        EventMessage = wasConsumed ? LidGuardNotificationText.StopFollowUpReplyConsumedMessage : LidGuardNotificationText.StopFollowUpReplyAwaitingConsumptionMessage;
         return Redirect($"/events#followup-{publicIdentifier}");
     }
 

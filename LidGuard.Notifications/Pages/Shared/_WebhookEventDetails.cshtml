@@ -39,6 +39,16 @@
             <strong><time datetime="@repliedAtDateTimeAttribute" data-device-time="true">@repliedAtFallbackText</time></strong>
         </div>
     }
+    @if (Model.StopFollowUpConsumedAtUtc is not null)
+    {
+        var consumedAtUniversalTime = Model.StopFollowUpConsumedAtUtc.Value.ToUniversalTime();
+        var consumedAtDateTimeAttribute = consumedAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+        var consumedAtFallbackText = consumedAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+        <div class="detail-item">
+            <span>@LidGuardNotificationText.StopFollowUpReplyCollectedAtLabel</span>
+            <strong><time datetime="@consumedAtDateTimeAttribute" data-device-time="true">@consumedAtFallbackText</time></strong>
+        </div>
+    }
     @if (Model.StartedAtUtc is not null)
     {
         var startedAtUniversalTime = Model.StartedAtUtc.Value.ToUniversalTime();

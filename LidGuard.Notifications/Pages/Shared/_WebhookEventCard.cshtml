@@ -102,7 +102,7 @@
             @if (string.Equals(Model.StopFollowUpStatus, StopFollowUpRequestStatuses.Pending, StringComparison.Ordinal)
                 && !string.IsNullOrWhiteSpace(Model.StopFollowUpPublicIdentifier))
             {
-                <form method="post" asp-page-handler="Reply" class="event-disclosure">
+                <form method="post" asp-page-handler="Reply" class="event-disclosure" data-stop-follow-up-reply-form data-submitting-text="@LidGuardNotificationText.StopFollowUpReplySendingMessage">
                     <input type="hidden" name="publicIdentifier" value="@Model.StopFollowUpPublicIdentifier" />
                     <label class="preview-label" for="reply-@Model.StopFollowUpPublicIdentifier">@LidGuardNotificationText.StopFollowUpReplyLabel</label>
                     <textarea
@@ -113,6 +113,7 @@
                     <div>
                         <button type="submit">@LidGuardNotificationText.StopFollowUpReplyButton</button>
                     </div>
+                    <p class="muted reply-submit-status" data-reply-submit-status hidden>@LidGuardNotificationText.StopFollowUpReplySendingMessage</p>
                 </form>
                 <form method="post" asp-page-handler="Cancel" class="event-disclosure">
                     <input type="hidden" name="publicIdentifier" value="@Model.StopFollowUpPublicIdentifier" />

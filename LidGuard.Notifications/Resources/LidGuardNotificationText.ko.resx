@@ -372,4 +372,16 @@
   <data name="EventsLoading" xml:space="preserve">
     <value>불러오는 중...</value>
   </data>
+  <data name="StopFollowUpReplyAwaitingConsumptionMessage" xml:space="preserve">
+    <value>답장을 보냈지만 4번의 폴링 확인 동안 LidGuard가 아직 가져가지 않았습니다. 잠시 후 다시 확인해 주세요.</value>
+  </data>
+  <data name="StopFollowUpReplyConsumedMessage" xml:space="preserve">
+    <value>답장을 보냈고 LidGuard가 후속 폴링에서 가져갔습니다.</value>
+  </data>
+  <data name="StopFollowUpReplyCollectedAtLabel" xml:space="preserve">
+    <value>답장 가져간 시간</value>
+  </data>
+  <data name="StopFollowUpReplySendingMessage" xml:space="preserve">
+    <value>답장을 보내는 중...</value>
+  </data>
 </root>

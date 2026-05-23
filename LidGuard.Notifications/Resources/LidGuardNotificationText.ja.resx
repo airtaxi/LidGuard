@@ -372,4 +372,16 @@
   <data name="EventsLoading" xml:space="preserve">
     <value>読み込み中...</value>
   </data>
+  <data name="StopFollowUpReplyAwaitingConsumptionMessage" xml:space="preserve">
+    <value>返信を送信しましたが、4回のポーリング確認後も LidGuard はまだ取得していません。まもなく取得される可能性があります。</value>
+  </data>
+  <data name="StopFollowUpReplyConsumedMessage" xml:space="preserve">
+    <value>返信を送信しました。LidGuard が後続のポーリングで取得しました。</value>
+  </data>
+  <data name="StopFollowUpReplyCollectedAtLabel" xml:space="preserve">
+    <value>返信取得日時</value>
+  </data>
+  <data name="StopFollowUpReplySendingMessage" xml:space="preserve">
+    <value>返信を送信中...</value>
+  </data>
 </root>

@@ -680,6 +680,23 @@ form.event-disclosure {
     gap: 10px;
 }
 
+.reply-submit-status {
+    align-items: center;
+    display: inline-flex;
+    gap: 8px;
+    margin: 0;
+}
+
+.reply-submit-status::before {
+    animation: spin 0.8s linear infinite;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 999px;
+    content: "";
+    height: 16px;
+    width: 16px;
+}
+
 .event-disclosure summary {
     color: var(--accent);
     cursor: pointer;
@@ -748,6 +765,12 @@ td {
 th {
     color: var(--button-secondary);
     font-size: 0.9rem;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @media (max-width: 760px) {
