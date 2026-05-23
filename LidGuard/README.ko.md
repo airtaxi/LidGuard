@@ -184,7 +184,7 @@ LidGuard는 기본 설정과 runtime log를 다음 위치에 저장합니다:
 
 ## 참고
 
-이 패키지는 `net10.0`을 대상으로 하며 Windows, Linux, macOS용 RID별 NativeAOT .NET tool package로 패키징됩니다. 현재 릴리스에서 Windows, systemd/logind Linux, macOS runtime platform이 구현되어 있습니다.
+이 프로젝트는 `net10.0`을 대상으로 하며 platform-specific source selection과 RuntimeIdentifier 매핑을 위해 `windows-x64`, `linux-x64`, `macos-arm64` 같은 RID 형태의 Visual Studio platform을 노출합니다. 릴리스 artifact는 Windows, Linux, macOS용 RID별 NativeAOT .NET tool package로 패키징됩니다. 현재 릴리스에서 Windows, systemd/logind Linux, macOS runtime platform이 구현되어 있습니다.
 
 Linux에서는 idle sleep protection이 systemd/logind `sleep`, `idle` inhibitor를 사용합니다. Lid-close handling은 별도이며 `--change-lid-action true`는 `handle-lid-switch` inhibitor를 유지하고, `false`는 배포판의 lid-close 처리를 변경하지 않습니다.
 

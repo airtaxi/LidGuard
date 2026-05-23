@@ -78,6 +78,15 @@ detect_target() {
     esac
 
     TOOL_RID=$TOOL_OS-$TOOL_ARCH
+    case "$TOOL_OS" in
+        linux)
+            TOOL_PLATFORM=linux-$TOOL_ARCH
+            ;;
+        osx)
+            TOOL_PLATFORM=macos-$TOOL_ARCH
+            ;;
+    esac
+
     return 0
 }
 
@@ -115,7 +124,7 @@ run_once() {
         return 1
     fi
 
-    echo "Detected target: $SYSTEM_NAME/$MACHINE_NAME (packing $TOOL_RID package)"
+    echo "Detected target: $SYSTEM_NAME/$MACHINE_NAME (packing $TOOL_RID package with $TOOL_PLATFORM platform)"
     echo "Using package version from project: $PACKAGE_VERSION"
     clean_build_output_directories || return 1
 
@@ -130,7 +139,7 @@ run_once() {
     dotnet pack "$PROJECT_FILE" -c Release || return 1
 
     echo "Packing lidguard.$TOOL_RID $PACKAGE_VERSION..."
-    dotnet pack "$PROJECT_FILE" -c Release -r "$TOOL_RID" || return 1
+    dotnet pack "$PROJECT_FILE" -c Release -p:Platform="$TOOL_PLATFORM" || return 1
 
     if [ ! -f "$PACKAGE_DIR/lidguard.$PACKAGE_VERSION.nupkg" ]; then
         echo "Expected package was not created: $PACKAGE_DIR/lidguard.$PACKAGE_VERSION.nupkg" >&2

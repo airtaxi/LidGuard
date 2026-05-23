@@ -1,10 +1,29 @@
 <Solution>
   <Configurations>
-    <Platform Name="ARM64" />
-    <Platform Name="x64" />
-    <Platform Name="x86" />
+    <Platform Name="linux-arm64" />
+    <Platform Name="linux-x64" />
+    <Platform Name="macos-arm64" />
+    <Platform Name="macos-x64" />
+    <Platform Name="windows-arm64" />
+    <Platform Name="windows-x64" />
+    <Platform Name="windows-x86" />
   </Configurations>
-  <Project Path="LidGuard/LidGuard.csproj" />
-  <Project Path="LidGuard.Notifications/LidGuard.Notifications.csproj" />
+  <Project Path="LidGuard/LidGuard.csproj">
+    <Platform Solution="*|linux-arm64" Project="linux-arm64" />
+    <Platform Solution="*|linux-x64" Project="linux-x64" />
+    <Platform Solution="*|macos-arm64" Project="macos-arm64" />
+    <Platform Solution="*|macos-x64" Project="macos-x64" />
+    <Platform Solution="*|windows-arm64" Project="windows-arm64" />
+    <Platform Solution="*|windows-x64" Project="windows-x64" />
+    <Platform Solution="*|windows-x86" Project="windows-x86" />
+  </Project>
+  <Project Path="LidGuard.Notifications/LidGuard.Notifications.csproj">
+    <Platform Solution="*|linux-arm64" Project="Any CPU" />
+    <Platform Solution="*|linux-x64" Project="Any CPU" />
+    <Platform Solution="*|macos-arm64" Project="Any CPU" />
+    <Platform Solution="*|macos-x64" Project="Any CPU" />
+    <Platform Solution="*|windows-arm64" Project="Any CPU" />
+    <Platform Solution="*|windows-x64" Project="Any CPU" />
+    <Platform Solution="*|windows-x86" Project="Any CPU" />
+  </Project>
 </Solution>
-

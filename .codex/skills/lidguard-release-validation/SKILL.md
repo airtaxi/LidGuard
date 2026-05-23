@@ -49,9 +49,12 @@ Package commands:
 
 ```powershell
 dotnet pack .\LidGuard\LidGuard.csproj -c Release
-dotnet pack .\LidGuard\LidGuard.csproj -c Release -r win-x64
-dotnet pack .\LidGuard\LidGuard.csproj -c Release -r win-x86
-dotnet pack .\LidGuard\LidGuard.csproj -c Release -r win-arm64
+dotnet pack .\LidGuard\LidGuard.csproj -c Release -p:Platform=windows-x64
+dotnet pack .\LidGuard\LidGuard.csproj -c Release -p:Platform=windows-x86
+dotnet pack .\LidGuard\LidGuard.csproj -c Release -p:Platform=windows-arm64
+dotnet pack .\LidGuard\LidGuard.csproj -c Release -p:Platform=linux-x64
+dotnet pack .\LidGuard\LidGuard.csproj -c Release -p:Platform=macos-x64
+dotnet pack .\LidGuard\LidGuard.csproj -c Release -p:Platform=macos-arm64
 ```
 
 Expected package files:

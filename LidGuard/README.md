@@ -186,7 +186,7 @@ The default settings file is `settings.json`. Runtime session execution events a
 
 ## Notes
 
-This package targets `net10.0` and is packaged as RID-specific NativeAOT .NET tool packages for Windows, Linux, and macOS. Windows, systemd/logind Linux, and macOS are implemented runtime platforms in the current release.
+This project targets `net10.0` and exposes RID-shaped Visual Studio platforms such as `windows-x64`, `linux-x64`, and `macos-arm64` for platform-specific source selection and RuntimeIdentifier mapping. Release artifacts are packaged as RID-specific NativeAOT .NET tool packages for Windows, Linux, and macOS. Windows, systemd/logind Linux, and macOS are implemented runtime platforms in the current release.
 
 On Linux, idle sleep protection uses systemd/logind `sleep` and `idle` inhibitors. Lid-close handling is separate: `--change-lid-action true` holds a `handle-lid-switch` inhibitor, while `false` leaves distribution lid-close handling unchanged. Partial systemd/logind environments report missing prerequisites per operation so diagnostics can still explain what is unavailable.
 

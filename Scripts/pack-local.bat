@@ -33,6 +33,8 @@ if not defined TOOL_ARCH (
     goto finalize
 )
 
+set "TOOL_PLATFORM=windows-%TOOL_ARCH%"
+
 for %%I in ("%SCRIPT_DIR%..") do set "REPO_ROOT=%%~fI"
 set "PROJECT_FILE=%REPO_ROOT%\LidGuard\LidGuard.csproj"
 call :read_package_version
@@ -90,7 +92,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo Detected system architecture: %NATIVE_ARCH% ^(packing win-%TOOL_ARCH% package^)
+echo Detected system architecture: %NATIVE_ARCH% ^(packing win-%TOOL_ARCH% package with %TOOL_PLATFORM% platform^)
 echo Using package version from project: %PACKAGE_VERSION%
 call :clean_build_output_directories
 if errorlevel 1 exit /b 1
@@ -106,7 +108,7 @@ dotnet pack ".\LidGuard\LidGuard.csproj" -c Release
 if errorlevel 1 exit /b 1
 
 echo Packing lidguard.win-%TOOL_ARCH% %PACKAGE_VERSION%...
-dotnet pack ".\LidGuard\LidGuard.csproj" -c Release -r "win-%TOOL_ARCH%"
+dotnet pack ".\LidGuard\LidGuard.csproj" -c Release -p:Platform="%TOOL_PLATFORM%"
 if errorlevel 1 exit /b 1
 
 if not exist "%PACKAGE_DIR%\lidguard.%PACKAGE_VERSION%.nupkg" (

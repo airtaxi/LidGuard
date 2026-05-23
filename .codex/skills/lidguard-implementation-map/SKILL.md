@@ -13,12 +13,14 @@ Use this skill for repository shape, subsystem ownership, and architectural cons
 
 - `LidGuard`
   - .NET 10 console app targeting `net10.0`.
+  - Visual Studio platform switching uses RID-shaped solution/project platforms `windows-x86`, `windows-x64`, `windows-arm64`, `linux-x64`, `linux-arm64`, `macos-x64`, and `macos-arm64`; the project maps those to `RuntimeIdentifier` and `LidGuardTargetPlatform`.
   - Standalone hook-facing CLI plus in-process headless runtime and stdio MCP server hosting.
   - Common, platform-neutral models and policies live in feature folders such as `Sessions`, `Settings`, `Power`, `Services`, `Results`, and `Processes`.
   - Shared provider/hook utilities live under `Hooks` in regular `*.cs` files.
   - Windows-specific runtime/process/power implementations live in `*.windows.cs`.
   - Linux-specific systemd/logind, `/proc`, and `/sys` implementations live in `*.linux.cs`.
   - macOS-specific runtime/process/power implementations live in `*.macOS.cs`.
+  - Platform-specific files are compiled according to `LidGuardTargetPlatform`, which is selected from Visual Studio `Platform`, then RID, then current host OS.
   - Nullable is intentionally not enabled in the csproj.
   - `ImplicitUsings` is enabled.
   - NativeAOT/trimming compatibility flags are enabled.

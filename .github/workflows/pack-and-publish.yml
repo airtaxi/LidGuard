@@ -97,10 +97,11 @@ jobs:
 
           $packJobs = foreach ($runtimeIdentifier in $runtimeIdentifiers) {
             $runtimeProjectPath = Join-Path $packRootDirectory "$runtimeIdentifier/LidGuard/LidGuard.csproj"
-            Start-Job -Name "pack-$runtimeIdentifier" -ArgumentList $runtimeIdentifier, $runtimeProjectPath, $packagesDirectory -ScriptBlock {
-              param($runtimeIdentifier, $runtimeProjectPath, $packagesDirectory)
+            $runtimePlatform = $runtimeIdentifier -replace "^win-", "windows-"
+            Start-Job -Name "pack-$runtimeIdentifier" -ArgumentList $runtimeIdentifier, $runtimePlatform, $runtimeProjectPath, $packagesDirectory -ScriptBlock {
+              param($runtimeIdentifier, $runtimePlatform, $runtimeProjectPath, $packagesDirectory)
               $ErrorActionPreference = "Stop"
-              & dotnet pack $runtimeProjectPath -c Release -r $runtimeIdentifier /p:ContinuousIntegrationBuild=true "/p:PackageOutputPath=$packagesDirectory"
+              & dotnet pack $runtimeProjectPath -c Release "-p:Platform=$runtimePlatform" /p:ContinuousIntegrationBuild=true "/p:PackageOutputPath=$packagesDirectory"
               if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed for $runtimeIdentifier." }
             }
           }
@@ -177,7 +178,7 @@ jobs:
             log_path="$logs_directory/pack-$runtime_identifier.log"
             (
               set -euo pipefail
-              dotnet pack "$runtime_project_path" -c Release -r "$runtime_identifier" /p:ContinuousIntegrationBuild=true "/p:PackageOutputPath=$packages_directory"
+              dotnet pack "$runtime_project_path" -c Release -p:Platform="$runtime_identifier" /p:ContinuousIntegrationBuild=true "/p:PackageOutputPath=$packages_directory"
             ) > "$log_path" 2>&1 &
             pack_process_ids="$pack_process_ids $runtime_identifier:$!"
           done
@@ -266,9 +267,10 @@ jobs:
           for runtime_identifier in $runtime_identifiers; do
             runtime_project_path="$pack_root_directory/$runtime_identifier/LidGuard/LidGuard.csproj"
             log_path="$logs_directory/pack-$runtime_identifier.log"
+            runtime_platform="macos-${runtime_identifier#osx-}"
             (
               set -euo pipefail
-              dotnet pack "$runtime_project_path" -c Release -r "$runtime_identifier" /p:ContinuousIntegrationBuild=true "/p:PackageOutputPath=$packages_directory"
+              dotnet pack "$runtime_project_path" -c Release -p:Platform="$runtime_platform" /p:ContinuousIntegrationBuild=true "/p:PackageOutputPath=$packages_directory"
             ) > "$log_path" 2>&1 &
             pack_process_ids="$pack_process_ids $runtime_identifier:$!"
           done

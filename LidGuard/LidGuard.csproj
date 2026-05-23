@@ -1,13 +1,27 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project>
+  <PropertyGroup>
+    <MSBuildEnableWorkloadResolver>false</MSBuildEnableWorkloadResolver>
+  </PropertyGroup>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
+    <Platforms>windows-x86;windows-x64;windows-arm64;linux-x64;linux-arm64;macos-x64;macos-arm64</Platforms>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <AssemblyName>lidguard</AssemblyName>
     <RootNamespace>LidGuard</RootNamespace>
     <RuntimeIdentifiers>win-x64;win-x86;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
     <ToolPackageRuntimeIdentifiers>$(RuntimeIdentifiers)</ToolPackageRuntimeIdentifiers>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and '$(Platform)' == 'windows-x86'">win-x86</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and '$(Platform)' == 'windows-x64'">win-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and '$(Platform)' == 'windows-arm64'">win-arm64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and '$(Platform)' == 'linux-x64'">linux-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and '$(Platform)' == 'linux-arm64'">linux-arm64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and '$(Platform)' == 'macos-x64'">osx-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and '$(Platform)' == 'macos-arm64'">osx-arm64</RuntimeIdentifier>
     <PublishAot>true</PublishAot>
     <IsAotCompatible>true</IsAotCompatible>
     <IsTrimmable>true</IsTrimmable>
@@ -16,17 +30,21 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
     <CsWin32RunAsBuildTask>true</CsWin32RunAsBuildTask>
-    <EffectiveTargetRuntimeIdentifier>$(RuntimeIdentifier)</EffectiveTargetRuntimeIdentifier>
-    <CurrentTargetPlatform>unknown</CurrentTargetPlatform>
-    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' != '' and $([System.String]::Copy('$(EffectiveTargetRuntimeIdentifier)').StartsWith('win'))">windows</CurrentTargetPlatform>
-    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' != '' and $([System.String]::Copy('$(EffectiveTargetRuntimeIdentifier)').StartsWith('linux'))">linux</CurrentTargetPlatform>
-    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' != '' and $([System.String]::Copy('$(EffectiveTargetRuntimeIdentifier)').StartsWith('osx'))">macOS</CurrentTargetPlatform>
-    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' == '' and '$(OS)' == 'Windows_NT'">windows</CurrentTargetPlatform>
-    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' == '' and $([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))">linux</CurrentTargetPlatform>
-    <CurrentTargetPlatform Condition="'$(EffectiveTargetRuntimeIdentifier)' == '' and $([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))">macOS</CurrentTargetPlatform>
-    <DefineConstants Condition="'$(CurrentTargetPlatform)' == 'linux'">$(DefineConstants);LIDGUARD_LINUX</DefineConstants>
-    <DefineConstants Condition="'$(CurrentTargetPlatform)' == 'macOS'">$(DefineConstants);LIDGUARD_MACOS</DefineConstants>
-    <DefineConstants Condition="'$(CurrentTargetPlatform)' == 'windows'">$(DefineConstants);LIDGUARD_WINDOWS</DefineConstants>
+    <LidGuardTargetPlatform Condition="$([System.String]::Copy('$(Platform)').StartsWith('windows-'))">windows</LidGuardTargetPlatform>
+    <LidGuardTargetPlatform Condition="$([System.String]::Copy('$(Platform)').StartsWith('linux-'))">linux</LidGuardTargetPlatform>
+    <LidGuardTargetPlatform Condition="$([System.String]::Copy('$(Platform)').StartsWith('macos-'))">macOS</LidGuardTargetPlatform>
+    <LidGuardTargetPlatform Condition="'$(LidGuardTargetPlatform)' == '' and '$(RuntimeIdentifier)' != '' and $([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win'))">windows</LidGuardTargetPlatform>
+    <LidGuardTargetPlatform Condition="'$(LidGuardTargetPlatform)' == '' and '$(RuntimeIdentifier)' != '' and $([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('linux'))">linux</LidGuardTargetPlatform>
+    <LidGuardTargetPlatform Condition="'$(LidGuardTargetPlatform)' == '' and '$(RuntimeIdentifier)' != '' and $([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('osx'))">macOS</LidGuardTargetPlatform>
+    <LidGuardTargetPlatform Condition="'$(LidGuardTargetPlatform)' == '' and '$(OS)' == 'Windows_NT'">windows</LidGuardTargetPlatform>
+    <LidGuardTargetPlatform Condition="'$(LidGuardTargetPlatform)' == '' and $([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))">linux</LidGuardTargetPlatform>
+    <LidGuardTargetPlatform Condition="'$(LidGuardTargetPlatform)' == '' and $([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))">macOS</LidGuardTargetPlatform>
+    <LidGuardIsWindowsTarget Condition="'$(LidGuardTargetPlatform)' == 'windows'">true</LidGuardIsWindowsTarget>
+    <LidGuardIsLinuxTarget Condition="'$(LidGuardTargetPlatform)' == 'linux'">true</LidGuardIsLinuxTarget>
+    <LidGuardIsMacOSTarget Condition="'$(LidGuardTargetPlatform)' == 'macOS'">true</LidGuardIsMacOSTarget>
+    <DefineConstants Condition="'$(LidGuardIsLinuxTarget)' == 'true'">$(DefineConstants);LIDGUARD_LINUX</DefineConstants>
+    <DefineConstants Condition="'$(LidGuardIsMacOSTarget)' == 'true'">$(DefineConstants);LIDGUARD_MACOS</DefineConstants>
+    <DefineConstants Condition="'$(LidGuardIsWindowsTarget)' == 'true'">$(DefineConstants);LIDGUARD_WINDOWS</DefineConstants>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>lidguard</ToolCommandName>
     <PackageId>lidguard</PackageId>
@@ -40,7 +58,7 @@
     <PackageOutputPath>$(MSBuildProjectDirectory)\..\artifacts\packages</PackageOutputPath>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <UsesWmiLight>false</UsesWmiLight>
-    <UsesWmiLight Condition="'$(CurrentTargetPlatform)' == 'windows'">true</UsesWmiLight>
+    <UsesWmiLight Condition="'$(LidGuardIsWindowsTarget)' == 'true'">true</UsesWmiLight>
   </PropertyGroup>
 
   <ItemGroup>
@@ -58,19 +76,31 @@
     <Compile Remove="**\*.macOS.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(CurrentTargetPlatform)' == 'windows'">
+  <ItemGroup Condition="'$(LidGuardIsWindowsTarget)' != 'true'">
+    <None Include="**\*.windows.cs" Pack="false" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(LidGuardIsLinuxTarget)' != 'true'">
+    <None Include="**\*.linux.cs" Pack="false" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(LidGuardIsMacOSTarget)' != 'true'">
+    <None Include="**\*.macOS.cs" Pack="false" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(LidGuardIsWindowsTarget)' == 'true'">
     <Compile Include="**\*.windows.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(CurrentTargetPlatform)' == 'linux'">
+  <ItemGroup Condition="'$(LidGuardIsLinuxTarget)' == 'true'">
     <Compile Include="**\*.linux.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(CurrentTargetPlatform)' == 'macOS'">
+  <ItemGroup Condition="'$(LidGuardIsMacOSTarget)' == 'true'">
     <Compile Include="**\*.macOS.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(CurrentTargetPlatform)' == 'windows'">
+  <ItemGroup Condition="'$(LidGuardIsWindowsTarget)' == 'true'">
     <PackageReference Include="WmiLight" Version="7.2.0" />
   </ItemGroup>
 
@@ -81,5 +111,6 @@
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
-</Project>
 
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+</Project>
