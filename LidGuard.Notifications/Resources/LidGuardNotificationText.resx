@@ -327,6 +327,36 @@
   <data name="StopFollowUpDeadlineLabel" xml:space="preserve">
     <value>Reply deadline</value>
   </data>
+  <data name="StopFollowUpExtendButton" xml:space="preserve">
+    <value>Extend wait</value>
+  </data>
+  <data name="StopFollowUpExtendHelp" xml:space="preserve">
+    <value>Extend the reply window without refreshing the page. The provider hook timeout is the hard limit.</value>
+  </data>
+  <data name="StopFollowUpExtendLabel" xml:space="preserve">
+    <value>Extend reply wait</value>
+  </data>
+  <data name="StopFollowUpExtendLimitReachedMessage" xml:space="preserve">
+    <value>The reply wait is already at the provider hook timeout limit.</value>
+  </data>
+  <data name="StopFollowUpExtendMinutesLabel" xml:space="preserve">
+    <value>Minutes to add</value>
+  </data>
+  <data name="StopFollowUpExtendSendingMessage" xml:space="preserve">
+    <value>Extending wait...</value>
+  </data>
+  <data name="StopFollowUpExtendSucceededMessage" xml:space="preserve">
+    <value>Reply wait extended.</value>
+  </data>
+  <data name="StopFollowUpExtendValidationMessage" xml:space="preserve">
+    <value>Enter a value from {0} to {1} minutes.</value>
+  </data>
+  <data name="StopFollowUpMaximumDeadlineLabel" xml:space="preserve">
+    <value>Provider hook timeout</value>
+  </data>
+  <data name="StopFollowUpProviderHookTimeoutRemaining" xml:space="preserve">
+    <value>Provider hook timeout remaining: {0} seconds</value>
+  </data>
   <data name="StopFollowUpReplyButton" xml:space="preserve">
     <value>Submit reply</value>
   </data>

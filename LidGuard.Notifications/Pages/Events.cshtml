@@ -14,7 +14,11 @@
     data-events-load-more="@LidGuardNotificationText.EventsLoadMore"
     data-events-load-failed="@LidGuardNotificationText.EventsLoadFailed"
     data-event-details-load-failed="@LidGuardNotificationText.EventDetailsLoadFailed"
-    data-recent-events-format="@LidGuardNotificationText.RecentEventsFormat">
+    data-recent-events-format="@LidGuardNotificationText.RecentEventsFormat"
+    data-stop-follow-up-status-pending="@LidGuardNotificationText.DisplayStopFollowUpStatus(StopFollowUpRequestStatuses.Pending)"
+    data-stop-follow-up-status-answered="@LidGuardNotificationText.DisplayStopFollowUpStatus(StopFollowUpRequestStatuses.Answered)"
+    data-stop-follow-up-status-expired="@LidGuardNotificationText.DisplayStopFollowUpStatus(StopFollowUpRequestStatuses.Expired)"
+    data-stop-follow-up-status-canceled="@LidGuardNotificationText.DisplayStopFollowUpStatus(StopFollowUpRequestStatuses.Canceled)">
     <div class="page-heading">
         <h1>@LidGuardNotificationText.WebhookEventsHeading</h1>
         <span class="muted" data-recent-events-count>@LidGuardNotificationText.RecentEvents(Model.EventPage.Events.Count)</span>

@@ -73,6 +73,14 @@ internal static class LidGuardNotificationText
     public static string StopFollowUpCancelHelp => Get(nameof(StopFollowUpCancelHelp));
     public static string StopFollowUpCancelSucceededMessage => Get(nameof(StopFollowUpCancelSucceededMessage));
     public static string StopFollowUpDeadlineLabel => Get(nameof(StopFollowUpDeadlineLabel));
+    public static string StopFollowUpExtendButton => Get(nameof(StopFollowUpExtendButton));
+    public static string StopFollowUpExtendHelp => Get(nameof(StopFollowUpExtendHelp));
+    public static string StopFollowUpExtendLabel => Get(nameof(StopFollowUpExtendLabel));
+    public static string StopFollowUpExtendLimitReachedMessage => Get(nameof(StopFollowUpExtendLimitReachedMessage));
+    public static string StopFollowUpExtendMinutesLabel => Get(nameof(StopFollowUpExtendMinutesLabel));
+    public static string StopFollowUpExtendSendingMessage => Get(nameof(StopFollowUpExtendSendingMessage));
+    public static string StopFollowUpExtendSucceededMessage => Get(nameof(StopFollowUpExtendSucceededMessage));
+    public static string StopFollowUpMaximumDeadlineLabel => Get(nameof(StopFollowUpMaximumDeadlineLabel));
     public static string StopFollowUpReplyButton => Get(nameof(StopFollowUpReplyButton));
     public static string StopFollowUpReplyAwaitingConsumptionMessage => Get(nameof(StopFollowUpReplyAwaitingConsumptionMessage));
     public static string StopFollowUpReplyConsumedMessage => Get(nameof(StopFollowUpReplyConsumedMessage));
@@ -128,6 +136,12 @@ internal static class LidGuardNotificationText
 
     public static string SoftLockedSessionCount(int softLockedSessionCount)
         => Format(nameof(SoftLockedSessionCount), softLockedSessionCount);
+
+    public static string StopFollowUpExtendValidationMessage(int minimumMinutes, int maximumMinutes)
+        => Format(nameof(StopFollowUpExtendValidationMessage), minimumMinutes, maximumMinutes);
+
+    public static string StopFollowUpProviderHookTimeoutRemaining(int remainingSeconds)
+        => Format(nameof(StopFollowUpProviderHookTimeoutRemaining), remainingSeconds);
 
     public static string ThemeSwitchTo(string modeLabel)
         => Format(nameof(ThemeSwitchTo), modeLabel);

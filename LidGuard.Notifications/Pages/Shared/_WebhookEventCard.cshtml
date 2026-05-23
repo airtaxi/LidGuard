@@ -12,6 +12,11 @@
         ? $"event-{Model.WebhookEventIdentifier}"
         : $"followup-{Model.StopFollowUpPublicIdentifier}";
     var isStopFollowUpEvent = Model.EventType == LidGuardWebhookEventTypes.StopFollowUp;
+    var stopFollowUpPublicIdentifier = Model.StopFollowUpPublicIdentifier ?? string.Empty;
+    var providerHookTimeoutRemainingSeconds = Model.StopFollowUpMaximumDeadlineUtc is null ? 0 : Math.Max(0, (int)Math.Ceiling((Model.StopFollowUpMaximumDeadlineUtc.Value - DateTimeOffset.UtcNow).TotalSeconds));
+    var replyApiUrl = Url.Content($"~/api/follow-ups/{stopFollowUpPublicIdentifier}/reply");
+    var extendApiUrl = Url.Content($"~/api/follow-ups/{stopFollowUpPublicIdentifier}/extend");
+    var cancelApiUrl = Url.Content($"~/api/follow-ups/{stopFollowUpPublicIdentifier}/cancel");
 }
 
 <article class="event-card" id="@followUpAnchorIdentifier" data-event-card data-webhook-event-identifier="@Model.WebhookEventIdentifier">
@@ -26,7 +31,7 @@
                 }
                 @if (!string.IsNullOrWhiteSpace(Model.StopFollowUpStatus))
                 {
-                    <span class="reason-badge secondary">@LidGuardNotificationText.DisplayStopFollowUpStatus(Model.StopFollowUpStatus)</span>
+                    <span class="reason-badge secondary" data-stop-follow-up-status-badge>@LidGuardNotificationText.DisplayStopFollowUpStatus(Model.StopFollowUpStatus)</span>
                 }
             </div>
             <div class="event-meta">
@@ -91,35 +96,57 @@
     {
         <section class="event-preview-block">
             <span class="preview-label">@LidGuardNotificationText.StopFollowUpStatusLabel</span>
-            <p>@LidGuardNotificationText.DisplayStopFollowUpStatus(Model.StopFollowUpStatus ?? string.Empty)</p>
+            <p data-stop-follow-up-status-text>@LidGuardNotificationText.DisplayStopFollowUpStatus(Model.StopFollowUpStatus ?? string.Empty)</p>
             @if (Model.ReplyDeadlineUtc is not null)
             {
                 var replyDeadlineUniversalTime = Model.ReplyDeadlineUtc.Value.ToUniversalTime();
                 var replyDeadlineDateTimeAttribute = replyDeadlineUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
                 var replyDeadlineFallbackText = replyDeadlineUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
-                <p><span class="preview-label">@LidGuardNotificationText.StopFollowUpDeadlineLabel</span> <time datetime="@replyDeadlineDateTimeAttribute" data-device-time="true">@replyDeadlineFallbackText</time></p>
+                <p><span class="preview-label">@LidGuardNotificationText.StopFollowUpDeadlineLabel</span> <time datetime="@replyDeadlineDateTimeAttribute" data-device-time="true" data-stop-follow-up-deadline>@replyDeadlineFallbackText</time></p>
+            }
+            @if (Model.StopFollowUpMaximumDeadlineUtc is not null)
+            {
+                var maximumDeadlineUniversalTime = Model.StopFollowUpMaximumDeadlineUtc.Value.ToUniversalTime();
+                var maximumDeadlineDateTimeAttribute = maximumDeadlineUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+                var maximumDeadlineFallbackText = maximumDeadlineUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+                <p><span class="preview-label">@LidGuardNotificationText.StopFollowUpMaximumDeadlineLabel</span> <time datetime="@maximumDeadlineDateTimeAttribute" data-device-time="true" data-stop-follow-up-maximum-deadline>@maximumDeadlineFallbackText</time></p>
+                <p class="muted" data-provider-hook-timeout-remaining>@LidGuardNotificationText.StopFollowUpProviderHookTimeoutRemaining(providerHookTimeoutRemainingSeconds)</p>
             }
             @if (string.Equals(Model.StopFollowUpStatus, StopFollowUpRequestStatuses.Pending, StringComparison.Ordinal)
-                && !string.IsNullOrWhiteSpace(Model.StopFollowUpPublicIdentifier))
+                && !string.IsNullOrWhiteSpace(stopFollowUpPublicIdentifier))
             {
-                <form method="post" asp-page-handler="Reply" class="event-disclosure" data-stop-follow-up-reply-form data-submitting-text="@LidGuardNotificationText.StopFollowUpReplySendingMessage">
-                    <input type="hidden" name="publicIdentifier" value="@Model.StopFollowUpPublicIdentifier" />
-                    <label class="preview-label" for="reply-@Model.StopFollowUpPublicIdentifier">@LidGuardNotificationText.StopFollowUpReplyLabel</label>
-                    <textarea
-                        id="reply-@Model.StopFollowUpPublicIdentifier"
-                        name="reply"
-                        rows="4"
-                        placeholder="@LidGuardNotificationText.StopFollowUpReplyPlaceholder"></textarea>
-                    <div>
-                        <button type="submit">@LidGuardNotificationText.StopFollowUpReplyButton</button>
-                    </div>
-                    <p class="muted reply-submit-status" data-reply-submit-status hidden>@LidGuardNotificationText.StopFollowUpReplySendingMessage</p>
-                </form>
-                <form method="post" asp-page-handler="Cancel" class="event-disclosure">
-                    <input type="hidden" name="publicIdentifier" value="@Model.StopFollowUpPublicIdentifier" />
-                    <p class="muted">@LidGuardNotificationText.StopFollowUpCancelHelp</p>
-                    <button type="submit" class="danger">@LidGuardNotificationText.StopFollowUpCancelButton</button>
-                </form>
+                <div data-stop-follow-up-actions>
+                    <form method="post" asp-page-handler="Reply" class="event-disclosure" data-stop-follow-up-reply-form data-reply-url="@replyApiUrl" data-submitting-text="@LidGuardNotificationText.StopFollowUpReplySendingMessage">
+                        <input type="hidden" name="publicIdentifier" value="@stopFollowUpPublicIdentifier" />
+                        <label class="preview-label" for="reply-@stopFollowUpPublicIdentifier">@LidGuardNotificationText.StopFollowUpReplyLabel</label>
+                        <textarea
+                            id="reply-@stopFollowUpPublicIdentifier"
+                            name="reply"
+                            rows="4"
+                            placeholder="@LidGuardNotificationText.StopFollowUpReplyPlaceholder"></textarea>
+                        <div>
+                            <button type="submit">@LidGuardNotificationText.StopFollowUpReplyButton</button>
+                        </div>
+                        <p class="muted reply-submit-status" role="status" aria-live="polite" data-reply-submit-status hidden>@LidGuardNotificationText.StopFollowUpReplySendingMessage</p>
+                    </form>
+                    <form method="post" asp-page-handler="Extend" class="event-disclosure" data-stop-follow-up-extend-form data-extend-url="@extendApiUrl" data-submitting-text="@LidGuardNotificationText.StopFollowUpExtendSendingMessage">
+                        <input type="hidden" name="publicIdentifier" value="@stopFollowUpPublicIdentifier" />
+                        <span class="preview-label">@LidGuardNotificationText.StopFollowUpExtendLabel</span>
+                        <p class="muted">@LidGuardNotificationText.StopFollowUpExtendHelp</p>
+                        <div class="follow-up-extend-controls">
+                            <label for="extend-@stopFollowUpPublicIdentifier">@LidGuardNotificationText.StopFollowUpExtendMinutesLabel</label>
+                            <input id="extend-@stopFollowUpPublicIdentifier" name="extendMinutes" type="number" min="@StopFollowUpTiming.MinimumExtensionMinutes.ToString(CultureInfo.InvariantCulture)" max="@StopFollowUpTiming.MaximumExtensionMinutes.ToString(CultureInfo.InvariantCulture)" step="1" value="@StopFollowUpTiming.DefaultExtensionMinutes.ToString(CultureInfo.InvariantCulture)" />
+                            <button type="submit" class="secondary">@LidGuardNotificationText.StopFollowUpExtendButton</button>
+                        </div>
+                        <p class="muted reply-submit-status" role="status" aria-live="polite" data-extend-submit-status hidden>@LidGuardNotificationText.StopFollowUpExtendSendingMessage</p>
+                    </form>
+                    <form method="post" asp-page-handler="Cancel" class="event-disclosure" data-stop-follow-up-cancel-form data-cancel-url="@cancelApiUrl" data-submitting-text="@LidGuardNotificationText.EventsLoading">
+                        <input type="hidden" name="publicIdentifier" value="@stopFollowUpPublicIdentifier" />
+                        <p class="muted">@LidGuardNotificationText.StopFollowUpCancelHelp</p>
+                        <button type="submit" class="danger">@LidGuardNotificationText.StopFollowUpCancelButton</button>
+                    </form>
+                </div>
+                <p class="muted" role="status" aria-live="polite" data-stop-follow-up-action-status hidden></p>
             }
         </section>
     }

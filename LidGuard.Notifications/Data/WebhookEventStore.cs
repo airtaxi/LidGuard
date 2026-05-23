@@ -91,6 +91,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         var publicIdentifier = Guid.NewGuid().ToString("N");
         var pollToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(24)).ToLowerInvariant();
         var pollTokenHash = ComputeHash(pollToken);
+        var maximumDeadlineAtUtc = replyDeadlineUtc.AddSeconds(StopFollowUpTiming.MaximumReplyExtensionSeconds);
 
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
         using var transaction = connection.BeginTransaction();
@@ -107,6 +108,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                     Status,
                     ReplyText,
                     DeadlineAtUtc,
+                    MaximumDeadlineAtUtc,
                     CreatedAtUtc,
                     RepliedAtUtc,
                     ConsumedAtUtc
@@ -118,6 +120,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                     $status,
                     NULL,
                     $deadlineAtUtc,
+                    $maximumDeadlineAtUtc,
                     $createdAtUtc,
                     NULL,
                     NULL
@@ -128,6 +131,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
             command.Parameters.AddWithValue("$pollTokenHash", pollTokenHash);
             command.Parameters.AddWithValue("$status", StopFollowUpRequestStatuses.Pending);
             command.Parameters.AddWithValue("$deadlineAtUtc", replyDeadlineUtc.ToString("O", CultureInfo.InvariantCulture));
+            command.Parameters.AddWithValue("$maximumDeadlineAtUtc", maximumDeadlineAtUtc.ToString("O", CultureInfo.InvariantCulture));
             command.Parameters.AddWithValue("$createdAtUtc", now.ToString("O", CultureInfo.InvariantCulture));
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
@@ -324,6 +328,47 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         return false;
     }
 
+    public async Task<StopFollowUpActionResult> ExtendStopFollowUpAsync(string publicIdentifier, int extendMinutes, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(publicIdentifier)) return new StopFollowUpActionResult(false, false, string.Empty, "The follow-up request was not found.", null, null, null);
+        if (extendMinutes is < StopFollowUpTiming.MinimumExtensionMinutes or > StopFollowUpTiming.MaximumExtensionMinutes)
+        {
+            return new StopFollowUpActionResult(false, false, StopFollowUpRequestStatuses.Pending, $"extendMinutes must be between {StopFollowUpTiming.MinimumExtensionMinutes} and {StopFollowUpTiming.MaximumExtensionMinutes}.", null, null, null);
+        }
+
+        await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+        using var transaction = connection.BeginTransaction();
+        await ExpirePendingStopFollowUpRequestsAsync(connection, transaction, cancellationToken);
+
+        var snapshot = await GetStopFollowUpActionSnapshotAsync(connection, transaction, publicIdentifier, cancellationToken);
+        if (snapshot is null)
+        {
+            await transaction.CommitAsync(cancellationToken);
+            return new StopFollowUpActionResult(false, false, string.Empty, "The follow-up request was not found.", null, null, null);
+        }
+
+        var status = snapshot.Value.Status;
+        var deadlineAtUtc = snapshot.Value.DeadlineAtUtc;
+        var maximumDeadlineAtUtc = snapshot.Value.MaximumDeadlineAtUtc ?? deadlineAtUtc.AddSeconds(StopFollowUpTiming.MaximumReplyExtensionSeconds);
+        if (snapshot.Value.MaximumDeadlineAtUtc is null) await UpdateMaximumDeadlineAsync(connection, transaction, publicIdentifier, maximumDeadlineAtUtc, cancellationToken);
+
+        if (!status.Equals(StopFollowUpRequestStatuses.Pending, StringComparison.Ordinal))
+        {
+            await transaction.CommitAsync(cancellationToken);
+            return new StopFollowUpActionResult(false, false, status, CreateStopFollowUpStatusFailureMessage(status), deadlineAtUtc, maximumDeadlineAtUtc, snapshot.Value.ConsumedAtUtc);
+        }
+
+        var requestedDeadlineAtUtc = DateTimeOffset.UtcNow.AddMinutes(extendMinutes);
+        var nextDeadlineAtUtc = requestedDeadlineAtUtc > deadlineAtUtc ? requestedDeadlineAtUtc : deadlineAtUtc;
+        if (nextDeadlineAtUtc > maximumDeadlineAtUtc) nextDeadlineAtUtc = maximumDeadlineAtUtc;
+        var extended = nextDeadlineAtUtc > deadlineAtUtc;
+        if (extended) await UpdateDeadlineAsync(connection, transaction, snapshot.Value.WebhookEventIdentifier, publicIdentifier, nextDeadlineAtUtc, cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
+        var message = extended ? "Follow-up wait extended." : "The follow-up wait is already at the provider hook timeout limit.";
+        return new StopFollowUpActionResult(true, extended, status, message, nextDeadlineAtUtc, maximumDeadlineAtUtc, snapshot.Value.ConsumedAtUtc);
+    }
+
     public async Task<StopFollowUpCancellationResult> CancelStopFollowUpAsync(string publicIdentifier, CancellationToken cancellationToken)
     {
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
@@ -382,6 +427,25 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         return new StopFollowUpCancellationResult(true, StopFollowUpRequestStatuses.Canceled, "Follow-up request canceled.");
     }
 
+    public async Task<StopFollowUpActionResult> GetStopFollowUpActionStateAsync(string publicIdentifier, string fallbackMessage, CancellationToken cancellationToken)
+    {
+        await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+        using var transaction = connection.BeginTransaction();
+        await ExpirePendingStopFollowUpRequestsAsync(connection, transaction, cancellationToken);
+        var snapshot = await GetStopFollowUpActionSnapshotAsync(connection, transaction, publicIdentifier, cancellationToken);
+        if (snapshot is null)
+        {
+            await transaction.CommitAsync(cancellationToken);
+            return new StopFollowUpActionResult(false, false, string.Empty, "The follow-up request was not found.", null, null, null);
+        }
+
+        var maximumDeadlineAtUtc = snapshot.Value.MaximumDeadlineAtUtc ?? snapshot.Value.DeadlineAtUtc.AddSeconds(StopFollowUpTiming.MaximumReplyExtensionSeconds);
+        if (snapshot.Value.MaximumDeadlineAtUtc is null) await UpdateMaximumDeadlineAsync(connection, transaction, publicIdentifier, maximumDeadlineAtUtc, cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
+        return new StopFollowUpActionResult(true, false, snapshot.Value.Status, fallbackMessage, snapshot.Value.DeadlineAtUtc, maximumDeadlineAtUtc, snapshot.Value.ConsumedAtUtc);
+    }
+
     public async Task<StopFollowUpPollResponse?> GetStopFollowUpPollResponseAsync(string publicIdentifier, string pollToken, CancellationToken cancellationToken)
     {
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
@@ -392,7 +456,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         selectCommand.Transaction = transaction;
         selectCommand.CommandText =
             """
-            SELECT PollTokenHash, Status, ReplyText, ConsumedAtUtc
+            SELECT PollTokenHash, Status, ReplyText, ConsumedAtUtc, DeadlineAtUtc
             FROM StopFollowUpRequests
             WHERE PublicIdentifier = $publicIdentifier;
             """;
@@ -406,6 +470,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         var status = reader.GetString(1);
         var replyText = reader.IsDBNull(2) ? null : reader.GetString(2);
         var consumedAtUtc = reader.IsDBNull(3) ? null : reader.GetString(3);
+        var deadlineAtUtc = GetTimestamp(reader, 4);
         if (status.Equals(StopFollowUpRequestStatuses.Answered, StringComparison.Ordinal) && string.IsNullOrWhiteSpace(consumedAtUtc))
         {
             using var updateCommand = connection.CreateCommand();
@@ -425,7 +490,8 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         return new StopFollowUpPollResponse
         {
             Status = status,
-            Reply = status.Equals(StopFollowUpRequestStatuses.Answered, StringComparison.Ordinal) ? replyText : null
+            Reply = status.Equals(StopFollowUpRequestStatuses.Answered, StringComparison.Ordinal) ? replyText : null,
+            ExpiresAtUtc = deadlineAtUtc
         };
     }
 
@@ -469,7 +535,8 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                 events.Provider,
                 events.ProviderName,
                 events.SessionIdentifier,
-                events.ReplyDeadlineUtc,
+                COALESCE(followUps.DeadlineAtUtc, events.ReplyDeadlineUtc),
+                followUps.MaximumDeadlineAtUtc,
                 SUBSTR(events.InputPromptPreview, 1, $previewCharacterLimit),
                 SUBSTR(events.LastResponse, 1, $previewCharacterLimit),
                 followUps.PublicIdentifier,
@@ -488,7 +555,9 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
         {
-            events.Add(new WebhookEventListItem(reader.GetInt64(0), reader.GetString(1), reader.GetString(2), GetNullableInt32(reader, 3), GetNullableString(reader, 4), GetNullableString(reader, 5), GetNullableString(reader, 6), WebhookTextPreview.Create(GetNullableString(reader, 8)), WebhookTextPreview.Create(GetNullableString(reader, 9)), GetNullableTimestamp(reader, 7), GetNullableString(reader, 10), GetNullableString(reader, 11), WebhookTextPreview.Create(GetNullableString(reader, 12)), GetTimestamp(reader, 13), reader.GetString(14)));
+            var replyDeadlineAtUtc = GetNullableTimestamp(reader, 7);
+            var maximumDeadlineAtUtc = GetNullableTimestamp(reader, 8) ?? replyDeadlineAtUtc?.AddSeconds(StopFollowUpTiming.MaximumReplyExtensionSeconds);
+            events.Add(new WebhookEventListItem(reader.GetInt64(0), reader.GetString(1), reader.GetString(2), GetNullableInt32(reader, 3), GetNullableString(reader, 4), GetNullableString(reader, 5), GetNullableString(reader, 6), WebhookTextPreview.Create(GetNullableString(reader, 9)), WebhookTextPreview.Create(GetNullableString(reader, 10)), replyDeadlineAtUtc, maximumDeadlineAtUtc, GetNullableString(reader, 11), GetNullableString(reader, 12), WebhookTextPreview.Create(GetNullableString(reader, 13)), GetTimestamp(reader, 14), reader.GetString(15)));
         }
 
         var hasMore = events.Count > normalizedPageSize;
@@ -514,6 +583,8 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
                 events.ActiveSessionCount,
                 events.WorkingDirectory,
                 events.TranscriptPath,
+                followUps.DeadlineAtUtc,
+                followUps.MaximumDeadlineAtUtc,
                 followUps.RepliedAtUtc,
                 followUps.ConsumedAtUtc,
                 events.ProcessedAtUtc,
@@ -538,8 +609,83 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         using var reader = await command.ExecuteReaderAsync(cancellationToken);
         if (!await reader.ReadAsync(cancellationToken)) return null;
 
-        return new WebhookEventDetails(reader.GetInt64(0), GetNullableString(reader, 1), GetNullableTimestamp(reader, 2), GetNullableTimestamp(reader, 3), GetNullableTimestamp(reader, 4), GetNullableString(reader, 5), GetNullableInt32(reader, 6), GetNullableString(reader, 7), GetNullableString(reader, 8), GetNullableTimestamp(reader, 9), GetNullableTimestamp(reader, 10), GetNullableTimestamp(reader, 11), GetInt32(reader, 12), GetInt32(reader, 13), GetInt32(reader, 14), GetInt32(reader, 15), GetInt32(reader, 16), GetNullableString(reader, 17), GetNullableString(reader, 18));
+        var deadlineAtUtc = GetNullableTimestamp(reader, 9);
+        var maximumDeadlineAtUtc = GetNullableTimestamp(reader, 10) ?? deadlineAtUtc?.AddSeconds(StopFollowUpTiming.MaximumReplyExtensionSeconds);
+        return new WebhookEventDetails(reader.GetInt64(0), GetNullableString(reader, 1), GetNullableTimestamp(reader, 2), GetNullableTimestamp(reader, 3), GetNullableTimestamp(reader, 4), GetNullableString(reader, 5), GetNullableInt32(reader, 6), GetNullableString(reader, 7), GetNullableString(reader, 8), deadlineAtUtc, maximumDeadlineAtUtc, GetNullableTimestamp(reader, 11), GetNullableTimestamp(reader, 12), GetNullableTimestamp(reader, 13), GetInt32(reader, 14), GetInt32(reader, 15), GetInt32(reader, 16), GetInt32(reader, 17), GetInt32(reader, 18), GetNullableString(reader, 19), GetNullableString(reader, 20));
     }
+
+    private static async Task<StopFollowUpActionSnapshot?> GetStopFollowUpActionSnapshotAsync(SqliteConnection connection, SqliteTransaction transaction, string publicIdentifier, CancellationToken cancellationToken)
+    {
+        using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText =
+            """
+            SELECT WebhookEventId, Status, DeadlineAtUtc, MaximumDeadlineAtUtc, ConsumedAtUtc
+            FROM StopFollowUpRequests
+            WHERE PublicIdentifier = $publicIdentifier;
+            """;
+        command.Parameters.AddWithValue("$publicIdentifier", publicIdentifier);
+        using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken)) return null;
+
+        return new StopFollowUpActionSnapshot(reader.GetInt64(0), reader.GetString(1), GetTimestamp(reader, 2), GetNullableTimestamp(reader, 3), GetNullableTimestamp(reader, 4));
+    }
+
+    private static async Task UpdateDeadlineAsync(SqliteConnection connection, SqliteTransaction transaction, long webhookEventIdentifier, string publicIdentifier, DateTimeOffset deadlineAtUtc, CancellationToken cancellationToken)
+    {
+        using (var followUpCommand = connection.CreateCommand())
+        {
+            followUpCommand.Transaction = transaction;
+            followUpCommand.CommandText =
+                """
+                UPDATE StopFollowUpRequests
+                SET DeadlineAtUtc = $deadlineAtUtc
+                WHERE PublicIdentifier = $publicIdentifier;
+                """;
+            followUpCommand.Parameters.AddWithValue("$deadlineAtUtc", deadlineAtUtc.ToString("O", CultureInfo.InvariantCulture));
+            followUpCommand.Parameters.AddWithValue("$publicIdentifier", publicIdentifier);
+            await followUpCommand.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        using var eventCommand = connection.CreateCommand();
+        eventCommand.Transaction = transaction;
+        eventCommand.CommandText =
+            """
+            UPDATE WebhookEvents
+            SET ReplyDeadlineUtc = $deadlineAtUtc
+            WHERE Id = $webhookEventIdentifier;
+            """;
+        eventCommand.Parameters.AddWithValue("$deadlineAtUtc", deadlineAtUtc.ToString("O", CultureInfo.InvariantCulture));
+        eventCommand.Parameters.AddWithValue("$webhookEventIdentifier", webhookEventIdentifier);
+        await eventCommand.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static async Task UpdateMaximumDeadlineAsync(SqliteConnection connection, SqliteTransaction transaction, string publicIdentifier, DateTimeOffset maximumDeadlineAtUtc, CancellationToken cancellationToken)
+    {
+        using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText =
+            """
+            UPDATE StopFollowUpRequests
+            SET MaximumDeadlineAtUtc = $maximumDeadlineAtUtc
+            WHERE PublicIdentifier = $publicIdentifier
+                AND MaximumDeadlineAtUtc IS NULL;
+            """;
+        command.Parameters.AddWithValue("$maximumDeadlineAtUtc", maximumDeadlineAtUtc.ToString("O", CultureInfo.InvariantCulture));
+        command.Parameters.AddWithValue("$publicIdentifier", publicIdentifier);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static string CreateStopFollowUpStatusFailureMessage(string status)
+        => status switch
+        {
+            StopFollowUpRequestStatuses.Answered => "A reply was already submitted for this follow-up request.",
+            StopFollowUpRequestStatuses.Expired => "This follow-up request has already expired.",
+            StopFollowUpRequestStatuses.Canceled => "This follow-up request was canceled.",
+            _ => "The follow-up request cannot be changed."
+        };
+
+    private readonly record struct StopFollowUpActionSnapshot(long WebhookEventIdentifier, string Status, DateTimeOffset DeadlineAtUtc, DateTimeOffset? MaximumDeadlineAtUtc, DateTimeOffset? ConsumedAtUtc);
 
     private static string? GetNullableString(SqliteDataReader reader, int ordinal)
         => reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);

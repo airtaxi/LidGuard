@@ -327,6 +327,36 @@
   <data name="StopFollowUpDeadlineLabel" xml:space="preserve">
     <value>回复截止时间</value>
   </data>
+  <data name="StopFollowUpExtendButton" xml:space="preserve">
+    <value>延长等待</value>
+  </data>
+  <data name="StopFollowUpExtendHelp" xml:space="preserve">
+    <value>无需刷新页面即可延长回复等待时间。provider hook timeout 是上限。</value>
+  </data>
+  <data name="StopFollowUpExtendLabel" xml:space="preserve">
+    <value>延长回复等待</value>
+  </data>
+  <data name="StopFollowUpExtendLimitReachedMessage" xml:space="preserve">
+    <value>回复等待时间已达到 provider hook timeout 上限。</value>
+  </data>
+  <data name="StopFollowUpExtendMinutesLabel" xml:space="preserve">
+    <value>要增加的分钟数</value>
+  </data>
+  <data name="StopFollowUpExtendSendingMessage" xml:space="preserve">
+    <value>正在延长等待...</value>
+  </data>
+  <data name="StopFollowUpExtendSucceededMessage" xml:space="preserve">
+    <value>已延长回复等待时间。</value>
+  </data>
+  <data name="StopFollowUpExtendValidationMessage" xml:space="preserve">
+    <value>请输入 {0} 到 {1} 分钟之间的值。</value>
+  </data>
+  <data name="StopFollowUpMaximumDeadlineLabel" xml:space="preserve">
+    <value>Provider hook timeout</value>
+  </data>
+  <data name="StopFollowUpProviderHookTimeoutRemaining" xml:space="preserve">
+    <value>Provider hook timeout 剩余时间: {0} 秒</value>
+  </data>
   <data name="StopFollowUpReplyButton" xml:space="preserve">
     <value>发送回复</value>
   </data>

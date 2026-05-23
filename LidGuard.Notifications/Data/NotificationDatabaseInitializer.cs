@@ -15,6 +15,7 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
         }
 
         await EnsureWebhookEventsColumnsAsync(connection, cancellationToken);
+        await EnsureStopFollowUpRequestsColumnsAsync(connection, cancellationToken);
     }
 
     private static async Task EnsureWebhookEventsColumnsAsync(SqliteConnection connection, CancellationToken cancellationToken)
@@ -28,6 +29,17 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
         await EnsureWebhookEventsColumnAsync(connection, columnNames, "UserInterfaceCulture", "TEXT NULL", cancellationToken);
         await EnsureWebhookEventsColumnAsync(connection, columnNames, "ReplyWaitSeconds", "INTEGER NULL", cancellationToken);
         await EnsureWebhookEventsColumnAsync(connection, columnNames, "ReplyDeadlineUtc", "TEXT NULL", cancellationToken);
+    }
+
+    private static async Task EnsureStopFollowUpRequestsColumnsAsync(SqliteConnection connection, CancellationToken cancellationToken)
+    {
+        var columnNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        using var inspectCommand = connection.CreateCommand();
+        inspectCommand.CommandText = "PRAGMA table_info(StopFollowUpRequests);";
+        using var reader = await inspectCommand.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken)) columnNames.Add(reader.GetString(1));
+
+        await EnsureColumnAsync(connection, columnNames, "StopFollowUpRequests", "MaximumDeadlineAtUtc", "TEXT NULL", cancellationToken);
     }
 
     private static IReadOnlyList<string> CreateSchemaCommands()
@@ -109,6 +121,7 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
                 Status TEXT NOT NULL,
                 ReplyText TEXT NULL,
                 DeadlineAtUtc TEXT NOT NULL,
+                MaximumDeadlineAtUtc TEXT NULL,
                 CreatedAtUtc TEXT NOT NULL,
                 RepliedAtUtc TEXT NULL,
                 ConsumedAtUtc TEXT NULL,
@@ -125,12 +138,15 @@ internal sealed class NotificationDatabaseInitializer(SqliteConnectionFactory co
             "CREATE INDEX IF NOT EXISTS IX_AuthenticationRefreshTokens_ExpiresAtUtc ON AuthenticationRefreshTokens(ExpiresAtUtc);"
         ];
 
-    private static async Task EnsureWebhookEventsColumnAsync(SqliteConnection connection, ISet<string> existingColumnNames, string columnName, string columnDefinition, CancellationToken cancellationToken)
+    private static Task EnsureWebhookEventsColumnAsync(SqliteConnection connection, ISet<string> existingColumnNames, string columnName, string columnDefinition, CancellationToken cancellationToken)
+        => EnsureColumnAsync(connection, existingColumnNames, "WebhookEvents", columnName, columnDefinition, cancellationToken);
+
+    private static async Task EnsureColumnAsync(SqliteConnection connection, ISet<string> existingColumnNames, string tableName, string columnName, string columnDefinition, CancellationToken cancellationToken)
     {
         if (existingColumnNames.Contains(columnName)) return;
 
         using var alterCommand = connection.CreateCommand();
-        alterCommand.CommandText = $"ALTER TABLE WebhookEvents ADD COLUMN {columnName} {columnDefinition};";
+        alterCommand.CommandText = $"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnDefinition};";
         await alterCommand.ExecuteNonQueryAsync(cancellationToken);
         existingColumnNames.Add(columnName);
     }

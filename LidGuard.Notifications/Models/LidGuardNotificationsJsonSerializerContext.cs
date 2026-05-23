@@ -6,6 +6,8 @@ namespace LidGuard.Notifications.Models;
 [JsonSerializable(typeof(LidGuardWebhookRequest))]
 [JsonSerializable(typeof(PublicKeyResponse))]
 [JsonSerializable(typeof(PushNotificationMessage))]
+[JsonSerializable(typeof(StopFollowUpActionResponse))]
+[JsonSerializable(typeof(StopFollowUpExtendRequest))]
 [JsonSerializable(typeof(StopFollowUpPollResponse))]
 [JsonSerializable(typeof(StopFollowUpReplyRequest))]
 [JsonSerializable(typeof(StopFollowUpWebhookAcceptedResponse))]

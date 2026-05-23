@@ -11,6 +11,9 @@ namespace LidGuard.Notifications.Services;
 
 internal static class LidGuardNotificationApiEndpoints
 {
+    private const int StopFollowUpConsumptionPollCycleCount = 4;
+    private static readonly TimeSpan s_stopFollowUpConsumptionPollInterval = TimeSpan.FromSeconds(1);
+
     public static void Map(WebApplication app)
     {
         app.MapGet("/healthz", () => Results.Text("ok", "text/plain"));
@@ -19,6 +22,7 @@ internal static class LidGuardNotificationApiEndpoints
         app.MapDelete("/api/push/subscriptions", DeletePushSubscriptionAsync).RequireAuthorization();
         app.MapPost("/api/webhooks/lidguard/{webhookSecret}", ReceiveLidGuardWebhookAsync);
         app.MapPost("/api/follow-ups/{publicIdentifier}/reply", SubmitFollowUpReplyAsync).RequireAuthorization();
+        app.MapPost("/api/follow-ups/{publicIdentifier}/extend", ExtendFollowUpAsync).RequireAuthorization();
         app.MapPost("/api/follow-ups/{publicIdentifier}/cancel", CancelFollowUpAsync).RequireAuthorization();
         app.MapGet("/api/follow-ups/{publicIdentifier}/poll/{pollToken}", PollFollowUpAsync);
     }
@@ -97,43 +101,55 @@ internal static class LidGuardNotificationApiEndpoints
         var reply = replyRequest?.Reply?.Trim() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(reply))
         {
-            await WriteTextAsync(response, "reply is required.", StatusCodes.Status400BadRequest, cancellationToken);
+            var actionResult = new StopFollowUpActionResult(false, false, StopFollowUpRequestStatuses.Pending, LidGuardNotificationText.StopFollowUpReplyRequiredMessage, null, null, null);
+            await WriteJsonAsync(response, CreateActionResponse(actionResult), LidGuardNotificationsJsonSerializerContext.Default.StopFollowUpActionResponse, StatusCodes.Status400BadRequest, cancellationToken);
             return;
         }
 
         var submissionResult = await webhookEventStore.SubmitStopFollowUpReplyAsync(publicIdentifier, reply, cancellationToken);
-        if (submissionResult.Succeeded)
+        if (!submissionResult.Succeeded)
         {
-            response.StatusCode = StatusCodes.Status204NoContent;
+            var state = await webhookEventStore.GetStopFollowUpActionStateAsync(publicIdentifier, submissionResult.Message, cancellationToken);
+            var actionResult = new StopFollowUpActionResult(false, false, submissionResult.Status, submissionResult.Message, state.DeadlineAtUtc, state.MaximumDeadlineAtUtc, state.ConsumedAtUtc);
+            await WriteJsonAsync(response, CreateActionResponse(actionResult), LidGuardNotificationsJsonSerializerContext.Default.StopFollowUpActionResponse, GetActionFailureStatusCode(submissionResult.Status), cancellationToken);
             return;
         }
 
-        var statusCode = submissionResult.Status switch
+        var wasConsumed = replyRequest?.WaitForConsumption == true
+            && await webhookEventStore.WaitForStopFollowUpConsumptionAsync(publicIdentifier, StopFollowUpConsumptionPollCycleCount, s_stopFollowUpConsumptionPollInterval, cancellationToken);
+        var successMessage = wasConsumed ? LidGuardNotificationText.StopFollowUpReplyConsumedMessage : LidGuardNotificationText.StopFollowUpReplyAwaitingConsumptionMessage;
+        var successState = await webhookEventStore.GetStopFollowUpActionStateAsync(publicIdentifier, successMessage, cancellationToken);
+        successState = successState with { Message = successMessage };
+        await WriteJsonAsync(response, CreateActionResponse(successState, wasConsumed || successState.ConsumedAtUtc is not null), LidGuardNotificationsJsonSerializerContext.Default.StopFollowUpActionResponse, StatusCodes.Status200OK, cancellationToken);
+    }
+
+    private static async Task ExtendFollowUpAsync(string publicIdentifier, HttpRequest request, HttpResponse response, WebhookEventStore webhookEventStore, CancellationToken cancellationToken)
+    {
+        var extendRequest = await ReadJsonAsync(request, LidGuardNotificationsJsonSerializerContext.Default.StopFollowUpExtendRequest, cancellationToken);
+        var extendMinutes = extendRequest?.ExtendMinutes ?? StopFollowUpTiming.DefaultExtensionMinutes;
+        if (extendMinutes is < StopFollowUpTiming.MinimumExtensionMinutes or > StopFollowUpTiming.MaximumExtensionMinutes)
         {
-            StopFollowUpRequestStatuses.Answered => StatusCodes.Status409Conflict,
-            StopFollowUpRequestStatuses.Expired => StatusCodes.Status410Gone,
-            StopFollowUpRequestStatuses.Canceled => StatusCodes.Status409Conflict,
-            _ => StatusCodes.Status404NotFound
-        };
-        await WriteTextAsync(response, submissionResult.Message, statusCode, cancellationToken);
+            var actionResult = new StopFollowUpActionResult(false, false, StopFollowUpRequestStatuses.Pending, LidGuardNotificationText.StopFollowUpExtendValidationMessage(StopFollowUpTiming.MinimumExtensionMinutes, StopFollowUpTiming.MaximumExtensionMinutes), null, null, null);
+            await WriteJsonAsync(response, CreateActionResponse(actionResult), LidGuardNotificationsJsonSerializerContext.Default.StopFollowUpActionResponse, StatusCodes.Status400BadRequest, cancellationToken);
+            return;
+        }
+
+        var extensionResult = await webhookEventStore.ExtendStopFollowUpAsync(publicIdentifier, extendMinutes, cancellationToken);
+        var message = extensionResult.Message;
+        if (extensionResult.Succeeded && extensionResult.Extended) message = LidGuardNotificationText.StopFollowUpExtendSucceededMessage;
+        else if (extensionResult.Succeeded) message = LidGuardNotificationText.StopFollowUpExtendLimitReachedMessage;
+        extensionResult = extensionResult with { Message = message };
+        var statusCode = extensionResult.Succeeded ? StatusCodes.Status200OK : GetActionFailureStatusCode(extensionResult.Status);
+        await WriteJsonAsync(response, CreateActionResponse(extensionResult), LidGuardNotificationsJsonSerializerContext.Default.StopFollowUpActionResponse, statusCode, cancellationToken);
     }
 
     private static async Task CancelFollowUpAsync(string publicIdentifier, HttpResponse response, WebhookEventStore webhookEventStore, CancellationToken cancellationToken)
     {
         var cancellationResult = await webhookEventStore.CancelStopFollowUpAsync(publicIdentifier, cancellationToken);
-        if (cancellationResult.Succeeded)
-        {
-            response.StatusCode = StatusCodes.Status204NoContent;
-            return;
-        }
-
-        var statusCode = cancellationResult.Status switch
-        {
-            StopFollowUpRequestStatuses.Answered => StatusCodes.Status409Conflict,
-            StopFollowUpRequestStatuses.Expired => StatusCodes.Status410Gone,
-            _ => StatusCodes.Status404NotFound
-        };
-        await WriteTextAsync(response, cancellationResult.Message, statusCode, cancellationToken);
+        var state = await webhookEventStore.GetStopFollowUpActionStateAsync(publicIdentifier, cancellationResult.Succeeded ? LidGuardNotificationText.StopFollowUpCancelSucceededMessage : cancellationResult.Message, cancellationToken);
+        var actionResult = new StopFollowUpActionResult(cancellationResult.Succeeded, false, string.IsNullOrWhiteSpace(cancellationResult.Status) ? state.Status : cancellationResult.Status, cancellationResult.Succeeded ? LidGuardNotificationText.StopFollowUpCancelSucceededMessage : cancellationResult.Message, state.DeadlineAtUtc, state.MaximumDeadlineAtUtc, state.ConsumedAtUtc);
+        var statusCode = cancellationResult.Succeeded ? StatusCodes.Status200OK : GetActionFailureStatusCode(cancellationResult.Status);
+        await WriteJsonAsync(response, CreateActionResponse(actionResult), LidGuardNotificationsJsonSerializerContext.Default.StopFollowUpActionResponse, statusCode, cancellationToken);
     }
 
     private static async Task PollFollowUpAsync(string publicIdentifier, string pollToken, HttpResponse response, WebhookEventStore webhookEventStore, CancellationToken cancellationToken)
@@ -301,6 +317,42 @@ internal static class LidGuardNotificationApiEndpoints
         response.ContentType = "application/json";
         await JsonSerializer.SerializeAsync(response.Body, value, jsonTypeInfo, cancellationToken);
     }
+
+    private static StopFollowUpActionResponse CreateActionResponse(StopFollowUpActionResult actionResult, bool replyConsumed = false)
+    {
+        var providerHookTimeoutRemainingSeconds = GetProviderHookTimeoutRemainingSeconds(actionResult.MaximumDeadlineAtUtc);
+        return new StopFollowUpActionResponse
+        {
+            Succeeded = actionResult.Succeeded,
+            Extended = actionResult.Extended,
+            Status = actionResult.Status,
+            Message = actionResult.Message,
+            DeadlineAtUtc = actionResult.DeadlineAtUtc,
+            MaximumDeadlineAtUtc = actionResult.MaximumDeadlineAtUtc,
+            ProviderHookTimeoutRemainingSeconds = providerHookTimeoutRemainingSeconds,
+            ProviderHookTimeoutRemainingText = LidGuardNotificationText.StopFollowUpProviderHookTimeoutRemaining(providerHookTimeoutRemainingSeconds),
+            ReplyConsumed = replyConsumed || actionResult.ConsumedAtUtc is not null,
+            ConsumedAtUtc = actionResult.ConsumedAtUtc
+        };
+    }
+
+    private static int GetProviderHookTimeoutRemainingSeconds(DateTimeOffset? maximumDeadlineAtUtc)
+    {
+        if (maximumDeadlineAtUtc is null) return 0;
+
+        var remainingSeconds = (maximumDeadlineAtUtc.Value - DateTimeOffset.UtcNow).TotalSeconds;
+        if (remainingSeconds <= 0) return 0;
+        return (int)Math.Ceiling(remainingSeconds);
+    }
+
+    private static int GetActionFailureStatusCode(string status)
+        => status switch
+        {
+            StopFollowUpRequestStatuses.Answered => StatusCodes.Status409Conflict,
+            StopFollowUpRequestStatuses.Expired => StatusCodes.Status410Gone,
+            StopFollowUpRequestStatuses.Canceled => StatusCodes.Status409Conflict,
+            _ => StatusCodes.Status404NotFound
+        };
 
     private static async Task WriteSubscriptionChangeResponseAsync(HttpResponse response, PushSubscriptionStore subscriptionStore, CancellationToken cancellationToken)
     {

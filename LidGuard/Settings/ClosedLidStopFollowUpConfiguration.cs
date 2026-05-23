@@ -6,7 +6,7 @@ internal static class ClosedLidStopFollowUpConfiguration
     public const string FeatureStateOn = "On";
     public const string FeatureStateConfigurationError = "ConfigurationError";
     public const int DefaultHookTimeoutSeconds = 30;
-    public const int AdditionalHookTimeoutBufferSeconds = 15;
+    public const int MaximumReplyExtensionSeconds = 300;
     public const int MinimumReplyWaitSeconds = 20;
     public const int MinimumPostStopSuspendDelaySeconds = 10;
 
@@ -26,7 +26,7 @@ internal static class ClosedLidStopFollowUpConfiguration
     {
         var normalizedSettings = LidGuardSettings.Normalize(settings);
         if (!IsEnabled(normalizedSettings, out _)) return DefaultHookTimeoutSeconds;
-        return Math.Max(DefaultHookTimeoutSeconds, normalizedSettings.PostStopSuspendDelaySeconds + normalizedSettings.ClosedLidStopFollowUpDelaySeconds + AdditionalHookTimeoutBufferSeconds);
+        return Math.Max(DefaultHookTimeoutSeconds, normalizedSettings.PostStopSuspendDelaySeconds + normalizedSettings.ClosedLidStopFollowUpDelaySeconds + MaximumReplyExtensionSeconds);
     }
 
     public static bool IsEnabled(LidGuardSettings settings, out string normalizedClosedLidStopFollowUpWebhookUrl)

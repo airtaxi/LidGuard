@@ -327,6 +327,36 @@
   <data name="StopFollowUpDeadlineLabel" xml:space="preserve">
     <value>답장 마감 시각</value>
   </data>
+  <data name="StopFollowUpExtendButton" xml:space="preserve">
+    <value>대기 연장</value>
+  </data>
+  <data name="StopFollowUpExtendHelp" xml:space="preserve">
+    <value>페이지를 새로고침하지 않고 답장 대기 시간을 늘립니다. provider hook timeout이 최대 한도입니다.</value>
+  </data>
+  <data name="StopFollowUpExtendLabel" xml:space="preserve">
+    <value>답장 대기 연장</value>
+  </data>
+  <data name="StopFollowUpExtendLimitReachedMessage" xml:space="preserve">
+    <value>이미 provider hook timeout 한도까지 연장되어 있습니다.</value>
+  </data>
+  <data name="StopFollowUpExtendMinutesLabel" xml:space="preserve">
+    <value>추가할 분</value>
+  </data>
+  <data name="StopFollowUpExtendSendingMessage" xml:space="preserve">
+    <value>대기 시간을 연장하는 중...</value>
+  </data>
+  <data name="StopFollowUpExtendSucceededMessage" xml:space="preserve">
+    <value>답장 대기 시간이 연장되었습니다.</value>
+  </data>
+  <data name="StopFollowUpExtendValidationMessage" xml:space="preserve">
+    <value>{0}분부터 {1}분까지 입력해 주세요.</value>
+  </data>
+  <data name="StopFollowUpMaximumDeadlineLabel" xml:space="preserve">
+    <value>Provider hook timeout</value>
+  </data>
+  <data name="StopFollowUpProviderHookTimeoutRemaining" xml:space="preserve">
+    <value>Provider hook timeout 남은 시간: {0}초</value>
+  </data>
   <data name="StopFollowUpReplyButton" xml:space="preserve">
     <value>답장 보내기</value>
   </data>

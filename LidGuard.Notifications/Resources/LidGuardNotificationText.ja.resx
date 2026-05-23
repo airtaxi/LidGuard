@@ -327,6 +327,36 @@
   <data name="StopFollowUpDeadlineLabel" xml:space="preserve">
     <value>返信期限</value>
   </data>
+  <data name="StopFollowUpExtendButton" xml:space="preserve">
+    <value>待機を延長</value>
+  </data>
+  <data name="StopFollowUpExtendHelp" xml:space="preserve">
+    <value>ページを更新せずに返信待機時間を延長します。provider hook timeout が上限です。</value>
+  </data>
+  <data name="StopFollowUpExtendLabel" xml:space="preserve">
+    <value>返信待機を延長</value>
+  </data>
+  <data name="StopFollowUpExtendLimitReachedMessage" xml:space="preserve">
+    <value>返信待機はすでに provider hook timeout の上限です。</value>
+  </data>
+  <data name="StopFollowUpExtendMinutesLabel" xml:space="preserve">
+    <value>追加する分数</value>
+  </data>
+  <data name="StopFollowUpExtendSendingMessage" xml:space="preserve">
+    <value>待機を延長しています...</value>
+  </data>
+  <data name="StopFollowUpExtendSucceededMessage" xml:space="preserve">
+    <value>返信待機を延長しました。</value>
+  </data>
+  <data name="StopFollowUpExtendValidationMessage" xml:space="preserve">
+    <value>{0} から {1} 分の値を入力してください。</value>
+  </data>
+  <data name="StopFollowUpMaximumDeadlineLabel" xml:space="preserve">
+    <value>Provider hook timeout</value>
+  </data>
+  <data name="StopFollowUpProviderHookTimeoutRemaining" xml:space="preserve">
+    <value>Provider hook timeout の残り時間: {0} 秒</value>
+  </data>
   <data name="StopFollowUpReplyButton" xml:space="preserve">
     <value>返信を送信</value>
   </data>

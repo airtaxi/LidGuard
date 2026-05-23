@@ -59,6 +59,22 @@ internal sealed class EventsModel(WebhookEventStore webhookEventStore) : PageMod
         return Redirect($"/events#followup-{publicIdentifier}");
     }
 
+    public async Task<IActionResult> OnPostExtendAsync(string publicIdentifier, int? extendMinutes, CancellationToken cancellationToken)
+    {
+        var normalizedExtendMinutes = extendMinutes ?? StopFollowUpTiming.DefaultExtensionMinutes;
+        if (normalizedExtendMinutes is < StopFollowUpTiming.MinimumExtensionMinutes or > StopFollowUpTiming.MaximumExtensionMinutes)
+        {
+            EventMessage = LidGuardNotificationText.StopFollowUpExtendValidationMessage(StopFollowUpTiming.MinimumExtensionMinutes, StopFollowUpTiming.MaximumExtensionMinutes);
+            return Redirect($"/events#followup-{publicIdentifier}");
+        }
+
+        var extensionResult = await webhookEventStore.ExtendStopFollowUpAsync(publicIdentifier, normalizedExtendMinutes, cancellationToken);
+        if (!extensionResult.Succeeded) EventMessage = extensionResult.Message;
+        else if (extensionResult.Extended) EventMessage = LidGuardNotificationText.StopFollowUpExtendSucceededMessage;
+        else EventMessage = LidGuardNotificationText.StopFollowUpExtendLimitReachedMessage;
+        return Redirect($"/events#followup-{publicIdentifier}");
+    }
+
     public async Task<IActionResult> OnPostCancelAsync(string publicIdentifier, CancellationToken cancellationToken)
     {
         var cancellationResult = await webhookEventStore.CancelStopFollowUpAsync(publicIdentifier, cancellationToken);

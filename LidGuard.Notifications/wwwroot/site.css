@@ -680,6 +680,23 @@ form.event-disclosure {
     gap: 10px;
 }
 
+.follow-up-extend-controls {
+    align-items: end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.follow-up-extend-controls label {
+    color: var(--muted);
+    flex-basis: 100%;
+    font-size: 0.86rem;
+}
+
+.follow-up-extend-controls input {
+    max-width: 120px;
+}
+
 .reply-submit-status {
     align-items: center;
     display: inline-flex;

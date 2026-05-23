@@ -1009,7 +1009,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 return CreateStopFollowUpResponse(stopFollowUpAwaitContext.ScheduledResponse, StopFollowUpStatuses.PollFailed);
             }
 
-            if (startResult.Value.ExpiresAtUtc is not null && startResult.Value.ExpiresAtUtc.Value < replyDeadlineUtc) replyDeadlineUtc = startResult.Value.ExpiresAtUtc.Value;
+            if (startResult.Value.ExpiresAtUtc < replyDeadlineUtc) replyDeadlineUtc = startResult.Value.ExpiresAtUtc;
 
             while (DateTimeOffset.UtcNow <= replyDeadlineUtc)
             {
@@ -1020,6 +1020,8 @@ internal sealed class LidGuardRuntimeCoordinator
                     await AppendStopFollowUpFailureAsync(stopFollowUpAwaitContext, StopFollowUpStatuses.PollFailed, pollResult.Message);
                     return CreateStopFollowUpResponse(stopFollowUpAwaitContext.ScheduledResponse, StopFollowUpStatuses.PollFailed);
                 }
+
+                if (pollResult.Value.ExpiresAtUtc > replyDeadlineUtc) replyDeadlineUtc = pollResult.Value.ExpiresAtUtc;
 
                 var pollStatus = pollResult.Value.Status?.Trim() ?? string.Empty;
                 if (pollStatus.Equals("Answered", StringComparison.Ordinal))

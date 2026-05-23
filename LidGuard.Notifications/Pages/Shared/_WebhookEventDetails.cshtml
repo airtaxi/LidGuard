@@ -39,6 +39,26 @@
             <strong><time datetime="@repliedAtDateTimeAttribute" data-device-time="true">@repliedAtFallbackText</time></strong>
         </div>
     }
+    @if (Model.StopFollowUpDeadlineAtUtc is not null)
+    {
+        var deadlineAtUniversalTime = Model.StopFollowUpDeadlineAtUtc.Value.ToUniversalTime();
+        var deadlineAtDateTimeAttribute = deadlineAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+        var deadlineAtFallbackText = deadlineAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+        <div class="detail-item">
+            <span>@LidGuardNotificationText.StopFollowUpDeadlineLabel</span>
+            <strong><time datetime="@deadlineAtDateTimeAttribute" data-device-time="true">@deadlineAtFallbackText</time></strong>
+        </div>
+    }
+    @if (Model.StopFollowUpMaximumDeadlineAtUtc is not null)
+    {
+        var maximumDeadlineAtUniversalTime = Model.StopFollowUpMaximumDeadlineAtUtc.Value.ToUniversalTime();
+        var maximumDeadlineAtDateTimeAttribute = maximumDeadlineAtUniversalTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+        var maximumDeadlineAtFallbackText = maximumDeadlineAtUniversalTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+        <div class="detail-item">
+            <span>@LidGuardNotificationText.StopFollowUpMaximumDeadlineLabel</span>
+            <strong><time datetime="@maximumDeadlineAtDateTimeAttribute" data-device-time="true">@maximumDeadlineAtFallbackText</time></strong>
+        </div>
+    }
     @if (Model.StopFollowUpConsumedAtUtc is not null)
     {
         var consumedAtUniversalTime = Model.StopFollowUpConsumedAtUtc.Value.ToUniversalTime();

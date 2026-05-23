@@ -140,7 +140,9 @@ curl.exe -X POST "https://host/api/webhooks/lidguard/{webhookSecret}" -H "Conten
 
 Webhook endpoint는 event를 기록하고 즉시 `202 Accepted`를 반환합니다. `StopFollowUp`일 때는 `followUpRequestIdentifier`, `replyPollUrl`, `expiresAtUtc`가 담긴 JSON 본문도 함께 반환합니다. 이후 background service가 알림을 보내고 delivery 결과를 기록합니다.
 
-인증된 dashboard에서는 `/events`에서 pending follow-up 카드에 답장할 수 있고, API로는 `POST /api/follow-ups/{publicIdentifier}/reply`에 `{ "reply": "..." }` JSON을 보낼 수 있습니다. 답장 없이 바로 Stop/절전 흐름을 진행하려면 `/events`에서 대기를 취소하거나 `POST /api/follow-ups/{publicIdentifier}/cancel`을 호출합니다. 다음 poll은 `Canceled`를 반환하므로 LidGuard가 즉시 기존 Stop 및 절전 흐름으로 내려갑니다. LidGuard runtime은 인증 없이 `GET /api/follow-ups/{publicIdentifier}/poll/{pollToken}`를 polling하므로, poll token은 일시적인 비밀 값처럼 다뤄야 합니다. 서버는 SQLite에 poll token hash만 저장합니다.
+인증된 dashboard에서는 `/events`에서 pending follow-up 카드에 답장할 수 있고, API로는 `POST /api/follow-ups/{publicIdentifier}/reply`에 `{ "reply": "...", "waitForConsumption": true }` JSON을 보낼 수 있습니다. `POST /api/follow-ups/{publicIdentifier}/extend`에 `{ "extendMinutes": 1 }`을 보내면 페이지를 새로고침하지 않고 답장 대기 시간을 연장합니다. 값은 1-5분이어야 하며, server는 deadline을 최초 답장 deadline + 5분으로 제한해서 provider hook timeout을 넘지 않게 합니다. 답장 없이 바로 Stop/절전 흐름을 진행하려면 `/events`에서 대기를 취소하거나 `POST /api/follow-ups/{publicIdentifier}/cancel`을 호출합니다. 다음 poll은 `Canceled`를 반환하므로 LidGuard가 즉시 기존 Stop 및 절전 흐름으로 내려갑니다. Reply, extend, cancel은 `succeeded`, `status`, `message`, `deadlineAtUtc`, `maximumDeadlineAtUtc`, `providerHookTimeoutRemainingSeconds`, 답장 수집 필드가 담긴 JSON을 반환합니다. LidGuard runtime은 인증 없이 `GET /api/follow-ups/{publicIdentifier}/poll/{pollToken}`를 polling하므로, poll token은 일시적인 비밀 값처럼 다뤄야 합니다. Poll response에는 현재 `expiresAtUtc`가 포함되며, 업데이트된 LidGuard client는 dashboard extension 이후에도 이 값까지 계속 polling합니다. 서버는 SQLite에 poll token hash만 저장합니다.
+
+Managed provider hook timeout은 post-stop delay + 최초 답장 대기 시간 + 5분으로 계산됩니다. 이 기능을 변경하거나 이전 LidGuard build에서 업데이트한 뒤에는 사용하는 provider의 hook install/status를 다시 실행해서 설정된 timeout을 갱신하세요.
 
 ## 운영 체크리스트
 

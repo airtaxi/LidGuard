@@ -11,7 +11,7 @@ internal sealed class StopFollowUpWebhookStartResponse
     public string ReplyPollUrl { get; init; } = string.Empty;
 
     [JsonPropertyName("expiresAtUtc")]
-    public DateTimeOffset? ExpiresAtUtc { get; init; }
+    public DateTimeOffset ExpiresAtUtc { get; init; }
 }
 
 internal sealed class StopFollowUpWebhookPollResponse
@@ -21,6 +21,9 @@ internal sealed class StopFollowUpWebhookPollResponse
 
     [JsonPropertyName("reply")]
     public string Reply { get; init; } = string.Empty;
+
+    [JsonPropertyName("expiresAtUtc")]
+    public DateTimeOffset ExpiresAtUtc { get; init; }
 }
 
 internal sealed class StopFollowUpWebhookAwaitResult
