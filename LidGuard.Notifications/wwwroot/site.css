@@ -207,7 +207,8 @@ label {
     font-weight: 650;
 }
 
-input {
+input,
+textarea {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-small);
@@ -217,6 +218,14 @@ input {
     padding: 9px 11px;
 }
 
+textarea {
+    display: block;
+    max-width: 100%;
+    min-height: 132px;
+    resize: vertical;
+    width: 100%;
+}
+
 input[type="checkbox"] {
     accent-color: var(--accent);
     min-height: auto;
@@ -224,6 +233,7 @@ input[type="checkbox"] {
 }
 
 input:focus-visible,
+textarea:focus-visible,
 select:focus-visible,
 button:focus-visible,
 a:focus-visible,
@@ -663,6 +673,11 @@ button:disabled {
 .event-disclosure {
     border-top: 1px solid var(--border-soft);
     padding-top: 12px;
+}
+
+form.event-disclosure {
+    display: grid;
+    gap: 10px;
 }
 
 .event-disclosure summary {
