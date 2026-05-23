@@ -117,10 +117,7 @@ internal static class MacOSPowerSettings
     private static string CreatePrivilegedPmsetFailureMessage(MacOSCommandResult commandResult, string commandDisplayName)
     {
         var failureMessage = commandResult.CreateFailureMessage(commandDisplayName);
-        if (failureMessage.Contains("a password is required", StringComparison.OrdinalIgnoreCase)
-            || failureMessage.Contains("a terminal is required", StringComparison.OrdinalIgnoreCase)
-            || failureMessage.Contains("not allowed", StringComparison.OrdinalIgnoreCase)
-            || failureMessage.Contains("sorry", StringComparison.OrdinalIgnoreCase))
+        if (failureMessage.Contains("a password is required", StringComparison.OrdinalIgnoreCase) || failureMessage.Contains("a terminal is required", StringComparison.OrdinalIgnoreCase) || failureMessage.Contains("not allowed", StringComparison.OrdinalIgnoreCase) || failureMessage.Contains("sorry", StringComparison.OrdinalIgnoreCase))
         {
             return $"{failureMessage} Run `lidguard macos-permission install` to install LidGuard's managed sudoers rule.";
         }

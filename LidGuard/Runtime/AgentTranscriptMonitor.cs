@@ -403,16 +403,13 @@ internal static class AgentTranscriptSoftLockDetectors
         foreach (var transcriptLine in ReadRecentTranscriptLines(transcriptPath, RecentTranscriptLineLimit, RecentTranscriptByteLimit))
         {
             if (!TryInspectCodexTranscriptResponseItem(transcriptLine, out var payloadType, out var functionName, out var functionCallIdentifier)) continue;
-            if (payloadType.Equals("function_call", StringComparison.Ordinal)
-                && functionName.Equals(CodexRequestUserInputFunctionName, StringComparison.Ordinal)
-                && !string.IsNullOrWhiteSpace(functionCallIdentifier))
+            if (payloadType.Equals("function_call", StringComparison.Ordinal) && functionName.Equals(CodexRequestUserInputFunctionName, StringComparison.Ordinal) && !string.IsNullOrWhiteSpace(functionCallIdentifier))
             {
                 pendingFunctionCallIdentifiers.Add(functionCallIdentifier);
                 continue;
             }
 
-            if (payloadType.Equals("function_call_output", StringComparison.Ordinal)
-                && !string.IsNullOrWhiteSpace(functionCallIdentifier))
+            if (payloadType.Equals("function_call_output", StringComparison.Ordinal) && !string.IsNullOrWhiteSpace(functionCallIdentifier))
             {
                 pendingFunctionCallIdentifiers.Remove(functionCallIdentifier);
             }
@@ -532,9 +529,7 @@ internal static class AgentTranscriptStopDetectors
             if (!TryGetStringProperty(rootElement, "type", out var recordType)) return false;
             if (!recordType.Equals("user", StringComparison.Ordinal)) return false;
 
-            if (rootElement.TryGetProperty("message", out var messageElement)
-                && messageElement.TryGetProperty("content", out var messageContentElement)
-                && ContainsClaudeInterruptMarker(messageContentElement))
+            if (rootElement.TryGetProperty("message", out var messageElement) && messageElement.TryGetProperty("content", out var messageContentElement) && ContainsClaudeInterruptMarker(messageContentElement))
             {
                 return true;
             }
@@ -580,8 +575,7 @@ internal static class AgentTranscriptStopDetectors
     private static bool IsClaudeInterruptMarker(string text)
     {
         var normalizedText = text.Trim();
-        return normalizedText.Equals("[Request interrupted by user]", StringComparison.Ordinal)
-            || normalizedText.Equals("[Request interrupted by user for tool use]", StringComparison.Ordinal);
+        return normalizedText.Equals("[Request interrupted by user]", StringComparison.Ordinal) || normalizedText.Equals("[Request interrupted by user for tool use]", StringComparison.Ordinal);
     }
 
     private static string ReadLastTranscriptLine(string transcriptPath)

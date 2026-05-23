@@ -221,20 +221,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
             };
         }
 
-        var isInstalled = hasSessionStartHook
-            && hasSessionEndHook
-            && hasUserPromptSubmittedHook
-            && hasPreToolUseHook
-            && hasPostToolUseHook
-            && hasPermissionRequestHook
-            && hasAgentStopHook
-            && hasSubagentStartHook
-            && hasSubagentStopHook
-            && hasErrorOccurredHook
-            && hasNotificationHook
-            && hasExpectedHookCommands
-            && hasExpectedNotificationMatcher
-            && hasExpectedHookTimeout;
+        var isInstalled = hasSessionStartHook && hasSessionEndHook && hasUserPromptSubmittedHook && hasPreToolUseHook && hasPostToolUseHook && hasPermissionRequestHook && hasAgentStopHook && hasSubagentStartHook && hasSubagentStopHook && hasErrorOccurredHook && hasNotificationHook && hasExpectedHookCommands && hasExpectedNotificationMatcher && hasExpectedHookTimeout;
         var status = isInstalled ? HookInstallationStatus.Installed : hasManagedHookEntries ? HookInstallationStatus.NeedsUpdate : HookInstallationStatus.NotInstalled;
         var message = isInstalled ? "GitHub Copilot hook is installed." : hasManagedHookEntries ? "GitHub Copilot hook is installed but needs update." : "GitHub Copilot hook is not installed.";
 
@@ -394,8 +381,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
         if (!command.Contains("lidguard", StringComparison.OrdinalIgnoreCase)) return false;
         if (!command.Contains("copilot-hook", StringComparison.OrdinalIgnoreCase)) return false;
         if (command.Contains($"--event {expectedHookEventName}", StringComparison.OrdinalIgnoreCase)) return true;
-        return expectedHookEventName.Equals(GitHubCopilotHookEventNames.AgentStop, StringComparison.Ordinal)
-            && command.Contains($"--event {GitHubCopilotHookEventNames.PascalCaseAgentStopAlias}", StringComparison.OrdinalIgnoreCase);
+        return expectedHookEventName.Equals(GitHubCopilotHookEventNames.AgentStop, StringComparison.Ordinal) && command.Contains($"--event {GitHubCopilotHookEventNames.PascalCaseAgentStopAlias}", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool HasExpectedHookCommand(JsonObject hookDefinitionObject, string expectedHookCommand, string expectedHookShellName)
@@ -481,10 +467,7 @@ public static class GitHubCopilotHookConfigurationJsonDocument
 
                     var actualMatcher = JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "matcher");
                     var expectedMatcher = matcher ?? string.Empty;
-                    if (!HasExpectedHookCommand(hookDefinitionObject, expectedHookCommand, hookShellName)
-                        || !HasExpectedTimeoutValue(hookDefinitionObject, GetExpectedTimeoutSeconds())
-                        || !JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "statusMessage").Equals(statusMessage, StringComparison.Ordinal)
-                        || !actualMatcher.Equals(expectedMatcher, StringComparison.Ordinal))
+                    if (!HasExpectedHookCommand(hookDefinitionObject, expectedHookCommand, hookShellName) || !HasExpectedTimeoutValue(hookDefinitionObject, GetExpectedTimeoutSeconds()) || !JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "statusMessage").Equals(statusMessage, StringComparison.Ordinal) || !actualMatcher.Equals(expectedMatcher, StringComparison.Ordinal))
                     {
                         ReplaceManagedHookDefinition(hookDefinitionObject, expectedHookCommand, hookShellName, statusMessage, matcher);
                         changed = true;
@@ -511,14 +494,10 @@ public static class GitHubCopilotHookConfigurationJsonDocument
     }
 
     private static bool HasExpectedTimeoutValue(JsonObject hookDefinitionObject, int expectedTimeoutSeconds)
-        => hookDefinitionObject["timeoutSec"] is JsonValue timeoutValue
-            && timeoutValue.TryGetValue<int>(out var timeoutSeconds)
-            && timeoutSeconds == expectedTimeoutSeconds;
+        => hookDefinitionObject["timeoutSec"] is JsonValue timeoutValue && timeoutValue.TryGetValue<int>(out var timeoutSeconds) && timeoutSeconds == expectedTimeoutSeconds;
 
     private static bool HasSufficientTimeoutValue(JsonObject hookDefinitionObject, int expectedTimeoutSeconds)
-        => hookDefinitionObject["timeoutSec"] is JsonValue timeoutValue
-            && timeoutValue.TryGetValue<int>(out var timeoutSeconds)
-            && timeoutSeconds >= expectedTimeoutSeconds;
+        => hookDefinitionObject["timeoutSec"] is JsonValue timeoutValue && timeoutValue.TryGetValue<int>(out var timeoutSeconds) && timeoutSeconds >= expectedTimeoutSeconds;
 
     private static void ReplaceManagedHookDefinition(JsonObject hookDefinitionObject, string hookCommand, string hookShellName, string statusMessage, string matcher)
     {

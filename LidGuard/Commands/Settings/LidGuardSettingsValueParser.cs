@@ -46,8 +46,7 @@ internal static class LidGuardSettingsValueParser
             return true;
         }
 
-        if (string.IsNullOrWhiteSpace(closedLidStopFollowUpWebhookUrlText)
-            || closedLidStopFollowUpWebhookUrlText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(closedLidStopFollowUpWebhookUrlText) || closedLidStopFollowUpWebhookUrlText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
         {
             message = LocalizationService.GetFormattedString("SettingsOptionClosedLidStopFollowUpWebhookRemovalCommand", LidGuardCommandConsole.GetCommandDisplayName(), LidGuardPipeCommands.RemoveClosedLidStopFollowUpWebhook);
             return false;
@@ -138,8 +137,7 @@ internal static class LidGuardSettingsValueParser
         closedLidStopFollowUpDelaySeconds = defaultValue;
         message = string.Empty;
         if (!CommandOptionReader.TryGetOption(options, out var closedLidStopFollowUpDelaySecondsText, "closed-lid-stop-follow-up-delay-seconds")) return true;
-        if (int.TryParse(closedLidStopFollowUpDelaySecondsText.Trim(), out closedLidStopFollowUpDelaySeconds)
-            && closedLidStopFollowUpDelaySeconds >= 0)
+        if (int.TryParse(closedLidStopFollowUpDelaySecondsText.Trim(), out closedLidStopFollowUpDelaySeconds) && closedLidStopFollowUpDelaySeconds >= 0)
         {
             return true;
         }
@@ -157,15 +155,13 @@ internal static class LidGuardSettingsValueParser
             return true;
         }
 
-        if (string.IsNullOrWhiteSpace(postStopSuspendSoundVolumeOverridePercentText)
-            || postStopSuspendSoundVolumeOverridePercentText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(postStopSuspendSoundVolumeOverridePercentText) || postStopSuspendSoundVolumeOverridePercentText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
         {
             postStopSuspendSoundVolumeOverridePercent = null;
             return true;
         }
 
-        if (int.TryParse(postStopSuspendSoundVolumeOverridePercentText.Trim(), out var parsedValue)
-            && LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(parsedValue))
+        if (int.TryParse(postStopSuspendSoundVolumeOverridePercentText.Trim(), out var parsedValue) && LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(parsedValue))
         {
             postStopSuspendSoundVolumeOverridePercent = parsedValue;
             return true;
@@ -184,15 +180,13 @@ internal static class LidGuardSettingsValueParser
             return true;
         }
 
-        if (string.IsNullOrWhiteSpace(suspendHistoryEntryCountText)
-            || suspendHistoryEntryCountText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(suspendHistoryEntryCountText) || suspendHistoryEntryCountText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
         {
             suspendHistoryEntryCount = null;
             return true;
         }
 
-        if (int.TryParse(suspendHistoryEntryCountText.Trim(), out var parsedValue)
-            && LidGuardSettings.IsValidSuspendHistoryEntryCount(parsedValue))
+        if (int.TryParse(suspendHistoryEntryCountText.Trim(), out var parsedValue) && LidGuardSettings.IsValidSuspendHistoryEntryCount(parsedValue))
         {
             suspendHistoryEntryCount = parsedValue;
             return true;
@@ -208,15 +202,13 @@ internal static class LidGuardSettingsValueParser
         message = string.Empty;
         if (!CommandOptionReader.TryGetOption(options, out var sessionTimeoutMinutesText, "session-timeout-minutes")) return true;
 
-        if (string.IsNullOrWhiteSpace(sessionTimeoutMinutesText)
-            || sessionTimeoutMinutesText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(sessionTimeoutMinutesText) || sessionTimeoutMinutesText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
         {
             sessionTimeoutMinutes = null;
             return true;
         }
 
-        if (int.TryParse(sessionTimeoutMinutesText.Trim(), out var parsedValue)
-            && LidGuardSettings.IsValidSessionTimeoutMinutes(parsedValue))
+        if (int.TryParse(sessionTimeoutMinutesText.Trim(), out var parsedValue) && LidGuardSettings.IsValidSessionTimeoutMinutes(parsedValue))
         {
             sessionTimeoutMinutes = parsedValue;
             return true;
@@ -235,15 +227,13 @@ internal static class LidGuardSettingsValueParser
             return true;
         }
 
-        if (string.IsNullOrWhiteSpace(serverRuntimeCleanupDelayMinutesText)
-            || serverRuntimeCleanupDelayMinutesText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(serverRuntimeCleanupDelayMinutesText) || serverRuntimeCleanupDelayMinutesText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
         {
             serverRuntimeCleanupDelayMinutes = null;
             return true;
         }
 
-        if (int.TryParse(serverRuntimeCleanupDelayMinutesText.Trim(), out var parsedValue)
-            && LidGuardSettings.IsValidServerRuntimeCleanupDelayMinutes(parsedValue))
+        if (int.TryParse(serverRuntimeCleanupDelayMinutesText.Trim(), out var parsedValue) && LidGuardSettings.IsValidServerRuntimeCleanupDelayMinutes(parsedValue))
         {
             serverRuntimeCleanupDelayMinutes = parsedValue;
             return true;
@@ -258,9 +248,7 @@ internal static class LidGuardSettingsValueParser
         emergencyHibernationTemperatureCelsius = defaultValue;
         message = string.Empty;
         if (!CommandOptionReader.TryGetOption(options, out var emergencyHibernationTemperatureCelsiusText, "emergency-hibernation-temperature-celsius")) return true;
-        if (int.TryParse(emergencyHibernationTemperatureCelsiusText.Trim(), out emergencyHibernationTemperatureCelsius)
-            && emergencyHibernationTemperatureCelsius >= LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius
-            && emergencyHibernationTemperatureCelsius <= LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius)
+        if (int.TryParse(emergencyHibernationTemperatureCelsiusText.Trim(), out emergencyHibernationTemperatureCelsius) && emergencyHibernationTemperatureCelsius >= LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius && emergencyHibernationTemperatureCelsius <= LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius)
             return true;
 
         message = LocalizationService.GetFormattedString("SettingsOptionEmergencyHibernationTemperatureCelsiusValidation", LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius, LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius);

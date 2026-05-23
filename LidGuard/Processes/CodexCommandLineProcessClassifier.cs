@@ -21,8 +21,7 @@ internal static class CodexCommandLineProcessClassifier
         if (!s_nodePackageManagerProcessNames.Contains(normalizedProcessName)) return false;
         if (string.IsNullOrWhiteSpace(commandLine)) return false;
 
-        return commandLine.Contains("node_modules", StringComparison.OrdinalIgnoreCase)
-            && commandLine.Contains("codex", StringComparison.OrdinalIgnoreCase);
+        return commandLine.Contains("node_modules", StringComparison.OrdinalIgnoreCase) && commandLine.Contains("codex", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool ContainsCommandLineToken(string commandLine, string token)

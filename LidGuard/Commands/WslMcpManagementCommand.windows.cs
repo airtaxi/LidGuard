@@ -9,11 +9,7 @@ namespace LidGuard.Commands;
 internal static class WslMcpManagementCommand
 {
     public static bool IsCommandName(string commandName)
-        => (commandName is LidGuardPipeCommands.WslMcpStatus
-            or LidGuardPipeCommands.WslMcpInstall
-            or LidGuardPipeCommands.WslMcpRemove
-            or "wsl-mcp-uninstall")
-            || TryGetAliasProvider(commandName, out _, out _);
+        => (commandName is LidGuardPipeCommands.WslMcpStatus or LidGuardPipeCommands.WslMcpInstall or LidGuardPipeCommands.WslMcpRemove or "wsl-mcp-uninstall") || TryGetAliasProvider(commandName, out _, out _);
 
     public static int Run(string commandName, string[] commandLineArguments)
     {

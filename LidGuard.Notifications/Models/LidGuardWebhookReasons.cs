@@ -12,9 +12,7 @@ internal static class LidGuardWebhookReasons
         => string.Equals(reason, AwaitingReply, StringComparison.Ordinal);
 
     public static bool IsRecognizedPreSuspendReason(string reason)
-        => string.Equals(reason, Completed, StringComparison.Ordinal)
-            || string.Equals(reason, SoftLocked, StringComparison.Ordinal)
-            || string.Equals(reason, EmergencyHibernation, StringComparison.Ordinal);
+        => string.Equals(reason, Completed, StringComparison.Ordinal) || string.Equals(reason, SoftLocked, StringComparison.Ordinal) || string.Equals(reason, EmergencyHibernation, StringComparison.Ordinal);
 
     public static bool IsRecognizedPostSessionEndReason(string reason)
         => string.Equals(reason, SessionEnded, StringComparison.Ordinal);

@@ -59,6 +59,7 @@ while (enumerator.MoveNext()) ProcessItem(enumerator.Current);
 - Single-line methods must use expression-bodied syntax (`=>`).
 - Keep short method calls, short method definitions, and short argument lists on a single line. Do not split clearly short calls or signatures only for visual wrapping.
 - Ternary conditional expressions (`condition ? whenTrue : whenFalse`) must stay on a single physical line. The resulting line may exceed 220 characters; that is allowed for this rule.
+- Logical AND, logical OR, and null-coalescing expressions (`left && right`, `left || right`, `left ?? right`) must stay on a single physical line. The resulting line may exceed 220 characters; that is allowed for this rule.
 - Parameter lists must stay on a single physical line no matter how long they are, for both calls and definitions/declarations. This applies to method calls, method declarations, constructor calls, constructor declarations, delegates, lambdas, and primary constructors. The resulting line may exceed 220 characters; definitions/declarations such as method declarations must remain on one physical line even when they exceed 220 characters.
 - Do not compress braced blocks into one line inside methods, `if`, `for`, `foreach`, `while`, `using`, `try`, `catch`, or `finally` blocks.
 - When a method or control statement contains nested braced logic, use expanded block formatting for the outer and nested blocks.
@@ -99,7 +100,7 @@ catch (Exception exception) { LogException(exception); }
 
 ## Automated Guard
 
-- For C# formatting verification or automatic cleanup of the ternary-expression and parameter-list rules above, use the Roslyn-based guard in `tools/CSharpStyleGuard`.
+- For C# formatting verification or automatic cleanup of the ternary-expression, logical/null-coalescing binary-expression, and parameter-list rules above, use the Roslyn-based guard in `tools/CSharpStyleGuard`.
 - Check files or directories with:
 
 ```powershell
@@ -112,6 +113,6 @@ dotnet run --project C:\Users\kck41\.codex\skills\csharp-code-style\tools\CSharp
 dotnet run --project C:\Users\kck41\.codex\skills\csharp-code-style\tools\CSharpStyleGuard\CSharpStyleGuard.csproj -- --fix <path>
 ```
 
-- The guard intentionally allows lines over 220 characters when enforcing these two single-line rules.
+- The guard intentionally allows lines over 220 characters when enforcing these single-line rules.
 - The guard skips automatic rewriting for spans that contain line comments, multiline comments, preprocessor directives, disabled text, or multiline braced syntax, and reports those cases for manual cleanup.
 - `dotnet run` may build the guard project before execution, so obey repository-local build restrictions before running it.

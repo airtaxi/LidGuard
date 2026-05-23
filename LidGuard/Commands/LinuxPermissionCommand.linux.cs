@@ -300,8 +300,7 @@ internal static class LinuxPermissionCommand
         if (readResult.NotFound) return RuleInspection.NotInstalled();
         if (!readResult.Succeeded) return RuleInspection.Inconclusive(readResult.Message);
 
-        var isManaged = readResult.Content.Contains(ManagedMarker, StringComparison.Ordinal)
-            && readResult.Content.Contains(VersionMarker, StringComparison.Ordinal);
+        var isManaged = readResult.Content.Contains(ManagedMarker, StringComparison.Ordinal) && readResult.Content.Contains(VersionMarker, StringComparison.Ordinal);
         var isForCurrentUser = readResult.Content.Contains($"subject.user == \"{EscapeJavaScriptString(targetUserName)}\"", StringComparison.Ordinal);
         return new RuleInspection(true, isManaged, isForCurrentUser, true, string.Empty);
     }

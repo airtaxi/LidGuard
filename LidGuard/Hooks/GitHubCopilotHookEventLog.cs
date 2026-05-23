@@ -28,6 +28,5 @@ public static class GitHubCopilotHookEventLog
     public static IReadOnlyList<string> ReadRecentLines(int maximumLineCount) => s_eventLog.ReadRecentLines(maximumLineCount);
 
     private static bool IsUserPromptSubmittedEvent(string hookEventName) =>
-        string.Equals(hookEventName?.Trim(), GitHubCopilotHookEventNames.UserPromptSubmitted, StringComparison.Ordinal)
-        || string.Equals(hookEventName?.Trim(), GitHubCopilotHookEventNames.PascalCaseUserPromptSubmittedAlias, StringComparison.Ordinal);
+        string.Equals(hookEventName?.Trim(), GitHubCopilotHookEventNames.UserPromptSubmitted, StringComparison.Ordinal) || string.Equals(hookEventName?.Trim(), GitHubCopilotHookEventNames.PascalCaseUserPromptSubmittedAlias, StringComparison.Ordinal);
 }

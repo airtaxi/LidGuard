@@ -58,7 +58,6 @@ public static class GitHubCopilotHookEventNames
 
     public static bool IsAgentStopEventName(string hookEventName)
     {
-        return hookEventName.Equals(AgentStop, StringComparison.Ordinal)
-            || hookEventName.Equals(PascalCaseAgentStopAlias, StringComparison.Ordinal);
+        return hookEventName.Equals(AgentStop, StringComparison.Ordinal) || hookEventName.Equals(PascalCaseAgentStopAlias, StringComparison.Ordinal);
     }
 }

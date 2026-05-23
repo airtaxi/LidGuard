@@ -30,8 +30,7 @@ public sealed class LidGuardSessionRegistry
         {
             var key = new LidGuardSessionKey(request.Provider, request.SessionIdentifier, request.ProviderName);
             var hasExistingSnapshot = _sessions.TryGetValue(key, out var existingSnapshot);
-            var hasEverHadWatchedProcess = request.WatchedProcessIdentifier > 0
-                || hasExistingSnapshot && (existingSnapshot.HasEverHadWatchedProcess || existingSnapshot.HasWatchedProcess);
+            var hasEverHadWatchedProcess = request.WatchedProcessIdentifier > 0 || hasExistingSnapshot && (existingSnapshot.HasEverHadWatchedProcess || existingSnapshot.HasWatchedProcess);
             var snapshot = new LidGuardSessionSnapshot
             {
                 SessionIdentifier = request.SessionIdentifier,

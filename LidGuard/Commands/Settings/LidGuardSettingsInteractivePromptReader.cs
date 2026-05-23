@@ -96,8 +96,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             return true;
         }
 
-        if (int.TryParse(valueText.Trim(), out var parsedValue)
-            && LidGuardSettings.IsValidSessionTimeoutMinutes(parsedValue))
+        if (int.TryParse(valueText.Trim(), out var parsedValue) && LidGuardSettings.IsValidSessionTimeoutMinutes(parsedValue))
         {
             value = parsedValue;
             return true;
@@ -127,8 +126,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             return true;
         }
 
-        if (int.TryParse(valueText.Trim(), out var parsedValue)
-            && LidGuardSettings.IsValidServerRuntimeCleanupDelayMinutes(parsedValue))
+        if (int.TryParse(valueText.Trim(), out var parsedValue) && LidGuardSettings.IsValidServerRuntimeCleanupDelayMinutes(parsedValue))
         {
             value = parsedValue;
             return true;
@@ -158,8 +156,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             return true;
         }
 
-        if (int.TryParse(valueText.Trim(), out var parsedValue)
-            && LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(parsedValue))
+        if (int.TryParse(valueText.Trim(), out var parsedValue) && LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(parsedValue))
         {
             value = parsedValue;
             return true;
@@ -189,8 +186,7 @@ internal static class LidGuardSettingsInteractivePromptReader
             return true;
         }
 
-        if (int.TryParse(valueText.Trim(), out var parsedValue)
-            && LidGuardSettings.IsValidSuspendHistoryEntryCount(parsedValue))
+        if (int.TryParse(valueText.Trim(), out var parsedValue) && LidGuardSettings.IsValidSuspendHistoryEntryCount(parsedValue))
         {
             value = parsedValue;
             return true;
@@ -214,9 +210,7 @@ internal static class LidGuardSettingsInteractivePromptReader
         }
 
         if (string.IsNullOrWhiteSpace(valueText)) return true;
-        if (int.TryParse(valueText.Trim(), out value)
-            && value >= LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius
-            && value <= LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius)
+        if (int.TryParse(valueText.Trim(), out value) && value >= LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius && value <= LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius)
             return true;
 
         message = LocalizationService.GetFormattedString("SettingsInteractiveRangeValidation", settingName, LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius, LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius);

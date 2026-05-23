@@ -117,8 +117,7 @@ internal static class GitHubCopilotHookCommand
                 return await ReportActivityAsync(configuredHookEventName, hookInput, configuredHookEventName);
             }
 
-            if (GitHubCopilotHookEventNames.IsAgentStopEventName(configuredHookEventName)
-                || configuredHookEventName.Equals(GitHubCopilotHookEventNames.SessionEnd, StringComparison.Ordinal))
+            if (GitHubCopilotHookEventNames.IsAgentStopEventName(configuredHookEventName) || configuredHookEventName.Equals(GitHubCopilotHookEventNames.SessionEnd, StringComparison.Ordinal))
             {
                 if (GitHubCopilotHookWorkTracker.TryCreatePendingWorkReason(hookInput, GetSessionIdentifier(hookInput), out var pendingProviderWorkReason))
                 {

@@ -137,8 +137,7 @@ internal static class WslProviderMcpManagementCommand
                 return 1;
             }
 
-            if (McpConfigurationJsonUtilities.TryGetMcpServersObject(rootObject, out var mcpServersObject)
-                && mcpServersObject[managedServerName] is JsonObject serverObject)
+            if (McpConfigurationJsonUtilities.TryGetMcpServersObject(rootObject, out var mcpServersObject) && mcpServersObject[managedServerName] is JsonObject serverObject)
             {
                 hasManagedServerEntry = true;
                 serverCommand = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "command");

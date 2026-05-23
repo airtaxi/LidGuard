@@ -43,11 +43,7 @@ internal static class AgentTranscriptResponseExtractor
         messageElement = default;
         if (rootElement.ValueKind != JsonValueKind.Object) return false;
 
-        if (provider == AgentProvider.Codex
-            && TryGetStringProperty(rootElement, "type", out var recordType)
-            && recordType.Equals("response_item", StringComparison.Ordinal)
-            && rootElement.TryGetProperty("payload", out var codexPayloadElement)
-            && IsAssistantMessageElement(codexPayloadElement))
+        if (provider == AgentProvider.Codex && TryGetStringProperty(rootElement, "type", out var recordType) && recordType.Equals("response_item", StringComparison.Ordinal) && rootElement.TryGetProperty("payload", out var codexPayloadElement) && IsAssistantMessageElement(codexPayloadElement))
         {
             messageElement = codexPayloadElement;
             return true;
@@ -85,16 +81,12 @@ internal static class AgentTranscriptResponseExtractor
         if (element.ValueKind != JsonValueKind.Object) return false;
 
         if (TryGetStringProperty(element, "role", out var role) && role.Equals("assistant", StringComparison.OrdinalIgnoreCase)) return true;
-        if (TryGetStringProperty(element, "type", out var type)
-            && (type.Equals("assistant", StringComparison.OrdinalIgnoreCase)
-                || type.Equals("assistant_message", StringComparison.OrdinalIgnoreCase)))
+        if (TryGetStringProperty(element, "type", out var type) && (type.Equals("assistant", StringComparison.OrdinalIgnoreCase) || type.Equals("assistant_message", StringComparison.OrdinalIgnoreCase)))
         {
             return true;
         }
 
-        return element.TryGetProperty("author", out var authorElement)
-            && TryGetStringProperty(authorElement, "role", out var authorRole)
-            && authorRole.Equals("assistant", StringComparison.OrdinalIgnoreCase);
+        return element.TryGetProperty("author", out var authorElement) && TryGetStringProperty(authorElement, "role", out var authorRole) && authorRole.Equals("assistant", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool TryExtractText(JsonElement messageElement, out string text)

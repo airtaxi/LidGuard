@@ -132,8 +132,7 @@ internal static class ProviderMcpManagementCommand
                 return 1;
             }
 
-            if (McpConfigurationJsonUtilities.TryGetMcpServersObject(rootObject, out var mcpServersObject)
-                && mcpServersObject[managedServerName] is JsonObject serverObject)
+            if (McpConfigurationJsonUtilities.TryGetMcpServersObject(rootObject, out var mcpServersObject) && mcpServersObject[managedServerName] is JsonObject serverObject)
             {
                 hasManagedServerEntry = true;
                 serverCommand = McpConfigurationJsonUtilities.GetJsonStringProperty(serverObject, "command");
@@ -196,8 +195,7 @@ internal static class ProviderMcpManagementCommand
             if (!jsonValue.TryGetValue<string>(out var stringValue)) continue;
             if (!stringValue.Equals("--provider-name", StringComparison.OrdinalIgnoreCase)) continue;
 
-            if (jsonArray[itemIndex + 1] is not JsonValue providerNameValue
-                || !providerNameValue.TryGetValue<string>(out providerName))
+            if (jsonArray[itemIndex + 1] is not JsonValue providerNameValue || !providerNameValue.TryGetValue<string>(out providerName))
                 return false;
 
             providerName = providerName.Trim();

@@ -73,8 +73,7 @@ public sealed record LidGuardSettings
         => Math.Clamp(emergencyHibernationTemperatureCelsius, MinimumEmergencyHibernationTemperatureCelsius, MaximumEmergencyHibernationTemperatureCelsius);
 
     public static bool IsValidPostStopSuspendSoundVolumeOverridePercent(int? postStopSuspendSoundVolumeOverridePercent)
-        => postStopSuspendSoundVolumeOverridePercent is null
-            || postStopSuspendSoundVolumeOverridePercent is >= MinimumPostStopSuspendSoundVolumeOverridePercent and <= MaximumPostStopSuspendSoundVolumeOverridePercent;
+        => postStopSuspendSoundVolumeOverridePercent is null || postStopSuspendSoundVolumeOverridePercent is >= MinimumPostStopSuspendSoundVolumeOverridePercent and <= MaximumPostStopSuspendSoundVolumeOverridePercent;
 
     public static bool IsValidSuspendHistoryEntryCount(int? suspendHistoryEntryCount)
         => suspendHistoryEntryCount is null || suspendHistoryEntryCount >= MinimumSuspendHistoryEntryCount;

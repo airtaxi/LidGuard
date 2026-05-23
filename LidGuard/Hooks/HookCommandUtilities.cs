@@ -32,8 +32,7 @@ public static class HookCommandUtilities
     {
         if (string.IsNullOrWhiteSpace(executableReference) || string.IsNullOrWhiteSpace(expectedExecutableReference)) return false;
 
-        if (TryResolveExecutableReferencePath(executableReference, out var executablePath)
-            && TryResolveExecutableReferencePath(expectedExecutableReference, out var expectedExecutablePath))
+        if (TryResolveExecutableReferencePath(executableReference, out var executablePath) && TryResolveExecutableReferencePath(expectedExecutableReference, out var expectedExecutablePath))
         {
             return executablePath.Equals(expectedExecutablePath, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         }

@@ -1539,8 +1539,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
         if (Uri.TryCreate(replyPollUrl.Trim(), UriKind.Absolute, out replyPollUri))
         {
-            if (replyPollUri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
-                || replyPollUri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            if (replyPollUri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) || replyPollUri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -1561,8 +1560,7 @@ internal sealed class LidGuardRuntimeCoordinator
             return false;
         }
 
-        if (replyPollUri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
-            || replyPollUri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+        if (replyPollUri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) || replyPollUri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }

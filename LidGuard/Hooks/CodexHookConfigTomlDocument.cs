@@ -65,11 +65,7 @@ public static class CodexHookConfigTomlDocument
         var hasExpectedHookCommand = HasAllRequiredHookCommands(contentUsedForRequiredHookInspection, command => command.Equals(hookCommand, StringComparison.Ordinal));
         var hasExpectedTimeout = HasAllRequiredHookTimeouts(contentUsedForRequiredHookInspection, GetExpectedTimeoutSeconds());
         var hasValidHookCommand = HasAllRequiredHookCommands(contentUsedForRequiredHookInspection, IsLidGuardCodexHookCommand);
-        var isInstalled = hasHooksFeatureFlag
-            && !hasDeprecatedCodexHooksFeatureFlag
-            && hasValidHookCommand
-            && hasExpectedHookCommand
-            && hasExpectedTimeout;
+        var isInstalled = hasHooksFeatureFlag && !hasDeprecatedCodexHooksFeatureFlag && hasValidHookCommand && hasExpectedHookCommand && hasExpectedTimeout;
         var status = isInstalled ? HookInstallationStatus.Installed : hasManagedHookEntries ? HookInstallationStatus.NeedsUpdate : HookInstallationStatus.NotInstalled;
         var message = isInstalled ? "Codex hook is installed." : hasManagedHookEntries ? "Codex hook is installed but needs update." : "Codex hook is not installed.";
 
@@ -299,8 +295,7 @@ public static class CodexHookConfigTomlDocument
 
             for (var commandLineIndex = lineIndex + 1; commandLineIndex < commandLineEndIndex; commandLineIndex++)
             {
-                if (TryReadIntegerValue(lines[commandLineIndex], "timeout", out var timeoutSeconds)
-                    && timeoutSeconds >= expectedTimeoutSeconds)
+                if (TryReadIntegerValue(lines[commandLineIndex], "timeout", out var timeoutSeconds) && timeoutSeconds >= expectedTimeoutSeconds)
                 {
                     return true;
                 }

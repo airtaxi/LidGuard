@@ -81,14 +81,10 @@ public static class SystemThermalInformation
     private static bool IsPowermetricsSectionHeader(string line) => line.StartsWith("****", StringComparison.Ordinal);
 
     private static bool IsSystemManagementControllerSensorSectionHeader(string line)
-        => line.Contains("SMC", StringComparison.OrdinalIgnoreCase)
-            && line.Contains("sensor", StringComparison.OrdinalIgnoreCase);
+        => line.Contains("SMC", StringComparison.OrdinalIgnoreCase) && line.Contains("sensor", StringComparison.OrdinalIgnoreCase);
 
     private static bool CanLineContainCelsiusTemperature(string line, bool isInsideSystemManagementControllerSensorSection)
-        => isInsideSystemManagementControllerSensorSection
-            || line.Contains("temperature", StringComparison.OrdinalIgnoreCase)
-            || line.Contains("thermal", StringComparison.OrdinalIgnoreCase)
-            || ContainsDelimitedToken(line, "temp");
+        => isInsideSystemManagementControllerSensorSection || line.Contains("temperature", StringComparison.OrdinalIgnoreCase) || line.Contains("thermal", StringComparison.OrdinalIgnoreCase) || ContainsDelimitedToken(line, "temp");
 
     private static bool ContainsDelimitedToken(string line, string token)
     {
@@ -159,8 +155,7 @@ public static class SystemThermalInformation
     {
         if (unitStartIndex >= line.Length) return false;
 
-        if (unitStartIndex + CelsiusUnitName.Length <= line.Length
-            && line[unitStartIndex..(unitStartIndex + CelsiusUnitName.Length)].Equals(CelsiusUnitName, StringComparison.OrdinalIgnoreCase))
+        if (unitStartIndex + CelsiusUnitName.Length <= line.Length && line[unitStartIndex..(unitStartIndex + CelsiusUnitName.Length)].Equals(CelsiusUnitName, StringComparison.OrdinalIgnoreCase))
         {
             return IsCelsiusUnitBoundary(line, unitStartIndex + CelsiusUnitName.Length);
         }

@@ -98,20 +98,7 @@ public static class ClaudeHookSettingsJsonDocument
             };
         }
 
-        if (!TryInspectHookEvent(hooksObject, ClaudeHookEventNames.UserPromptSubmit, hookCommand, string.Empty, expectedHookShellName, out var userPromptSubmitInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PreToolUse, hookCommand, string.Empty, expectedHookShellName, out var preToolUseInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PostToolUse, hookCommand, string.Empty, expectedHookShellName, out var postToolUseInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PostToolUseFailure, hookCommand, string.Empty, expectedHookShellName, out var postToolUseFailureInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SubagentStart, hookCommand, string.Empty, expectedHookShellName, out var subagentStartInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SubagentStop, hookCommand, string.Empty, expectedHookShellName, out var subagentStopInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.TaskCreated, hookCommand, string.Empty, expectedHookShellName, out var taskCreatedInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.TaskCompleted, hookCommand, string.Empty, expectedHookShellName, out var taskCompletedInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Stop, hookCommand, string.Empty, expectedHookShellName, out var stopInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.StopFailure, hookCommand, string.Empty, expectedHookShellName, out var stopFailureInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Elicitation, hookCommand, string.Empty, expectedHookShellName, out var elicitationInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PermissionRequest, hookCommand, string.Empty, expectedHookShellName, out var permissionRequestInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Notification, hookCommand, ClaudeSoftLockSignalSource.NotificationMatcher, expectedHookShellName, out var notificationInspection, out parseMessage)
-            || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SessionEnd, hookCommand, string.Empty, expectedHookShellName, out var sessionEndInspection, out parseMessage))
+        if (!TryInspectHookEvent(hooksObject, ClaudeHookEventNames.UserPromptSubmit, hookCommand, string.Empty, expectedHookShellName, out var userPromptSubmitInspection, out parseMessage) || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PreToolUse, hookCommand, string.Empty, expectedHookShellName, out var preToolUseInspection, out parseMessage) || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PostToolUse, hookCommand, string.Empty, expectedHookShellName, out var postToolUseInspection, out parseMessage) || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PostToolUseFailure, hookCommand, string.Empty, expectedHookShellName, out var postToolUseFailureInspection, out parseMessage) || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SubagentStart, hookCommand, string.Empty, expectedHookShellName, out var subagentStartInspection, out parseMessage) || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SubagentStop, hookCommand, string.Empty, expectedHookShellName, out var subagentStopInspection, out parseMessage) || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.TaskCreated, hookCommand, string.Empty, expectedHookShellName, out var taskCreatedInspection, out parseMessage) || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.TaskCompleted, hookCommand, string.Empty, expectedHookShellName, out var taskCompletedInspection, out parseMessage) || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Stop, hookCommand, string.Empty, expectedHookShellName, out var stopInspection, out parseMessage) || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.StopFailure, hookCommand, string.Empty, expectedHookShellName, out var stopFailureInspection, out parseMessage) || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Elicitation, hookCommand, string.Empty, expectedHookShellName, out var elicitationInspection, out parseMessage) || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.PermissionRequest, hookCommand, string.Empty, expectedHookShellName, out var permissionRequestInspection, out parseMessage) || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.Notification, hookCommand, ClaudeSoftLockSignalSource.NotificationMatcher, expectedHookShellName, out var notificationInspection, out parseMessage) || !TryInspectHookEvent(hooksObject, ClaudeHookEventNames.SessionEnd, hookCommand, string.Empty, expectedHookShellName, out var sessionEndInspection, out parseMessage))
         {
             return new HookInstallationInspection
             {
@@ -129,48 +116,9 @@ public static class ClaudeHookSettingsJsonDocument
             };
         }
 
-        var hasManagedHookEntries = userPromptSubmitInspection.HasManagedHook
-            || preToolUseInspection.HasManagedHook
-            || postToolUseInspection.HasManagedHook
-            || postToolUseFailureInspection.HasManagedHook
-            || subagentStartInspection.HasManagedHook
-            || subagentStopInspection.HasManagedHook
-            || taskCreatedInspection.HasManagedHook
-            || taskCompletedInspection.HasManagedHook
-            || stopInspection.HasManagedHook
-            || stopFailureInspection.HasManagedHook
-            || elicitationInspection.HasManagedHook
-            || permissionRequestInspection.HasManagedHook
-            || notificationInspection.HasManagedHook
-            || sessionEndInspection.HasManagedHook;
-        var hasExpectedHookCommand = userPromptSubmitInspection.HasExpectedCommand
-            && preToolUseInspection.HasExpectedCommand
-            && postToolUseInspection.HasExpectedCommand
-            && postToolUseFailureInspection.HasExpectedCommand
-            && subagentStartInspection.HasExpectedCommand
-            && subagentStopInspection.HasExpectedCommand
-            && taskCreatedInspection.HasExpectedCommand
-            && taskCompletedInspection.HasExpectedCommand
-            && stopInspection.HasExpectedCommand
-            && stopFailureInspection.HasExpectedCommand
-            && elicitationInspection.HasExpectedCommand
-            && permissionRequestInspection.HasExpectedCommand
-            && notificationInspection.HasExpectedCommand
-            && sessionEndInspection.HasExpectedCommand;
-        var hasExpectedNotificationMatcher = userPromptSubmitInspection.HasExpectedMatcher
-            && preToolUseInspection.HasExpectedMatcher
-            && postToolUseInspection.HasExpectedMatcher
-            && postToolUseFailureInspection.HasExpectedMatcher
-            && subagentStartInspection.HasExpectedMatcher
-            && subagentStopInspection.HasExpectedMatcher
-            && taskCreatedInspection.HasExpectedMatcher
-            && taskCompletedInspection.HasExpectedMatcher
-            && stopInspection.HasExpectedMatcher
-            && stopFailureInspection.HasExpectedMatcher
-            && elicitationInspection.HasExpectedMatcher
-            && permissionRequestInspection.HasExpectedMatcher
-            && notificationInspection.HasExpectedMatcher
-            && sessionEndInspection.HasExpectedMatcher;
+        var hasManagedHookEntries = userPromptSubmitInspection.HasManagedHook || preToolUseInspection.HasManagedHook || postToolUseInspection.HasManagedHook || postToolUseFailureInspection.HasManagedHook || subagentStartInspection.HasManagedHook || subagentStopInspection.HasManagedHook || taskCreatedInspection.HasManagedHook || taskCompletedInspection.HasManagedHook || stopInspection.HasManagedHook || stopFailureInspection.HasManagedHook || elicitationInspection.HasManagedHook || permissionRequestInspection.HasManagedHook || notificationInspection.HasManagedHook || sessionEndInspection.HasManagedHook;
+        var hasExpectedHookCommand = userPromptSubmitInspection.HasExpectedCommand && preToolUseInspection.HasExpectedCommand && postToolUseInspection.HasExpectedCommand && postToolUseFailureInspection.HasExpectedCommand && subagentStartInspection.HasExpectedCommand && subagentStopInspection.HasExpectedCommand && taskCreatedInspection.HasExpectedCommand && taskCompletedInspection.HasExpectedCommand && stopInspection.HasExpectedCommand && stopFailureInspection.HasExpectedCommand && elicitationInspection.HasExpectedCommand && permissionRequestInspection.HasExpectedCommand && notificationInspection.HasExpectedCommand && sessionEndInspection.HasExpectedCommand;
+        var hasExpectedNotificationMatcher = userPromptSubmitInspection.HasExpectedMatcher && preToolUseInspection.HasExpectedMatcher && postToolUseInspection.HasExpectedMatcher && postToolUseFailureInspection.HasExpectedMatcher && subagentStartInspection.HasExpectedMatcher && subagentStopInspection.HasExpectedMatcher && taskCreatedInspection.HasExpectedMatcher && taskCompletedInspection.HasExpectedMatcher && stopInspection.HasExpectedMatcher && stopFailureInspection.HasExpectedMatcher && elicitationInspection.HasExpectedMatcher && permissionRequestInspection.HasExpectedMatcher && notificationInspection.HasExpectedMatcher && sessionEndInspection.HasExpectedMatcher;
         var hasExpectedHookTimeout = TryHasExpectedHookTimeouts(hooksObject, out parseMessage);
         if (!string.IsNullOrWhiteSpace(parseMessage))
         {
@@ -189,38 +137,8 @@ public static class ClaudeHookSettingsJsonDocument
                 Message = parseMessage
             };
         }
-        var hasExpectedHookShell = userPromptSubmitInspection.HasExpectedShell
-            && preToolUseInspection.HasExpectedShell
-            && postToolUseInspection.HasExpectedShell
-            && postToolUseFailureInspection.HasExpectedShell
-            && subagentStartInspection.HasExpectedShell
-            && subagentStopInspection.HasExpectedShell
-            && taskCreatedInspection.HasExpectedShell
-            && taskCompletedInspection.HasExpectedShell
-            && stopInspection.HasExpectedShell
-            && stopFailureInspection.HasExpectedShell
-            && elicitationInspection.HasExpectedShell
-            && permissionRequestInspection.HasExpectedShell
-            && notificationInspection.HasExpectedShell
-            && sessionEndInspection.HasExpectedShell;
-        var isInstalled = userPromptSubmitInspection.HasManagedHook
-            && preToolUseInspection.HasManagedHook
-            && postToolUseInspection.HasManagedHook
-            && postToolUseFailureInspection.HasManagedHook
-            && subagentStartInspection.HasManagedHook
-            && subagentStopInspection.HasManagedHook
-            && taskCreatedInspection.HasManagedHook
-            && taskCompletedInspection.HasManagedHook
-            && stopInspection.HasManagedHook
-            && stopFailureInspection.HasManagedHook
-            && elicitationInspection.HasManagedHook
-            && permissionRequestInspection.HasManagedHook
-            && notificationInspection.HasManagedHook
-            && sessionEndInspection.HasManagedHook
-            && hasExpectedHookCommand
-            && hasExpectedNotificationMatcher
-            && hasExpectedHookTimeout
-            && hasExpectedHookShell;
+        var hasExpectedHookShell = userPromptSubmitInspection.HasExpectedShell && preToolUseInspection.HasExpectedShell && postToolUseInspection.HasExpectedShell && postToolUseFailureInspection.HasExpectedShell && subagentStartInspection.HasExpectedShell && subagentStopInspection.HasExpectedShell && taskCreatedInspection.HasExpectedShell && taskCompletedInspection.HasExpectedShell && stopInspection.HasExpectedShell && stopFailureInspection.HasExpectedShell && elicitationInspection.HasExpectedShell && permissionRequestInspection.HasExpectedShell && notificationInspection.HasExpectedShell && sessionEndInspection.HasExpectedShell;
+        var isInstalled = userPromptSubmitInspection.HasManagedHook && preToolUseInspection.HasManagedHook && postToolUseInspection.HasManagedHook && postToolUseFailureInspection.HasManagedHook && subagentStartInspection.HasManagedHook && subagentStopInspection.HasManagedHook && taskCreatedInspection.HasManagedHook && taskCompletedInspection.HasManagedHook && stopInspection.HasManagedHook && stopFailureInspection.HasManagedHook && elicitationInspection.HasManagedHook && permissionRequestInspection.HasManagedHook && notificationInspection.HasManagedHook && sessionEndInspection.HasManagedHook && hasExpectedHookCommand && hasExpectedNotificationMatcher && hasExpectedHookTimeout && hasExpectedHookShell;
         var status = isInstalled ? HookInstallationStatus.Installed : hasManagedHookEntries ? HookInstallationStatus.NeedsUpdate : HookInstallationStatus.NotInstalled;
         var message = isInstalled ? "Claude hook is installed." : hasManagedHookEntries ? "Claude hook is installed but needs update." : "Claude hook is not installed.";
 
@@ -559,11 +477,7 @@ public static class ClaudeHookSettingsJsonDocument
 
                 if (refreshCommand)
                 {
-                    if (!MatcherEquals(JsonHookConfigurationDocument.GetStringProperty(hookMatcherObject, "matcher"), matcher)
-                        || !HasExpectedHookCommand(hookDefinitionObject, hookCommand)
-                        || !HasExpectedHookShell(hookDefinitionObject, hookShellName)
-                        || !HasExpectedTimeoutValue(hookDefinitionObject, GetExpectedTimeoutSeconds())
-                        || !JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "statusMessage").Equals(statusMessage, StringComparison.Ordinal))
+                    if (!MatcherEquals(JsonHookConfigurationDocument.GetStringProperty(hookMatcherObject, "matcher"), matcher) || !HasExpectedHookCommand(hookDefinitionObject, hookCommand) || !HasExpectedHookShell(hookDefinitionObject, hookShellName) || !HasExpectedTimeoutValue(hookDefinitionObject, GetExpectedTimeoutSeconds()) || !JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "statusMessage").Equals(statusMessage, StringComparison.Ordinal))
                     {
                         ReplaceManagedHookDefinition(hookMatcherObject, hookDefinitionObject, hookCommand, hookShellName, statusMessage, matcher);
                         changed = true;
@@ -590,14 +504,10 @@ public static class ClaudeHookSettingsJsonDocument
     }
 
     private static bool HasExpectedTimeoutValue(JsonObject hookDefinitionObject, int expectedTimeoutSeconds)
-        => hookDefinitionObject["timeout"] is JsonValue timeoutValue
-            && timeoutValue.TryGetValue<int>(out var timeoutSeconds)
-            && timeoutSeconds == expectedTimeoutSeconds;
+        => hookDefinitionObject["timeout"] is JsonValue timeoutValue && timeoutValue.TryGetValue<int>(out var timeoutSeconds) && timeoutSeconds == expectedTimeoutSeconds;
 
     private static bool HasSufficientTimeoutValue(JsonObject hookDefinitionObject, int expectedTimeoutSeconds)
-        => hookDefinitionObject["timeout"] is JsonValue timeoutValue
-            && timeoutValue.TryGetValue<int>(out var timeoutSeconds)
-            && timeoutSeconds >= expectedTimeoutSeconds;
+        => hookDefinitionObject["timeout"] is JsonValue timeoutValue && timeoutValue.TryGetValue<int>(out var timeoutSeconds) && timeoutSeconds >= expectedTimeoutSeconds;
 
     private static bool MatcherEquals(string actualMatcher, string expectedMatcher)
     {

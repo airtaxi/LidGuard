@@ -323,9 +323,7 @@ internal static class WslCommandUtilities
         message = string.Empty;
 
         var executableReference = HookCommandUtilities.GetDefaultMcpExecutableReference();
-        if (HookCommandUtilities.TryResolveExecutableReferencePath(executableReference, out var resolvedExecutablePath)
-            && resolvedExecutablePath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
-            && File.Exists(resolvedExecutablePath))
+        if (HookCommandUtilities.TryResolveExecutableReferencePath(executableReference, out var resolvedExecutablePath) && resolvedExecutablePath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) && File.Exists(resolvedExecutablePath))
         {
             executablePath = Path.GetFullPath(resolvedExecutablePath);
             return true;

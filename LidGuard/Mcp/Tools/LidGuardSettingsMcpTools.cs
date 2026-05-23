@@ -148,8 +148,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
 
         hasPostStopSuspendSoundVolumeOverridePercent = true;
         if (string.IsNullOrWhiteSpace(configuredValue) || configuredValue.Trim().Equals("off", StringComparison.OrdinalIgnoreCase)) return true;
-        if (int.TryParse(configuredValue.Trim(), out var parsedValue)
-            && LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(parsedValue))
+        if (int.TryParse(configuredValue.Trim(), out var parsedValue) && LidGuardSettings.IsValidPostStopSuspendSoundVolumeOverridePercent(parsedValue))
         {
             postStopSuspendSoundVolumeOverridePercent = parsedValue;
             return true;
@@ -169,8 +168,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
 
         hasSuspendHistoryEntryCount = true;
         if (string.IsNullOrWhiteSpace(configuredValue) || configuredValue.Trim().Equals("off", StringComparison.OrdinalIgnoreCase)) return true;
-        if (int.TryParse(configuredValue.Trim(), out var parsedValue)
-            && LidGuardSettings.IsValidSuspendHistoryEntryCount(parsedValue))
+        if (int.TryParse(configuredValue.Trim(), out var parsedValue) && LidGuardSettings.IsValidSuspendHistoryEntryCount(parsedValue))
         {
             suspendHistoryEntryCount = parsedValue;
             return true;
@@ -189,8 +187,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
 
         hasSessionTimeoutMinutes = true;
         if (string.IsNullOrWhiteSpace(configuredValue) || configuredValue.Trim().Equals("off", StringComparison.OrdinalIgnoreCase)) return true;
-        if (int.TryParse(configuredValue.Trim(), out var parsedValue)
-            && LidGuardSettings.IsValidSessionTimeoutMinutes(parsedValue))
+        if (int.TryParse(configuredValue.Trim(), out var parsedValue) && LidGuardSettings.IsValidSessionTimeoutMinutes(parsedValue))
         {
             sessionTimeoutMinutes = parsedValue;
             return true;
@@ -209,8 +206,7 @@ public sealed class LidGuardSettingsMcpTools(LidGuardControlService controlServi
 
         hasServerRuntimeCleanupDelayMinutes = true;
         if (string.IsNullOrWhiteSpace(configuredValue) || configuredValue.Trim().Equals("off", StringComparison.OrdinalIgnoreCase)) return true;
-        if (int.TryParse(configuredValue.Trim(), out var parsedValue)
-            && LidGuardSettings.IsValidServerRuntimeCleanupDelayMinutes(parsedValue))
+        if (int.TryParse(configuredValue.Trim(), out var parsedValue) && LidGuardSettings.IsValidServerRuntimeCleanupDelayMinutes(parsedValue))
         {
             serverRuntimeCleanupDelayMinutes = parsedValue;
             return true;

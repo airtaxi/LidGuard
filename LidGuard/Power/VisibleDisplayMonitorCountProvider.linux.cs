@@ -51,8 +51,6 @@ internal sealed class VisibleDisplayMonitorCountProvider : IVisibleDisplayMonito
         var separatorIndex = normalizedConnectorName.IndexOf('-');
         if (separatorIndex >= 0 && separatorIndex + 1 < normalizedConnectorName.Length) normalizedConnectorName = normalizedConnectorName[(separatorIndex + 1)..];
 
-        return normalizedConnectorName.StartsWith("eDP", StringComparison.OrdinalIgnoreCase)
-            || normalizedConnectorName.StartsWith("LVDS", StringComparison.OrdinalIgnoreCase)
-            || normalizedConnectorName.StartsWith("DSI", StringComparison.OrdinalIgnoreCase);
+        return normalizedConnectorName.StartsWith("eDP", StringComparison.OrdinalIgnoreCase) || normalizedConnectorName.StartsWith("LVDS", StringComparison.OrdinalIgnoreCase) || normalizedConnectorName.StartsWith("DSI", StringComparison.OrdinalIgnoreCase);
     }
 }

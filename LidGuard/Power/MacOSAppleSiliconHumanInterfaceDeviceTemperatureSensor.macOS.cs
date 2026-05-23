@@ -116,10 +116,7 @@ internal static partial class MacOSAppleSiliconHumanInterfaceDeviceTemperatureSe
     }
 
     private static bool IsProcessorTemperatureProduct(string productName)
-        => productName.Contains("PMU tdie", StringComparison.OrdinalIgnoreCase)
-            || productName.Contains("pACC", StringComparison.OrdinalIgnoreCase)
-            || productName.Contains("eACC", StringComparison.OrdinalIgnoreCase)
-            || productName.Contains("CPU", StringComparison.OrdinalIgnoreCase);
+        => productName.Contains("PMU tdie", StringComparison.OrdinalIgnoreCase) || productName.Contains("pACC", StringComparison.OrdinalIgnoreCase) || productName.Contains("eACC", StringComparison.OrdinalIgnoreCase) || productName.Contains("CPU", StringComparison.OrdinalIgnoreCase);
 
     private static unsafe IntPtr CreateCoreFoundationString(string text)
     {
@@ -153,14 +150,12 @@ internal static partial class MacOSAppleSiliconHumanInterfaceDeviceTemperatureSe
             lock (s_coreFoundationExportGate)
             {
                 if (s_coreFoundationLibraryHandle == IntPtr.Zero) s_coreFoundationLibraryHandle = NativeLibrary.Load(CoreFoundationLibraryPath);
-                if (s_coreFoundationDictionaryKeyCallbacks == IntPtr.Zero
-                    && !NativeLibrary.TryGetExport(s_coreFoundationLibraryHandle, "kCFTypeDictionaryKeyCallBacks", out s_coreFoundationDictionaryKeyCallbacks))
+                if (s_coreFoundationDictionaryKeyCallbacks == IntPtr.Zero && !NativeLibrary.TryGetExport(s_coreFoundationLibraryHandle, "kCFTypeDictionaryKeyCallBacks", out s_coreFoundationDictionaryKeyCallbacks))
                 {
                     return false;
                 }
 
-                if (s_coreFoundationDictionaryValueCallbacks == IntPtr.Zero
-                    && !NativeLibrary.TryGetExport(s_coreFoundationLibraryHandle, "kCFTypeDictionaryValueCallBacks", out s_coreFoundationDictionaryValueCallbacks))
+                if (s_coreFoundationDictionaryValueCallbacks == IntPtr.Zero && !NativeLibrary.TryGetExport(s_coreFoundationLibraryHandle, "kCFTypeDictionaryValueCallBacks", out s_coreFoundationDictionaryValueCallbacks))
                 {
                     return false;
                 }

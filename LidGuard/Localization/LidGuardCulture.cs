@@ -95,8 +95,7 @@ internal static class LidGuardCulture
         if (TryResolveConcreteCultureName(environmentCultureName, out var environmentEffectiveCultureName)) return environmentEffectiveCultureName;
 
         var normalizedSettings = LidGuardSettings.Normalize(settings);
-        if (!UserInterfaceCultureConfiguration.IsAutomatic(normalizedSettings.UserInterfaceCulture)
-            && TryResolveConcreteCultureName(normalizedSettings.UserInterfaceCulture, out var settingsEffectiveCultureName))
+        if (!UserInterfaceCultureConfiguration.IsAutomatic(normalizedSettings.UserInterfaceCulture) && TryResolveConcreteCultureName(normalizedSettings.UserInterfaceCulture, out var settingsEffectiveCultureName))
         {
             return settingsEffectiveCultureName;
         }

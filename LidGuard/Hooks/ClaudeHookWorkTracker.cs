@@ -142,8 +142,7 @@ internal static class ClaudeHookWorkTracker
     private static bool TryGetStoppedTaskIdentifier(ClaudeHookInput hookInput, out string taskIdentifier)
     {
         taskIdentifier = string.Empty;
-        var isToolUseCompletionEvent = hookInput.HookEventName.Trim().Equals(ClaudeHookEventNames.PostToolUse, StringComparison.Ordinal)
-            || hookInput.HookEventName.Trim().Equals(ClaudeHookEventNames.PostToolUseFailure, StringComparison.Ordinal);
+        var isToolUseCompletionEvent = hookInput.HookEventName.Trim().Equals(ClaudeHookEventNames.PostToolUse, StringComparison.Ordinal) || hookInput.HookEventName.Trim().Equals(ClaudeHookEventNames.PostToolUseFailure, StringComparison.Ordinal);
         if (!isToolUseCompletionEvent) return false;
 
         if (!hookInput.ToolName.Trim().Equals(ClaudeHookEventNames.TaskStopToolName, StringComparison.Ordinal)) return false;
@@ -306,10 +305,7 @@ internal static class ClaudeHookWorkTracker
     {
         var normalizedToolName = toolName.Trim();
         if (normalizedToolName.Equals(ClaudeHookEventNames.MonitorToolName, StringComparison.Ordinal)) return true;
-        var isBackgroundCapableTool = normalizedToolName.Equals(ClaudeHookEventNames.BashToolName, StringComparison.Ordinal)
-            || normalizedToolName.Equals(ClaudeHookEventNames.PowerShellToolName, StringComparison.Ordinal)
-            || normalizedToolName.Equals(ClaudeHookEventNames.AgentToolName, StringComparison.Ordinal)
-            || normalizedToolName.Equals(ClaudeHookEventNames.TaskToolName, StringComparison.Ordinal);
+        var isBackgroundCapableTool = normalizedToolName.Equals(ClaudeHookEventNames.BashToolName, StringComparison.Ordinal) || normalizedToolName.Equals(ClaudeHookEventNames.PowerShellToolName, StringComparison.Ordinal) || normalizedToolName.Equals(ClaudeHookEventNames.AgentToolName, StringComparison.Ordinal) || normalizedToolName.Equals(ClaudeHookEventNames.TaskToolName, StringComparison.Ordinal);
         if (!isBackgroundCapableTool) return false;
 
         return TryGetBooleanProperty(toolInput, "run_in_background", out var runInBackground) && runInBackground;
@@ -318,10 +314,7 @@ internal static class ClaudeHookWorkTracker
     private static string CreateBackgroundWorkSummary(string toolName, JsonElement toolInput, string taskIdentifier, string toolUseIdentifier)
     {
         var detail = string.Empty;
-        var hasBackgroundWorkDetail = TryGetStringProperty(toolInput, "description", out detail)
-            || TryGetStringProperty(toolInput, "command", out detail)
-            || TryGetStringProperty(toolInput, "subagent_type", out detail)
-            || TryGetStringProperty(toolInput, "prompt", out detail);
+        var hasBackgroundWorkDetail = TryGetStringProperty(toolInput, "description", out detail) || TryGetStringProperty(toolInput, "command", out detail) || TryGetStringProperty(toolInput, "subagent_type", out detail) || TryGetStringProperty(toolInput, "prompt", out detail);
         if (!hasBackgroundWorkDetail) detail = string.Empty;
 
         if (detail.Length > 80) detail = detail[..77] + "...";
@@ -376,9 +369,7 @@ internal static class ClaudeHookWorkTracker
     }
 
     private static bool IsTerminalTaskStatus(string taskStatus)
-        => taskStatus.Equals("completed", StringComparison.Ordinal)
-            || taskStatus.Equals("failed", StringComparison.Ordinal)
-            || taskStatus.Equals("stopped", StringComparison.Ordinal);
+        => taskStatus.Equals("completed", StringComparison.Ordinal) || taskStatus.Equals("failed", StringComparison.Ordinal) || taskStatus.Equals("stopped", StringComparison.Ordinal);
 
     private static string ExtractTaskIdentifier(JsonElement element)
     {
@@ -512,12 +503,10 @@ internal static class ClaudeHookWorkTracker
 
         private static bool WorkItemsReferToSameTask(ClaudeHookBackgroundWorkItem firstBackgroundWorkItem, ClaudeHookBackgroundWorkItem secondBackgroundWorkItem)
         {
-            var hasMatchingToolUseIdentifier = !string.IsNullOrWhiteSpace(firstBackgroundWorkItem.ToolUseIdentifier)
-                && firstBackgroundWorkItem.ToolUseIdentifier.Equals(secondBackgroundWorkItem.ToolUseIdentifier, StringComparison.Ordinal);
+            var hasMatchingToolUseIdentifier = !string.IsNullOrWhiteSpace(firstBackgroundWorkItem.ToolUseIdentifier) && firstBackgroundWorkItem.ToolUseIdentifier.Equals(secondBackgroundWorkItem.ToolUseIdentifier, StringComparison.Ordinal);
             if (hasMatchingToolUseIdentifier) return true;
 
-            return !string.IsNullOrWhiteSpace(firstBackgroundWorkItem.TaskIdentifier)
-                && firstBackgroundWorkItem.TaskIdentifier.Equals(secondBackgroundWorkItem.TaskIdentifier, StringComparison.Ordinal);
+            return !string.IsNullOrWhiteSpace(firstBackgroundWorkItem.TaskIdentifier) && firstBackgroundWorkItem.TaskIdentifier.Equals(secondBackgroundWorkItem.TaskIdentifier, StringComparison.Ordinal);
         }
     }
 
@@ -545,19 +534,14 @@ internal static class ClaudeHookWorkTracker
         }
 
         public bool IsCompleted(ClaudeHookBackgroundWorkItem backgroundWorkItem)
-            => !string.IsNullOrWhiteSpace(backgroundWorkItem.TaskIdentifier)
-                && CompletedTaskIdentifiers.Contains(backgroundWorkItem.TaskIdentifier)
-            || !string.IsNullOrWhiteSpace(backgroundWorkItem.ToolUseIdentifier)
-                && CompletedToolUseIdentifiers.Contains(backgroundWorkItem.ToolUseIdentifier);
+            => !string.IsNullOrWhiteSpace(backgroundWorkItem.TaskIdentifier) && CompletedTaskIdentifiers.Contains(backgroundWorkItem.TaskIdentifier) || !string.IsNullOrWhiteSpace(backgroundWorkItem.ToolUseIdentifier) && CompletedToolUseIdentifiers.Contains(backgroundWorkItem.ToolUseIdentifier);
 
         private static bool WorkItemsReferToSameTask(ClaudeHookBackgroundWorkItem firstBackgroundWorkItem, ClaudeHookBackgroundWorkItem secondBackgroundWorkItem)
         {
-            var hasMatchingToolUseIdentifier = !string.IsNullOrWhiteSpace(firstBackgroundWorkItem.ToolUseIdentifier)
-                && firstBackgroundWorkItem.ToolUseIdentifier.Equals(secondBackgroundWorkItem.ToolUseIdentifier, StringComparison.Ordinal);
+            var hasMatchingToolUseIdentifier = !string.IsNullOrWhiteSpace(firstBackgroundWorkItem.ToolUseIdentifier) && firstBackgroundWorkItem.ToolUseIdentifier.Equals(secondBackgroundWorkItem.ToolUseIdentifier, StringComparison.Ordinal);
             if (hasMatchingToolUseIdentifier) return true;
 
-            return !string.IsNullOrWhiteSpace(firstBackgroundWorkItem.TaskIdentifier)
-                && firstBackgroundWorkItem.TaskIdentifier.Equals(secondBackgroundWorkItem.TaskIdentifier, StringComparison.Ordinal);
+            return !string.IsNullOrWhiteSpace(firstBackgroundWorkItem.TaskIdentifier) && firstBackgroundWorkItem.TaskIdentifier.Equals(secondBackgroundWorkItem.TaskIdentifier, StringComparison.Ordinal);
         }
     }
 
@@ -648,8 +632,7 @@ internal static class ClaudeHookWorkTracker
             toolName = string.Empty;
             toolInput = default;
 
-            var hasHookToolNameAndInput = TryGetStringProperty(element, "tool_name", out toolName)
-                && element.TryGetProperty("tool_input", out toolInput);
+            var hasHookToolNameAndInput = TryGetStringProperty(element, "tool_name", out toolName) && element.TryGetProperty("tool_input", out toolInput);
             if (hasHookToolNameAndInput) return true;
 
             if (!TryGetStringProperty(element, "type", out var type) || !type.Equals("tool_use", StringComparison.Ordinal)) return false;

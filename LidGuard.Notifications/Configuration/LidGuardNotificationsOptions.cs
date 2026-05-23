@@ -72,10 +72,7 @@ internal sealed class LidGuardNotificationsOptions
             return false;
         }
 
-        if (!string.IsNullOrWhiteSpace(PublicBaseUrl)
-            && (!Uri.TryCreate(PublicBaseUrl, UriKind.Absolute, out var publicBaseUri)
-                || (publicBaseUri.Scheme != Uri.UriSchemeHttps
-                    && (publicBaseUri.Scheme != Uri.UriSchemeHttp || publicBaseUri.Host != "localhost"))))
+        if (!string.IsNullOrWhiteSpace(PublicBaseUrl) && (!Uri.TryCreate(PublicBaseUrl, UriKind.Absolute, out var publicBaseUri) || (publicBaseUri.Scheme != Uri.UriSchemeHttps && (publicBaseUri.Scheme != Uri.UriSchemeHttp || publicBaseUri.Host != "localhost"))))
         {
             message = "PublicBaseUrl must be an HTTPS URL, or an HTTP localhost URL for development.";
             return false;

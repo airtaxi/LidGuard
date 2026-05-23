@@ -55,7 +55,7 @@ internal static class Program
     private static void WriteUsage()
     {
         Console.WriteLine("Usage: CSharpStyleGuard (--check|--fix) <file-or-directory> [more paths]");
-        Console.WriteLine("Checks or safely rewrites multiline ternary conditional expressions and parameter/argument lists so they stay on one physical line. Lines over 220 characters are allowed for these rules.");
+        Console.WriteLine("Checks or safely rewrites multiline ternary conditional expressions, logical/null-coalescing binary expressions, and parameter/argument lists so they stay on one physical line. Lines over 220 characters are allowed for these rules.");
     }
 
     private static IEnumerable<string> EnumerateSourceFilePaths(IReadOnlyList<string> inputPaths)
@@ -148,6 +148,14 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
         base.VisitConditionalExpression(node);
     }
 
+    public override void VisitBinaryExpression(BinaryExpressionSyntax node)
+    {
+        var diagnosticMessage = "Logical AND, logical OR, and null-coalescing expressions must stay on one physical line; lines over 220 characters are allowed for this rule.";
+        if (IsSingleLineBinaryExpression(node) && !IsNestedSingleLineBinaryExpression(node)) ReportIfMultiline(node, "CSG0003", diagnosticMessage);
+
+        base.VisitBinaryExpression(node);
+    }
+
     public override void VisitArgumentList(ArgumentListSyntax node)
     {
         ReportIfMultiline(node, "CSG0002", "Parameter and argument lists must stay on one physical line; lines over 220 characters are allowed for this rule.");
@@ -171,6 +179,10 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
     }
 
     private bool CanRewriteAutomatically(SyntaxNode node) => !ContainsUnsafeTrivia(node) && !ContainsMultilineBracedSyntax(node);
+
+    private static bool IsNestedSingleLineBinaryExpression(BinaryExpressionSyntax node) => node.Parent is BinaryExpressionSyntax parentNode && IsSingleLineBinaryExpression(parentNode);
+
+    private static bool IsSingleLineBinaryExpression(BinaryExpressionSyntax node) => node.IsKind(SyntaxKind.LogicalAndExpression) || node.IsKind(SyntaxKind.LogicalOrExpression) || node.IsKind(SyntaxKind.CoalesceExpression);
 
     private bool ContainsMultilineBracedSyntax(SyntaxNode node)
     {

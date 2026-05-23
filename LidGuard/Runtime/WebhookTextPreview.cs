@@ -31,10 +31,7 @@ internal static class WebhookTextPreview
             .Replace('\n', ' ');
 
     private static bool CutsThroughWord(string text, int maximumPrefixCharacterCount)
-        => maximumPrefixCharacterCount < text.Length
-            && maximumPrefixCharacterCount > 0
-            && !char.IsWhiteSpace(text[maximumPrefixCharacterCount])
-            && !char.IsWhiteSpace(text[maximumPrefixCharacterCount - 1]);
+        => maximumPrefixCharacterCount < text.Length && maximumPrefixCharacterCount > 0 && !char.IsWhiteSpace(text[maximumPrefixCharacterCount]) && !char.IsWhiteSpace(text[maximumPrefixCharacterCount - 1]);
 
     private static int FindLastWordBoundary(string text)
     {

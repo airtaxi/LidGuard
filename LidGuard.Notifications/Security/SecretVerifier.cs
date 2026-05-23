@@ -11,7 +11,6 @@ internal static class SecretVerifier
 
         var configuredSecretBytes = Encoding.UTF8.GetBytes(configuredSecret);
         var suppliedSecretBytes = Encoding.UTF8.GetBytes(suppliedSecret);
-        return configuredSecretBytes.Length == suppliedSecretBytes.Length
-            && CryptographicOperations.FixedTimeEquals(configuredSecretBytes, suppliedSecretBytes);
+        return configuredSecretBytes.Length == suppliedSecretBytes.Length && CryptographicOperations.FixedTimeEquals(configuredSecretBytes, suppliedSecretBytes);
     }
 }

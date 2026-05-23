@@ -35,11 +35,7 @@ internal static class LidGuardExceptionLog
     private static bool IsFirstChanceExceptionLoggingEnabled()
     {
         var configuredValue = Environment.GetEnvironmentVariable(FirstChanceExceptionLogEnvironmentVariable);
-        return configuredValue is not null
-            && (configuredValue.Equals("1", StringComparison.OrdinalIgnoreCase)
-                || configuredValue.Equals("true", StringComparison.OrdinalIgnoreCase)
-                || configuredValue.Equals("yes", StringComparison.OrdinalIgnoreCase)
-                || configuredValue.Equals("on", StringComparison.OrdinalIgnoreCase));
+        return configuredValue is not null && (configuredValue.Equals("1", StringComparison.OrdinalIgnoreCase) || configuredValue.Equals("true", StringComparison.OrdinalIgnoreCase) || configuredValue.Equals("yes", StringComparison.OrdinalIgnoreCase) || configuredValue.Equals("on", StringComparison.OrdinalIgnoreCase));
     }
 
     private static void HandleFirstChanceException(object sender, FirstChanceExceptionEventArgs eventArguments)

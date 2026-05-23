@@ -341,9 +341,7 @@ internal static class HookManagementCommand
     }
 
     private static bool HasClaudeAllStopHooks(HookInstallationInspection inspection)
-        => inspection.HasCheck(HookInstallationCheck.StopHook)
-        && inspection.HasCheck(HookInstallationCheck.StopFailureHook)
-        && inspection.HasCheck(HookInstallationCheck.SessionEndHook);
+        => inspection.HasCheck(HookInstallationCheck.StopHook) && inspection.HasCheck(HookInstallationCheck.StopFailureHook) && inspection.HasCheck(HookInstallationCheck.SessionEndHook);
 
     private static string DisplayHookManagementMessage(AgentProvider provider, string message)
     {

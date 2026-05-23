@@ -13,8 +13,7 @@ internal static class WebhookUrlConfiguration
         if (string.IsNullOrWhiteSpace(webhookUrl)) return true;
 
         var normalizedInput = webhookUrl.Trim();
-        if (!Uri.TryCreate(normalizedInput, UriKind.Absolute, out var webhookUri) ||
-            (webhookUri.Scheme != Uri.UriSchemeHttp && webhookUri.Scheme != Uri.UriSchemeHttps))
+        if (!Uri.TryCreate(normalizedInput, UriKind.Absolute, out var webhookUri) || (webhookUri.Scheme != Uri.UriSchemeHttp && webhookUri.Scheme != Uri.UriSchemeHttps))
         {
             message = $"The {displayName} webhook URL must be empty or an absolute HTTP or HTTPS URL.";
             return false;

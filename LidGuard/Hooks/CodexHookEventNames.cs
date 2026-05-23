@@ -8,6 +8,5 @@ public static class CodexHookEventNames
     public const string UserPromptSubmit = "UserPromptSubmit";
 
     public static bool IsStopTrigger(string hookEventName) =>
-        hookEventName.Equals(Stop, StringComparison.Ordinal)
-        || hookEventName.Equals(SessionEnd, StringComparison.Ordinal);
+        hookEventName.Equals(Stop, StringComparison.Ordinal) || hookEventName.Equals(SessionEnd, StringComparison.Ordinal);
 }

@@ -84,8 +84,7 @@ internal static class ClaudeHookCommand
                 return await ReportActivityAsync(hookInput, hookInput.TaskIdentifier);
             }
 
-            if (hookEventName.Equals(ClaudeHookEventNames.PreToolUse, StringComparison.Ordinal)
-                || hookEventName.Equals(ClaudeHookEventNames.PostToolUse, StringComparison.Ordinal))
+            if (hookEventName.Equals(ClaudeHookEventNames.PreToolUse, StringComparison.Ordinal) || hookEventName.Equals(ClaudeHookEventNames.PostToolUse, StringComparison.Ordinal))
             {
                 ClaudeHookWorkTracker.RecordToolUseEvent(hookInput, GetSessionIdentifier(hookInput));
                 return await ReportActivityAsync(hookInput);
@@ -189,8 +188,7 @@ internal static class ClaudeHookCommand
             if (hookInput.IsInterrupt) return false;
 
             var hookEventName = hookInput.HookEventName.Trim();
-            return hookEventName.Equals(ClaudeHookEventNames.Stop, StringComparison.Ordinal)
-                || hookEventName.Equals(ClaudeHookEventNames.SessionEnd, StringComparison.Ordinal);
+            return hookEventName.Equals(ClaudeHookEventNames.Stop, StringComparison.Ordinal) || hookEventName.Equals(ClaudeHookEventNames.SessionEnd, StringComparison.Ordinal);
         }
     }
 }

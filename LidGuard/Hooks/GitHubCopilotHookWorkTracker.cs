@@ -39,15 +39,13 @@ internal static class GitHubCopilotHookWorkTracker
 
         var notificationType = hookInput.NotificationType.Trim();
         var notificationText = $"{hookInput.NotificationTitle} {hookInput.NotificationMessage}".Trim();
-        if (notificationType.Equals(GitHubCopilotHookEventNames.ShellCompletedNotificationType, StringComparison.Ordinal)
-            || notificationType.Equals(GitHubCopilotHookEventNames.ShellDetachedCompletedNotificationType, StringComparison.Ordinal))
+        if (notificationType.Equals(GitHubCopilotHookEventNames.ShellCompletedNotificationType, StringComparison.Ordinal) || notificationType.Equals(GitHubCopilotHookEventNames.ShellDetachedCompletedNotificationType, StringComparison.Ordinal))
         {
             UpdateSessionState(sessionIdentifier, sessionWorkState => sessionWorkState.RemoveBackgroundTaskFromNotification(ShellWorkKind, notificationText));
             return true;
         }
 
-        if (notificationType.Equals(GitHubCopilotHookEventNames.AgentCompletedNotificationType, StringComparison.Ordinal)
-            || notificationType.Equals(GitHubCopilotHookEventNames.AgentIdleNotificationType, StringComparison.Ordinal))
+        if (notificationType.Equals(GitHubCopilotHookEventNames.AgentCompletedNotificationType, StringComparison.Ordinal) || notificationType.Equals(GitHubCopilotHookEventNames.AgentIdleNotificationType, StringComparison.Ordinal))
         {
             void ClearAgentWork(GitHubCopilotHookSessionWorkState sessionWorkState)
             {
@@ -133,8 +131,7 @@ internal static class GitHubCopilotHookWorkTracker
     private static bool TryCreateBackgroundWorkItem(GitHubCopilotHookInput hookInput, out GitHubCopilotHookBackgroundWorkItem backgroundWorkItem)
     {
         backgroundWorkItem = default;
-        var hasDifferentHookEventName = !IsPostToolUseEventName(hookInput.HookEventName)
-            && !string.IsNullOrWhiteSpace(hookInput.HookEventName);
+        var hasDifferentHookEventName = !IsPostToolUseEventName(hookInput.HookEventName) && !string.IsNullOrWhiteSpace(hookInput.HookEventName);
         if (hasDifferentHookEventName) return false;
 
         return TryCreateBackgroundWorkItem(hookInput.ToolName, hookInput.ToolInput, hookInput.ToolResult, string.Empty, out backgroundWorkItem);
@@ -144,8 +141,7 @@ internal static class GitHubCopilotHookWorkTracker
     {
         backgroundWorkItem = default;
         var normalizedToolName = toolName.Trim();
-        if (normalizedToolName.Equals(GitHubCopilotHookEventNames.TaskToolName, StringComparison.Ordinal)
-            && IsBackgroundTaskStart(toolInput, toolResult))
+        if (normalizedToolName.Equals(GitHubCopilotHookEventNames.TaskToolName, StringComparison.Ordinal) && IsBackgroundTaskStart(toolInput, toolResult))
         {
             var agentIdentifier = ExtractAgentIdentifier(toolInput, toolResult);
             if (string.IsNullOrWhiteSpace(agentIdentifier)) agentIdentifier = toolCallIdentifier.Trim();
@@ -181,8 +177,7 @@ internal static class GitHubCopilotHookWorkTracker
     {
         backgroundWorkIdentifier = string.Empty;
         var normalizedToolName = hookInput.ToolName.Trim();
-        if (normalizedToolName.Equals(GitHubCopilotHookEventNames.ReadAgentToolName, StringComparison.Ordinal)
-            && IsTerminalReadAgentResult(hookInput.ToolResult))
+        if (normalizedToolName.Equals(GitHubCopilotHookEventNames.ReadAgentToolName, StringComparison.Ordinal) && IsTerminalReadAgentResult(hookInput.ToolResult))
         {
             backgroundWorkIdentifier = ExtractAgentIdentifier(hookInput.ToolInput, hookInput.ToolResult);
             return !string.IsNullOrWhiteSpace(backgroundWorkIdentifier);
@@ -393,19 +388,14 @@ internal static class GitHubCopilotHookWorkTracker
         if (toolResultText.Contains("still running", StringComparison.OrdinalIgnoreCase)) return false;
         if (toolResultText.Contains("status: running", StringComparison.OrdinalIgnoreCase)) return false;
 
-        return toolResultText.Contains("Agent is idle", StringComparison.OrdinalIgnoreCase)
-            || toolResultText.Contains("status: idle", StringComparison.OrdinalIgnoreCase)
-            || toolResultText.Contains("status: completed", StringComparison.OrdinalIgnoreCase)
-            || toolResultText.Contains("status: failed", StringComparison.OrdinalIgnoreCase);
+        return toolResultText.Contains("Agent is idle", StringComparison.OrdinalIgnoreCase) || toolResultText.Contains("status: idle", StringComparison.OrdinalIgnoreCase) || toolResultText.Contains("status: completed", StringComparison.OrdinalIgnoreCase) || toolResultText.Contains("status: failed", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsShellToolName(string toolName)
-        => toolName.Equals(GitHubCopilotHookEventNames.BashToolName, StringComparison.Ordinal)
-            || toolName.Equals(GitHubCopilotHookEventNames.PowerShellToolName, StringComparison.Ordinal);
+        => toolName.Equals(GitHubCopilotHookEventNames.BashToolName, StringComparison.Ordinal) || toolName.Equals(GitHubCopilotHookEventNames.PowerShellToolName, StringComparison.Ordinal);
 
     private static bool IsPostToolUseEventName(string hookEventName)
-        => hookEventName.Trim().Equals(GitHubCopilotHookEventNames.PostToolUse, StringComparison.Ordinal)
-            || hookEventName.Trim().Equals(GitHubCopilotHookEventNames.PascalCasePostToolUseAlias, StringComparison.Ordinal);
+        => hookEventName.Trim().Equals(GitHubCopilotHookEventNames.PostToolUse, StringComparison.Ordinal) || hookEventName.Trim().Equals(GitHubCopilotHookEventNames.PascalCasePostToolUseAlias, StringComparison.Ordinal);
 
     private static string ExtractAgentIdentifier(JsonElement toolInput, JsonElement toolResult)
     {
@@ -450,11 +440,7 @@ internal static class GitHubCopilotHookWorkTracker
     private static string CreateBackgroundWorkSummary(string toolName, JsonElement toolInput, string workIdentifier)
     {
         var detail = string.Empty;
-        var hasBackgroundWorkDetail = TryGetStringProperty(toolInput, "description", out detail)
-            || TryGetStringProperty(toolInput, "command", out detail)
-            || TryGetStringProperty(toolInput, "prompt", out detail)
-            || TryGetStringProperty(toolInput, "agent_type", out detail)
-            || TryGetStringProperty(toolInput, "name", out detail);
+        var hasBackgroundWorkDetail = TryGetStringProperty(toolInput, "description", out detail) || TryGetStringProperty(toolInput, "command", out detail) || TryGetStringProperty(toolInput, "prompt", out detail) || TryGetStringProperty(toolInput, "agent_type", out detail) || TryGetStringProperty(toolInput, "name", out detail);
         if (!hasBackgroundWorkDetail) detail = string.Empty;
 
         if (detail.Length > 80) detail = detail[..77] + "...";
@@ -661,10 +647,7 @@ internal static class GitHubCopilotHookWorkTracker
 
         public HashSet<string> CompletedBackgroundWorkIdentifiers { get; } = new(StringComparer.Ordinal);
 
-        public bool IsEmpty => StartedSubagents.Count == 0
-            && StartedBackgroundTasks.Count == 0
-            && CompletedSubagentIdentifiers.Count == 0
-            && CompletedBackgroundWorkIdentifiers.Count == 0;
+        public bool IsEmpty => StartedSubagents.Count == 0 && StartedBackgroundTasks.Count == 0 && CompletedSubagentIdentifiers.Count == 0 && CompletedBackgroundWorkIdentifiers.Count == 0;
 
         public void AddStartedSubagent(GitHubCopilotHookSubagentWorkItem subagentWorkItem)
         {
@@ -724,15 +707,13 @@ internal static class GitHubCopilotHookWorkTracker
             if (!TryGetStringProperty(dataElement, "hookType", out var hookType)) return;
             if (!dataElement.TryGetProperty("input", out var inputElement)) return;
 
-            if (hookType.Equals(GitHubCopilotHookEventNames.SubagentStart, StringComparison.Ordinal)
-                && TryCreateSubagentWorkItem(inputElement, out var subagentWorkItem))
+            if (hookType.Equals(GitHubCopilotHookEventNames.SubagentStart, StringComparison.Ordinal) && TryCreateSubagentWorkItem(inputElement, out var subagentWorkItem))
             {
                 transcriptWorkSnapshot.AddStartedSubagent(subagentWorkItem);
                 return;
             }
 
-            if (hookType.Equals(GitHubCopilotHookEventNames.SubagentStop, StringComparison.Ordinal)
-                && TryGetStringProperty(inputElement, "agentName", out var stoppedAgentIdentifier))
+            if (hookType.Equals(GitHubCopilotHookEventNames.SubagentStop, StringComparison.Ordinal) && TryGetStringProperty(inputElement, "agentName", out var stoppedAgentIdentifier))
             {
                 transcriptWorkSnapshot.CompletedSubagentIdentifiers.Add(stoppedAgentIdentifier);
                 return;
@@ -749,8 +730,7 @@ internal static class GitHubCopilotHookWorkTracker
                 return;
             }
 
-            if (toolName.Equals(GitHubCopilotHookEventNames.ReadAgentToolName, StringComparison.Ordinal)
-                && IsTerminalReadAgentResult(toolResult))
+            if (toolName.Equals(GitHubCopilotHookEventNames.ReadAgentToolName, StringComparison.Ordinal) && IsTerminalReadAgentResult(toolResult))
             {
                 var agentIdentifier = ExtractAgentIdentifier(toolInput, toolResult);
                 if (!string.IsNullOrWhiteSpace(agentIdentifier)) transcriptWorkSnapshot.CompletedBackgroundWorkIdentifiers.Add(agentIdentifier);
@@ -760,8 +740,7 @@ internal static class GitHubCopilotHookWorkTracker
         private static void InspectToolExecutionEvent(JsonElement element, GitHubCopilotHookTranscriptWorkSnapshot transcriptWorkSnapshot)
         {
             if (!TryGetStringProperty(element, "type", out var type)) return;
-            var isToolExecutionEvent = type.Equals("tool.execution_start", StringComparison.Ordinal)
-                || type.Equals("tool.execution_complete", StringComparison.Ordinal);
+            var isToolExecutionEvent = type.Equals("tool.execution_start", StringComparison.Ordinal) || type.Equals("tool.execution_complete", StringComparison.Ordinal);
             if (!isToolExecutionEvent) return;
             if (!element.TryGetProperty("data", out var dataElement)) return;
             if (!TryGetStringProperty(dataElement, "toolName", out var toolName)) return;
@@ -776,9 +755,7 @@ internal static class GitHubCopilotHookWorkTracker
                 return;
             }
 
-            if (type.Equals("tool.execution_complete", StringComparison.Ordinal)
-                && toolName.Equals(GitHubCopilotHookEventNames.ReadAgentToolName, StringComparison.Ordinal)
-                && IsTerminalReadAgentResult(toolResult))
+            if (type.Equals("tool.execution_complete", StringComparison.Ordinal) && toolName.Equals(GitHubCopilotHookEventNames.ReadAgentToolName, StringComparison.Ordinal) && IsTerminalReadAgentResult(toolResult))
             {
                 var agentIdentifier = ExtractAgentIdentifier(toolInput, toolResult);
                 if (!string.IsNullOrWhiteSpace(agentIdentifier)) transcriptWorkSnapshot.CompletedBackgroundWorkIdentifiers.Add(agentIdentifier);

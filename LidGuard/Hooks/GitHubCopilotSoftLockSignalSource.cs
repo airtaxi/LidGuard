@@ -8,8 +8,7 @@ public static class GitHubCopilotSoftLockSignalSource
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
-        if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.PreToolUse, StringComparison.Ordinal)
-            || configuredHookEventName.Equals(GitHubCopilotHookEventNames.PostToolUse, StringComparison.Ordinal))
+        if (configuredHookEventName.Equals(GitHubCopilotHookEventNames.PreToolUse, StringComparison.Ordinal) || configuredHookEventName.Equals(GitHubCopilotHookEventNames.PostToolUse, StringComparison.Ordinal))
             return IsActivityToolName(hookInput.ToolName);
 
         return false;
@@ -23,8 +22,7 @@ public static class GitHubCopilotSoftLockSignalSource
         if (!configuredHookEventName.Equals(GitHubCopilotHookEventNames.Notification, StringComparison.Ordinal)) return false;
 
         var notificationType = hookInput.NotificationType.Trim();
-        if (!notificationType.Equals(GitHubCopilotHookEventNames.PermissionPromptNotificationType, StringComparison.Ordinal)
-            && !notificationType.Equals(GitHubCopilotHookEventNames.ElicitationDialogNotificationType, StringComparison.Ordinal))
+        if (!notificationType.Equals(GitHubCopilotHookEventNames.PermissionPromptNotificationType, StringComparison.Ordinal) && !notificationType.Equals(GitHubCopilotHookEventNames.ElicitationDialogNotificationType, StringComparison.Ordinal))
             return false;
 
         softLockReason = notificationType;

@@ -115,8 +115,7 @@ internal static class LidGuardNotificationApiEndpoints
             return;
         }
 
-        var wasConsumed = replyRequest?.WaitForConsumption == true
-            && await webhookEventStore.WaitForStopFollowUpConsumptionAsync(publicIdentifier, StopFollowUpConsumptionPollCycleCount, s_stopFollowUpConsumptionPollInterval, cancellationToken);
+        var wasConsumed = replyRequest?.WaitForConsumption == true && await webhookEventStore.WaitForStopFollowUpConsumptionAsync(publicIdentifier, StopFollowUpConsumptionPollCycleCount, s_stopFollowUpConsumptionPollInterval, cancellationToken);
         var successMessage = wasConsumed ? LidGuardNotificationText.StopFollowUpReplyConsumedMessage : LidGuardNotificationText.StopFollowUpReplyAwaitingConsumptionMessage;
         var successState = await webhookEventStore.GetStopFollowUpActionStateAsync(publicIdentifier, successMessage, cancellationToken);
         successState = successState with { Message = successMessage };
@@ -188,8 +187,7 @@ internal static class LidGuardNotificationApiEndpoints
             return false;
         }
 
-        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var endpointUri)
-            || (endpointUri.Scheme != Uri.UriSchemeHttps && endpointUri.Host != "localhost"))
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var endpointUri) || (endpointUri.Scheme != Uri.UriSchemeHttps && endpointUri.Host != "localhost"))
         {
             errorMessage = "Endpoint must be an absolute HTTPS URL or localhost URL.";
             return false;

@@ -332,8 +332,7 @@ internal static class MacOSPermissionCommand
         if (readResult.NotFound) return RuleInspection.NotInstalled();
         if (!readResult.Succeeded) return RuleInspection.Inconclusive(readResult.Message);
 
-        var isManaged = readResult.Content.Contains(ManagedMarker, StringComparison.Ordinal)
-            && readResult.Content.Contains(VersionMarker, StringComparison.Ordinal);
+        var isManaged = readResult.Content.Contains(ManagedMarker, StringComparison.Ordinal) && readResult.Content.Contains(VersionMarker, StringComparison.Ordinal);
         var isForCurrentUser = readResult.Content.Contains(CreateUserSpecification(targetUserName), StringComparison.Ordinal);
         return new RuleInspection(true, isManaged, isForCurrentUser, true, string.Empty);
     }
@@ -376,8 +375,7 @@ internal static class MacOSPermissionCommand
 
     private static string CreateUserSpecification(string targetUserName)
     {
-        if (!string.IsNullOrWhiteSpace(targetUserName)
-            && targetUserName.All(static character => char.IsLetterOrDigit(character) || character is '_' or '-' or '.'))
+        if (!string.IsNullOrWhiteSpace(targetUserName) && targetUserName.All(static character => char.IsLetterOrDigit(character) || character is '_' or '-' or '.'))
         {
             return targetUserName;
         }
@@ -445,9 +443,7 @@ internal static class MacOSPermissionCommand
     }
 
     private static bool IsHelpAlias(string argument)
-        => argument.Equals("--help", StringComparison.OrdinalIgnoreCase)
-            || argument.Equals("-h", StringComparison.OrdinalIgnoreCase)
-            || argument.Equals("/?", StringComparison.OrdinalIgnoreCase);
+        => argument.Equals("--help", StringComparison.OrdinalIgnoreCase) || argument.Equals("-h", StringComparison.OrdinalIgnoreCase) || argument.Equals("/?", StringComparison.OrdinalIgnoreCase);
 
     private static void WriteField(string labelResourceName, string value)
         => Console.WriteLine(Format("ManagementField", Get(labelResourceName), value));

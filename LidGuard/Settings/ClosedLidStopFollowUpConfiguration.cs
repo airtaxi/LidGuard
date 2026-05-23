@@ -59,8 +59,7 @@ internal static class ClosedLidStopFollowUpConfiguration
             issues.Add(new ClosedLidStopFollowUpConfigurationIssueDetail(ClosedLidStopFollowUpConfigurationIssue.ReplyWaitTooShort, string.Empty));
         }
 
-        if (normalizedSettings.ClosedLidStopFollowUpDelaySeconds > 0
-            && normalizedSettings.PostStopSuspendDelaySeconds < MinimumPostStopSuspendDelaySeconds)
+        if (normalizedSettings.ClosedLidStopFollowUpDelaySeconds > 0 && normalizedSettings.PostStopSuspendDelaySeconds < MinimumPostStopSuspendDelaySeconds)
         {
             issues.Add(new ClosedLidStopFollowUpConfigurationIssueDetail(ClosedLidStopFollowUpConfigurationIssue.PostStopDelayTooShort, string.Empty));
         }

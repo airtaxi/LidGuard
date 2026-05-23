@@ -65,16 +65,12 @@ internal sealed class VisibleDisplayMonitorCountProvider : IVisibleDisplayMonito
         {
             var propertyName = property.Name;
             var propertyValue = GetElementText(property.Value);
-            if (propertyName.Contains("builtin", StringComparison.OrdinalIgnoreCase)
-                || propertyName.Contains("built-in", StringComparison.OrdinalIgnoreCase)
-                || propertyName.Contains("internal", StringComparison.OrdinalIgnoreCase))
+            if (propertyName.Contains("builtin", StringComparison.OrdinalIgnoreCase) || propertyName.Contains("built-in", StringComparison.OrdinalIgnoreCase) || propertyName.Contains("internal", StringComparison.OrdinalIgnoreCase))
             {
                 if (string.IsNullOrWhiteSpace(propertyValue) || IsPositiveValue(propertyValue)) return true;
             }
 
-            if (propertyValue.Contains("built-in", StringComparison.OrdinalIgnoreCase)
-                || propertyValue.Contains("builtin", StringComparison.OrdinalIgnoreCase)
-                || propertyValue.Contains("internal", StringComparison.OrdinalIgnoreCase))
+            if (propertyValue.Contains("built-in", StringComparison.OrdinalIgnoreCase) || propertyValue.Contains("builtin", StringComparison.OrdinalIgnoreCase) || propertyValue.Contains("internal", StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -103,19 +99,11 @@ internal sealed class VisibleDisplayMonitorCountProvider : IVisibleDisplayMonito
         };
 
     private static bool IsPositiveValue(string value)
-        => value.Equals("yes", StringComparison.OrdinalIgnoreCase)
-            || value.Equals("true", StringComparison.OrdinalIgnoreCase)
-            || value.Equals("1", StringComparison.OrdinalIgnoreCase)
-            || value.Equals("spdisplays_yes", StringComparison.OrdinalIgnoreCase);
+        => value.Equals("yes", StringComparison.OrdinalIgnoreCase) || value.Equals("true", StringComparison.OrdinalIgnoreCase) || value.Equals("1", StringComparison.OrdinalIgnoreCase) || value.Equals("spdisplays_yes", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsNegativeValue(string value)
-        => value.Equals("no", StringComparison.OrdinalIgnoreCase)
-            || value.Equals("false", StringComparison.OrdinalIgnoreCase)
-            || value.Equals("0", StringComparison.OrdinalIgnoreCase)
-            || value.Equals("spdisplays_no", StringComparison.OrdinalIgnoreCase);
+        => value.Equals("no", StringComparison.OrdinalIgnoreCase) || value.Equals("false", StringComparison.OrdinalIgnoreCase) || value.Equals("0", StringComparison.OrdinalIgnoreCase) || value.Equals("spdisplays_no", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsOfflineStatus(string value)
-        => value.Contains("offline", StringComparison.OrdinalIgnoreCase)
-            || value.Contains("disconnected", StringComparison.OrdinalIgnoreCase)
-            || value.Contains("inactive", StringComparison.OrdinalIgnoreCase);
+        => value.Contains("offline", StringComparison.OrdinalIgnoreCase) || value.Contains("disconnected", StringComparison.OrdinalIgnoreCase) || value.Contains("inactive", StringComparison.OrdinalIgnoreCase);
 }

@@ -6,9 +6,7 @@ internal sealed class DashboardAuthenticationRefreshMiddleware(RequestDelegate n
 {
     public async Task InvokeAsync(HttpContext httpContext, DashboardAuthenticationService authenticationService)
     {
-        if (ShouldRefresh(httpContext)
-            && (httpContext.User.Identity?.IsAuthenticated == true
-                || httpContext.Request.Cookies.ContainsKey(DashboardAuthenticationConstants.RefreshCookieName)))
+        if (ShouldRefresh(httpContext) && (httpContext.User.Identity?.IsAuthenticated == true || httpContext.Request.Cookies.ContainsKey(DashboardAuthenticationConstants.RefreshCookieName)))
         {
             await authenticationService.TryRefreshAsync(httpContext, httpContext.RequestAborted);
         }
@@ -18,9 +16,7 @@ internal sealed class DashboardAuthenticationRefreshMiddleware(RequestDelegate n
 
     private static bool ShouldRefresh(HttpContext httpContext)
     {
-        var isPublicPath = httpContext.Request.Path.StartsWithSegments("/api/webhooks")
-            || httpContext.Request.Path.StartsWithSegments("/api/push/public-key")
-            || httpContext.Request.Path.StartsWithSegments("/healthz");
+        var isPublicPath = httpContext.Request.Path.StartsWithSegments("/api/webhooks") || httpContext.Request.Path.StartsWithSegments("/api/push/public-key") || httpContext.Request.Path.StartsWithSegments("/healthz");
         if (isPublicPath) return false;
 
         if (httpContext.Request.Path.StartsWithSegments("/login")) return true;

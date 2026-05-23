@@ -61,22 +61,19 @@ internal static partial class HookParentProcessResolver
     {
         var normalizedProcessName = NormalizeProcessName(processInfo.ProcessName);
         if (normalizedProcessName.Contains("claude", StringComparison.OrdinalIgnoreCase)) return true;
-        return IsNodePackageManagerProcess(normalizedProcessName)
-            && processInfo.CommandLine.Contains("claude", StringComparison.OrdinalIgnoreCase);
+        return IsNodePackageManagerProcess(normalizedProcessName) && processInfo.CommandLine.Contains("claude", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsGitHubCopilotOwnerProcess(HookParentProcessInfo processInfo)
     {
         var normalizedProcessName = NormalizeProcessName(processInfo.ProcessName);
         if (normalizedProcessName.Contains("copilot", StringComparison.OrdinalIgnoreCase)) return true;
-        if (normalizedProcessName.Equals("gh", StringComparison.OrdinalIgnoreCase)
-            && processInfo.CommandLine.Contains("copilot", StringComparison.OrdinalIgnoreCase))
+        if (normalizedProcessName.Equals("gh", StringComparison.OrdinalIgnoreCase) && processInfo.CommandLine.Contains("copilot", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
 
-        return IsNodePackageManagerProcess(normalizedProcessName)
-            && processInfo.CommandLine.Contains("copilot", StringComparison.OrdinalIgnoreCase);
+        return IsNodePackageManagerProcess(normalizedProcessName) && processInfo.CommandLine.Contains("copilot", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsProcessName(string processName, string expectedProcessName)

@@ -77,26 +77,22 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         ArgumentNullException.ThrowIfNull(settingsPatch);
         if (settingsPatch.PostStopSuspendDelaySeconds < 0) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure("Post-stop suspend delay seconds must be a non-negative integer.");
         if (settingsPatch.ClosedLidStopFollowUpDelaySeconds < 0) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure("Closed-lid stop follow-up delay seconds must be a non-negative integer.");
-        if (settingsPatch.HasPostStopSuspendSoundVolumeOverridePercent
-            && !PostStopSuspendSoundConfiguration.TryValidateVolumeOverridePercent(settingsPatch.PostStopSuspendSoundVolumeOverridePercent, out var volumeOverrideValidationMessage))
+        if (settingsPatch.HasPostStopSuspendSoundVolumeOverridePercent && !PostStopSuspendSoundConfiguration.TryValidateVolumeOverridePercent(settingsPatch.PostStopSuspendSoundVolumeOverridePercent, out var volumeOverrideValidationMessage))
         {
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(volumeOverrideValidationMessage);
         }
 
-        if (settingsPatch.HasSuspendHistoryEntryCount
-            && !SuspendHistoryConfiguration.TryValidateEntryCount(settingsPatch.SuspendHistoryEntryCount, out var suspendHistoryValidationMessage))
+        if (settingsPatch.HasSuspendHistoryEntryCount && !SuspendHistoryConfiguration.TryValidateEntryCount(settingsPatch.SuspendHistoryEntryCount, out var suspendHistoryValidationMessage))
         {
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(suspendHistoryValidationMessage);
         }
 
-        if (settingsPatch.HasSessionTimeoutMinutes
-            && !SessionTimeoutConfiguration.TryValidateMinutes(settingsPatch.SessionTimeoutMinutes, out var sessionTimeoutValidationMessage))
+        if (settingsPatch.HasSessionTimeoutMinutes && !SessionTimeoutConfiguration.TryValidateMinutes(settingsPatch.SessionTimeoutMinutes, out var sessionTimeoutValidationMessage))
         {
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(sessionTimeoutValidationMessage);
         }
 
-        if (settingsPatch.HasServerRuntimeCleanupDelayMinutes
-            && !ServerRuntimeCleanupConfiguration.TryValidateDelayMinutes(settingsPatch.ServerRuntimeCleanupDelayMinutes, out var serverRuntimeCleanupValidationMessage))
+        if (settingsPatch.HasServerRuntimeCleanupDelayMinutes && !ServerRuntimeCleanupConfiguration.TryValidateDelayMinutes(settingsPatch.ServerRuntimeCleanupDelayMinutes, out var serverRuntimeCleanupValidationMessage))
         {
             return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(serverRuntimeCleanupValidationMessage);
         }
@@ -303,8 +299,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         {
             if (!string.Equals(session.SessionIdentifier, sessionIdentifier, StringComparison.Ordinal)) continue;
             if (provider is not null && session.Provider != provider.Value) continue;
-            if (!string.IsNullOrWhiteSpace(providerName)
-                && !string.Equals(session.ProviderName, providerName, StringComparison.Ordinal)) continue;
+            if (!string.IsNullOrWhiteSpace(providerName) && !string.Equals(session.ProviderName, providerName, StringComparison.Ordinal)) continue;
             matchingSessions.Add(session);
         }
 

@@ -116,8 +116,7 @@ internal sealed class LidGuardRuntimeClient
                 var shouldStop = false;
                 try
                 {
-                    snapshot = JsonSerializer.Deserialize(snapshotJson, LidGuardJsonSerializerContext.Default.LiveStatusSnapshot)
-                        ?? LiveStatusSnapshot.Failure("The LidGuard runtime live-status snapshot could not be parsed.");
+                    snapshot = JsonSerializer.Deserialize(snapshotJson, LidGuardJsonSerializerContext.Default.LiveStatusSnapshot) ?? LiveStatusSnapshot.Failure("The LidGuard runtime live-status snapshot could not be parsed.");
                 }
                 catch (JsonException exception)
                 {

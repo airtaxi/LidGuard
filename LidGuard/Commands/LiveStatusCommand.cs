@@ -272,11 +272,7 @@ internal static class LiveStatusCommand
     private static bool IsRuntimeFlowEvent(LidGuardRuntimeSessionLogEntry runtimeLogEntry)
     {
         var eventName = runtimeLogEntry.EventName ?? string.Empty;
-        return eventName.Contains("webhook", StringComparison.OrdinalIgnoreCase)
-            || eventName.Contains("sound", StringComparison.OrdinalIgnoreCase)
-            || eventName.Contains("suspend", StringComparison.OrdinalIgnoreCase)
-            || eventName.Contains("session", StringComparison.OrdinalIgnoreCase)
-            || eventName.Contains("emergency-hibernation", StringComparison.OrdinalIgnoreCase);
+        return eventName.Contains("webhook", StringComparison.OrdinalIgnoreCase) || eventName.Contains("sound", StringComparison.OrdinalIgnoreCase) || eventName.Contains("suspend", StringComparison.OrdinalIgnoreCase) || eventName.Contains("session", StringComparison.OrdinalIgnoreCase) || eventName.Contains("emergency-hibernation", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string CreateRuntimeLogLine(LidGuardRuntimeSessionLogEntry runtimeLogEntry, bool enableStyles)
