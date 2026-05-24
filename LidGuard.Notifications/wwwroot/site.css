@@ -90,6 +90,10 @@
     box-sizing: border-box;
 }
 
+[hidden] {
+    display: none !important;
+}
+
 body {
     background: var(--page-background);
     color: var(--text);
