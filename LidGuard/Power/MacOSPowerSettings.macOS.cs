@@ -54,8 +54,7 @@ internal static class MacOSPowerSettings
         return LidGuardOperationResult.Failure(commandResult.CreateFailureMessage("pmset sleepnow"), commandResult.ExitCode);
     }
 
-    public static bool IsSupportedHibernateMode(int hibernateMode)
-        => hibernateMode is HibernateModePlainSleep or HibernateModeSafeSleep or HibernateModeDiskOnly;
+    public static bool IsSupportedHibernateMode(int hibernateMode) => hibernateMode is HibernateModePlainSleep or HibernateModeSafeSleep or HibernateModeDiskOnly;
 
     public static bool TryParseIntegerSetting(string pmsetOutput, string settingName, out int settingValue)
     {
@@ -87,8 +86,7 @@ internal static class MacOSPowerSettings
         return MacOSCommandRunner.Run(sudoPath, sudoArguments, timeout);
     }
 
-    private static MacOSCommandResult RunPrivilegedPmset(IEnumerable<string> arguments)
-        => RunPrivilegedCommand("pmset", arguments, s_pmsetTimeout);
+    private static MacOSCommandResult RunPrivilegedPmset(IEnumerable<string> arguments) => RunPrivilegedCommand("pmset", arguments, s_pmsetTimeout);
 
     private static LidGuardOperationResult ReadCurrentSetting(string settingName, out int settingValue, bool requirePresence)
     {

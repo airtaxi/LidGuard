@@ -340,8 +340,7 @@ internal static class HookManagementCommand
         ManagementFieldWriter.WriteField("ManagementLabelMessage", DisplayHookManagementMessage(inspection.Provider, inspection.Message));
     }
 
-    private static bool HasClaudeAllStopHooks(HookInstallationInspection inspection)
-        => inspection.HasCheck(HookInstallationCheck.StopHook) && inspection.HasCheck(HookInstallationCheck.StopFailureHook) && inspection.HasCheck(HookInstallationCheck.SessionEndHook);
+    private static bool HasClaudeAllStopHooks(HookInstallationInspection inspection) => inspection.HasCheck(HookInstallationCheck.StopHook) && inspection.HasCheck(HookInstallationCheck.StopFailureHook) && inspection.HasCheck(HookInstallationCheck.SessionEndHook);
 
     private static string DisplayHookManagementMessage(AgentProvider provider, string message)
     {

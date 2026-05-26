@@ -12,8 +12,7 @@ internal static partial class HookParentProcessResolver
     {
         private readonly Dictionary<int, HookParentProcessInfo> _processes = ReadProcesses();
 
-        public override bool TryReadProcessInfo(int processIdentifier, out HookParentProcessInfo processInfo)
-            => _processes.TryGetValue(processIdentifier, out processInfo);
+        public override bool TryReadProcessInfo(int processIdentifier, out HookParentProcessInfo processInfo) => _processes.TryGetValue(processIdentifier, out processInfo);
 
         private static Dictionary<int, HookParentProcessInfo> ReadProcesses()
         {

@@ -69,9 +69,7 @@ internal static class LidGuardRuntimeResponseLocalizer
         return messageArguments[argumentIndex] ?? string.Empty;
     }
 
-    private static string Get(string resourceName)
-        => LocalizationService.GetString(resourceName);
+    private static string Get(string resourceName) => LocalizationService.GetString(resourceName);
 
-    private static string Format(string resourceName, params object[] arguments)
-        => string.Format(CultureInfo.CurrentCulture, Get(resourceName), arguments);
+    private static string Format(string resourceName, params object[] arguments) => string.Format(CultureInfo.CurrentCulture, Get(resourceName), arguments);
 }

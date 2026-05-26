@@ -58,20 +58,13 @@ internal sealed class EmergencyHibernationThermalMonitor(Func<EmergencyHibernati
                 await NotifyEmergencyHibernationThresholdReachedAsync(new EmergencyHibernationThermalThresholdReachedContext(observedTemperatureCelsius.Value, emergencyHibernationTemperatureCelsius, emergencyHibernationTemperatureMode), emergencyHibernationThresholdReachedAsync);
             }
         }
-        catch (OperationCanceledException)
-        {
-        }
+        catch (OperationCanceledException) { }
     }
 
     private static async Task NotifyEmergencyHibernationThresholdReachedAsync(EmergencyHibernationThermalThresholdReachedContext emergencyHibernationThermalThresholdReachedContext, Func<EmergencyHibernationThermalThresholdReachedContext, Task> emergencyHibernationThresholdReachedAsync)
     {
-        try
-        {
-            await emergencyHibernationThresholdReachedAsync(emergencyHibernationThermalThresholdReachedContext);
-        }
-        catch
-        {
-        }
+        try { await emergencyHibernationThresholdReachedAsync(emergencyHibernationThermalThresholdReachedContext); }
+        catch { }
     }
 }
 

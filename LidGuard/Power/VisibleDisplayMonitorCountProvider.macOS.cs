@@ -46,10 +46,7 @@ internal sealed class VisibleDisplayMonitorCountProvider : IVisibleDisplayMonito
 
             return visibleDisplayMonitorCount;
         }
-        catch (JsonException)
-        {
-            return 0;
-        }
+        catch (JsonException) { return 0; }
     }
 
     private static bool IsDisplayOnline(JsonElement displayElement)
@@ -70,10 +67,7 @@ internal sealed class VisibleDisplayMonitorCountProvider : IVisibleDisplayMonito
                 if (string.IsNullOrWhiteSpace(propertyValue) || IsPositiveValue(propertyValue)) return true;
             }
 
-            if (propertyValue.Contains("built-in", StringComparison.OrdinalIgnoreCase) || propertyValue.Contains("builtin", StringComparison.OrdinalIgnoreCase) || propertyValue.Contains("internal", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
+            if (propertyValue.Contains("built-in", StringComparison.OrdinalIgnoreCase) || propertyValue.Contains("builtin", StringComparison.OrdinalIgnoreCase) || propertyValue.Contains("internal", StringComparison.OrdinalIgnoreCase)) return true;
         }
 
         return false;
@@ -88,22 +82,11 @@ internal sealed class VisibleDisplayMonitorCountProvider : IVisibleDisplayMonito
         return !string.IsNullOrWhiteSpace(propertyValue);
     }
 
-    private static string GetElementText(JsonElement jsonElement)
-        => jsonElement.ValueKind switch
-        {
-            JsonValueKind.String => jsonElement.GetString() ?? string.Empty,
-            JsonValueKind.True => "true",
-            JsonValueKind.False => "false",
-            JsonValueKind.Number => jsonElement.GetRawText(),
-            _ => string.Empty
-        };
+    private static string GetElementText(JsonElement jsonElement) => jsonElement.ValueKind switch { JsonValueKind.String => jsonElement.GetString() ?? string.Empty, JsonValueKind.True => "true", JsonValueKind.False => "false", JsonValueKind.Number => jsonElement.GetRawText(), _ => string.Empty  };
 
-    private static bool IsPositiveValue(string value)
-        => value.Equals("yes", StringComparison.OrdinalIgnoreCase) || value.Equals("true", StringComparison.OrdinalIgnoreCase) || value.Equals("1", StringComparison.OrdinalIgnoreCase) || value.Equals("spdisplays_yes", StringComparison.OrdinalIgnoreCase);
+    private static bool IsPositiveValue(string value) => value.Equals("yes", StringComparison.OrdinalIgnoreCase) || value.Equals("true", StringComparison.OrdinalIgnoreCase) || value.Equals("1", StringComparison.OrdinalIgnoreCase) || value.Equals("spdisplays_yes", StringComparison.OrdinalIgnoreCase);
 
-    private static bool IsNegativeValue(string value)
-        => value.Equals("no", StringComparison.OrdinalIgnoreCase) || value.Equals("false", StringComparison.OrdinalIgnoreCase) || value.Equals("0", StringComparison.OrdinalIgnoreCase) || value.Equals("spdisplays_no", StringComparison.OrdinalIgnoreCase);
+    private static bool IsNegativeValue(string value) => value.Equals("no", StringComparison.OrdinalIgnoreCase) || value.Equals("false", StringComparison.OrdinalIgnoreCase) || value.Equals("0", StringComparison.OrdinalIgnoreCase) || value.Equals("spdisplays_no", StringComparison.OrdinalIgnoreCase);
 
-    private static bool IsOfflineStatus(string value)
-        => value.Contains("offline", StringComparison.OrdinalIgnoreCase) || value.Contains("disconnected", StringComparison.OrdinalIgnoreCase) || value.Contains("inactive", StringComparison.OrdinalIgnoreCase);
+    private static bool IsOfflineStatus(string value) => value.Contains("offline", StringComparison.OrdinalIgnoreCase) || value.Contains("disconnected", StringComparison.OrdinalIgnoreCase) || value.Contains("inactive", StringComparison.OrdinalIgnoreCase);
 }

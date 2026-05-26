@@ -110,41 +110,29 @@ internal static class LidGuardNotificationText
 
     public static string RecentEventsFormat => Get(nameof(RecentEvents));
 
-    public static string DeliverySummary(int successCount, int permanentFailureCount, int transientFailureCount)
-        => Format(nameof(DeliverySummary), successCount, permanentFailureCount, transientFailureCount);
+    public static string DeliverySummary(int successCount, int permanentFailureCount, int transientFailureCount) => Format(nameof(DeliverySummary), successCount, permanentFailureCount, transientFailureCount);
 
-    public static string PushActiveSessionsRemaining(int activeSessionCount)
-        => Format(nameof(PushActiveSessionsRemaining), activeSessionCount);
+    public static string PushActiveSessionsRemaining(int activeSessionCount) => Format(nameof(PushActiveSessionsRemaining), activeSessionCount);
 
-    public static string PushEndReason(string endReason)
-        => Format(nameof(PushEndReason), endReason);
+    public static string PushEndReason(string endReason) => Format(nameof(PushEndReason), endReason);
 
-    public static string PushInputPrompt(string inputPromptPreview)
-        => Format(nameof(PushInputPrompt), inputPromptPreview);
+    public static string PushInputPrompt(string inputPromptPreview) => Format(nameof(PushInputPrompt), inputPromptPreview);
 
-    public static string PushLastResponse(string lastResponsePreview)
-        => Format(nameof(PushLastResponse), lastResponsePreview);
+    public static string PushLastResponse(string lastResponsePreview) => Format(nameof(PushLastResponse), lastResponsePreview);
 
-    public static string PushSession(string sessionIdentifier)
-        => Format(nameof(PushSession), sessionIdentifier);
+    public static string PushSession(string sessionIdentifier) => Format(nameof(PushSession), sessionIdentifier);
 
-    public static string PushSoftLockedSessionCount(int softLockedSessionCount)
-        => Format(nameof(PushSoftLockedSessionCount), softLockedSessionCount);
+    public static string PushSoftLockedSessionCount(int softLockedSessionCount) => Format(nameof(PushSoftLockedSessionCount), softLockedSessionCount);
 
-    public static string RecentEvents(int eventCount)
-        => Format(nameof(RecentEvents), eventCount);
+    public static string RecentEvents(int eventCount) => Format(nameof(RecentEvents), eventCount);
 
-    public static string SoftLockedSessionCount(int softLockedSessionCount)
-        => Format(nameof(SoftLockedSessionCount), softLockedSessionCount);
+    public static string SoftLockedSessionCount(int softLockedSessionCount) => Format(nameof(SoftLockedSessionCount), softLockedSessionCount);
 
-    public static string StopFollowUpExtendValidationMessage(int minimumMinutes, int maximumMinutes)
-        => Format(nameof(StopFollowUpExtendValidationMessage), minimumMinutes, maximumMinutes);
+    public static string StopFollowUpExtendValidationMessage(int minimumMinutes, int maximumMinutes) => Format(nameof(StopFollowUpExtendValidationMessage), minimumMinutes, maximumMinutes);
 
-    public static string StopFollowUpProviderHookTimeoutRemaining(int remainingSeconds)
-        => Format(nameof(StopFollowUpProviderHookTimeoutRemaining), remainingSeconds);
+    public static string StopFollowUpProviderHookTimeoutRemaining(int remainingSeconds) => Format(nameof(StopFollowUpProviderHookTimeoutRemaining), remainingSeconds);
 
-    public static string ThemeSwitchTo(string modeLabel)
-        => Format(nameof(ThemeSwitchTo), modeLabel);
+    public static string ThemeSwitchTo(string modeLabel) => Format(nameof(ThemeSwitchTo), modeLabel);
 
     public static string DisplayWebhookEventType(string eventType)
         => eventType switch
@@ -195,8 +183,7 @@ internal static class LidGuardNotificationText
 
     private static string Get(string name) => LocalizationService.GetString(name);
 
-    private static string Format(string name, params object[] arguments)
-        => LocalizationService.GetFormattedString(name, arguments);
+    private static string Format(string name, params object[] arguments) => LocalizationService.GetFormattedString(name, arguments);
 
     public static string DisplayStopFollowUpStatus(string status)
         => status switch

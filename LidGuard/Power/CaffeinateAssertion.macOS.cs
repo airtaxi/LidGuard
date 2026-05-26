@@ -50,10 +50,7 @@ internal sealed class CaffeinateAssertion : IDisposable
             process = Process.Start(processStartInformation);
             if (process is null) return LidGuardOperationResult<CaffeinateAssertion>.Failure("Failed to start caffeinate.");
         }
-        catch (Exception exception) when (exception is InvalidOperationException or System.ComponentModel.Win32Exception)
-        {
-            return LidGuardOperationResult<CaffeinateAssertion>.Failure($"Failed to start caffeinate: {exception.Message}");
-        }
+        catch (Exception exception) when (exception is InvalidOperationException or System.ComponentModel.Win32Exception) { return LidGuardOperationResult<CaffeinateAssertion>.Failure($"Failed to start caffeinate: {exception.Message}"); }
 
         Thread.Sleep(s_startupProbeDelay);
         if (!HasExited(process)) return LidGuardOperationResult<CaffeinateAssertion>.Success(new CaffeinateAssertion(process));

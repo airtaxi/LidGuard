@@ -9,8 +9,7 @@ internal static class CodexCommandLineProcessClassifier
         "npx"
     };
 
-    public static bool IsAppServer(string commandLine)
-        => ContainsCommandLineToken(commandLine, "app-server");
+    public static bool IsAppServer(string commandLine) => ContainsCommandLineToken(commandLine, "app-server");
 
     public static bool IsCodexCliProcess(string processName, string commandLine)
     {

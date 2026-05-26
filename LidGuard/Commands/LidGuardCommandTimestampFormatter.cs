@@ -4,8 +4,7 @@ namespace LidGuard.Commands;
 
 internal static class LidGuardCommandTimestampFormatter
 {
-    public static string FormatDisplayTimestamp(DateTimeOffset timestamp)
-        => timestamp.ToLocalTime().ToString("O", CultureInfo.InvariantCulture);
+    public static string FormatDisplayTimestamp(DateTimeOffset timestamp) => timestamp.ToLocalTime().ToString("O", CultureInfo.InvariantCulture);
 
     public static string FormatHookEventLineForDisplay(string eventLine)
     {

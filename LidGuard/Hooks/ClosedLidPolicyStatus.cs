@@ -5,8 +5,7 @@ namespace LidGuard.Hooks;
 
 internal static class ClosedLidPolicyStatus
 {
-    public static bool IsActive(LidGuardPipeResponse response)
-        => response.LidSwitchState == LidSwitchState.Closed && response.VisibleDisplayMonitorCount <= 0;
+    public static bool IsActive(LidGuardPipeResponse response) => response.LidSwitchState == LidSwitchState.Closed && response.VisibleDisplayMonitorCount <= 0;
 
     public static string DescribeInactiveReason(LidGuardPipeResponse response)
     {

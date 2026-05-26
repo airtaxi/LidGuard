@@ -73,23 +73,18 @@ public sealed record LidGuardSettings
 
     public string UserInterfaceCulture { get; init; } = DefaultUserInterfaceCulture;
 
-    public static int ClampEmergencyHibernationTemperatureCelsius(int emergencyHibernationTemperatureCelsius)
-        => Math.Clamp(emergencyHibernationTemperatureCelsius, MinimumEmergencyHibernationTemperatureCelsius, MaximumEmergencyHibernationTemperatureCelsius);
+    public static int ClampEmergencyHibernationTemperatureCelsius(int emergencyHibernationTemperatureCelsius) => Math.Clamp(emergencyHibernationTemperatureCelsius, MinimumEmergencyHibernationTemperatureCelsius, MaximumEmergencyHibernationTemperatureCelsius);
 
     public static bool IsValidPostStopSuspendSoundVolumeOverridePercent(int? postStopSuspendSoundVolumeOverridePercent)
         => postStopSuspendSoundVolumeOverridePercent is null || postStopSuspendSoundVolumeOverridePercent is >= MinimumPostStopSuspendSoundVolumeOverridePercent and <= MaximumPostStopSuspendSoundVolumeOverridePercent;
 
-    public static bool IsValidClosedLidStopFollowUpSoundVolumeOverridePercent(int? closedLidStopFollowUpSoundVolumeOverridePercent)
-        => IsValidPostStopSuspendSoundVolumeOverridePercent(closedLidStopFollowUpSoundVolumeOverridePercent);
+    public static bool IsValidClosedLidStopFollowUpSoundVolumeOverridePercent(int? closedLidStopFollowUpSoundVolumeOverridePercent) => IsValidPostStopSuspendSoundVolumeOverridePercent(closedLidStopFollowUpSoundVolumeOverridePercent);
 
-    public static bool IsValidSuspendHistoryEntryCount(int? suspendHistoryEntryCount)
-        => suspendHistoryEntryCount is null || suspendHistoryEntryCount >= MinimumSuspendHistoryEntryCount;
+    public static bool IsValidSuspendHistoryEntryCount(int? suspendHistoryEntryCount) => suspendHistoryEntryCount is null || suspendHistoryEntryCount >= MinimumSuspendHistoryEntryCount;
 
-    public static bool IsValidSessionTimeoutMinutes(int? sessionTimeoutMinutes)
-        => sessionTimeoutMinutes is null || sessionTimeoutMinutes >= MinimumSessionTimeoutMinutes;
+    public static bool IsValidSessionTimeoutMinutes(int? sessionTimeoutMinutes) => sessionTimeoutMinutes is null || sessionTimeoutMinutes >= MinimumSessionTimeoutMinutes;
 
-    public static bool IsValidServerRuntimeCleanupDelayMinutes(int? serverRuntimeCleanupDelayMinutes)
-        => serverRuntimeCleanupDelayMinutes is null || serverRuntimeCleanupDelayMinutes >= MinimumServerRuntimeCleanupDelayMinutes;
+    public static bool IsValidServerRuntimeCleanupDelayMinutes(int? serverRuntimeCleanupDelayMinutes) => serverRuntimeCleanupDelayMinutes is null || serverRuntimeCleanupDelayMinutes >= MinimumServerRuntimeCleanupDelayMinutes;
 
     public static LidGuardSettings Normalize(LidGuardSettings settings)
     {

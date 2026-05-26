@@ -41,10 +41,7 @@ internal sealed class LidGuardRuntimeClient
                 diagnostics.RuntimeStartSucceeded = runtimeStarted;
             }
 
-            if (!runtimeStarted)
-            {
-                return LidGuardPipeResponse.Failure("Failed to start the LidGuard runtime.", runtimeUnavailable: true, messageCode: LidGuardPipeResponseMessageCodes.FailedToStartRuntime);
-            }
+            if (!runtimeStarted) return LidGuardPipeResponse.Failure("Failed to start the LidGuard runtime.", runtimeUnavailable: true, messageCode: LidGuardPipeResponseMessageCodes.FailedToStartRuntime);
 
             var startupConnectStopwatch = Stopwatch.StartNew();
             pipeClientStream = await WaitForRuntimeAsync(s_runtimeStartupTimeout, cancellationToken);
@@ -56,10 +53,7 @@ internal sealed class LidGuardRuntimeClient
             }
         }
 
-        if (pipeClientStream is null)
-        {
-            return LidGuardPipeResponse.Failure("LidGuard runtime is not running.", runtimeUnavailable: true, messageCode: LidGuardPipeResponseMessageCodes.RuntimeNotRunning);
-        }
+        if (pipeClientStream is null) return LidGuardPipeResponse.Failure("LidGuard runtime is not running.", runtimeUnavailable: true, messageCode: LidGuardPipeResponseMessageCodes.RuntimeNotRunning);
 
         using (pipeClientStream)
         {
@@ -114,10 +108,7 @@ internal sealed class LidGuardRuntimeClient
 
                 LiveStatusSnapshot snapshot;
                 var shouldStop = false;
-                try
-                {
-                    snapshot = JsonSerializer.Deserialize(snapshotJson, LidGuardJsonSerializerContext.Default.LiveStatusSnapshot) ?? LiveStatusSnapshot.Failure("The LidGuard runtime live-status snapshot could not be parsed.");
-                }
+                try { snapshot = JsonSerializer.Deserialize(snapshotJson, LidGuardJsonSerializerContext.Default.LiveStatusSnapshot) ?? LiveStatusSnapshot.Failure("The LidGuard runtime live-status snapshot could not be parsed."); }
                 catch (JsonException exception)
                 {
                     snapshot = LiveStatusSnapshot.Failure($"The LidGuard runtime returned an invalid live-status snapshot: {exception.Message}");
@@ -146,8 +137,7 @@ internal sealed class LidGuardRuntimeClient
         catch (ObjectDisposedException exception) { return CreateLiveStatusConnectionFailureSnapshot(exception); }
     }
 
-    private static LiveStatusSnapshot CreateLiveStatusConnectionFailureSnapshot(Exception exception)
-        => LiveStatusSnapshot.RuntimeUnavailable($"Failed to connect to the LidGuard runtime live-status stream: {exception.Message}");
+    private static LiveStatusSnapshot CreateLiveStatusConnectionFailureSnapshot(Exception exception) => LiveStatusSnapshot.RuntimeUnavailable($"Failed to connect to the LidGuard runtime live-status stream: {exception.Message}");
 
     private static void DisposeLiveStatusResource(IDisposable resource)
     {
@@ -275,8 +265,7 @@ internal sealed class LidGuardRuntimeClient
         return true;
     }
 
-    private static bool IsDotnetHost(string runtimeExecutablePath)
-        => Path.GetFileNameWithoutExtension(runtimeExecutablePath).Equals("dotnet", StringComparison.OrdinalIgnoreCase);
+    private static bool IsDotnetHost(string runtimeExecutablePath) => Path.GetFileNameWithoutExtension(runtimeExecutablePath).Equals("dotnet", StringComparison.OrdinalIgnoreCase);
 
     private static bool TryStartUnixDetachedRuntime(ProcessStartInfo runtimeProcessStartInfo)
     {

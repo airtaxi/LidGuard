@@ -69,10 +69,7 @@ internal static class MacOSPendingPowerStateBackupStore
             message = $"Failed to write LidGuard pending macOS power-state backup to {pendingBackupFilePath}: {exception.Message}";
             return false;
         }
-        finally
-        {
-            TryDeleteTemporaryFile(temporaryFilePath);
-        }
+        finally { TryDeleteTemporaryFile(temporaryFilePath); }
     }
 
     public static bool TryDelete(out string message)

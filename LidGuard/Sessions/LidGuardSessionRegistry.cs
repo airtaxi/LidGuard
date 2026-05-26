@@ -78,8 +78,7 @@ public sealed class LidGuardSessionRegistry
         return false;
     }
 
-    public bool TryMarkActive(AgentProvider provider, string sessionIdentifier, out LidGuardSessionSnapshot snapshot, out bool changed)
-        => TryMarkActive(provider, sessionIdentifier, string.Empty, out snapshot, out changed);
+    public bool TryMarkActive(AgentProvider provider, string sessionIdentifier, out LidGuardSessionSnapshot snapshot, out bool changed) => TryMarkActive(provider, sessionIdentifier, string.Empty, out snapshot, out changed);
 
     public bool TryMarkActive(AgentProvider provider, string sessionIdentifier, string providerName, out LidGuardSessionSnapshot snapshot, out bool changed)
     {

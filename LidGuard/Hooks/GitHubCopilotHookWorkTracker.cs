@@ -111,10 +111,7 @@ internal static class GitHubCopilotHookWorkTracker
             using var lockFileStream = OpenLockFile(lockFilePath);
             if (File.Exists(stateFilePath)) File.Delete(stateFilePath);
         }
-        catch (Exception exception) when (IsStateFileException(exception))
-        {
-            GitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook could not clear work state: {exception.Message}");
-        }
+        catch (Exception exception) when (IsStateFileException(exception)) { GitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook could not clear work state: {exception.Message}"); }
     }
 
     private static void SynchronizeWorkFromTranscript(string transcriptPath, string sessionIdentifier)
@@ -200,10 +197,7 @@ internal static class GitHubCopilotHookWorkTracker
             updateState(sessionWorkState);
             WriteSessionStateWithoutLock(stateFilePath, sessionIdentifier, sessionWorkState);
         }
-        catch (Exception exception) when (IsStateFileException(exception))
-        {
-            GitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook could not update work state: {exception.Message}");
-        }
+        catch (Exception exception) when (IsStateFileException(exception)) { GitHubCopilotHookEventLog.AppendMessage($"LidGuard GitHub Copilot hook could not update work state: {exception.Message}"); }
     }
 
     private static GitHubCopilotHookSessionWorkState ReadSessionState(string sessionIdentifier)
@@ -391,11 +385,9 @@ internal static class GitHubCopilotHookWorkTracker
         return toolResultText.Contains("Agent is idle", StringComparison.OrdinalIgnoreCase) || toolResultText.Contains("status: idle", StringComparison.OrdinalIgnoreCase) || toolResultText.Contains("status: completed", StringComparison.OrdinalIgnoreCase) || toolResultText.Contains("status: failed", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static bool IsShellToolName(string toolName)
-        => toolName.Equals(GitHubCopilotHookEventNames.BashToolName, StringComparison.Ordinal) || toolName.Equals(GitHubCopilotHookEventNames.PowerShellToolName, StringComparison.Ordinal);
+    private static bool IsShellToolName(string toolName) => toolName.Equals(GitHubCopilotHookEventNames.BashToolName, StringComparison.Ordinal) || toolName.Equals(GitHubCopilotHookEventNames.PowerShellToolName, StringComparison.Ordinal);
 
-    private static bool IsPostToolUseEventName(string hookEventName)
-        => hookEventName.Trim().Equals(GitHubCopilotHookEventNames.PostToolUse, StringComparison.Ordinal) || hookEventName.Trim().Equals(GitHubCopilotHookEventNames.PascalCasePostToolUseAlias, StringComparison.Ordinal);
+    private static bool IsPostToolUseEventName(string hookEventName) => hookEventName.Trim().Equals(GitHubCopilotHookEventNames.PostToolUse, StringComparison.Ordinal) || hookEventName.Trim().Equals(GitHubCopilotHookEventNames.PascalCasePostToolUseAlias, StringComparison.Ordinal);
 
     private static string ExtractAgentIdentifier(JsonElement toolInput, JsonElement toolResult)
     {
@@ -482,11 +474,9 @@ internal static class GitHubCopilotHookWorkTracker
         return false;
     }
 
-    private static bool TryGetStringProperty(JsonElement element, string propertyName, out string value)
-        => HookJsonPropertyReader.TryGetNonWhiteSpaceStringProperty(element, propertyName, out value);
+    private static bool TryGetStringProperty(JsonElement element, string propertyName, out string value) => HookJsonPropertyReader.TryGetNonWhiteSpaceStringProperty(element, propertyName, out value);
 
-    private static string GetStringProperty(JsonObject jsonObject, string propertyName)
-        => HookJsonPropertyReader.GetStringProperty(jsonObject, propertyName);
+    private static string GetStringProperty(JsonObject jsonObject, string propertyName) => HookJsonPropertyReader.GetStringProperty(jsonObject, propertyName);
 
     private static DateTimeOffset GetDateTimeOffsetProperty(JsonObject jsonObject, string propertyName)
     {
@@ -494,8 +484,7 @@ internal static class GitHubCopilotHookWorkTracker
         return DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dateTimeOffset) ? dateTimeOffset : DateTimeOffset.MinValue;
     }
 
-    private static bool GetBooleanProperty(JsonObject jsonObject, string propertyName)
-        => HookJsonPropertyReader.GetBooleanProperty(jsonObject, propertyName);
+    private static bool GetBooleanProperty(JsonObject jsonObject, string propertyName) => HookJsonPropertyReader.GetBooleanProperty(jsonObject, propertyName);
 
     private static string ResolveTranscriptPath(string transcriptPath, string sessionIdentifier)
     {
@@ -541,12 +530,7 @@ internal static class GitHubCopilotHookWorkTracker
         return new FileStream(lockFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
     }
 
-    private static bool IsStateFileException(Exception exception) =>
-        exception is IOException
-            or UnauthorizedAccessException
-            or DirectoryNotFoundException
-            or PathTooLongException
-            or NotSupportedException;
+    private static bool IsStateFileException(Exception exception) => exception is IOException or UnauthorizedAccessException or DirectoryNotFoundException or PathTooLongException or NotSupportedException;
 
     private sealed class GitHubCopilotHookSessionWorkState
     {
@@ -661,11 +645,9 @@ internal static class GitHubCopilotHookWorkTracker
             StartedBackgroundTasks.Add(backgroundWorkItem);
         }
 
-        public bool IsCompleted(GitHubCopilotHookSubagentWorkItem subagentWorkItem)
-            => CompletedSubagentIdentifiers.Contains(subagentWorkItem.AgentIdentifier);
+        public bool IsCompleted(GitHubCopilotHookSubagentWorkItem subagentWorkItem) => CompletedSubagentIdentifiers.Contains(subagentWorkItem.AgentIdentifier);
 
-        public bool IsCompleted(GitHubCopilotHookBackgroundWorkItem backgroundWorkItem)
-            => CompletedBackgroundWorkIdentifiers.Contains(backgroundWorkItem.WorkIdentifier);
+        public bool IsCompleted(GitHubCopilotHookBackgroundWorkItem backgroundWorkItem) => CompletedBackgroundWorkIdentifiers.Contains(backgroundWorkItem.WorkIdentifier);
     }
 
     private static class GitHubCopilotHookTranscriptWorkScanner
@@ -809,10 +791,7 @@ internal static class GitHubCopilotHookWorkTracker
                     .TakeLast(RecentTranscriptLineLimit)
                     .ToArray();
             }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException)
-            {
-                return [];
-            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException) { return[]; }
         }
     }
 
@@ -840,15 +819,9 @@ internal static class GitHubCopilotHookWorkTracker
         public string CreateLogSummary()
         {
             var summaryParts = new List<string>();
-            if (ActiveSubagents.Length > 0)
-            {
-                summaryParts.Add("subagents=" + string.Join(",", ActiveSubagents.Select(subagentWorkItem => string.IsNullOrWhiteSpace(subagentWorkItem.AgentDisplayName) ? subagentWorkItem.AgentIdentifier : $"{subagentWorkItem.AgentDisplayName}:{subagentWorkItem.AgentIdentifier}")));
-            }
+            if (ActiveSubagents.Length > 0) summaryParts.Add("subagents=" + string.Join(",", ActiveSubagents.Select(subagentWorkItem => string.IsNullOrWhiteSpace(subagentWorkItem.AgentDisplayName) ? subagentWorkItem.AgentIdentifier : $"{subagentWorkItem.AgentDisplayName}:{subagentWorkItem.AgentIdentifier}")));
 
-            if (ActiveBackgroundTasks.Length > 0)
-            {
-                summaryParts.Add("backgroundTasks=" + string.Join(",", ActiveBackgroundTasks.Select(backgroundWorkItem => string.IsNullOrWhiteSpace(backgroundWorkItem.Summary) ? backgroundWorkItem.WorkIdentifier : backgroundWorkItem.Summary)));
-            }
+            if (ActiveBackgroundTasks.Length > 0) summaryParts.Add("backgroundTasks=" + string.Join(",", ActiveBackgroundTasks.Select(backgroundWorkItem => string.IsNullOrWhiteSpace(backgroundWorkItem.Summary) ? backgroundWorkItem.WorkIdentifier : backgroundWorkItem.Summary)));
 
             return string.Join(" ", summaryParts);
         }

@@ -120,8 +120,7 @@ public static class HookCommandUtilities
         return executableReference.Contains(Path.DirectorySeparatorChar, StringComparison.Ordinal) || executableReference.Contains(Path.AltDirectorySeparatorChar, StringComparison.Ordinal);
     }
 
-    private static bool IsCommandAvailable(string commandName)
-        => TryResolveCommandExecutablePath(commandName, out _);
+    private static bool IsCommandAvailable(string commandName) => TryResolveCommandExecutablePath(commandName, out _);
 
     private static bool TryResolveCommandExecutablePath(string commandName, out string executablePath)
     {

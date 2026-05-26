@@ -17,8 +17,7 @@ internal sealed class EventsModel(WebhookEventStore webhookEventStore) : PageMod
     [TempData]
     public string EventMessage { get; set; } = string.Empty;
 
-    public async Task OnGetAsync(CancellationToken cancellationToken)
-        => EventPage = await webhookEventStore.ListRecentPageAsync(EventPageSize, null, cancellationToken);
+    public async Task OnGetAsync(CancellationToken cancellationToken) => EventPage = await webhookEventStore.ListRecentPageAsync(EventPageSize, null, cancellationToken);
 
     public async Task<IActionResult> OnGetMoreAsync(long? beforeWebhookEventIdentifier, CancellationToken cancellationToken)
     {
@@ -82,10 +81,9 @@ internal sealed class EventsModel(WebhookEventStore webhookEventStore) : PageMod
         return Redirect($"/events#followup-{publicIdentifier}");
     }
 
-    private PartialViewResult Partial<TModel>(string viewName, TModel model)
-        => new()
-        {
-            ViewName = viewName,
-            ViewData = new ViewDataDictionary<TModel>(ViewData, model)
-        };
+    private PartialViewResult Partial<TModel>(string viewName, TModel model) => new()
+    {
+        ViewName = viewName,
+        ViewData = new ViewDataDictionary<TModel>(ViewData, model)
+    };
 }

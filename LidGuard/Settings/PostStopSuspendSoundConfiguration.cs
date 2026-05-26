@@ -4,17 +4,13 @@ namespace LidGuard.Settings;
 
 internal static class PostStopSuspendSoundConfiguration
 {
-    public static string GetDisplayValue(string postStopSuspendSound)
-        => string.IsNullOrWhiteSpace(postStopSuspendSound) ? "off" : postStopSuspendSound;
+    public static string GetDisplayValue(string postStopSuspendSound) => string.IsNullOrWhiteSpace(postStopSuspendSound) ? "off" : postStopSuspendSound;
 
-    public static string GetVolumeOverrideDisplayValue(int? postStopSuspendSoundVolumeOverridePercent)
-        => postStopSuspendSoundVolumeOverridePercent is null ? "off" : $"{postStopSuspendSoundVolumeOverridePercent}%";
+    public static string GetVolumeOverrideDisplayValue(int? postStopSuspendSoundVolumeOverridePercent) => postStopSuspendSoundVolumeOverridePercent is null ? "off" : $"{postStopSuspendSoundVolumeOverridePercent}%";
 
-    public static bool TryValidateVolumeOverridePercent(int? postStopSuspendSoundVolumeOverridePercent, out string message)
-        => TryValidateVolumeOverridePercent(postStopSuspendSoundVolumeOverridePercent, "Post-stop suspend sound", out message);
+    public static bool TryValidateVolumeOverridePercent(int? postStopSuspendSoundVolumeOverridePercent, out string message) => TryValidateVolumeOverridePercent(postStopSuspendSoundVolumeOverridePercent, "Post-stop suspend sound", out message);
 
-    public static bool TryValidateClosedLidStopFollowUpVolumeOverridePercent(int? closedLidStopFollowUpSoundVolumeOverridePercent, out string message)
-        => TryValidateVolumeOverridePercent(closedLidStopFollowUpSoundVolumeOverridePercent, "Closed-lid stop follow-up sound", out message);
+    public static bool TryValidateClosedLidStopFollowUpVolumeOverridePercent(int? closedLidStopFollowUpSoundVolumeOverridePercent, out string message) => TryValidateVolumeOverridePercent(closedLidStopFollowUpSoundVolumeOverridePercent, "Closed-lid stop follow-up sound", out message);
 
     public static bool TryValidateVolumeOverridePercent(int? soundVolumeOverridePercent, string soundDescription, out string message)
     {

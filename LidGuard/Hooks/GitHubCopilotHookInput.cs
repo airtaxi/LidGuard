@@ -98,12 +98,9 @@ public sealed class GitHubCopilotHookInput : IHookCommandInput
         }
     }
 
-    private static JsonElement GetElement(JsonElement hookInputElement, string primaryPropertyName, string secondaryPropertyName = "")
-        => HookJsonPropertyReader.GetElementProperty(hookInputElement, primaryPropertyName, secondaryPropertyName);
+    private static JsonElement GetElement(JsonElement hookInputElement, string primaryPropertyName, string secondaryPropertyName = "") => HookJsonPropertyReader.GetElementProperty(hookInputElement, primaryPropertyName, secondaryPropertyName);
 
-    private static bool? GetBoolean(JsonElement hookInputElement, string primaryPropertyName, string secondaryPropertyName = "")
-        => HookJsonPropertyReader.GetNullableBooleanProperty(hookInputElement, primaryPropertyName, secondaryPropertyName);
+    private static bool? GetBoolean(JsonElement hookInputElement, string primaryPropertyName, string secondaryPropertyName = "") => HookJsonPropertyReader.GetNullableBooleanProperty(hookInputElement, primaryPropertyName, secondaryPropertyName);
 
-    private static string GetString(JsonElement hookInputElement, string primaryPropertyName, string secondaryPropertyName = "")
-        => HookJsonPropertyReader.GetStringProperty(hookInputElement, primaryPropertyName, secondaryPropertyName);
+    private static string GetString(JsonElement hookInputElement, string primaryPropertyName, string secondaryPropertyName = "") => HookJsonPropertyReader.GetStringProperty(hookInputElement, primaryPropertyName, secondaryPropertyName);
 }

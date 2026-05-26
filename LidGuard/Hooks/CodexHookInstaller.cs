@@ -26,8 +26,7 @@ public sealed class CodexHookInstaller : HookInstallerBase
         return Path.GetFullPath(codexHomePath);
     }
 
-    public static string GetDefaultCodexConfigurationFilePath()
-        => Path.Combine(GetDefaultCodexConfigurationDirectoryPath(), CodexConfigurationFileName);
+    public static string GetDefaultCodexConfigurationFilePath() => Path.Combine(GetDefaultCodexConfigurationDirectoryPath(), CodexConfigurationFileName);
 
     protected override string GetDefaultConfigurationFilePath() => GetDefaultCodexConfigurationFilePath();
 

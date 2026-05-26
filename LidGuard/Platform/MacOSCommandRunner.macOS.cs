@@ -36,20 +36,14 @@ internal static class MacOSCommandRunner
             process = Process.Start(processStartInformation);
             if (process is null) return MacOSCommandResult.Failure($"Failed to start command: {fileName}");
         }
-        catch (Exception exception) when (exception is InvalidOperationException or System.ComponentModel.Win32Exception or FileNotFoundException)
-        {
-            return MacOSCommandResult.Failure($"Failed to start command {fileName}: {exception.Message}");
-        }
+        catch (Exception exception) when (exception is InvalidOperationException or System.ComponentModel.Win32Exception or FileNotFoundException) { return MacOSCommandResult.Failure($"Failed to start command {fileName}: {exception.Message}"); }
 
         using (process)
         {
             var standardOutputTask = process.StandardOutput.ReadToEndAsync();
             var standardErrorTask = process.StandardError.ReadToEndAsync();
 
-            try
-            {
-                await process.WaitForExitAsync(cancellationToken);
-            }
+            try { await process.WaitForExitAsync(cancellationToken); }
             catch (OperationCanceledException)
             {
                 TryKill(process);

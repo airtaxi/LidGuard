@@ -173,8 +173,7 @@ internal static class ManagedHookStatusMessageRefresh
     }
 #endif
 
-    private static TryRefreshManagedHookConfiguration UnsupportedRefreshDelegate()
-        => (string content, out string updatedContent, out bool changed, out string message) =>
+    private static TryRefreshManagedHookConfiguration UnsupportedRefreshDelegate() => (string content, out string updatedContent, out bool changed, out string message) =>
         {
             updatedContent = content;
             changed = false;
@@ -198,14 +197,10 @@ internal static class ManagedHookStatusMessageRefresh
             File.WriteAllText(configurationFilePath, updatedContent);
             changedProviderNames.Add(providerDisplayName);
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException)
-        {
-            warningMessages.Add($"{providerDisplayName}: {exception.Message}");
-        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException) { warningMessages.Add($"{providerDisplayName}: {exception.Message}"); }
     }
 
-    private static string CreateMissingConfigurationWarning(AgentProvider provider)
-        => $"{ManagedProviderSelection.GetProviderDisplayName(provider)} hook configuration file does not exist.";
+    private static string CreateMissingConfigurationWarning(AgentProvider provider) => $"{ManagedProviderSelection.GetProviderDisplayName(provider)} hook configuration file does not exist.";
 
     private static bool ShouldWarnMissingLocalConfigurationFile(string configurationFilePath)
     {

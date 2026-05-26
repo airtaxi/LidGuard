@@ -149,8 +149,7 @@ internal static class GitHubCopilotHookCommand
             return $"{hookEventName}:{detailedReason}";
         }
 
-        protected override bool CanReturnStopContinuation(string hookEventName, GitHubCopilotHookInput hookInput)
-            => GitHubCopilotHookEventNames.IsAgentStopEventName(hookEventName);
+        protected override bool CanReturnStopContinuation(string hookEventName, GitHubCopilotHookInput hookInput) => GitHubCopilotHookEventNames.IsAgentStopEventName(hookEventName);
 
         protected override string GetLastAssistantMessage(GitHubCopilotHookInput hookInput) => hookInput.LastAssistantMessage;
 
@@ -175,10 +174,7 @@ internal static class GitHubCopilotHookCommand
 
         private async Task<int> HandleNotificationAsync(string configuredHookEventName, GitHubCopilotHookInput hookInput)
         {
-            if (GitHubCopilotHookWorkTracker.RecordCompletionNotification(hookInput, GetSessionIdentifier(hookInput)))
-            {
-                return await SendSessionStateRequestAsync(LidGuardPipeCommands.MarkSessionActive, configuredHookEventName, hookInput, hookInput.NotificationType);
-            }
+            if (GitHubCopilotHookWorkTracker.RecordCompletionNotification(hookInput, GetSessionIdentifier(hookInput))) return await SendSessionStateRequestAsync(LidGuardPipeCommands.MarkSessionActive, configuredHookEventName, hookInput, hookInput.NotificationType);
 
             if (!GitHubCopilotSoftLockSignalSource.TryGetSoftLockReason(configuredHookEventName, hookInput, out var softLockReason)) return 0;
             return await SendSessionStateRequestAsync(LidGuardPipeCommands.MarkSessionSoftLocked, configuredHookEventName, hookInput, softLockReason);
@@ -186,10 +182,7 @@ internal static class GitHubCopilotHookCommand
 
         private async Task<int> HandlePreToolUseAsync(string configuredHookEventName, GitHubCopilotHookInput hookInput)
         {
-            if (GitHubCopilotSoftLockSignalSource.IsActivityEvent(configuredHookEventName, hookInput))
-            {
-                await SendSessionStateRequestAsync(LidGuardPipeCommands.MarkSessionActive, configuredHookEventName, hookInput, DescribeActivityReason(configuredHookEventName, hookInput.ToolName));
-            }
+            if (GitHubCopilotSoftLockSignalSource.IsActivityEvent(configuredHookEventName, hookInput)) await SendSessionStateRequestAsync(LidGuardPipeCommands.MarkSessionActive, configuredHookEventName, hookInput, DescribeActivityReason(configuredHookEventName, hookInput.ToolName));
 
             return await WriteClosedLidAskUserGuardAsync(configuredHookEventName, hookInput);
         }

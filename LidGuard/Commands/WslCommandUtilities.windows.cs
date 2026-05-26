@@ -14,8 +14,7 @@ internal static class WslCommandUtilities
 
     public readonly record struct WslContext(string DistroName, string WslExecutablePath);
 
-    public static string GetDistroName(IReadOnlyDictionary<string, string> options)
-        => NormalizeDistroName(CommandOptionReader.GetOption(options, DistroOptionName));
+    public static string GetDistroName(IReadOnlyDictionary<string, string> options) => NormalizeDistroName(CommandOptionReader.GetOption(options, DistroOptionName));
 
     public static string GetDistroDisplayName(string distroName)
     {
@@ -104,8 +103,7 @@ internal static class WslCommandUtilities
         return false;
     }
 
-    public static string CreateWslLidGuardCommand(string wslExecutablePath, string commandName)
-        => $"{QuoteBashWord(wslExecutablePath)} {commandName}";
+    public static string CreateWslLidGuardCommand(string wslExecutablePath, string commandName) => $"{QuoteBashWord(wslExecutablePath)} {commandName}";
 
     public static string GetHookCommandName(AgentProvider provider)
     {
@@ -118,14 +116,11 @@ internal static class WslCommandUtilities
         };
     }
 
-    public static bool ExecutableReferencesMatch(string executableReference, string expectedExecutableReference)
-        => executableReference.Trim().Equals(expectedExecutableReference.Trim(), StringComparison.Ordinal);
+    public static bool ExecutableReferencesMatch(string executableReference, string expectedExecutableReference) => executableReference.Trim().Equals(expectedExecutableReference.Trim(), StringComparison.Ordinal);
 
-    public static bool FileExists(string distroName, string filePath)
-        => RunShell(distroName, "test -f \"$1\"", [filePath]).ExitCode == 0;
+    public static bool FileExists(string distroName, string filePath) => RunShell(distroName, "test -f \"$1\"", [filePath]).ExitCode == 0;
 
-    public static bool PathExists(string distroName, string path)
-        => RunShell(distroName, "test -e \"$1\"", [path]).ExitCode == 0;
+    public static bool PathExists(string distroName, string path) => RunShell(distroName, "test -e \"$1\"", [path]).ExitCode == 0;
 
     public static WslCommandResult RunCommand(string distroName, string executableName, IReadOnlyList<string> arguments)
     {
@@ -270,11 +265,9 @@ internal static class WslCommandUtilities
         return true;
     }
 
-    private static string NormalizeDistroName(string distroName)
-        => NormalizeWslConsoleText(distroName).Trim();
+    private static string NormalizeDistroName(string distroName) => NormalizeWslConsoleText(distroName).Trim();
 
-    private static string NormalizeWslConsoleText(string value)
-        => string.IsNullOrEmpty(value) ? string.Empty : value.Replace("\0", string.Empty, StringComparison.Ordinal);
+    private static string NormalizeWslConsoleText(string value) => string.IsNullOrEmpty(value) ? string.Empty : value.Replace("\0", string.Empty, StringComparison.Ordinal);
 
     private static WslCommandResult RunWslProcess(IReadOnlyList<string> arguments, string standardInput = "")
     {
@@ -304,18 +297,11 @@ internal static class WslCommandUtilities
 
             return new WslCommandResult(process.ExitCode, standardOutputTask.GetAwaiter().GetResult(), standardErrorTask.GetAwaiter().GetResult(), false);
         }
-        catch (Win32Exception exception)
-        {
-            return WslCommandResult.FailedToStart(exception.Message);
-        }
-        catch (InvalidOperationException exception)
-        {
-            return WslCommandResult.FailedToStart(exception.Message);
-        }
+        catch (Win32Exception exception) { return WslCommandResult.FailedToStart(exception.Message); }
+        catch (InvalidOperationException exception) { return WslCommandResult.FailedToStart(exception.Message); }
     }
 
-    private static string QuoteBashWord(string value)
-        => $"'{value.Replace("'", "'\"'\"'", StringComparison.Ordinal)}'";
+    private static string QuoteBashWord(string value) => $"'{value.Replace("'", "'\"'\"'", StringComparison.Ordinal)}'";
 
     private static bool TryResolveWindowsLidGuardExecutablePath(out string executablePath, out string message)
     {
@@ -349,6 +335,5 @@ internal readonly record struct WslCommandResult(int ExitCode, string StandardOu
         return LocalizationService.GetString("TextDisplayNone");
     }
 
-    private static string NormalizeDisplayText(string value)
-        => string.IsNullOrEmpty(value) ? string.Empty : value.Replace("\0", string.Empty, StringComparison.Ordinal).Trim();
+    private static string NormalizeDisplayText(string value) => string.IsNullOrEmpty(value) ? string.Empty : value.Replace("\0", string.Empty, StringComparison.Ordinal).Trim();
 }

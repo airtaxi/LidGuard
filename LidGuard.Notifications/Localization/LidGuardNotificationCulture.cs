@@ -40,13 +40,7 @@ internal static class LidGuardNotificationCulture
             FallBackToParentUICultures = true
         };
 
-        if (hasEnvironmentCulture)
-        {
-            requestLocalizationOptions.RequestCultureProviders =
-            [
-                new CustomRequestCultureProvider(_ => Task.FromResult<ProviderCultureResult?>(new ProviderCultureResult(environmentCultureInfo.Name)))
-            ];
-        }
+        if (hasEnvironmentCulture) requestLocalizationOptions.RequestCultureProviders = [new CustomRequestCultureProvider(_ => Task.FromResult<ProviderCultureResult?>(new ProviderCultureResult(environmentCultureInfo.Name)))];
 
         return requestLocalizationOptions;
     }
@@ -58,8 +52,7 @@ internal static class LidGuardNotificationCulture
         return TryResolveSelectableCultureInfo(selectedCultureInfo, out cultureInfo);
     }
 
-    public static string ResolveSelectableCultureName(CultureInfo cultureInfo)
-        => TryResolveSelectableCultureInfo(cultureInfo, out var selectableCultureInfo) ? selectableCultureInfo.Name : "en";
+    public static string ResolveSelectableCultureName(CultureInfo cultureInfo) => TryResolveSelectableCultureInfo(cultureInfo, out var selectableCultureInfo) ? selectableCultureInfo.Name : "en";
 
     private static bool TryResolveEnvironmentCulture(out CultureInfo cultureInfo)
     {

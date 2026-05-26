@@ -108,11 +108,7 @@ internal sealed partial class VisibleDisplayMonitorCountProvider : IVisibleDispl
         catch (Exception) { return null; }
     }
 
-    private static bool IsInternalDisplayOutputTechnology(uint videoOutputTechnology)
-        => videoOutputTechnology is VideoOutputTechnologyLowVoltageDifferentialSwing
-            or VideoOutputTechnologyDisplayPortEmbedded
-            or VideoOutputTechnologyUnifiedDisplayInterfaceEmbedded
-            or VideoOutputTechnologyInternal;
+    private static bool IsInternalDisplayOutputTechnology(uint videoOutputTechnology) => videoOutputTechnology is VideoOutputTechnologyLowVoltageDifferentialSwing or VideoOutputTechnologyDisplayPortEmbedded or VideoOutputTechnologyUnifiedDisplayInterfaceEmbedded or VideoOutputTechnologyInternal;
 
     private readonly record struct MonitorConnectionSummary(int ActiveMonitorCount, int ActiveInternalMonitorCount);
 }

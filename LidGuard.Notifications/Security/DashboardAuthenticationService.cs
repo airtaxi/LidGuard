@@ -80,17 +80,16 @@ internal sealed class DashboardAuthenticationService(AuthenticationRefreshTokenS
         return new ClaimsPrincipal(identity);
     }
 
-    private static CookieOptions CreateRefreshCookieOptions(HttpContext httpContext, DateTimeOffset expiresAtUtc)
-        => new()
-        {
-            Expires = expiresAtUtc,
-            HttpOnly = true,
-            IsEssential = true,
-            MaxAge = DashboardAuthenticationConstants.RefreshTokenLifetime,
-            Path = "/",
-            SameSite = SameSiteMode.Strict,
-            Secure = httpContext.Request.IsHttps
-        };
+    private static CookieOptions CreateRefreshCookieOptions(HttpContext httpContext, DateTimeOffset expiresAtUtc) => new()
+    {
+        Expires = expiresAtUtc,
+        HttpOnly = true,
+        IsEssential = true,
+        MaxAge = DashboardAuthenticationConstants.RefreshTokenLifetime,
+        Path = "/",
+        SameSite = SameSiteMode.Strict,
+        Secure = httpContext.Request.IsHttps
+    };
 
     private static void DeleteRefreshCookie(HttpContext httpContext)
     {

@@ -19,10 +19,7 @@ internal static class StopFollowUpWebhookClient
         try
         {
             using var response = await SendAsync(requestMessage, cancellationToken, timeout);
-            if (!response.IsSuccessStatusCode)
-            {
-                return LidGuardOperationResult<StopFollowUpWebhookStartResponse>.Failure($"The closed-lid stop follow-up webhook returned {(int)response.StatusCode} ({response.ReasonPhrase}).");
-            }
+            if (!response.IsSuccessStatusCode) return LidGuardOperationResult<StopFollowUpWebhookStartResponse>.Failure($"The closed-lid stop follow-up webhook returned {(int)response.StatusCode} ({response.ReasonPhrase}).");
 
             await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
             var startResponse = await JsonSerializer.DeserializeAsync(responseStream, SuspendWebhookJsonSerializerContext.Default.StopFollowUpWebhookStartResponse, cancellationToken);
@@ -30,18 +27,9 @@ internal static class StopFollowUpWebhookClient
 
             return LidGuardOperationResult<StopFollowUpWebhookStartResponse>.Success(startResponse);
         }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-        {
-            return LidGuardOperationResult<StopFollowUpWebhookStartResponse>.Failure("The closed-lid stop follow-up webhook request timed out.");
-        }
-        catch (JsonException exception)
-        {
-            return LidGuardOperationResult<StopFollowUpWebhookStartResponse>.Failure($"The closed-lid stop follow-up webhook returned invalid JSON: {exception.Message}");
-        }
-        catch (Exception exception) when (exception is HttpRequestException or InvalidOperationException)
-        {
-            return LidGuardOperationResult<StopFollowUpWebhookStartResponse>.Failure($"Failed to send the closed-lid stop follow-up webhook: {exception.Message}");
-        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { return LidGuardOperationResult<StopFollowUpWebhookStartResponse>.Failure("The closed-lid stop follow-up webhook request timed out."); }
+        catch (JsonException exception) { return LidGuardOperationResult<StopFollowUpWebhookStartResponse>.Failure($"The closed-lid stop follow-up webhook returned invalid JSON: {exception.Message}"); }
+        catch (Exception exception) when (exception is HttpRequestException or InvalidOperationException) { return LidGuardOperationResult<StopFollowUpWebhookStartResponse>.Failure($"Failed to send the closed-lid stop follow-up webhook: {exception.Message}"); }
     }
 
     public static async Task<LidGuardOperationResult<StopFollowUpWebhookPollResponse>> PollAsync(Uri pollUri, CancellationToken cancellationToken, TimeSpan? timeout = null)
@@ -50,10 +38,7 @@ internal static class StopFollowUpWebhookClient
         try
         {
             using var response = await SendAsync(requestMessage, cancellationToken, timeout);
-            if (!response.IsSuccessStatusCode)
-            {
-                return LidGuardOperationResult<StopFollowUpWebhookPollResponse>.Failure($"The closed-lid stop follow-up poll returned {(int)response.StatusCode} ({response.ReasonPhrase}).");
-            }
+            if (!response.IsSuccessStatusCode) return LidGuardOperationResult<StopFollowUpWebhookPollResponse>.Failure($"The closed-lid stop follow-up poll returned {(int)response.StatusCode} ({response.ReasonPhrase}).");
 
             await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
             var pollResponse = await JsonSerializer.DeserializeAsync(responseStream, SuspendWebhookJsonSerializerContext.Default.StopFollowUpWebhookPollResponse, cancellationToken);
@@ -61,18 +46,9 @@ internal static class StopFollowUpWebhookClient
 
             return LidGuardOperationResult<StopFollowUpWebhookPollResponse>.Success(pollResponse);
         }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-        {
-            return LidGuardOperationResult<StopFollowUpWebhookPollResponse>.Failure("The closed-lid stop follow-up poll request timed out.");
-        }
-        catch (JsonException exception)
-        {
-            return LidGuardOperationResult<StopFollowUpWebhookPollResponse>.Failure($"The closed-lid stop follow-up poll returned invalid JSON: {exception.Message}");
-        }
-        catch (Exception exception) when (exception is HttpRequestException or InvalidOperationException)
-        {
-            return LidGuardOperationResult<StopFollowUpWebhookPollResponse>.Failure($"Failed to poll the closed-lid stop follow-up webhook: {exception.Message}");
-        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { return LidGuardOperationResult<StopFollowUpWebhookPollResponse>.Failure("The closed-lid stop follow-up poll request timed out."); }
+        catch (JsonException exception) { return LidGuardOperationResult<StopFollowUpWebhookPollResponse>.Failure($"The closed-lid stop follow-up poll returned invalid JSON: {exception.Message}"); }
+        catch (Exception exception) when (exception is HttpRequestException or InvalidOperationException) { return LidGuardOperationResult<StopFollowUpWebhookPollResponse>.Failure($"Failed to poll the closed-lid stop follow-up webhook: {exception.Message}"); }
     }
 
     private static async Task<HttpResponseMessage> SendAsync(HttpRequestMessage requestMessage, CancellationToken cancellationToken, TimeSpan? timeout)

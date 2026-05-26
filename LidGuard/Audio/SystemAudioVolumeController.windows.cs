@@ -18,8 +18,7 @@ public sealed partial class SystemAudioVolumeController : ISystemAudioVolumeCont
     private const int RpcChangedMode = unchecked((int)0x80010106);
     private static readonly Guid s_mmDeviceEnumeratorClassIdentifier = new("BCDE0395-E52F-467C-8E3D-C4579291692E");
 
-    public LidGuardOperationResult<SystemAudioVolumeState> CaptureDefaultRenderDeviceState()
-        => CaptureDefaultRenderDeviceStateCore();
+    public LidGuardOperationResult<SystemAudioVolumeState> CaptureDefaultRenderDeviceState() => CaptureDefaultRenderDeviceStateCore();
 
     public LidGuardOperationResult ApplyDefaultRenderDeviceVolumeOverride(int volumeOverridePercent)
     {
@@ -232,6 +231,5 @@ public sealed partial class SystemAudioVolumeController : ISystemAudioVolumeCont
 
 internal static class AudioVolumeOperationResultExtensions
 {
-    public static LidGuardOperationResult ToNonGenericResult<TValue>(this LidGuardOperationResult<TValue> result)
-        => result.Succeeded ? LidGuardOperationResult.Success() : LidGuardOperationResult.Failure(result.Message, result.NativeErrorCode);
+    public static LidGuardOperationResult ToNonGenericResult<TValue>(this LidGuardOperationResult<TValue> result) => result.Succeeded ? LidGuardOperationResult.Success() : LidGuardOperationResult.Failure(result.Message, result.NativeErrorCode);
 }

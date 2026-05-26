@@ -170,11 +170,8 @@ internal static class ProviderMcpManagementCommand
         if (!configurationFileExists) return LocalizationService.GetFormattedString("ManagementConfigurationFileDoesNotExist", configurationFilePath);
         if (!string.IsNullOrWhiteSpace(message)) return message;
         if (!hasManagedServerEntry) return LocalizationService.GetString("ManagementNoProviderMcpServerEntryFound");
-        if (!matchesCurrentLidGuardExecutable) return LocalizationService.GetString("ManagementProviderMcpServerDoesNotPointAtCurrentExecutable")
-            .Replace("{0}", managedServerName, StringComparison.Ordinal);
-        if (!containsProviderMcpServerCommand) return LocalizationService.GetString("ManagementProviderMcpServerDoesNotPointAtManagedCommand")
-            .Replace("{0}", managedServerName, StringComparison.Ordinal)
-            .Replace("{1}", ProviderMcpServerCommand.CommandName, StringComparison.Ordinal);
+        if (!matchesCurrentLidGuardExecutable) return LocalizationService.GetString("ManagementProviderMcpServerDoesNotPointAtCurrentExecutable").Replace("{0}", managedServerName, StringComparison.Ordinal);
+        if (!containsProviderMcpServerCommand) return LocalizationService.GetString("ManagementProviderMcpServerDoesNotPointAtManagedCommand").Replace("{0}", managedServerName, StringComparison.Ordinal).Replace("{1}", ProviderMcpServerCommand.CommandName, StringComparison.Ordinal);
         return LocalizationService.GetString("ManagementProviderMcpRegistered");
     }
 
@@ -195,8 +192,7 @@ internal static class ProviderMcpManagementCommand
             if (!jsonValue.TryGetValue<string>(out var stringValue)) continue;
             if (!stringValue.Equals("--provider-name", StringComparison.OrdinalIgnoreCase)) continue;
 
-            if (jsonArray[itemIndex + 1] is not JsonValue providerNameValue || !providerNameValue.TryGetValue<string>(out providerName))
-                return false;
+            if (jsonArray[itemIndex + 1] is not JsonValue providerNameValue || !providerNameValue.TryGetValue<string>(out providerName)) return false;
 
             providerName = providerName.Trim();
             return !string.IsNullOrWhiteSpace(providerName);

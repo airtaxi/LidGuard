@@ -31,8 +31,7 @@ public static class ClaudeHookSettingsJsonDocument
         (ClaudeHookEventNames.SessionEnd, () => LocalizationService.GetString("HookStatusMessageStoppingSessionProtection"), string.Empty)
     ];
 
-    public static string CreateSettingsJsonSnippet(string hookCommand)
-        => CreateSettingsJsonSnippet(hookCommand, HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform());
+    public static string CreateSettingsJsonSnippet(string hookCommand) => CreateSettingsJsonSnippet(hookCommand, HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform());
 
     public static string CreateSettingsJsonSnippet(string hookCommand, string hookShellName)
     {
@@ -45,8 +44,7 @@ public static class ClaudeHookSettingsJsonDocument
         return settingsObject.ToJsonString(s_jsonSerializerOptions);
     }
 
-    public static string CreateHooksJsonSnippet(string hookCommand)
-        => CreateHooksJsonSnippet(hookCommand, HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform());
+    public static string CreateHooksJsonSnippet(string hookCommand) => CreateHooksJsonSnippet(hookCommand, HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform());
 
     public static string CreateHooksJsonSnippet(string hookCommand, string hookShellName) => CreateHooksObject(hookCommand, hookShellName).ToJsonString(s_jsonSerializerOptions);
 
@@ -176,8 +174,7 @@ public static class ClaudeHookSettingsJsonDocument
         };
     }
 
-    public static bool TryInstallManagedHooks(string content, string hookCommand, out string updatedContent, out string message)
-        => TryInstallManagedHooks(content, hookCommand, HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform(), out updatedContent, out message);
+    public static bool TryInstallManagedHooks(string content, string hookCommand, out string updatedContent, out string message) => TryInstallManagedHooks(content, hookCommand, HookCommandUtilities.GetCommandHookShellNameForCurrentPlatform(), out updatedContent, out message);
 
     public static bool TryInstallManagedHooks(string content, string hookCommand, string hookShellName, out string updatedContent, out string message)
     {
@@ -189,8 +186,7 @@ public static class ClaudeHookSettingsJsonDocument
 
         foreach (var hookDefinition in s_requiredHookDefinitions)
         {
-            if (!TryUpsertManagedHook(hooksObject, hookDefinition.HookEventName, hookCommand, hookShellName, hookDefinition.GetStatusMessage(), hookDefinition.Matcher, out message))
-                return false;
+            if (!TryUpsertManagedHook(hooksObject, hookDefinition.HookEventName, hookCommand, hookShellName, hookDefinition.GetStatusMessage(), hookDefinition.Matcher, out message)) return false;
         }
 
         updatedContent = settingsObject.ToJsonString(s_jsonSerializerOptions) + Environment.NewLine;
@@ -218,8 +214,7 @@ public static class ClaudeHookSettingsJsonDocument
         return true;
     }
 
-    public static bool TryRefreshManagedHookStatusMessages(string content, out string updatedContent, out bool changed, out string message)
-        => TryRefreshManagedHooks(content, string.Empty, string.Empty, refreshCommand: false, out updatedContent, out changed, out message);
+    public static bool TryRefreshManagedHookStatusMessages(string content, out string updatedContent, out bool changed, out string message) => TryRefreshManagedHooks(content, string.Empty, string.Empty, refreshCommand: false, out updatedContent, out changed, out message);
 
     public static bool TryRefreshManagedHooks(string content, string hookCommand, string hookShellName, bool refreshCommand, out string updatedContent, out bool changed, out string message)
     {
@@ -235,10 +230,7 @@ public static class ClaudeHookSettingsJsonDocument
 
         foreach (var hookDefinition in s_requiredHookDefinitions)
         {
-            if (!TryRefreshManagedHook(hooksObject, hookDefinition.HookEventName, hookCommand, hookShellName, hookDefinition.GetStatusMessage(), hookDefinition.Matcher, refreshCommand, out var hookChanged, out message))
-            {
-                return false;
-            }
+            if (!TryRefreshManagedHook(hooksObject, hookDefinition.HookEventName, hookCommand, hookShellName, hookDefinition.GetStatusMessage(), hookDefinition.Matcher, refreshCommand, out var hookChanged, out message)) return false;
 
             changed |= hookChanged;
         }
@@ -252,10 +244,7 @@ public static class ClaudeHookSettingsJsonDocument
     private static JsonObject CreateHooksObject(string hookCommand, string hookShellName)
     {
         var hooksObject = new JsonObject();
-        foreach (var hookDefinition in s_requiredHookDefinitions)
-        {
-            hooksObject[hookDefinition.HookEventName] = JsonHookConfigurationDocument.CreateJsonArrayWithSingleNode(CreateManagedHookMatcher(hookCommand, hookShellName, hookDefinition.GetStatusMessage(), hookDefinition.Matcher));
-        }
+        foreach (var hookDefinition in s_requiredHookDefinitions) hooksObject[hookDefinition.HookEventName] = JsonHookConfigurationDocument.CreateJsonArrayWithSingleNode(CreateManagedHookMatcher(hookCommand, hookShellName, hookDefinition.GetStatusMessage(), hookDefinition.Matcher));
 
         return hooksObject;
     }
@@ -338,8 +327,7 @@ public static class ClaudeHookSettingsJsonDocument
         return true;
     }
 
-    private static bool RemoveManagedHook(JsonObject hooksObject, string hookEventName)
-        => JsonHookConfigurationDocument.RemoveNestedManagedCommandHooks(hooksObject, hookEventName, IsLidGuardClaudeHookCommand);
+    private static bool RemoveManagedHook(JsonObject hooksObject, string hookEventName) => JsonHookConfigurationDocument.RemoveNestedManagedCommandHooks(hooksObject, hookEventName, IsLidGuardClaudeHookCommand);
 
     private static bool TryRefreshManagedHookStatusMessage(JsonObject hooksObject, string hookEventName, string statusMessage, out bool changed, out string message)
         => JsonHookConfigurationDocument.TryRefreshNestedManagedHookStatusMessage(hooksObject, hookEventName, statusMessage, "Claude", IsLidGuardClaudeHookCommand, out changed, out message);
@@ -380,11 +368,9 @@ public static class ClaudeHookSettingsJsonDocument
         hookDefinitionObject["statusMessage"] = statusMessage;
     }
 
-    private static bool HasExpectedHookCommand(JsonObject hookDefinitionObject, string expectedHookCommand)
-        => JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "command").Equals(expectedHookCommand, StringComparison.Ordinal);
+    private static bool HasExpectedHookCommand(JsonObject hookDefinitionObject, string expectedHookCommand) => JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "command").Equals(expectedHookCommand, StringComparison.Ordinal);
 
-    private static bool HasExpectedHookShell(JsonObject hookDefinitionObject, string expectedHookShellName)
-        => JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "shell").Equals(expectedHookShellName, StringComparison.OrdinalIgnoreCase);
+    private static bool HasExpectedHookShell(JsonObject hookDefinitionObject, string expectedHookShellName) => JsonHookConfigurationDocument.GetStringProperty(hookDefinitionObject, "shell").Equals(expectedHookShellName, StringComparison.OrdinalIgnoreCase);
 
     private static int GetExpectedTimeoutSeconds() => ManagedHookTimeoutConfiguration.GetInstalledHookTimeoutSeconds();
 
@@ -503,11 +489,9 @@ public static class ClaudeHookSettingsJsonDocument
         return true;
     }
 
-    private static bool HasExpectedTimeoutValue(JsonObject hookDefinitionObject, int expectedTimeoutSeconds)
-        => hookDefinitionObject["timeout"] is JsonValue timeoutValue && timeoutValue.TryGetValue<int>(out var timeoutSeconds) && timeoutSeconds == expectedTimeoutSeconds;
+    private static bool HasExpectedTimeoutValue(JsonObject hookDefinitionObject, int expectedTimeoutSeconds) => hookDefinitionObject["timeout"] is JsonValue timeoutValue && timeoutValue.TryGetValue<int>(out var timeoutSeconds) && timeoutSeconds == expectedTimeoutSeconds;
 
-    private static bool HasSufficientTimeoutValue(JsonObject hookDefinitionObject, int expectedTimeoutSeconds)
-        => hookDefinitionObject["timeout"] is JsonValue timeoutValue && timeoutValue.TryGetValue<int>(out var timeoutSeconds) && timeoutSeconds >= expectedTimeoutSeconds;
+    private static bool HasSufficientTimeoutValue(JsonObject hookDefinitionObject, int expectedTimeoutSeconds) => hookDefinitionObject["timeout"] is JsonValue timeoutValue && timeoutValue.TryGetValue<int>(out var timeoutSeconds) && timeoutSeconds >= expectedTimeoutSeconds;
 
     private static bool MatcherEquals(string actualMatcher, string expectedMatcher)
     {

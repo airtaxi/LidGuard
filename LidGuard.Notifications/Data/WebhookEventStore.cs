@@ -687,20 +687,15 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
 
     private readonly record struct StopFollowUpActionSnapshot(long WebhookEventIdentifier, string Status, DateTimeOffset DeadlineAtUtc, DateTimeOffset? MaximumDeadlineAtUtc, DateTimeOffset? ConsumedAtUtc);
 
-    private static string? GetNullableString(SqliteDataReader reader, int ordinal)
-        => reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
+    private static string? GetNullableString(SqliteDataReader reader, int ordinal) => reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
 
-    private static int? GetNullableInt32(SqliteDataReader reader, int ordinal)
-        => reader.IsDBNull(ordinal) ? null : reader.GetInt32(ordinal);
+    private static int? GetNullableInt32(SqliteDataReader reader, int ordinal) => reader.IsDBNull(ordinal) ? null : reader.GetInt32(ordinal);
 
-    private static int GetInt32(SqliteDataReader reader, int ordinal)
-        => Convert.ToInt32(reader.GetValue(ordinal), CultureInfo.InvariantCulture);
+    private static int GetInt32(SqliteDataReader reader, int ordinal) => Convert.ToInt32(reader.GetValue(ordinal), CultureInfo.InvariantCulture);
 
-    private static DateTimeOffset GetTimestamp(SqliteDataReader reader, int ordinal)
-        => DateTimeOffset.Parse(reader.GetString(ordinal), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+    private static DateTimeOffset GetTimestamp(SqliteDataReader reader, int ordinal) => DateTimeOffset.Parse(reader.GetString(ordinal), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
 
-    private static DateTimeOffset? GetNullableTimestamp(SqliteDataReader reader, int ordinal)
-        => reader.IsDBNull(ordinal) ? null : GetTimestamp(reader, ordinal);
+    private static DateTimeOffset? GetNullableTimestamp(SqliteDataReader reader, int ordinal) => reader.IsDBNull(ordinal) ? null : GetTimestamp(reader, ordinal);
 
     private static async Task ExpirePendingStopFollowUpRequestsAsync(SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
     {
@@ -719,16 +714,13 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private static string ComputeHash(string value)
-        => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
+    private static string ComputeHash(string value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
 
     private static object ToDatabaseValue(int? value) => value.HasValue ? value.Value : DBNull.Value;
 
-    private static object ToDatabaseValue(DateTimeOffset? value)
-        => value.HasValue ? value.Value.ToString("O", CultureInfo.InvariantCulture) : DBNull.Value;
+    private static object ToDatabaseValue(DateTimeOffset? value) => value.HasValue ? value.Value.ToString("O", CultureInfo.InvariantCulture) : DBNull.Value;
 
-    private static object ToDatabaseValue(string? value)
-        => string.IsNullOrWhiteSpace(value) ? DBNull.Value : value;
+    private static object ToDatabaseValue(string? value) => string.IsNullOrWhiteSpace(value) ? DBNull.Value : value;
 
     private static async Task<long> InsertWebhookEventAsync(SqliteConnection connection, SqliteTransaction transaction, string eventType, string reason, string? userInterfaceCulture, int? softLockedSessionCount, string? provider, string? providerName, string? sessionIdentifier, DateTimeOffset? startedAtUtc, DateTimeOffset? lastActivityAtUtc, DateTimeOffset? endedAtUtc, string? endReason, int? activeSessionCount, string? inputPromptPreview, string? lastResponse, int? replyWaitSeconds, DateTimeOffset? replyDeadlineUtc, string? workingDirectory, string? transcriptPath, DateTimeOffset receivedAtUtc, CancellationToken cancellationToken)
     {

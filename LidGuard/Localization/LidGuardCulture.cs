@@ -95,10 +95,7 @@ internal static class LidGuardCulture
         if (TryResolveConcreteCultureName(environmentCultureName, out var environmentEffectiveCultureName)) return environmentEffectiveCultureName;
 
         var normalizedSettings = LidGuardSettings.Normalize(settings);
-        if (!UserInterfaceCultureConfiguration.IsAutomatic(normalizedSettings.UserInterfaceCulture) && TryResolveConcreteCultureName(normalizedSettings.UserInterfaceCulture, out var settingsEffectiveCultureName))
-        {
-            return settingsEffectiveCultureName;
-        }
+        if (!UserInterfaceCultureConfiguration.IsAutomatic(normalizedSettings.UserInterfaceCulture) && TryResolveConcreteCultureName(normalizedSettings.UserInterfaceCulture, out var settingsEffectiveCultureName)) return settingsEffectiveCultureName;
 
         return ResolveConcreteCultureNameOrEnglish(s_processDefaultUserInterfaceCulture);
     }
@@ -155,6 +152,5 @@ internal static class LidGuardCulture
         return cultureInfo.TwoLetterISOLanguageName.Equals("en", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string CultureInvalidEnvironmentWarning(string cultureName, string detail)
-        => LocalizationService.GetFormattedString("CultureInvalidUserInterfaceCultureWarning", $"{UserInterfaceCultureEnvironmentVariableName}={cultureName}", detail);
+    private static string CultureInvalidEnvironmentWarning(string cultureName, string detail) => LocalizationService.GetFormattedString("CultureInvalidUserInterfaceCultureWarning", $"{UserInterfaceCultureEnvironmentVariableName}={cultureName}", detail);
 }

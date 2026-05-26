@@ -151,8 +151,7 @@ internal abstract class HookCommandBase<THookInput>
         return $"{Provider}:{normalizedWorkingDirectory}";
     }
 
-    protected string GetWorkingDirectory(THookInput hookInput)
-        => string.IsNullOrWhiteSpace(hookInput.WorkingDirectory) ? Environment.CurrentDirectory : hookInput.WorkingDirectory;
+    protected string GetWorkingDirectory(THookInput hookInput) => string.IsNullOrWhiteSpace(hookInput.WorkingDirectory) ? Environment.CurrentDirectory : hookInput.WorkingDirectory;
 
     protected static string DescribeActivityReason(string hookEventName, string activityDetail)
     {

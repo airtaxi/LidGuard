@@ -42,6 +42,5 @@ internal sealed class HookExecutionTiming
             + $"logWriteMs={FormatMilliseconds(LogWriteDuration)}";
     }
 
-    private static string FormatMilliseconds(TimeSpan duration)
-        => duration.TotalMilliseconds.ToString("0.###", CultureInfo.InvariantCulture);
+    private static string FormatMilliseconds(TimeSpan duration) => duration.TotalMilliseconds.ToString("0.###", CultureInfo.InvariantCulture);
 }

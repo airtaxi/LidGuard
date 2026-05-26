@@ -83,8 +83,7 @@ internal static class PushNotificationMessageFactory
         return AppendSessionEndDetails(baseBody, webhookEvent);
     }
 
-    private static string CreatePostSessionEndBody(PendingWebhookEvent webhookEvent)
-        => CreateSessionEndDetails(webhookEvent, LidGuardNotificationText.PushPostSessionEndStatus);
+    private static string CreatePostSessionEndBody(PendingWebhookEvent webhookEvent) => CreateSessionEndDetails(webhookEvent, LidGuardNotificationText.PushPostSessionEndStatus);
 
     private static string AppendSessionEndDetails(string baseBody, PendingWebhookEvent webhookEvent)
     {
@@ -115,8 +114,7 @@ internal static class PushNotificationMessageFactory
         return LidGuardNotificationText.PushSoftLockedSessionCount(softLockedSessionCount.Value);
     }
 
-    private static string CreateStopFollowUpBody(PendingWebhookEvent webhookEvent)
-        => CreateSessionEndDetails(webhookEvent, LidGuardNotificationText.PushStopFollowUpStatus) + " " + LidGuardNotificationText.PushBodyStopFollowUp;
+    private static string CreateStopFollowUpBody(PendingWebhookEvent webhookEvent) => CreateSessionEndDetails(webhookEvent, LidGuardNotificationText.PushStopFollowUpStatus) + " " + LidGuardNotificationText.PushBodyStopFollowUp;
 
     private static string CreateNotificationUrl(PendingWebhookEvent webhookEvent, string publicBaseUrl)
     {

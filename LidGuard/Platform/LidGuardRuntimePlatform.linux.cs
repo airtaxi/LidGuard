@@ -11,8 +11,7 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
 {
     public bool IsSupported => OperatingSystem.IsLinux();
 
-    public string UnsupportedMessage
-        => LocalizationService.GetString("PlatformUnsupportedLinux");
+    public string UnsupportedMessage => LocalizationService.GetString("PlatformUnsupportedLinux");
 
     public LidGuardOperationResult<LidGuardRuntimeServiceSet> CreateRuntimeServiceSet()
     {
@@ -28,9 +27,7 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
         return LidGuardOperationResult<LidGuardRuntimeServiceSet>.Success(serviceSet);
     }
 
-    public LidGuardOperationResult<IPostStopSuspendSoundPlayer> CreatePostStopSuspendSoundPlayer()
-        => LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Success(new PostStopSuspendSoundPlayer());
+    public LidGuardOperationResult<IPostStopSuspendSoundPlayer> CreatePostStopSuspendSoundPlayer() => LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Success(new PostStopSuspendSoundPlayer());
 
-    public LidGuardOperationResult<ISystemAudioVolumeController> CreateSystemAudioVolumeController()
-        => LidGuardOperationResult<ISystemAudioVolumeController>.Success(new SystemAudioVolumeController());
+    public LidGuardOperationResult<ISystemAudioVolumeController> CreateSystemAudioVolumeController() => LidGuardOperationResult<ISystemAudioVolumeController>.Success(new SystemAudioVolumeController());
 }

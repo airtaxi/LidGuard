@@ -9,8 +9,7 @@ public sealed class LidActionService : ILidActionService
     private LidAction _alternatingCurrentLidAction = LidAction.Sleep;
     private LidAction _directCurrentLidAction = LidAction.Sleep;
 
-    public LidGuardOperationResult<Guid> GetActivePowerSchemeIdentifier()
-        => LidGuardOperationResult<Guid>.Success(s_macOSLidActionSchemeIdentifier);
+    public LidGuardOperationResult<Guid> GetActivePowerSchemeIdentifier() => LidGuardOperationResult<Guid>.Success(s_macOSLidActionSchemeIdentifier);
 
     public LidGuardOperationResult<LidAction> ReadLidAction(Guid powerSchemeIdentifier, PowerLine powerLine)
     {

@@ -16,9 +16,7 @@ internal static class ManagementFieldWriter
         Console.WriteLine(LocalizationService.GetFormattedString("ManagementField", LocalizationService.GetString(labelResourceName), displayValue));
     }
 
-    public static void WriteField(string labelResourceName, HookInstallationStatus status)
-        => WriteField(labelResourceName, (object)status);
+    public static void WriteField(string labelResourceName, HookInstallationStatus status) => WriteField(labelResourceName, (object)status);
 
-    private static string DisplayHookInstallationStatus(HookInstallationStatus status)
-        => LocalizationService.GetString($"DisplayHookInstallationStatus{status}");
+    private static string DisplayHookInstallationStatus(HookInstallationStatus status) => LocalizationService.GetString($"DisplayHookInstallationStatus{status}");
 }

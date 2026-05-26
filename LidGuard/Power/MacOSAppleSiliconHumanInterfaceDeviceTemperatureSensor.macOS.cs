@@ -150,15 +150,9 @@ internal static partial class MacOSAppleSiliconHumanInterfaceDeviceTemperatureSe
             lock (s_coreFoundationExportGate)
             {
                 if (s_coreFoundationLibraryHandle == IntPtr.Zero) s_coreFoundationLibraryHandle = NativeLibrary.Load(CoreFoundationLibraryPath);
-                if (s_coreFoundationDictionaryKeyCallbacks == IntPtr.Zero && !NativeLibrary.TryGetExport(s_coreFoundationLibraryHandle, "kCFTypeDictionaryKeyCallBacks", out s_coreFoundationDictionaryKeyCallbacks))
-                {
-                    return false;
-                }
+                if (s_coreFoundationDictionaryKeyCallbacks == IntPtr.Zero && !NativeLibrary.TryGetExport(s_coreFoundationLibraryHandle, "kCFTypeDictionaryKeyCallBacks", out s_coreFoundationDictionaryKeyCallbacks)) return false;
 
-                if (s_coreFoundationDictionaryValueCallbacks == IntPtr.Zero && !NativeLibrary.TryGetExport(s_coreFoundationLibraryHandle, "kCFTypeDictionaryValueCallBacks", out s_coreFoundationDictionaryValueCallbacks))
-                {
-                    return false;
-                }
+                if (s_coreFoundationDictionaryValueCallbacks == IntPtr.Zero && !NativeLibrary.TryGetExport(s_coreFoundationLibraryHandle, "kCFTypeDictionaryValueCallBacks", out s_coreFoundationDictionaryValueCallbacks)) return false;
 
                 dictionaryKeyCallbacks = s_coreFoundationDictionaryKeyCallbacks;
                 dictionaryValueCallbacks = s_coreFoundationDictionaryValueCallbacks;

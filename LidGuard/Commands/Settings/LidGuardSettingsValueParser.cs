@@ -41,10 +41,7 @@ internal static class LidGuardSettingsValueParser
     {
         closedLidStopFollowUpWebhookUrl = defaultValue;
         message = string.Empty;
-        if (!CommandOptionReader.TryGetOption(options, out var closedLidStopFollowUpWebhookUrlText, "closed-lid-stop-follow-up-webhook-url"))
-        {
-            return true;
-        }
+        if (!CommandOptionReader.TryGetOption(options, out var closedLidStopFollowUpWebhookUrlText, "closed-lid-stop-follow-up-webhook-url")) return true;
 
         if (string.IsNullOrWhiteSpace(closedLidStopFollowUpWebhookUrlText) || closedLidStopFollowUpWebhookUrlText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
         {
@@ -137,10 +134,7 @@ internal static class LidGuardSettingsValueParser
         closedLidStopFollowUpDelaySeconds = defaultValue;
         message = string.Empty;
         if (!CommandOptionReader.TryGetOption(options, out var closedLidStopFollowUpDelaySecondsText, "closed-lid-stop-follow-up-delay-seconds")) return true;
-        if (int.TryParse(closedLidStopFollowUpDelaySecondsText.Trim(), out closedLidStopFollowUpDelaySeconds) && closedLidStopFollowUpDelaySeconds >= 0)
-        {
-            return true;
-        }
+        if (int.TryParse(closedLidStopFollowUpDelaySecondsText.Trim(), out closedLidStopFollowUpDelaySeconds) && closedLidStopFollowUpDelaySeconds >= 0) return true;
 
         message = LocalizationService.GetString("SettingsOptionClosedLidStopFollowUpDelaySecondsValidation");
         return false;
@@ -150,10 +144,7 @@ internal static class LidGuardSettingsValueParser
     {
         postStopSuspendSoundVolumeOverridePercent = defaultValue;
         message = string.Empty;
-        if (!CommandOptionReader.TryGetOption(options, out var postStopSuspendSoundVolumeOverridePercentText, "post-stop-suspend-sound-volume-override-percent"))
-        {
-            return true;
-        }
+        if (!CommandOptionReader.TryGetOption(options, out var postStopSuspendSoundVolumeOverridePercentText, "post-stop-suspend-sound-volume-override-percent")) return true;
 
         if (string.IsNullOrWhiteSpace(postStopSuspendSoundVolumeOverridePercentText) || postStopSuspendSoundVolumeOverridePercentText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
         {
@@ -197,10 +188,7 @@ internal static class LidGuardSettingsValueParser
     {
         suspendHistoryEntryCount = defaultValue;
         message = string.Empty;
-        if (!CommandOptionReader.TryGetOption(options, out var suspendHistoryEntryCountText, "suspend-history-count", "suspend-history-entry-count"))
-        {
-            return true;
-        }
+        if (!CommandOptionReader.TryGetOption(options, out var suspendHistoryEntryCountText, "suspend-history-count", "suspend-history-entry-count")) return true;
 
         if (string.IsNullOrWhiteSpace(suspendHistoryEntryCountText) || suspendHistoryEntryCountText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
         {
@@ -244,10 +232,7 @@ internal static class LidGuardSettingsValueParser
     {
         serverRuntimeCleanupDelayMinutes = defaultValue;
         message = string.Empty;
-        if (!CommandOptionReader.TryGetOption(options, out var serverRuntimeCleanupDelayMinutesText, "server-runtime-cleanup-delay-minutes"))
-        {
-            return true;
-        }
+        if (!CommandOptionReader.TryGetOption(options, out var serverRuntimeCleanupDelayMinutesText, "server-runtime-cleanup-delay-minutes")) return true;
 
         if (string.IsNullOrWhiteSpace(serverRuntimeCleanupDelayMinutesText) || serverRuntimeCleanupDelayMinutesText.Trim().Equals("off", StringComparison.OrdinalIgnoreCase))
         {

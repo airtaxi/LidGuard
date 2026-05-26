@@ -49,6 +49,5 @@ public sealed class SystemSuspendService : ISystemSuspendService
         return $"{result.Message} Native error: {result.NativeErrorCode}.";
     }
 
-    private static string CreateDeferredHibernateRestoreMessage()
-        => $"macOS hibernatemode restore was deferred through pending backup: {MacOSPendingPowerStateBackupStore.GetDefaultFilePath()}.";
+    private static string CreateDeferredHibernateRestoreMessage() => $"macOS hibernatemode restore was deferred through pending backup: {MacOSPendingPowerStateBackupStore.GetDefaultFilePath()}.";
 }

@@ -329,22 +329,16 @@ internal static class WslHookManagementCommand
         return false;
     }
 
-    private static string CreateAlreadyInstalledMessage(AgentProvider provider)
-        => $"{ManagedProviderSelection.GetProviderDisplayName(provider)} hook is already installed.";
+    private static string CreateAlreadyInstalledMessage(AgentProvider provider) => $"{ManagedProviderSelection.GetProviderDisplayName(provider)} hook is already installed.";
 
-    private static string CreateInstalledMessage(AgentProvider provider)
-        => $"{ManagedProviderSelection.GetProviderDisplayName(provider)} hook installed.";
+    private static string CreateInstalledMessage(AgentProvider provider) => $"{ManagedProviderSelection.GetProviderDisplayName(provider)} hook installed.";
 
-    private static string CreateNoManagedHookFoundMessage(AgentProvider provider)
-        => $"No LidGuard-managed {ManagedProviderSelection.GetProviderDisplayName(provider)} hook was found.";
+    private static string CreateNoManagedHookFoundMessage(AgentProvider provider) => $"No LidGuard-managed {ManagedProviderSelection.GetProviderDisplayName(provider)} hook was found.";
 
-    private static string CreateNotInstalledMessage(AgentProvider provider)
-        => $"{ManagedProviderSelection.GetProviderDisplayName(provider)} hook is not installed.";
+    private static string CreateNotInstalledMessage(AgentProvider provider) => $"{ManagedProviderSelection.GetProviderDisplayName(provider)} hook is not installed.";
 
-    private static string CreateRemovedMessage(AgentProvider provider)
-        => $"{ManagedProviderSelection.GetProviderDisplayName(provider)} hook removed.";
+    private static string CreateRemovedMessage(AgentProvider provider) => $"{ManagedProviderSelection.GetProviderDisplayName(provider)} hook removed.";
 
-    private static string CreateWrittenNeedsAttentionMessage(AgentProvider provider)
-        => $"{ManagedProviderSelection.GetProviderDisplayName(provider)} hook configuration was written but still needs attention.";
+    private static string CreateWrittenNeedsAttentionMessage(AgentProvider provider) => $"{ManagedProviderSelection.GetProviderDisplayName(provider)} hook configuration was written but still needs attention.";
 
 }

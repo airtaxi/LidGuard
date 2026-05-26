@@ -49,6 +49,5 @@ internal static partial class McpConfigurationJsonUtilities
         }
     }
 
-    public static bool TrySaveConfigurationRoot(string distroName, string configurationFilePath, JsonObject rootObject, out string message)
-        => WslCommandUtilities.TryWriteTextFile(distroName, configurationFilePath, rootObject.ToJsonString(new JsonSerializerOptions { WriteIndented = true }), out message);
+    public static bool TrySaveConfigurationRoot(string distroName, string configurationFilePath, JsonObject rootObject, out string message) => WslCommandUtilities.TryWriteTextFile(distroName, configurationFilePath, rootObject.ToJsonString(new JsonSerializerOptions { WriteIndented = true }), out message);
 }

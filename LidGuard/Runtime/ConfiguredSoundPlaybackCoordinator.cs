@@ -57,10 +57,9 @@ internal sealed class ConfiguredSoundPlaybackResult
 
     public static ConfiguredSoundPlaybackResult Success() => new();
 
-    public static ConfiguredSoundPlaybackResult FromPlaybackResult(LidGuardOperationResult playbackResult, LidGuardOperationResult[] volumeWarningResults = null)
-        => new()
-        {
-            PlaybackResult = playbackResult,
-            VolumeWarningResults = volumeWarningResults ?? []
-        };
+    public static ConfiguredSoundPlaybackResult FromPlaybackResult(LidGuardOperationResult playbackResult, LidGuardOperationResult[] volumeWarningResults = null) => new()
+    {
+        PlaybackResult = playbackResult,
+        VolumeWarningResults = volumeWarningResults ?? []
+    };
 }

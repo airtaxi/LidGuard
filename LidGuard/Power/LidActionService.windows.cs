@@ -18,14 +18,8 @@ public sealed class LidActionService : ILidActionService
         var nativeError = PInvoke.PowerGetActiveScheme(null, out var activePowerSchemePointer);
         if (!Succeeded(nativeError)) return LidGuardOperationResult<Guid>.Failure("Failed to read the active Windows power scheme.", (int)(uint)nativeError);
 
-        try
-        {
-            return LidGuardOperationResult<Guid>.Success(*activePowerSchemePointer);
-        }
-        finally
-        {
-            PInvoke.LocalFree((HLOCAL)(nint)activePowerSchemePointer);
-        }
+        try { return LidGuardOperationResult<Guid>.Success(*activePowerSchemePointer); }
+        finally { PInvoke.LocalFree((HLOCAL)(nint)activePowerSchemePointer); }
     }
 
     public LidGuardOperationResult<LidAction> ReadLidAction(Guid powerSchemeIdentifier, PowerLine powerLine)

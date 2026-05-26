@@ -55,10 +55,7 @@ internal sealed class SystemdInhibitor : IDisposable
             process = Process.Start(processStartInformation);
             if (process is null) return LidGuardOperationResult<SystemdInhibitor>.Failure("Failed to start systemd-inhibit.");
         }
-        catch (Exception exception) when (exception is InvalidOperationException or System.ComponentModel.Win32Exception)
-        {
-            return LidGuardOperationResult<SystemdInhibitor>.Failure($"Failed to start systemd-inhibit: {exception.Message}");
-        }
+        catch (Exception exception) when (exception is InvalidOperationException or System.ComponentModel.Win32Exception) { return LidGuardOperationResult<SystemdInhibitor>.Failure($"Failed to start systemd-inhibit: {exception.Message}"); }
 
         Thread.Sleep(s_startupProbeDelay);
         if (!HasExited(process)) return LidGuardOperationResult<SystemdInhibitor>.Success(new SystemdInhibitor(process));

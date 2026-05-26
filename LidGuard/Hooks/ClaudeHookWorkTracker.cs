@@ -109,10 +109,7 @@ internal static class ClaudeHookWorkTracker
             using var lockFileStream = OpenLockFile(lockFilePath);
             if (File.Exists(stateFilePath)) File.Delete(stateFilePath);
         }
-        catch (Exception exception) when (IsStateFileException(exception))
-        {
-            ClaudeHookEventLog.AppendMessage($"LidGuard Claude hook could not clear work state: {exception.Message}");
-        }
+        catch (Exception exception) when (IsStateFileException(exception)) { ClaudeHookEventLog.AppendMessage($"LidGuard Claude hook could not clear work state: {exception.Message}"); }
     }
 
     private static void SynchronizeBackgroundTasksFromTranscript(string transcriptPath, string sessionIdentifier)
@@ -163,10 +160,7 @@ internal static class ClaudeHookWorkTracker
             updateState(sessionWorkState);
             WriteSessionStateWithoutLock(stateFilePath, sessionIdentifier, sessionWorkState);
         }
-        catch (Exception exception) when (IsStateFileException(exception))
-        {
-            ClaudeHookEventLog.AppendMessage($"LidGuard Claude hook could not update work state: {exception.Message}");
-        }
+        catch (Exception exception) when (IsStateFileException(exception)) { ClaudeHookEventLog.AppendMessage($"LidGuard Claude hook could not update work state: {exception.Message}"); }
     }
 
     private static ClaudeHookSessionWorkState ReadSessionState(string sessionIdentifier)
@@ -368,8 +362,7 @@ internal static class ClaudeHookWorkTracker
         return content[valueStartIndex..closingTagIndex].Trim();
     }
 
-    private static bool IsTerminalTaskStatus(string taskStatus)
-        => taskStatus.Equals("completed", StringComparison.Ordinal) || taskStatus.Equals("failed", StringComparison.Ordinal) || taskStatus.Equals("stopped", StringComparison.Ordinal);
+    private static bool IsTerminalTaskStatus(string taskStatus) => taskStatus.Equals("completed", StringComparison.Ordinal) || taskStatus.Equals("failed", StringComparison.Ordinal) || taskStatus.Equals("stopped", StringComparison.Ordinal);
 
     private static string ExtractTaskIdentifier(JsonElement element)
     {
@@ -403,14 +396,11 @@ internal static class ClaudeHookWorkTracker
         return false;
     }
 
-    private static bool TryGetBooleanProperty(JsonElement element, string propertyName, out bool value)
-        => HookJsonPropertyReader.TryGetBooleanProperty(element, propertyName, out value);
+    private static bool TryGetBooleanProperty(JsonElement element, string propertyName, out bool value) => HookJsonPropertyReader.TryGetBooleanProperty(element, propertyName, out value);
 
-    private static bool TryGetStringProperty(JsonElement element, string propertyName, out string value)
-        => HookJsonPropertyReader.TryGetNonWhiteSpaceStringProperty(element, propertyName, out value);
+    private static bool TryGetStringProperty(JsonElement element, string propertyName, out string value) => HookJsonPropertyReader.TryGetNonWhiteSpaceStringProperty(element, propertyName, out value);
 
-    private static string GetStringProperty(JsonObject jsonObject, string propertyName)
-        => HookJsonPropertyReader.GetStringProperty(jsonObject, propertyName);
+    private static string GetStringProperty(JsonObject jsonObject, string propertyName) => HookJsonPropertyReader.GetStringProperty(jsonObject, propertyName);
 
     private static DateTimeOffset GetDateTimeOffsetProperty(JsonObject jsonObject, string propertyName)
     {
@@ -418,8 +408,7 @@ internal static class ClaudeHookWorkTracker
         return DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dateTimeOffset) ? dateTimeOffset : DateTimeOffset.MinValue;
     }
 
-    private static bool GetBooleanProperty(JsonObject jsonObject, string propertyName)
-        => HookJsonPropertyReader.GetBooleanProperty(jsonObject, propertyName);
+    private static bool GetBooleanProperty(JsonObject jsonObject, string propertyName) => HookJsonPropertyReader.GetBooleanProperty(jsonObject, propertyName);
 
     private static string GetStateFilePath(string sessionIdentifier)
     {
@@ -449,12 +438,7 @@ internal static class ClaudeHookWorkTracker
         return new FileStream(lockFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
     }
 
-    private static bool IsStateFileException(Exception exception) =>
-        exception is IOException
-            or UnauthorizedAccessException
-            or DirectoryNotFoundException
-            or PathTooLongException
-            or NotSupportedException;
+    private static bool IsStateFileException(Exception exception) => exception is IOException or UnauthorizedAccessException or DirectoryNotFoundException or PathTooLongException or NotSupportedException;
 
     private sealed class ClaudeHookSessionWorkState
     {
@@ -476,8 +460,7 @@ internal static class ClaudeHookWorkTracker
             ActiveSubagents.Add(subagentWorkItem);
         }
 
-        public void RemoveSubagent(string agentIdentifier)
-            => ActiveSubagents.RemoveAll(subagentWorkItem => subagentWorkItem.AgentIdentifier.Equals(agentIdentifier.Trim(), StringComparison.Ordinal));
+        public void RemoveSubagent(string agentIdentifier) => ActiveSubagents.RemoveAll(subagentWorkItem => subagentWorkItem.AgentIdentifier.Equals(agentIdentifier.Trim(), StringComparison.Ordinal));
 
         public void UpsertBackgroundTask(ClaudeHookBackgroundWorkItem backgroundWorkItem)
         {
@@ -691,10 +674,7 @@ internal static class ClaudeHookWorkTracker
                     .TakeLast(RecentTranscriptLineLimit)
                     .ToArray();
             }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException)
-            {
-                return [];
-            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException) { return[]; }
         }
     }
 
@@ -730,15 +710,9 @@ internal static class ClaudeHookWorkTracker
         public string CreateLogSummary()
         {
             var summaryParts = new List<string>();
-            if (ActiveSubagents.Length > 0)
-            {
-                summaryParts.Add("subagents=" + string.Join(",", ActiveSubagents.Select(subagentWorkItem => string.IsNullOrWhiteSpace(subagentWorkItem.AgentType) ? subagentWorkItem.AgentIdentifier : $"{subagentWorkItem.AgentType}:{subagentWorkItem.AgentIdentifier}")));
-            }
+            if (ActiveSubagents.Length > 0) summaryParts.Add("subagents=" + string.Join(",", ActiveSubagents.Select(subagentWorkItem => string.IsNullOrWhiteSpace(subagentWorkItem.AgentType) ? subagentWorkItem.AgentIdentifier : $"{subagentWorkItem.AgentType}:{subagentWorkItem.AgentIdentifier}")));
 
-            if (ActiveBackgroundTasks.Length > 0)
-            {
-                summaryParts.Add("backgroundTasks=" + string.Join(",", ActiveBackgroundTasks.Select(backgroundWorkItem => string.IsNullOrWhiteSpace(backgroundWorkItem.Summary) ? backgroundWorkItem.ToolUseIdentifier : backgroundWorkItem.Summary)));
-            }
+            if (ActiveBackgroundTasks.Length > 0) summaryParts.Add("backgroundTasks=" + string.Join(",", ActiveBackgroundTasks.Select(backgroundWorkItem => string.IsNullOrWhiteSpace(backgroundWorkItem.Summary) ? backgroundWorkItem.ToolUseIdentifier : backgroundWorkItem.Summary)));
 
             return string.Join(" ", summaryParts);
         }

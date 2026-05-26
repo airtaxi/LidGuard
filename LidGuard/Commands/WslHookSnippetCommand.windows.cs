@@ -7,10 +7,7 @@ namespace LidGuard.Commands;
 
 internal static class WslHookSnippetCommand
 {
-    public static bool IsCommandName(string commandName)
-        => commandName is LidGuardPipeCommands.WslCodexHooks
-            or LidGuardPipeCommands.WslClaudeHooks
-            or LidGuardPipeCommands.WslCopilotHooks;
+    public static bool IsCommandName(string commandName) => commandName is LidGuardPipeCommands.WslCodexHooks or LidGuardPipeCommands.WslClaudeHooks or LidGuardPipeCommands.WslCopilotHooks;
 
     public static int WriteHookSnippet(string commandName, string[] commandLineArguments)
     {

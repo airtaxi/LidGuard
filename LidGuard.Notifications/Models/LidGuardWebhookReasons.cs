@@ -8,12 +8,9 @@ internal static class LidGuardWebhookReasons
     public const string EmergencyHibernation = nameof(EmergencyHibernation);
     public const string SessionEnded = nameof(SessionEnded);
 
-    public static bool IsRecognizedStopFollowUpReason(string reason)
-        => string.Equals(reason, AwaitingReply, StringComparison.Ordinal);
+    public static bool IsRecognizedStopFollowUpReason(string reason) => string.Equals(reason, AwaitingReply, StringComparison.Ordinal);
 
-    public static bool IsRecognizedPreSuspendReason(string reason)
-        => string.Equals(reason, Completed, StringComparison.Ordinal) || string.Equals(reason, SoftLocked, StringComparison.Ordinal) || string.Equals(reason, EmergencyHibernation, StringComparison.Ordinal);
+    public static bool IsRecognizedPreSuspendReason(string reason) => string.Equals(reason, Completed, StringComparison.Ordinal) || string.Equals(reason, SoftLocked, StringComparison.Ordinal) || string.Equals(reason, EmergencyHibernation, StringComparison.Ordinal);
 
-    public static bool IsRecognizedPostSessionEndReason(string reason)
-        => string.Equals(reason, SessionEnded, StringComparison.Ordinal);
+    public static bool IsRecognizedPostSessionEndReason(string reason) => string.Equals(reason, SessionEnded, StringComparison.Ordinal);
 }

@@ -54,10 +54,7 @@ internal static class LiveStatusCommand
             return await RunInteractiveAsync(cancellationTokenSource);
         }
         catch (OperationCanceledException) { return 0; }
-        finally
-        {
-            Console.CancelKeyPress -= cancelHandler;
-        }
+        finally { Console.CancelKeyPress -= cancelHandler; }
     }
 
     private static async Task<int> RunInteractiveAsync(CancellationTokenSource cancellationTokenSource)
@@ -101,10 +98,7 @@ internal static class LiveStatusCommand
 
     private static async Task<LiveStatusSnapshot> ReadFirstSnapshotAsync(CancellationToken cancellationToken)
     {
-        await foreach (var snapshot in new LidGuardRuntimeClient().SubscribeLiveStatusAsync(cancellationToken))
-        {
-            return snapshot;
-        }
+        await foreach (var snapshot in new LidGuardRuntimeClient().SubscribeLiveStatusAsync(cancellationToken)) return snapshot;
 
         return LiveStatusSnapshot.Failure("The LidGuard runtime live-status stream ended before sending a snapshot.");
     }
@@ -384,8 +378,7 @@ internal static class LiveStatusCommand
         return DisplayValue(suspendReasonCode);
     }
 
-    private static string DisplaySuspendWebhookReason(SuspendWebhookReason reason)
-        => LocalizationService.GetString($"DisplaySuspendWebhookReason{reason}");
+    private static string DisplaySuspendWebhookReason(SuspendWebhookReason reason) => LocalizationService.GetString($"DisplaySuspendWebhookReason{reason}");
 
     private static string DisplayLidSwitchState(LidGuardPipeResponse response, bool enableStyles)
     {
@@ -400,8 +393,7 @@ internal static class LiveStatusCommand
         };
     }
 
-    private static string DisplayVisibleDisplayMonitorCount(LidGuardPipeResponse response)
-        => response.RuntimeUnavailable ? LocalizationService.GetString("TextDisplayNone") : response.VisibleDisplayMonitorCount.ToString(CultureInfo.InvariantCulture);
+    private static string DisplayVisibleDisplayMonitorCount(LidGuardPipeResponse response) => response.RuntimeUnavailable ? LocalizationService.GetString("TextDisplayNone") : response.VisibleDisplayMonitorCount.ToString(CultureInfo.InvariantCulture);
 
     private static string DescribeSoftLockStatus(LidGuardSessionStatus session, bool enableStyles)
     {
@@ -541,16 +533,7 @@ internal static class LiveStatusCommand
         return IsWideCodePoint(codePoint) ? 2 : 1;
     }
 
-    private static bool IsWideCodePoint(int codePoint)
-        => codePoint is >= 0x1100 and <= 0x115F
-            or >= 0x2329 and <= 0x232A
-            or >= 0x2E80 and <= 0xA4CF
-            or >= 0xAC00 and <= 0xD7A3
-            or >= 0xF900 and <= 0xFAFF
-            or >= 0xFE10 and <= 0xFE19
-            or >= 0xFE30 and <= 0xFE6F
-            or >= 0xFF00 and <= 0xFF60
-            or >= 0xFFE0 and <= 0xFFE6;
+    private static bool IsWideCodePoint(int codePoint) => codePoint is >= 0x1100 and <= 0x115F or >= 0x2329 and <= 0x232A or >= 0x2E80 and <= 0xA4CF or >= 0xAC00 and <= 0xD7A3 or >= 0xF900 and <= 0xFAFF or >= 0xFE10 and <= 0xFE19 or >= 0xFE30 and <= 0xFE6F or >= 0xFF00 and <= 0xFF60 or >= 0xFFE0 and <= 0xFFE6;
 
     private static bool TryReadTerminalStyleSequence(string value, ref int characterIndex, out string terminalStyleSequence)
     {
@@ -730,26 +713,19 @@ internal static class LiveStatusCommand
         return !string.IsNullOrWhiteSpace(terminalName) && terminalName.Equals("dumb", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string CreateSucceededText(bool succeeded, bool enableStyles)
-        => succeeded ? StyleSuccess(LocalizationService.DisplayBoolean(true), enableStyles) : StyleFailure(LocalizationService.DisplayBoolean(false), enableStyles);
+    private static string CreateSucceededText(bool succeeded, bool enableStyles) => succeeded ? StyleSuccess(LocalizationService.DisplayBoolean(true), enableStyles) : StyleFailure(LocalizationService.DisplayBoolean(false), enableStyles);
 
-    private static string StyleSuccess(string value, bool enableStyles)
-        => StyleText(value, enableStyles, StyleBoldSequence, StyleGreenSequence);
+    private static string StyleSuccess(string value, bool enableStyles) => StyleText(value, enableStyles, StyleBoldSequence, StyleGreenSequence);
 
-    private static string StyleFailure(string value, bool enableStyles)
-        => StyleText(value, enableStyles, StyleBoldSequence, StyleRedSequence);
+    private static string StyleFailure(string value, bool enableStyles) => StyleText(value, enableStyles, StyleBoldSequence, StyleRedSequence);
 
-    private static string StyleWarning(string value, bool enableStyles)
-        => StyleText(value, enableStyles, StyleBoldSequence, StyleYellowSequence);
+    private static string StyleWarning(string value, bool enableStyles) => StyleText(value, enableStyles, StyleBoldSequence, StyleYellowSequence);
 
-    private static string StyleStrong(string value, bool enableStyles)
-        => StyleText(value, enableStyles, StyleBoldSequence);
+    private static string StyleStrong(string value, bool enableStyles) => StyleText(value, enableStyles, StyleBoldSequence);
 
-    private static string StyleMuted(string value, bool enableStyles)
-        => StyleText(value, enableStyles, StyleDimSequence);
+    private static string StyleMuted(string value, bool enableStyles) => StyleText(value, enableStyles, StyleDimSequence);
 
-    private static string StyleCyan(string value, bool enableStyles)
-        => StyleText(value, enableStyles, StyleCyanSequence);
+    private static string StyleCyan(string value, bool enableStyles) => StyleText(value, enableStyles, StyleCyanSequence);
 
     private static string StyleText(string value, bool enableStyles, params string[] styleSequences)
     {
@@ -758,14 +734,11 @@ internal static class LiveStatusCommand
         return string.Concat(styleSequences) + value + StyleResetSequence;
     }
 
-    private static string DisplayValue(string value)
-        => string.IsNullOrWhiteSpace(value) ? LocalizationService.GetString("TextDisplayNone") : value.Trim();
+    private static string DisplayValue(string value) => string.IsNullOrWhiteSpace(value) ? LocalizationService.GetString("TextDisplayNone") : value.Trim();
 
-    private static string Text(string resourceName)
-        => LocalizationService.GetString(resourceName);
+    private static string Text(string resourceName) => LocalizationService.GetString(resourceName);
 
-    private static string Format(string resourceName, params object[] arguments)
-        => string.Format(CultureInfo.CurrentCulture, Text(resourceName), arguments);
+    private static string Format(string resourceName, params object[] arguments) => string.Format(CultureInfo.CurrentCulture, Text(resourceName), arguments);
 
     private sealed record LiveStatusFlowEventLine(DateTimeOffset Timestamp, string Line);
 

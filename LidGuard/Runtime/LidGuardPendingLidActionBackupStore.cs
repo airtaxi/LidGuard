@@ -80,10 +80,7 @@ internal static class LidGuardPendingLidActionBackupStore
             message = $"Failed to write LidGuard pending lid action backup to {pendingBackupFilePath}: {exception.Message}";
             return false;
         }
-        finally
-        {
-            TryDeleteTemporaryFile(temporaryFilePath);
-        }
+        finally { TryDeleteTemporaryFile(temporaryFilePath); }
     }
 
     public static bool TryDelete(out string message)

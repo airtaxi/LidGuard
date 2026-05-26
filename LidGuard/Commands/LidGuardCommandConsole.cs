@@ -70,10 +70,7 @@ internal static class LidGuardCommandConsole
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsClosedLidStopFollowUpSound", LocalizationService.DisplayOptionalValue(PostStopSuspendSoundConfiguration.GetDisplayValue(normalizedSettings.ClosedLidStopFollowUpSound))));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsClosedLidStopFollowUpSoundVolumeOverridePercent", LocalizationService.DisplayOptionalValue(PostStopSuspendSoundConfiguration.GetVolumeOverrideDisplayValue(normalizedSettings.ClosedLidStopFollowUpSoundVolumeOverridePercent))));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsClosedLidStopFollowUpFeatureState", DisplayClosedLidStopFollowUpFeatureState(normalizedSettings)));
-        foreach (var configurationIssueMessage in CreateClosedLidStopFollowUpConfigurationIssueMessages(normalizedSettings))
-        {
-            Console.WriteLine(LocalizationService.GetFormattedString("SettingsClosedLidStopFollowUpConfigurationIssue", configurationIssueMessage));
-        }
+        foreach (var configurationIssueMessage in CreateClosedLidStopFollowUpConfigurationIssueMessages(normalizedSettings)) Console.WriteLine(LocalizationService.GetFormattedString("SettingsClosedLidStopFollowUpConfigurationIssue", configurationIssueMessage));
 
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsRepeatClosedLidStopFollowUp", LocalizationService.DisplayBoolean(normalizedSettings.RepeatClosedLidStopFollowUp)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsClosedLidPermissionRequestDecision", LocalizationService.DisplayClosedLidPermissionRequestDecision(normalizedSettings.ClosedLidPermissionRequestDecision)));

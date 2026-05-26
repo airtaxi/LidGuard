@@ -24,14 +24,9 @@ internal static class WebhookTextPreview
         return $"{prefix}{TrimmingSuffix}";
     }
 
-    private static string NormalizeLineBreaks(string text)
-        => text
-            .Replace("\r\n", "\n", StringComparison.Ordinal)
-            .Replace('\r', '\n')
-            .Replace('\n', ' ');
+    private static string NormalizeLineBreaks(string text) => text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n').Replace('\n', ' ');
 
-    private static bool CutsThroughWord(string text, int maximumPrefixCharacterCount)
-        => maximumPrefixCharacterCount < text.Length && maximumPrefixCharacterCount > 0 && !char.IsWhiteSpace(text[maximumPrefixCharacterCount]) && !char.IsWhiteSpace(text[maximumPrefixCharacterCount - 1]);
+    private static bool CutsThroughWord(string text, int maximumPrefixCharacterCount) => maximumPrefixCharacterCount < text.Length && maximumPrefixCharacterCount > 0 && !char.IsWhiteSpace(text[maximumPrefixCharacterCount]) && !char.IsWhiteSpace(text[maximumPrefixCharacterCount - 1]);
 
     private static int FindLastWordBoundary(string text)
     {

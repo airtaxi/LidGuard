@@ -4,8 +4,7 @@ namespace LidGuard.Settings;
 
 internal static class SessionTimeoutConfiguration
 {
-    public static string GetDisplayValue(int? sessionTimeoutMinutes)
-        => sessionTimeoutMinutes is null ? "off" : $"{sessionTimeoutMinutes.Value} minutes";
+    public static string GetDisplayValue(int? sessionTimeoutMinutes) => sessionTimeoutMinutes is null ? "off" : $"{sessionTimeoutMinutes.Value} minutes";
 
     public static bool TryValidateMinutes(int? sessionTimeoutMinutes, out string message)
     {

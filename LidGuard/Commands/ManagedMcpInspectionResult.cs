@@ -15,11 +15,8 @@ internal readonly record struct ManagedMcpInspectionResult(AgentProvider Provide
         if (!configurationFileExists) return LocalizationService.GetFormattedString("ManagementConfigurationFileDoesNotExist", configurationFilePath);
         if (!string.IsNullOrWhiteSpace(parseMessage)) return parseMessage;
         if (!hasServerEntry) return LocalizationService.GetFormattedString("ManagementNoMcpServerNamedFound", McpConfigurationTomlUtilities.ManagedMcpServerName);
-        if (!matchesCurrentLidGuardExecutable) return LocalizationService.GetString("ManagementMcpServerDoesNotPointAtCurrentExecutable")
-            .Replace("{0}", McpConfigurationTomlUtilities.ManagedMcpServerName, StringComparison.Ordinal);
-        if (!containsExpectedServerCommand) return LocalizationService.GetString("ManagementMcpServerDoesNotPointAtManagedCommand")
-            .Replace("{0}", McpConfigurationTomlUtilities.ManagedMcpServerName, StringComparison.Ordinal)
-            .Replace("{1}", LidGuardMcpServerCommand.CommandName, StringComparison.Ordinal);
+        if (!matchesCurrentLidGuardExecutable) return LocalizationService.GetString("ManagementMcpServerDoesNotPointAtCurrentExecutable").Replace("{0}", McpConfigurationTomlUtilities.ManagedMcpServerName, StringComparison.Ordinal);
+        if (!containsExpectedServerCommand) return LocalizationService.GetString("ManagementMcpServerDoesNotPointAtManagedCommand").Replace("{0}", McpConfigurationTomlUtilities.ManagedMcpServerName, StringComparison.Ordinal).Replace("{1}", LidGuardMcpServerCommand.CommandName, StringComparison.Ordinal);
         return LocalizationService.GetString("ManagementLidGuardMcpServerRegistered");
     }
 

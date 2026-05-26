@@ -25,8 +25,7 @@ public sealed class GitHubCopilotHookInstaller : HookInstallerBase
 
     protected override string DefaultHookCommandName => "copilot-hook";
 
-    public static string GetDefaultGitHubCopilotHooksConfigurationFilePath()
-        => Path.Combine(GetDefaultGitHubCopilotConfigurationDirectoryPath(), CopilotHooksDirectoryName, ManagedConfigurationFileName);
+    public static string GetDefaultGitHubCopilotHooksConfigurationFilePath() => Path.Combine(GetDefaultGitHubCopilotConfigurationDirectoryPath(), CopilotHooksDirectoryName, ManagedConfigurationFileName);
 
     public static string GetDefaultGitHubCopilotConfigurationDirectoryPath() => GetCopilotConfigurationDirectoryPath();
 
@@ -44,11 +43,9 @@ public sealed class GitHubCopilotHookInstaller : HookInstallerBase
         return GitHubCopilotHookConfigurationJsonDocument.TryInstallManagedHooks(originalContent, hookCommandsByEvent, out updatedContent, out message);
     }
 
-    protected override bool TryCreateRemovedContent(string originalContent, out string updatedContent, out bool changed, out string message)
-        => GitHubCopilotHookConfigurationJsonDocument.TryRemoveManagedHooks(originalContent, out updatedContent, out changed, out message);
+    protected override bool TryCreateRemovedContent(string originalContent, out string updatedContent, out bool changed, out string message) => GitHubCopilotHookConfigurationJsonDocument.TryRemoveManagedHooks(originalContent, out updatedContent, out changed, out message);
 
-    protected override HookInstallationInspection AddProviderSpecificInspectionDetails(HookInstallationRequest request, HookInstallationInspection inspection)
-        => inspection.WithConflictingAgentStopHookSources(FindConflictingAgentStopHookSources(request));
+    protected override HookInstallationInspection AddProviderSpecificInspectionDetails(HookInstallationRequest request, HookInstallationInspection inspection) => inspection.WithConflictingAgentStopHookSources(FindConflictingAgentStopHookSources(request));
 
     private static void AddConflictingAgentStopHooksFromDirectory(string directoryPath, string excludedConfigurationFilePath, ISet<string> conflictingAgentStopHookSources)
     {
@@ -150,8 +147,7 @@ public sealed class GitHubCopilotHookInstaller : HookInstallerBase
         return Path.GetFullPath(copilotConfigurationDirectoryPath);
     }
 
-    private static string GetStringProperty(JsonObject jsonObject, string propertyName)
-        => HookJsonPropertyReader.GetStringProperty(jsonObject, propertyName);
+    private static string GetStringProperty(JsonObject jsonObject, string propertyName) => HookJsonPropertyReader.GetStringProperty(jsonObject, propertyName);
 
     private static bool IsLidGuardManagedAgentStopHook(JsonObject hookDefinitionObject)
     {

@@ -32,20 +32,14 @@ internal static class LidGuardSettingsCommandLineFactory
         if (!CommandOptionReader.TryParseBooleanOption(options, basePowerRequest.PreventDisplaySleep, out var preventDisplaySleep, out message, "prevent-display-sleep", "display-required")) return false;
         if (!CommandOptionReader.TryParseBooleanOption(options, baseSettings.ChangeLidAction, out var changeLidAction, out message, "change-lid-action", "lid-action")) return false;
         if (!CommandOptionReader.TryParseBooleanOption(options, baseSettings.WatchParentProcess, out var watchParentProcess, out message, "watch-parent-process", "watch-parent")) return false;
-        if (!LidGuardSettingsValueParser.TryParseSessionTimeoutMinutesOption(options, baseSettings.SessionTimeoutMinutes, out var sessionTimeoutMinutes, out message))
-            return false;
-        if (!LidGuardSettingsValueParser.TryParseServerRuntimeCleanupDelayMinutesOption(options, baseSettings.ServerRuntimeCleanupDelayMinutes, out var serverRuntimeCleanupDelayMinutes, out message))
-            return false;
-        if (!CommandOptionReader.TryParseBooleanOption(options, baseSettings.EmergencyHibernationOnHighTemperature, out var emergencyHibernationOnHighTemperature, out message, "emergency-hibernation-on-high-temperature"))
-            return false;
-        if (!LidGuardSettingsValueParser.TryParseEmergencyHibernationTemperatureModeOption(options, baseSettings.EmergencyHibernationTemperatureMode, out var emergencyHibernationTemperatureMode, out message))
-            return false;
-        if (!LidGuardSettingsValueParser.TryParseEmergencyHibernationTemperatureCelsiusOption(options, baseSettings.EmergencyHibernationTemperatureCelsius, out var emergencyHibernationTemperatureCelsius, out message))
-            return false;
+        if (!LidGuardSettingsValueParser.TryParseSessionTimeoutMinutesOption(options, baseSettings.SessionTimeoutMinutes, out var sessionTimeoutMinutes, out message)) return false;
+        if (!LidGuardSettingsValueParser.TryParseServerRuntimeCleanupDelayMinutesOption(options, baseSettings.ServerRuntimeCleanupDelayMinutes, out var serverRuntimeCleanupDelayMinutes, out message)) return false;
+        if (!CommandOptionReader.TryParseBooleanOption(options, baseSettings.EmergencyHibernationOnHighTemperature, out var emergencyHibernationOnHighTemperature, out message, "emergency-hibernation-on-high-temperature")) return false;
+        if (!LidGuardSettingsValueParser.TryParseEmergencyHibernationTemperatureModeOption(options, baseSettings.EmergencyHibernationTemperatureMode, out var emergencyHibernationTemperatureMode, out message)) return false;
+        if (!LidGuardSettingsValueParser.TryParseEmergencyHibernationTemperatureCelsiusOption(options, baseSettings.EmergencyHibernationTemperatureCelsius, out var emergencyHibernationTemperatureCelsius, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParseSuspendModeOption(options, baseSettings.SuspendMode, out var suspendMode, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParsePostStopSuspendDelaySecondsOption(options, baseSettings.PostStopSuspendDelaySeconds, out var postStopSuspendDelaySeconds, out message)) return false;
-        if (!LidGuardSettingsValueParser.TryParseClosedLidStopFollowUpDelaySecondsOption(options, baseSettings.ClosedLidStopFollowUpDelaySeconds, out var closedLidStopFollowUpDelaySeconds, out message))
-            return false;
+        if (!LidGuardSettingsValueParser.TryParseClosedLidStopFollowUpDelaySecondsOption(options, baseSettings.ClosedLidStopFollowUpDelaySeconds, out var closedLidStopFollowUpDelaySeconds, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParsePostStopSuspendSoundVolumeOverridePercentOption(options, baseSettings.PostStopSuspendSoundVolumeOverridePercent, out var postStopSuspendSoundVolumeOverridePercent, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParseClosedLidStopFollowUpSoundVolumeOverridePercentOption(options, baseSettings.ClosedLidStopFollowUpSoundVolumeOverridePercent, out var closedLidStopFollowUpSoundVolumeOverridePercent, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParseSuspendHistoryEntryCountOption(options, baseSettings.SuspendHistoryEntryCount, out var suspendHistoryEntryCount, out message)) return false;

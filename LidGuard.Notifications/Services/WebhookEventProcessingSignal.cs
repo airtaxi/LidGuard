@@ -8,6 +8,5 @@ internal sealed class WebhookEventProcessingSignal
 
     public void Signal() => _channel.Writer.TryWrite(true);
 
-    public async ValueTask WaitAsync(CancellationToken cancellationToken)
-        => await _channel.Reader.ReadAsync(cancellationToken);
+    public async ValueTask WaitAsync(CancellationToken cancellationToken) => await _channel.Reader.ReadAsync(cancellationToken);
 }

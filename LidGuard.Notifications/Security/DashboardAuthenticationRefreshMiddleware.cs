@@ -6,10 +6,7 @@ internal sealed class DashboardAuthenticationRefreshMiddleware(RequestDelegate n
 {
     public async Task InvokeAsync(HttpContext httpContext, DashboardAuthenticationService authenticationService)
     {
-        if (ShouldRefresh(httpContext) && (httpContext.User.Identity?.IsAuthenticated == true || httpContext.Request.Cookies.ContainsKey(DashboardAuthenticationConstants.RefreshCookieName)))
-        {
-            await authenticationService.TryRefreshAsync(httpContext, httpContext.RequestAborted);
-        }
+        if (ShouldRefresh(httpContext) && (httpContext.User.Identity?.IsAuthenticated == true || httpContext.Request.Cookies.ContainsKey(DashboardAuthenticationConstants.RefreshCookieName))) await authenticationService.TryRefreshAsync(httpContext, httpContext.RequestAborted);
 
         await next(httpContext);
     }

@@ -63,17 +63,8 @@ internal static class SuspendWebhookSender
 
             return LidGuardOperationResult.Failure($"The {displayName} webhook returned {(int)response.StatusCode} ({response.ReasonPhrase}).");
         }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-        {
-            return LidGuardOperationResult.Failure($"The {displayName} webhook request timed out.");
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception exception) when (exception is HttpRequestException or InvalidOperationException)
-        {
-            return LidGuardOperationResult.Failure($"Failed to send the {displayName} webhook: {exception.Message}");
-        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { return LidGuardOperationResult.Failure($"The {displayName} webhook request timed out."); }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception exception) when (exception is HttpRequestException or InvalidOperationException) { return LidGuardOperationResult.Failure($"Failed to send the {displayName} webhook: {exception.Message}"); }
     }
 }

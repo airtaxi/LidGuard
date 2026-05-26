@@ -13,8 +13,7 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
 {
     public bool IsSupported => OperatingSystem.IsWindowsVersionAtLeast(6, 1);
 
-    public string UnsupportedMessage
-        => LocalizationService.GetString("PlatformUnsupportedWindows");
+    public string UnsupportedMessage => LocalizationService.GetString("PlatformUnsupportedWindows");
 
     public LidGuardOperationResult<LidGuardRuntimeServiceSet> CreateRuntimeServiceSet()
     {
@@ -45,6 +44,5 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
         return LidGuardOperationResult<ISystemAudioVolumeController>.Success(new SystemAudioVolumeController());
     }
 
-    [SupportedOSPlatform("windows6.1")]
-    private static ILidStateSource CreateLidStateSource() => new LidStateSource();
+    [SupportedOSPlatform("windows6.1")] private static ILidStateSource CreateLidStateSource() => new LidStateSource();
 }

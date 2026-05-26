@@ -14,24 +14,22 @@ internal sealed class MacOSCommandResult
 
     public bool Succeeded => Started && ExitCode == 0;
 
-    public static MacOSCommandResult Success(int exitCode, string standardOutput, string standardError)
-        => new()
-        {
-            Started = true,
-            ExitCode = exitCode,
-            StandardOutput = standardOutput ?? string.Empty,
-            StandardError = standardError ?? string.Empty
-        };
+    public static MacOSCommandResult Success(int exitCode, string standardOutput, string standardError) => new()
+    {
+        Started = true,
+        ExitCode = exitCode,
+        StandardOutput = standardOutput ?? string.Empty,
+        StandardError = standardError ?? string.Empty
+    };
 
-    public static MacOSCommandResult Failure(string message, int exitCode = -1, string standardOutput = "", string standardError = "")
-        => new()
-        {
-            Started = false,
-            ExitCode = exitCode,
-            StandardOutput = standardOutput ?? string.Empty,
-            StandardError = standardError ?? string.Empty,
-            Message = message ?? string.Empty
-        };
+    public static MacOSCommandResult Failure(string message, int exitCode = -1, string standardOutput = "", string standardError = "") => new()
+    {
+        Started = false,
+        ExitCode = exitCode,
+        StandardOutput = standardOutput ?? string.Empty,
+        StandardError = standardError ?? string.Empty,
+        Message = message ?? string.Empty
+    };
 
     public string CreateFailureMessage(string commandDisplayName)
     {

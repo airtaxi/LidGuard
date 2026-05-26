@@ -72,17 +72,10 @@ internal static class SuspendHistoryCommand
             Console.WriteLine(LocalizationService.GetString("SuspendHistoryTemperature").Replace("{0}", historyEntry.ObservedTemperatureCelsius.Value.ToString(), StringComparison.Ordinal).Replace("{1}", temperatureMode, StringComparison.Ordinal).Replace("{2}", threshold, StringComparison.Ordinal));
         }
 
-        if (!string.IsNullOrWhiteSpace(historyEntry.WorkingDirectory))
-        {
-            Console.WriteLine(LocalizationService.GetString("SuspendHistoryWorkingDirectory").Replace("{0}", historyEntry.WorkingDirectory, StringComparison.Ordinal));
-        }
+        if (!string.IsNullOrWhiteSpace(historyEntry.WorkingDirectory)) Console.WriteLine(LocalizationService.GetString("SuspendHistoryWorkingDirectory").Replace("{0}", historyEntry.WorkingDirectory, StringComparison.Ordinal));
 
-        if (!string.IsNullOrWhiteSpace(historyEntry.Message))
-        {
-            Console.WriteLine(LocalizationService.GetString("SuspendHistoryMessage").Replace("{0}", historyEntry.Message, StringComparison.Ordinal));
-        }
+        if (!string.IsNullOrWhiteSpace(historyEntry.Message)) Console.WriteLine(LocalizationService.GetString("SuspendHistoryMessage").Replace("{0}", historyEntry.Message, StringComparison.Ordinal));
     }
 
-    private static string DisplaySuspendWebhookReason(SuspendWebhookReason reason)
-        => LocalizationService.GetString($"DisplaySuspendWebhookReason{reason}");
+    private static string DisplaySuspendWebhookReason(SuspendWebhookReason reason) => LocalizationService.GetString($"DisplaySuspendWebhookReason{reason}");
 }

@@ -49,10 +49,7 @@ public sealed class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPlayer
     {
         string fullWaveFilePath;
         try { fullWaveFilePath = Path.GetFullPath(configuredValue); }
-        catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
-        {
-            return LidGuardOperationResult<string>.Failure($"The configured sound path is invalid: {exception.Message}");
-        }
+        catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException) { return LidGuardOperationResult<string>.Failure($"The configured sound path is invalid: {exception.Message}"); }
 
         if (!string.Equals(Path.GetExtension(fullWaveFilePath), ".wav", StringComparison.OrdinalIgnoreCase))
         {

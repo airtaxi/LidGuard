@@ -84,15 +84,9 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
 
         if (settingsPatch.HasClosedLidStopFollowUpSoundVolumeOverridePercent && !PostStopSuspendSoundConfiguration.TryValidateClosedLidStopFollowUpVolumeOverridePercent(settingsPatch.ClosedLidStopFollowUpSoundVolumeOverridePercent, out var closedLidStopFollowUpVolumeOverrideValidationMessage)) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(closedLidStopFollowUpVolumeOverrideValidationMessage);
 
-        if (settingsPatch.HasSuspendHistoryEntryCount && !SuspendHistoryConfiguration.TryValidateEntryCount(settingsPatch.SuspendHistoryEntryCount, out var suspendHistoryValidationMessage))
-        {
-            return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(suspendHistoryValidationMessage);
-        }
+        if (settingsPatch.HasSuspendHistoryEntryCount && !SuspendHistoryConfiguration.TryValidateEntryCount(settingsPatch.SuspendHistoryEntryCount, out var suspendHistoryValidationMessage)) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(suspendHistoryValidationMessage);
 
-        if (settingsPatch.HasSessionTimeoutMinutes && !SessionTimeoutConfiguration.TryValidateMinutes(settingsPatch.SessionTimeoutMinutes, out var sessionTimeoutValidationMessage))
-        {
-            return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(sessionTimeoutValidationMessage);
-        }
+        if (settingsPatch.HasSessionTimeoutMinutes && !SessionTimeoutConfiguration.TryValidateMinutes(settingsPatch.SessionTimeoutMinutes, out var sessionTimeoutValidationMessage)) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(sessionTimeoutValidationMessage);
 
         if (settingsPatch.HasServerRuntimeCleanupDelayMinutes && !ServerRuntimeCleanupConfiguration.TryValidateDelayMinutes(settingsPatch.ServerRuntimeCleanupDelayMinutes, out var serverRuntimeCleanupValidationMessage))
         {
@@ -103,37 +97,25 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
 
         var previousStoredSettings = LidGuardSettings.Normalize(currentSettings);
         var updatedStoredSettings = ApplyPatch(previousStoredSettings, settingsPatch);
-        if (!PostStopSuspendSoundConfiguration.TryNormalize(updatedStoredSettings, postStopSuspendSoundPlayer, out updatedStoredSettings, out message))
-        {
-            return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
-        }
+        if (!PostStopSuspendSoundConfiguration.TryNormalize(updatedStoredSettings, postStopSuspendSoundPlayer, out updatedStoredSettings, out message)) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
 
         if (settingsPatch.PreSuspendWebhookUrl is not null)
         {
-            if (!PreSuspendWebhookConfiguration.TryNormalizeConfiguredValue(settingsPatch.PreSuspendWebhookUrl, out var normalizedPreSuspendWebhookUrl, out message))
-            {
-                return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
-            }
+            if (!PreSuspendWebhookConfiguration.TryNormalizeConfiguredValue(settingsPatch.PreSuspendWebhookUrl, out var normalizedPreSuspendWebhookUrl, out message)) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
 
             updatedStoredSettings = PreSuspendWebhookConfiguration.WithPreSuspendWebhookUrl(updatedStoredSettings, normalizedPreSuspendWebhookUrl);
         }
 
         if (settingsPatch.PostSessionEndWebhookUrl is not null)
         {
-            if (!PostSessionEndWebhookConfiguration.TryNormalizeConfiguredValue(settingsPatch.PostSessionEndWebhookUrl, out var normalizedPostSessionEndWebhookUrl, out message))
-            {
-                return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
-            }
+            if (!PostSessionEndWebhookConfiguration.TryNormalizeConfiguredValue(settingsPatch.PostSessionEndWebhookUrl, out var normalizedPostSessionEndWebhookUrl, out message)) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
 
             updatedStoredSettings = PostSessionEndWebhookConfiguration.WithPostSessionEndWebhookUrl(updatedStoredSettings, normalizedPostSessionEndWebhookUrl);
         }
 
         if (settingsPatch.ClosedLidStopFollowUpWebhookUrl is not null)
         {
-            if (!ClosedLidStopFollowUpWebhookConfiguration.TryNormalizeConfiguredValue(settingsPatch.ClosedLidStopFollowUpWebhookUrl, out var normalizedClosedLidStopFollowUpWebhookUrl, out message))
-            {
-                return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
-            }
+            if (!ClosedLidStopFollowUpWebhookConfiguration.TryNormalizeConfiguredValue(settingsPatch.ClosedLidStopFollowUpWebhookUrl, out var normalizedClosedLidStopFollowUpWebhookUrl, out message)) return LidGuardOperationResult<LidGuardSettingsUpdateOutcome>.Failure(message);
 
             updatedStoredSettings = ClosedLidStopFollowUpWebhookConfiguration.WithClosedLidStopFollowUpWebhookUrl(updatedStoredSettings, normalizedClosedLidStopFollowUpWebhookUrl);
         }
@@ -253,8 +235,7 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
         };
     }
 
-    private static string NormalizePowerRequestReason(string powerRequestReason)
-        => string.IsNullOrWhiteSpace(powerRequestReason) ? PowerRequestOptions.Default.Reason : powerRequestReason;
+    private static string NormalizePowerRequestReason(string powerRequestReason) => string.IsNullOrWhiteSpace(powerRequestReason) ? PowerRequestOptions.Default.Reason : powerRequestReason;
 
     private async Task<LidGuardOperationResult<LidGuardSessionCommandOutcome>> SendSessionCommandAsync(string commandName, AgentProvider provider, string providerName, string sessionIdentifier, string workingDirectory, int watchedProcessIdentifier, string sessionStateReason, bool isProviderSessionEnd, string sessionEndReason, bool includeStoredSettings, bool startRuntimeIfUnavailable, bool allowRuntimeUnavailableAsSuccess, CancellationToken cancellationToken)
     {

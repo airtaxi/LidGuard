@@ -27,6 +27,5 @@ public static class ClaudeHookEventNames
     public const string TaskToolName = "Task";
     public const string UserPromptSubmit = "UserPromptSubmit";
 
-    public static bool IsStopTrigger(string hookEventName) =>
-        hookEventName.Equals(Stop, StringComparison.Ordinal) || hookEventName.Equals(StopFailure, StringComparison.Ordinal) || hookEventName.Equals(SessionEnd, StringComparison.Ordinal);
+    public static bool IsStopTrigger(string hookEventName) => hookEventName.Equals(Stop, StringComparison.Ordinal) || hookEventName.Equals(StopFailure, StringComparison.Ordinal) || hookEventName.Equals(SessionEnd, StringComparison.Ordinal);
 }

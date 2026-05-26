@@ -124,14 +124,11 @@ internal sealed class AuthenticationRefreshTokenStore(SqliteConnectionFactory co
         return reader.GetInt64(0);
     }
 
-    private static AuthenticationRefreshTokenIssue CreateIssue(DateTimeOffset now, TimeSpan lifetime)
-        => new(CreateToken(), now.Add(lifetime));
+    private static AuthenticationRefreshTokenIssue CreateIssue(DateTimeOffset now, TimeSpan lifetime) => new(CreateToken(), now.Add(lifetime));
 
-    private static string CreateToken()
-        => Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+    private static string CreateToken() => Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
 
-    private static string HashToken(string token)
-        => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
+    private static string HashToken(string token) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
     private static void AddIssueParameters(SqliteCommand command, AuthenticationRefreshTokenIssue issue, DateTimeOffset createdAtUtc)
     {
@@ -141,6 +138,5 @@ internal sealed class AuthenticationRefreshTokenStore(SqliteConnectionFactory co
         command.Parameters.AddWithValue("$lastUsedAtUtc", ToTimestamp(createdAtUtc));
     }
 
-    private static string ToTimestamp(DateTimeOffset timestamp)
-        => timestamp.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
+    private static string ToTimestamp(DateTimeOffset timestamp) => timestamp.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
 }

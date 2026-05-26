@@ -10,8 +10,7 @@ internal static class ClosedLidStopFollowUpConfiguration
     public const int MinimumReplyWaitSeconds = 20;
     public const int MinimumPostStopSuspendDelaySeconds = 10;
 
-    public static string GetDisplayValue(string closedLidStopFollowUpWebhookUrl)
-        => WebhookUrlConfiguration.GetDisplayValue(closedLidStopFollowUpWebhookUrl);
+    public static string GetDisplayValue(string closedLidStopFollowUpWebhookUrl) => WebhookUrlConfiguration.GetDisplayValue(closedLidStopFollowUpWebhookUrl);
 
     public static string GetFeatureState(LidGuardSettings settings)
     {
@@ -35,10 +34,7 @@ internal static class ClosedLidStopFollowUpConfiguration
         var normalizedSettings = LidGuardSettings.Normalize(settings);
         if (normalizedSettings.ClosedLidStopFollowUpDelaySeconds == 0) return false;
         if (GetConfigurationIssues(normalizedSettings).Length > 0) return false;
-        if (!TryNormalizeConfiguredValue(normalizedSettings.ClosedLidStopFollowUpWebhookUrl, out normalizedClosedLidStopFollowUpWebhookUrl, out _))
-        {
-            return false;
-        }
+        if (!TryNormalizeConfiguredValue(normalizedSettings.ClosedLidStopFollowUpWebhookUrl, out normalizedClosedLidStopFollowUpWebhookUrl, out _)) return false;
 
         return !string.IsNullOrWhiteSpace(normalizedClosedLidStopFollowUpWebhookUrl);
     }
@@ -49,20 +45,11 @@ internal static class ClosedLidStopFollowUpConfiguration
         if (string.IsNullOrWhiteSpace(normalizedSettings.ClosedLidStopFollowUpWebhookUrl)) return [];
 
         var issues = new List<ClosedLidStopFollowUpConfigurationIssueDetail>();
-        if (!TryNormalizeConfiguredValue(normalizedSettings.ClosedLidStopFollowUpWebhookUrl, out _, out var webhookUrlMessage))
-        {
-            issues.Add(new ClosedLidStopFollowUpConfigurationIssueDetail(ClosedLidStopFollowUpConfigurationIssue.InvalidWebhookUrl, webhookUrlMessage));
-        }
+        if (!TryNormalizeConfiguredValue(normalizedSettings.ClosedLidStopFollowUpWebhookUrl, out _, out var webhookUrlMessage)) issues.Add(new ClosedLidStopFollowUpConfigurationIssueDetail(ClosedLidStopFollowUpConfigurationIssue.InvalidWebhookUrl, webhookUrlMessage));
 
-        if (normalizedSettings.ClosedLidStopFollowUpDelaySeconds is > 0 and < MinimumReplyWaitSeconds)
-        {
-            issues.Add(new ClosedLidStopFollowUpConfigurationIssueDetail(ClosedLidStopFollowUpConfigurationIssue.ReplyWaitTooShort, string.Empty));
-        }
+        if (normalizedSettings.ClosedLidStopFollowUpDelaySeconds is > 0 and < MinimumReplyWaitSeconds) issues.Add(new ClosedLidStopFollowUpConfigurationIssueDetail(ClosedLidStopFollowUpConfigurationIssue.ReplyWaitTooShort, string.Empty));
 
-        if (normalizedSettings.ClosedLidStopFollowUpDelaySeconds > 0 && normalizedSettings.PostStopSuspendDelaySeconds < MinimumPostStopSuspendDelaySeconds)
-        {
-            issues.Add(new ClosedLidStopFollowUpConfigurationIssueDetail(ClosedLidStopFollowUpConfigurationIssue.PostStopDelayTooShort, string.Empty));
-        }
+        if (normalizedSettings.ClosedLidStopFollowUpDelaySeconds > 0 && normalizedSettings.PostStopSuspendDelaySeconds < MinimumPostStopSuspendDelaySeconds) issues.Add(new ClosedLidStopFollowUpConfigurationIssueDetail(ClosedLidStopFollowUpConfigurationIssue.PostStopDelayTooShort, string.Empty));
 
         return [.. issues];
     }

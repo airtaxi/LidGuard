@@ -210,8 +210,7 @@ internal static class LidGuardSettingsInteractivePromptReader
         }
 
         if (string.IsNullOrWhiteSpace(valueText)) return true;
-        if (int.TryParse(valueText.Trim(), out value) && value >= LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius && value <= LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius)
-            return true;
+        if (int.TryParse(valueText.Trim(), out value) && value >= LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius && value <= LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius) return true;
 
         message = LocalizationService.GetFormattedString("SettingsInteractiveRangeValidation", settingName, LidGuardSettings.MinimumEmergencyHibernationTemperatureCelsius, LidGuardSettings.MaximumEmergencyHibernationTemperatureCelsius);
         return false;

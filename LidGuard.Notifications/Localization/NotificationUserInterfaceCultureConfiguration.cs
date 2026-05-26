@@ -6,11 +6,9 @@ internal static class NotificationUserInterfaceCultureConfiguration
 {
     public const string AutomaticCultureName = "auto";
 
-    public static bool IsAutomatic(string userInterfaceCulture)
-        => NormalizeStoredValue(userInterfaceCulture).Equals(AutomaticCultureName, StringComparison.OrdinalIgnoreCase);
+    public static bool IsAutomatic(string userInterfaceCulture) => NormalizeStoredValue(userInterfaceCulture).Equals(AutomaticCultureName, StringComparison.OrdinalIgnoreCase);
 
-    public static string NormalizeStoredValue(string userInterfaceCulture)
-        => string.IsNullOrWhiteSpace(userInterfaceCulture) ? AutomaticCultureName : userInterfaceCulture.Trim();
+    public static string NormalizeStoredValue(string userInterfaceCulture) => string.IsNullOrWhiteSpace(userInterfaceCulture) ? AutomaticCultureName : userInterfaceCulture.Trim();
 
     public static bool TryNormalizeConfiguredValue(string userInterfaceCulture, out string normalizedUserInterfaceCulture, out string message)
     {

@@ -117,8 +117,7 @@ public static class CodexHookConfigTomlDocument
         return RemoveManagedBlockMarkerLines(updatedContent);
     }
 
-    public static bool TryRefreshManagedHookStatusMessages(string content, out string updatedContent, out bool changed, out string message)
-        => TryRefreshManagedHookConfiguration(content, string.Empty, false, out updatedContent, out changed, out message);
+    public static bool TryRefreshManagedHookStatusMessages(string content, out string updatedContent, out bool changed, out string message) => TryRefreshManagedHookConfiguration(content, string.Empty, false, out updatedContent, out changed, out message);
 
     public static bool TryRefreshManagedHookConfiguration(string content, string hookCommand, bool refreshCommand, out string updatedContent, out bool changed, out string message)
     {
@@ -221,22 +220,20 @@ public static class CodexHookConfigTomlDocument
 
     private static bool ContainsHookBlock(string content, string hookEventName) => content.Contains($"[[hooks.{hookEventName}]]", StringComparison.Ordinal);
 
-    private static string[] CreateHookBlockLines(string hookEventName, string tomlCommandLiteral, string statusMessage)
-        =>
-        [
-            $"[[hooks.{hookEventName}]]",
-            .. CreateHookCommandTableLines(hookEventName, tomlCommandLiteral, statusMessage)
-        ];
+    private static string[] CreateHookBlockLines(string hookEventName, string tomlCommandLiteral, string statusMessage) =>
+    [
+        $"[[hooks.{hookEventName}]]",
+        .. CreateHookCommandTableLines(hookEventName, tomlCommandLiteral, statusMessage)
+    ];
 
-    private static string[] CreateHookCommandTableLines(string hookEventName, string tomlCommandLiteral, string statusMessage)
-        =>
-        [
-            $"[[hooks.{hookEventName}.hooks]]",
-            "type = \"command\"",
-            $"command = {tomlCommandLiteral}",
-            $"timeout = {GetExpectedTimeoutSeconds()}",
-            $"statusMessage = {ToTomlStringLiteral(statusMessage)}"
-        ];
+    private static string[] CreateHookCommandTableLines(string hookEventName, string tomlCommandLiteral, string statusMessage) =>
+    [
+        $"[[hooks.{hookEventName}.hooks]]",
+        "type = \"command\"",
+        $"command = {tomlCommandLiteral}",
+        $"timeout = {GetExpectedTimeoutSeconds()}",
+        $"statusMessage = {ToTomlStringLiteral(statusMessage)}"
+    ];
 
     private static bool HasAnyLidGuardCodexHookCommand(string content)
     {
@@ -295,10 +292,7 @@ public static class CodexHookConfigTomlDocument
 
             for (var commandLineIndex = lineIndex + 1; commandLineIndex < commandLineEndIndex; commandLineIndex++)
             {
-                if (TryReadIntegerValue(lines[commandLineIndex], "timeout", out var timeoutSeconds) && timeoutSeconds >= expectedTimeoutSeconds)
-                {
-                    return true;
-                }
+                if (TryReadIntegerValue(lines[commandLineIndex], "timeout", out var timeoutSeconds) && timeoutSeconds >= expectedTimeoutSeconds) return true;
             }
         }
 
@@ -407,8 +401,7 @@ public static class CodexHookConfigTomlDocument
         return false;
     }
 
-    private static bool IsHookCommandTableHeader(string line, string hookEventName) =>
-        line.Trim().Equals($"[[hooks.{hookEventName}.hooks]]", StringComparison.Ordinal);
+    private static bool IsHookCommandTableHeader(string line, string hookEventName) => line.Trim().Equals($"[[hooks.{hookEventName}.hooks]]", StringComparison.Ordinal);
 
     private static bool TryGetHookEventNameFromCommandTableHeader(string line, out string hookEventName)
     {

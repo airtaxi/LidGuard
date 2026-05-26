@@ -169,10 +169,7 @@ internal static class LinuxPermissionCommand
             Console.Error.WriteLine(Format("LinuxPermissionPreparePolkitRuleFailed", exception.Message));
             return 1;
         }
-        finally
-        {
-            TryDeleteTemporaryFile(temporaryRuleFilePath);
-        }
+        finally { TryDeleteTemporaryFile(temporaryRuleFilePath); }
     }
 
     private static int RemoveRule()
@@ -247,11 +244,9 @@ internal static class LinuxPermissionCommand
         return false;
     }
 
-    private static string DescribeExecutableAvailability(string commandName)
-        => LinuxCommandPathResolver.TryFindExecutable(commandName, out var executablePath) ? Format("PermissionExecutableAvailable", executablePath) : Get("PermissionExecutableMissing");
+    private static string DescribeExecutableAvailability(string commandName) => LinuxCommandPathResolver.TryFindExecutable(commandName, out var executablePath) ? Format("PermissionExecutableAvailable", executablePath) : Get("PermissionExecutableMissing");
 
-    private static string DescribeCapability(string capabilityName)
-        => TryQueryLogindCapability(capabilityName, out var capabilityValue, out var message) ? capabilityValue : Format("PermissionResultUnavailableParenthesized", message);
+    private static string DescribeCapability(string capabilityName) => TryQueryLogindCapability(capabilityName, out var capabilityValue, out var message) ? capabilityValue : Format("PermissionResultUnavailableParenthesized", message);
 
     private static bool TryQueryLogindCapability(string capabilityName, out string capabilityValue, out string message)
     {
@@ -358,8 +353,7 @@ polkit.addRule(function(action, subject) {
 """;
     }
 
-    private static string EscapeJavaScriptString(string value)
-        => value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal);
+    private static string EscapeJavaScriptString(string value) => value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal);
 
     private static string GetTargetUserName()
     {
@@ -387,17 +381,13 @@ polkit.addRule(function(action, subject) {
         return 1;
     }
 
-    private static void WriteField(string labelResourceName, string value)
-        => Console.WriteLine(Format("ManagementField", Get(labelResourceName), value));
+    private static void WriteField(string labelResourceName, string value) => Console.WriteLine(Format("ManagementField", Get(labelResourceName), value));
 
-    private static void WriteCheckLine(string labelResourceName, string value)
-        => Console.WriteLine(Format("ManagementField", Get(labelResourceName), value));
+    private static void WriteCheckLine(string labelResourceName, string value) => Console.WriteLine(Format("ManagementField", Get(labelResourceName), value));
 
-    private static string Get(string resourceName)
-        => LocalizationService.GetString(resourceName);
+    private static string Get(string resourceName) => LocalizationService.GetString(resourceName);
 
-    private static string Format(string resourceName, params object[] arguments)
-        => string.Format(System.Globalization.CultureInfo.CurrentCulture, Get(resourceName), arguments);
+    private static string Format(string resourceName, params object[] arguments) => string.Format(System.Globalization.CultureInfo.CurrentCulture, Get(resourceName), arguments);
 
     private static void TryDeleteTemporaryFile(string temporaryRuleFilePath)
     {

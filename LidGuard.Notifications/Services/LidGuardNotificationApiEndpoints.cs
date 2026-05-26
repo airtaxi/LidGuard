@@ -165,14 +165,8 @@ internal static class LidGuardNotificationApiEndpoints
 
     private static async Task<TValue?> ReadJsonAsync<TValue>(HttpRequest request, JsonTypeInfo<TValue> jsonTypeInfo, CancellationToken cancellationToken)
     {
-        try
-        {
-            return await JsonSerializer.DeserializeAsync(request.Body, jsonTypeInfo, cancellationToken);
-        }
-        catch (JsonException)
-        {
-            return default;
-        }
+        try { return await JsonSerializer.DeserializeAsync(request.Body, jsonTypeInfo, cancellationToken); }
+        catch (JsonException) { return default; }
     }
 
     private static bool TryValidateSubscription(PushSubscriptionChangeRequest? request, out string endpoint, out string p256dhKey, out string authenticationSecret, out string errorMessage)

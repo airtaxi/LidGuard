@@ -4,8 +4,7 @@ namespace LidGuard.Settings;
 
 internal static class ServerRuntimeCleanupConfiguration
 {
-    public static string GetDisplayValue(int? serverRuntimeCleanupDelayMinutes)
-        => serverRuntimeCleanupDelayMinutes is null ? "off" : $"{serverRuntimeCleanupDelayMinutes.Value} minutes";
+    public static string GetDisplayValue(int? serverRuntimeCleanupDelayMinutes) => serverRuntimeCleanupDelayMinutes is null ? "off" : $"{serverRuntimeCleanupDelayMinutes.Value} minutes";
 
     public static bool TryValidateDelayMinutes(int? serverRuntimeCleanupDelayMinutes, out string message)
     {

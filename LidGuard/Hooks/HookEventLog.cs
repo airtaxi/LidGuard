@@ -27,13 +27,11 @@ internal sealed class HookEventLog(string logFileName)
         return AppendLine(HookEventLogWriter.CreateLogLine("runtime-result", hookEventName, hookInput.SessionIdentifier, hookInput.WorkingDirectory, details));
     }
 
-    public void AppendMessage(string message)
-        => AppendLine(HookEventLogWriter.CreateLogLine("message", string.Empty, string.Empty, string.Empty, HookEventLogWriter.Sanitize(message)));
+    public void AppendMessage(string message) => AppendLine(HookEventLogWriter.CreateLogLine("message", string.Empty, string.Empty, string.Empty, HookEventLogWriter.Sanitize(message)));
 
     public IReadOnlyList<string> ReadRecentLines(int maximumLineCount) => HookEventLogWriter.ReadRecentLines(GetDefaultLogFilePath(), maximumLineCount);
 
-    public static string CreateDetails(params (string FieldName, string FieldValue)[] fields)
-        => string.Join(" ", fields.Select(field => $"{field.FieldName}={HookEventLogWriter.Sanitize(field.FieldValue)}"));
+    public static string CreateDetails(params (string FieldName, string FieldValue)[] fields) => string.Join(" ", fields.Select(field => $"{field.FieldName}={HookEventLogWriter.Sanitize(field.FieldValue)}"));
 
     private TimeSpan AppendLine(string line) => HookEventLogWriter.AppendLine(GetDefaultLogFilePath(), line);
 }

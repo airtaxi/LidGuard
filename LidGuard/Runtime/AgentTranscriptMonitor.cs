@@ -18,13 +18,7 @@ internal sealed class AgentTranscriptMonitor(AgentTranscriptMonitoringProfile mo
         lock (_gate)
         {
             RemoveSessionInsideGate(sessionKey);
-            if (string.IsNullOrWhiteSpace(resolvedTranscriptPath))
-            {
-                return new AgentTranscriptMonitoringRegistrationResult
-                {
-                    Message = resolutionMessage
-                };
-            }
+            if (string.IsNullOrWhiteSpace(resolvedTranscriptPath)) return new AgentTranscriptMonitoringRegistrationResult { Message = resolutionMessage };
 
             var transcriptDirectoryPath = Path.GetDirectoryName(resolvedTranscriptPath);
             var transcriptFileName = Path.GetFileName(resolvedTranscriptPath);
@@ -37,14 +31,7 @@ internal sealed class AgentTranscriptMonitor(AgentTranscriptMonitoringProfile mo
                 };
             }
 
-            if (!Directory.Exists(transcriptDirectoryPath))
-            {
-                return new AgentTranscriptMonitoringRegistrationResult
-                {
-                    ResolvedTranscriptPath = resolvedTranscriptPath,
-                    Message = $"Skipped {monitoringProfile.DisplayName} transcript monitoring because transcript directory '{transcriptDirectoryPath}' does not exist."
-                };
-            }
+            if (!Directory.Exists(transcriptDirectoryPath)) return new AgentTranscriptMonitoringRegistrationResult { ResolvedTranscriptPath = resolvedTranscriptPath, Message = $"Skipped {monitoringProfile.DisplayName} transcript monitoring because transcript directory '{transcriptDirectoryPath}' does not exist."};
 
             var fileSystemWatcher = new FileSystemWatcher(transcriptDirectoryPath, transcriptFileName)
             {
@@ -177,35 +164,20 @@ internal sealed class AgentTranscriptMonitor(AgentTranscriptMonitoringProfile mo
 
     private static async Task NotifyTranscriptActivityDetectedAsync(AgentTranscriptActivityDetectedContext transcriptActivityDetectedContext, Func<AgentTranscriptActivityDetectedContext, Task> transcriptActivityDetectedAsync)
     {
-        try
-        {
-            await transcriptActivityDetectedAsync(transcriptActivityDetectedContext);
-        }
-        catch
-        {
-        }
+        try { await transcriptActivityDetectedAsync(transcriptActivityDetectedContext); }
+        catch { }
     }
 
     private static async Task NotifyTranscriptStopDetectedAsync(AgentTranscriptStopDetectedContext transcriptStopDetectedContext, Func<AgentTranscriptStopDetectedContext, Task> transcriptStopDetectedAsync)
     {
-        try
-        {
-            await transcriptStopDetectedAsync(transcriptStopDetectedContext);
-        }
-        catch
-        {
-        }
+        try { await transcriptStopDetectedAsync(transcriptStopDetectedContext); }
+        catch { }
     }
 
     private static async Task NotifyTranscriptSoftLockDetectedAsync(AgentTranscriptSoftLockDetectedContext transcriptSoftLockDetectedContext, Func<AgentTranscriptSoftLockDetectedContext, Task> transcriptSoftLockDetectedAsync)
     {
-        try
-        {
-            await transcriptSoftLockDetectedAsync(transcriptSoftLockDetectedContext);
-        }
-        catch
-        {
-        }
+        try { await transcriptSoftLockDetectedAsync(transcriptSoftLockDetectedContext); }
+        catch { }
     }
 
     private void RemoveSessionInsideGate(LidGuardSessionKey sessionKey)
@@ -278,10 +250,7 @@ internal sealed class AgentTranscriptMonitor(AgentTranscriptMonitoringProfile mo
             transcriptFileInfo.Refresh();
             return transcriptFileInfo.Exists ? new AgentTranscriptObservation(transcriptFileInfo.Length, transcriptFileInfo.LastWriteTimeUtc) : new AgentTranscriptObservation(0, DateTime.MinValue);
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException)
-        {
-            return new AgentTranscriptObservation(0, DateTime.MinValue);
-        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException) { return new AgentTranscriptObservation(0, DateTime.MinValue); }
     }
 
     private sealed class MonitoredAgentTranscriptSessionState
@@ -409,10 +378,7 @@ internal static class AgentTranscriptSoftLockDetectors
                 continue;
             }
 
-            if (payloadType.Equals("function_call_output", StringComparison.Ordinal) && !string.IsNullOrWhiteSpace(functionCallIdentifier))
-            {
-                pendingFunctionCallIdentifiers.Remove(functionCallIdentifier);
-            }
+            if (payloadType.Equals("function_call_output", StringComparison.Ordinal) && !string.IsNullOrWhiteSpace(functionCallIdentifier)) pendingFunctionCallIdentifiers.Remove(functionCallIdentifier);
         }
 
         if (pendingFunctionCallIdentifiers.Count == 0) return false;
@@ -480,10 +446,7 @@ internal static class AgentTranscriptSoftLockDetectors
                 .TakeLast(lineLimit)
                 .ToArray();
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException)
-        {
-            return [];
-        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException) { return[]; }
     }
 
     private static bool TryGetStringProperty(JsonElement element, string propertyName, out string value)
@@ -529,10 +492,7 @@ internal static class AgentTranscriptStopDetectors
             if (!TryGetStringProperty(rootElement, "type", out var recordType)) return false;
             if (!recordType.Equals("user", StringComparison.Ordinal)) return false;
 
-            if (rootElement.TryGetProperty("message", out var messageElement) && messageElement.TryGetProperty("content", out var messageContentElement) && ContainsClaudeInterruptMarker(messageContentElement))
-            {
-                return true;
-            }
+            if (rootElement.TryGetProperty("message", out var messageElement) && messageElement.TryGetProperty("content", out var messageContentElement) && ContainsClaudeInterruptMarker(messageContentElement)) return true;
 
             if (rootElement.TryGetProperty("content", out var contentElement) && ContainsClaudeInterruptMarker(contentElement)) return true;
             if (TryGetStringProperty(rootElement, "text", out var text)) return IsClaudeInterruptMarker(text);
@@ -588,10 +548,7 @@ internal static class AgentTranscriptStopDetectors
             while (reader.ReadLine() is { } transcriptLine) lastTranscriptLine = transcriptLine;
             return lastTranscriptLine;
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException)
-        {
-            return string.Empty;
-        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException) { return string.Empty; }
     }
 
     private static bool TryGetStringProperty(JsonElement element, string propertyName, out string value)

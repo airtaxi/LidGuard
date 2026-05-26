@@ -5,20 +5,17 @@ namespace LidGuard.Commands.Help;
 
 internal static class WslHookStatusHelpContent
 {
-    internal static LidGuardHelpCommandEntry Create(LidGuardHelpDocumentContext context)
-        => WslHelpContentFactory.CreateHookManagementEntry(context, LidGuardPipeCommands.WslHookStatus, "wsl-hook-status", LocalizationService.GetString("Help_WslHookStatus_Description"));
+    internal static LidGuardHelpCommandEntry Create(LidGuardHelpDocumentContext context) => WslHelpContentFactory.CreateHookManagementEntry(context, LidGuardPipeCommands.WslHookStatus, "wsl-hook-status", LocalizationService.GetString("Help_WslHookStatus_Description"));
 }
 
 internal static class WslHookInstallHelpContent
 {
-    internal static LidGuardHelpCommandEntry Create(LidGuardHelpDocumentContext context)
-        => WslHelpContentFactory.CreateHookManagementEntry(context, LidGuardPipeCommands.WslHookInstall, "wsl-hook-install", LocalizationService.GetString("Help_WslHookInstall_Description"));
+    internal static LidGuardHelpCommandEntry Create(LidGuardHelpDocumentContext context) => WslHelpContentFactory.CreateHookManagementEntry(context, LidGuardPipeCommands.WslHookInstall, "wsl-hook-install", LocalizationService.GetString("Help_WslHookInstall_Description"));
 }
 
 internal static class WslHookRemoveHelpContent
 {
-    internal static LidGuardHelpCommandEntry Create(LidGuardHelpDocumentContext context)
-        => WslHelpContentFactory.CreateHookManagementEntry(context, LidGuardPipeCommands.WslHookRemove, "wsl-hook-remove", LocalizationService.GetString("Help_WslHookRemove_Description"));
+    internal static LidGuardHelpCommandEntry Create(LidGuardHelpDocumentContext context) => WslHelpContentFactory.CreateHookManagementEntry(context, LidGuardPipeCommands.WslHookRemove, "wsl-hook-remove", LocalizationService.GetString("Help_WslHookRemove_Description"));
 }
 
 internal static class WslCodexHooksHelpContent
@@ -41,20 +38,17 @@ internal static class WslCopilotHooksHelpContent
 
 internal static class WslMcpStatusHelpContent
 {
-    internal static LidGuardHelpCommandEntry Create(LidGuardHelpDocumentContext context)
-        => WslHelpContentFactory.CreateMcpManagementEntry(context, LidGuardPipeCommands.WslMcpStatus, "wsl-mcp-status", LocalizationService.GetString("Help_WslMcpStatus_Description"));
+    internal static LidGuardHelpCommandEntry Create(LidGuardHelpDocumentContext context) => WslHelpContentFactory.CreateMcpManagementEntry(context, LidGuardPipeCommands.WslMcpStatus, "wsl-mcp-status", LocalizationService.GetString("Help_WslMcpStatus_Description"));
 }
 
 internal static class WslMcpInstallHelpContent
 {
-    internal static LidGuardHelpCommandEntry Create(LidGuardHelpDocumentContext context)
-        => WslHelpContentFactory.CreateMcpManagementEntry(context, LidGuardPipeCommands.WslMcpInstall, "wsl-mcp-install", LocalizationService.GetString("Help_WslMcpInstall_Description"));
+    internal static LidGuardHelpCommandEntry Create(LidGuardHelpDocumentContext context) => WslHelpContentFactory.CreateMcpManagementEntry(context, LidGuardPipeCommands.WslMcpInstall, "wsl-mcp-install", LocalizationService.GetString("Help_WslMcpInstall_Description"));
 }
 
 internal static class WslMcpRemoveHelpContent
 {
-    internal static LidGuardHelpCommandEntry Create(LidGuardHelpDocumentContext context)
-        => WslHelpContentFactory.CreateMcpManagementEntry(context, LidGuardPipeCommands.WslMcpRemove, "wsl-mcp-remove", LocalizationService.GetString("Help_WslMcpRemove_Description"));
+    internal static LidGuardHelpCommandEntry Create(LidGuardHelpDocumentContext context) => WslHelpContentFactory.CreateMcpManagementEntry(context, LidGuardPipeCommands.WslMcpRemove, "wsl-mcp-remove", LocalizationService.GetString("Help_WslMcpRemove_Description"));
 }
 
 internal static class WslProviderMcpStatusHelpContent
@@ -105,15 +99,13 @@ internal static class WslHelpContentFactory
         return LidGuardHelpCommandEntryFactory.CreateSingleCommandEntry(commandName, [], LidGuardHelpSectionTitles.McpIntegration, $"{context.CommandDisplayName} {synopsisCommandName} {argumentSynopsis} [--distro <name>]", description, options, CreateWslNotes());
     }
 
-    private static LidGuardHelpOption CreateDistroOption()
-        => new("--distro <name>", LocalizationService.GetString("Help_Wsl_DistroOption"));
+    private static LidGuardHelpOption CreateDistroOption() => new("--distro <name>", LocalizationService.GetString("Help_Wsl_DistroOption"));
 
-    private static IReadOnlyList<string> CreateWslNotes()
-        =>
-        [
-            LocalizationService.GetString("Help_Wsl_WindowsOnlyNote"),
-            LocalizationService.GetString("Help_Wsl_CommandNote")
-        ];
+    private static IReadOnlyList<string> CreateWslNotes() =>
+    [
+        LocalizationService.GetString("Help_Wsl_WindowsOnlyNote"),
+        LocalizationService.GetString("Help_Wsl_CommandNote")
+    ];
 
     private static IReadOnlyList<string> CreateProviderMcpAliases(string synopsisCommandName)
     {

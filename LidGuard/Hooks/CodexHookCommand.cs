@@ -80,8 +80,7 @@ internal static class CodexHookCommand
             return hookInput.HookEventName;
         }
 
-        protected override bool CanReturnStopContinuation(string hookEventName, CodexHookInput hookInput)
-            => hookEventName.Equals(CodexHookEventNames.Stop, StringComparison.Ordinal);
+        protected override bool CanReturnStopContinuation(string hookEventName, CodexHookInput hookInput) => hookEventName.Equals(CodexHookEventNames.Stop, StringComparison.Ordinal);
 
         protected override string GetLastAssistantMessage(CodexHookInput hookInput) => hookInput.LastAssistantMessage;
 
@@ -94,10 +93,7 @@ internal static class CodexHookCommand
                 var hookInput = JsonSerializer.Deserialize(hookInputJson, LidGuardJsonSerializerContext.Default.CodexHookInput);
                 return hookInput is null ? HookCommandInputParseResult<CodexHookInput>.Failure("LidGuard Codex hook could not parse input.") : HookCommandInputParseResult<CodexHookInput>.Success(hookInput);
             }
-            catch (JsonException exception)
-            {
-                return HookCommandInputParseResult<CodexHookInput>.Failure($"LidGuard Codex hook could not parse input: {exception.Message}");
-            }
+            catch (JsonException exception) { return HookCommandInputParseResult<CodexHookInput>.Failure($"LidGuard Codex hook could not parse input: {exception.Message}"); }
         }
 
         private Task<int> WriteClosedLidPermissionRequestDecisionAsync(CodexHookInput hookInput)

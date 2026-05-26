@@ -90,10 +90,7 @@ internal static class ClaudeHookCommand
                 return await ReportActivityAsync(hookInput);
             }
 
-            if (hookEventName.Equals(ClaudeHookEventNames.PostToolUseFailure, StringComparison.Ordinal))
-            {
-                return hookInput.IsInterrupt ? await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookEventName, hookInput, timing: timing) : await ReportActivityAsync(hookInput);
-            }
+            if (hookEventName.Equals(ClaudeHookEventNames.PostToolUseFailure, StringComparison.Ordinal)) return hookInput.IsInterrupt ? await SendRuntimeRequestAsync(LidGuardPipeCommands.Stop, hookEventName, hookInput, timing: timing) : await ReportActivityAsync(hookInput);
 
             if (hookEventName.Equals(ClaudeHookEventNames.UserPromptSubmit, StringComparison.Ordinal))
             {
@@ -136,8 +133,7 @@ internal static class ClaudeHookCommand
             return $"{hookInput.HookEventName}:{hookInput.Reason}";
         }
 
-        protected override bool CanReturnStopContinuation(string hookEventName, ClaudeHookInput hookInput)
-            => hookEventName.Equals(ClaudeHookEventNames.Stop, StringComparison.Ordinal);
+        protected override bool CanReturnStopContinuation(string hookEventName, ClaudeHookInput hookInput) => hookEventName.Equals(ClaudeHookEventNames.Stop, StringComparison.Ordinal);
 
         protected override string GetLastAssistantMessage(ClaudeHookInput hookInput) => hookInput.LastAssistantMessage;
 
@@ -150,10 +146,7 @@ internal static class ClaudeHookCommand
                 var hookInput = JsonSerializer.Deserialize(hookInputJson, LidGuardJsonSerializerContext.Default.ClaudeHookInput);
                 return hookInput is null ? HookCommandInputParseResult<ClaudeHookInput>.Failure("LidGuard Claude hook could not parse input.") : HookCommandInputParseResult<ClaudeHookInput>.Success(hookInput);
             }
-            catch (JsonException exception)
-            {
-                return HookCommandInputParseResult<ClaudeHookInput>.Failure($"LidGuard Claude hook could not parse input: {exception.Message}");
-            }
+            catch (JsonException exception) { return HookCommandInputParseResult<ClaudeHookInput>.Failure($"LidGuard Claude hook could not parse input: {exception.Message}"); }
         }
 
         private Task<int> WriteClosedLidPermissionRequestDecisionAsync(ClaudeHookInput hookInput)
@@ -180,8 +173,7 @@ internal static class ClaudeHookCommand
             return SendSessionStateRequestAsync(LidGuardPipeCommands.MarkSessionActive, hookInput.HookEventName, hookInput, DescribeActivityReason(hookInput.HookEventName, hookInput.ToolName));
         }
 
-        private Task<int> ReportActivityAsync(ClaudeHookInput hookInput, string activityDetail)
-            => SendSessionStateRequestAsync(LidGuardPipeCommands.MarkSessionActive, hookInput.HookEventName, hookInput, DescribeActivityReason(hookInput.HookEventName, activityDetail));
+        private Task<int> ReportActivityAsync(ClaudeHookInput hookInput, string activityDetail) => SendSessionStateRequestAsync(LidGuardPipeCommands.MarkSessionActive, hookInput.HookEventName, hookInput, DescribeActivityReason(hookInput.HookEventName, activityDetail));
 
         private static bool IsProviderSessionEnd(ClaudeHookInput hookInput)
         {

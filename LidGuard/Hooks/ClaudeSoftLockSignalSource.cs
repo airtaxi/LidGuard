@@ -12,8 +12,7 @@ public static class ClaudeSoftLockSignalSource
         var hookEventName = hookInput.HookEventName.Trim();
         if (hookEventName.Equals(ClaudeHookEventNames.Notification, StringComparison.Ordinal)) return IsResolutionNotificationType(hookInput.NotificationType);
 
-        if (hookEventName.Equals(ClaudeHookEventNames.PreToolUse, StringComparison.Ordinal) || hookEventName.Equals(ClaudeHookEventNames.PostToolUse, StringComparison.Ordinal) || hookEventName.Equals(ClaudeHookEventNames.PostToolUseFailure, StringComparison.Ordinal))
-            return IsActivityToolName(hookInput.ToolName);
+        if (hookEventName.Equals(ClaudeHookEventNames.PreToolUse, StringComparison.Ordinal) || hookEventName.Equals(ClaudeHookEventNames.PostToolUse, StringComparison.Ordinal) || hookEventName.Equals(ClaudeHookEventNames.PostToolUseFailure, StringComparison.Ordinal)) return IsActivityToolName(hookInput.ToolName);
 
         return false;
     }
@@ -26,8 +25,7 @@ public static class ClaudeSoftLockSignalSource
         if (!hookInput.HookEventName.Trim().Equals(ClaudeHookEventNames.Notification, StringComparison.Ordinal)) return false;
 
         var notificationType = hookInput.NotificationType.Trim();
-        if (!notificationType.Equals(ClaudeHookEventNames.PermissionPromptNotificationType, StringComparison.Ordinal) && !notificationType.Equals(ClaudeHookEventNames.ElicitationDialogNotificationType, StringComparison.Ordinal))
-            return false;
+        if (!notificationType.Equals(ClaudeHookEventNames.PermissionPromptNotificationType, StringComparison.Ordinal) && !notificationType.Equals(ClaudeHookEventNames.ElicitationDialogNotificationType, StringComparison.Ordinal)) return false;
 
         softLockReason = notificationType;
         return true;

@@ -16,8 +16,7 @@ internal static class LidGuardExceptionLog
     [ThreadStatic]
     private static bool s_isWriting;
 
-    public static string GetDefaultLogFilePath()
-        => Path.Combine(LidGuardSettingsStore.GetApplicationDataDirectoryPath(), LogDirectoryName, LogFileName);
+    public static string GetDefaultLogFilePath() => Path.Combine(LidGuardSettingsStore.GetApplicationDataDirectoryPath(), LogDirectoryName, LogFileName);
 
     public static void SubscribeGlobalHandlers()
     {
@@ -38,8 +37,7 @@ internal static class LidGuardExceptionLog
         return configuredValue is not null && (configuredValue.Equals("1", StringComparison.OrdinalIgnoreCase) || configuredValue.Equals("true", StringComparison.OrdinalIgnoreCase) || configuredValue.Equals("yes", StringComparison.OrdinalIgnoreCase) || configuredValue.Equals("on", StringComparison.OrdinalIgnoreCase));
     }
 
-    private static void HandleFirstChanceException(object sender, FirstChanceExceptionEventArgs eventArguments)
-        => AppendException("first-chance-exception", eventArguments.Exception, string.Empty);
+    private static void HandleFirstChanceException(object sender, FirstChanceExceptionEventArgs eventArguments) => AppendException("first-chance-exception", eventArguments.Exception, string.Empty);
 
     private static void HandleUnhandledException(object sender, UnhandledExceptionEventArgs eventArguments)
     {
@@ -72,10 +70,7 @@ internal static class LidGuardExceptionLog
             AppendEntry(stringBuilder);
         }
         catch (Exception) { }
-        finally
-        {
-            s_isWriting = false;
-        }
+        finally { s_isWriting = false; }
     }
 
     private static void AppendMessage(string eventName, string message)
@@ -90,10 +85,7 @@ internal static class LidGuardExceptionLog
             AppendEntry(stringBuilder);
         }
         catch (Exception) { }
-        finally
-        {
-            s_isWriting = false;
-        }
+        finally { s_isWriting = false; }
     }
 
     private static StringBuilder CreateEntryHeader(string eventName, string details)
@@ -157,6 +149,5 @@ internal static class LidGuardExceptionLog
         }
     }
 
-    private static string NormalizeLine(string value)
-        => value.Replace("\r\n", "\\n", StringComparison.Ordinal).Replace("\n", "\\n", StringComparison.Ordinal).Replace("\r", "\\n", StringComparison.Ordinal);
+    private static string NormalizeLine(string value) => value.Replace("\r\n", "\\n", StringComparison.Ordinal).Replace("\n", "\\n", StringComparison.Ordinal).Replace("\r", "\\n", StringComparison.Ordinal);
 }

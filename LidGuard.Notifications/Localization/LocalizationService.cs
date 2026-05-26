@@ -13,7 +13,6 @@ internal static class LocalizationService
         return string.IsNullOrWhiteSpace(localizedString) ? resourceName : localizedString;
     }
 
-    public static string GetFormattedString(string resourceName, params object[] arguments)
-        => string.Format(CultureInfo.CurrentCulture, GetString(resourceName), arguments);
+    public static string GetFormattedString(string resourceName, params object[] arguments) => string.Format(CultureInfo.CurrentCulture, GetString(resourceName), arguments);
 
 }

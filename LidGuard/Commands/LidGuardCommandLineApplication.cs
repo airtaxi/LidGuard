@@ -126,8 +126,7 @@ internal static class LidGuardCommandLineApplication
         return 1;
     }
 
-    private static bool IsTopLevelHelpAlias(string commandName)
-        => commandName is "--help" or "-h" or "/?";
+    private static bool IsTopLevelHelpAlias(string commandName) => commandName is "--help" or "-h" or "/?";
 
     private static bool HasCommandHelpSwitch(string[] commandLineArguments)
     {
@@ -256,10 +255,7 @@ internal static class LidGuardCommandLineApplication
             }
             catch (OperationCanceledException) { return 0; }
         }
-        finally
-        {
-            runtimeMutex.ReleaseMutex();
-        }
+        finally { runtimeMutex.ReleaseMutex(); }
     }
 
     private static bool TryAcquireRuntimeMutex(Mutex runtimeMutex)
@@ -281,10 +277,7 @@ internal static class LidGuardCommandLineApplication
                 if (!runtimeMutex.WaitOne(0)) return true;
                 ownsRuntimeMutex = true;
             }
-            catch (AbandonedMutexException)
-            {
-                ownsRuntimeMutex = true;
-            }
+            catch (AbandonedMutexException) { ownsRuntimeMutex = true; }
 
             var hasPendingLidActionBackup = File.Exists(LidGuardPendingLidActionBackupStore.GetDefaultFilePath());
 #if LIDGUARD_MACOS
@@ -488,8 +481,7 @@ internal static class LidGuardCommandLineApplication
         return lidSwitchState;
     }
 
-    private static int? GetCurrentTemperatureCelsius(EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode)
-        => SystemThermalInformation.GetSystemTemperatureCelsius(emergencyHibernationTemperatureMode);
+    private static int? GetCurrentTemperatureCelsius(EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode) => SystemThermalInformation.GetSystemTemperatureCelsius(emergencyHibernationTemperatureMode);
 
     private static bool TryResolveCurrentTemperatureMode(string temperatureModeText, out EmergencyHibernationTemperatureMode emergencyHibernationTemperatureMode, out string message)
     {

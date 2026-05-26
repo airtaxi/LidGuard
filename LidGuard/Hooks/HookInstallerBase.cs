@@ -11,8 +11,7 @@ public abstract class HookInstallerBase : IHookInstaller
 
     protected abstract string DefaultHookCommandName { get; }
 
-    protected virtual string ConfigurationMissingMessage
-        => Format("HookManagementConfigurationFileDoesNotExist", ProviderDisplayName);
+    protected virtual string ConfigurationMissingMessage => Format("HookManagementConfigurationFileDoesNotExist", ProviderDisplayName);
 
     public HookInstallationInspection Inspect(HookInstallationRequest request)
     {
@@ -164,30 +163,21 @@ public abstract class HookInstallerBase : IHookInstaller
         };
     }
 
-    private string CreateAlreadyInstalledMessage()
-        => Format("HookManagementAlreadyInstalled", ProviderDisplayName);
+    private string CreateAlreadyInstalledMessage() => Format("HookManagementAlreadyInstalled", ProviderDisplayName);
 
-    private string CreateInstalledMessage()
-        => Format("HookManagementInstalled", ProviderDisplayName);
+    private string CreateInstalledMessage() => Format("HookManagementInstalled", ProviderDisplayName);
 
-    private string CreateWrittenNeedsAttentionMessage()
-        => Format("HookManagementWrittenNeedsAttention", ProviderDisplayName);
+    private string CreateWrittenNeedsAttentionMessage() => Format("HookManagementWrittenNeedsAttention", ProviderDisplayName);
 
-    private string CreateNotInstalledMessage()
-        => Format("HookManagementNotInstalled", ProviderDisplayName);
+    private string CreateNotInstalledMessage() => Format("HookManagementNotInstalled", ProviderDisplayName);
 
-    private string CreateNoManagedHookFoundMessage()
-        => Format("HookManagementNoManagedHookFound", ProviderDisplayName);
+    private string CreateNoManagedHookFoundMessage() => Format("HookManagementNoManagedHookFound", ProviderDisplayName);
 
-    private string CreateRemovedMessage()
-        => Format("HookManagementRemoved", ProviderDisplayName);
+    private string CreateRemovedMessage() => Format("HookManagementRemoved", ProviderDisplayName);
 
-    private string CreateUnsupportedInstallationMessage()
-        => Format("HookManagementUnsupportedInstallation", ProviderDisplayName);
+    private string CreateUnsupportedInstallationMessage() => Format("HookManagementUnsupportedInstallation", ProviderDisplayName);
 
-    private string CreateUnsupportedRemovalMessage()
-        => Format("HookManagementUnsupportedRemoval", ProviderDisplayName);
+    private string CreateUnsupportedRemovalMessage() => Format("HookManagementUnsupportedRemoval", ProviderDisplayName);
 
-    private static string Format(string resourceName, params object[] arguments)
-        => LocalizationService.GetFormattedString(resourceName, arguments);
+    private static string Format(string resourceName, params object[] arguments) => LocalizationService.GetFormattedString(resourceName, arguments);
 }

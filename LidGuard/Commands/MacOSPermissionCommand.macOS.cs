@@ -157,10 +157,7 @@ internal static class MacOSPermissionCommand
             Console.Error.WriteLine(Format("MacOSPermissionPrepareSudoersRuleFailed", exception.Message));
             return 1;
         }
-        finally
-        {
-            TryDeleteTemporaryFile(temporaryRuleFilePath);
-        }
+        finally { TryDeleteTemporaryFile(temporaryRuleFilePath); }
     }
 
     private static int RemoveRule()
@@ -301,8 +298,7 @@ internal static class MacOSPermissionCommand
         return false;
     }
 
-    private static string DescribeExecutableAvailability(string commandName)
-        => MacOSCommandPathResolver.TryFindExecutable(commandName, out var executablePath) ? Format("PermissionExecutableAvailable", executablePath) : Get("PermissionExecutableMissing");
+    private static string DescribeExecutableAvailability(string commandName) => MacOSCommandPathResolver.TryFindExecutable(commandName, out var executablePath) ? Format("PermissionExecutableAvailable", executablePath) : Get("PermissionExecutableMissing");
 
     private static string DescribeSleepDisabled()
     {
@@ -375,10 +371,7 @@ internal static class MacOSPermissionCommand
 
     private static string CreateUserSpecification(string targetUserName)
     {
-        if (!string.IsNullOrWhiteSpace(targetUserName) && targetUserName.All(static character => char.IsLetterOrDigit(character) || character is '_' or '-' or '.'))
-        {
-            return targetUserName;
-        }
+        if (!string.IsNullOrWhiteSpace(targetUserName) && targetUserName.All(static character => char.IsLetterOrDigit(character) || character is '_' or '-' or '.')) return targetUserName;
 
         var escapedUserName = (targetUserName ?? string.Empty)
             .Replace("\\", "\\\\", StringComparison.Ordinal)
@@ -410,10 +403,7 @@ internal static class MacOSPermissionCommand
             message = Format("MacOSPermissionPrepareSudoersValidationFileFailed", exception.Message);
             return false;
         }
-        finally
-        {
-            TryDeleteTemporaryFile(temporaryRuleFilePath);
-        }
+        finally { TryDeleteTemporaryFile(temporaryRuleFilePath); }
     }
 
     private static string GetTargetUserName()
@@ -442,20 +432,15 @@ internal static class MacOSPermissionCommand
         return 1;
     }
 
-    private static bool IsHelpAlias(string argument)
-        => argument.Equals("--help", StringComparison.OrdinalIgnoreCase) || argument.Equals("-h", StringComparison.OrdinalIgnoreCase) || argument.Equals("/?", StringComparison.OrdinalIgnoreCase);
+    private static bool IsHelpAlias(string argument) => argument.Equals("--help", StringComparison.OrdinalIgnoreCase) || argument.Equals("-h", StringComparison.OrdinalIgnoreCase) || argument.Equals("/?", StringComparison.OrdinalIgnoreCase);
 
-    private static void WriteField(string labelResourceName, string value)
-        => Console.WriteLine(Format("ManagementField", Get(labelResourceName), value));
+    private static void WriteField(string labelResourceName, string value) => Console.WriteLine(Format("ManagementField", Get(labelResourceName), value));
 
-    private static void WriteCheckLine(string labelResourceName, string value)
-        => Console.WriteLine(Format("ManagementField", Get(labelResourceName), value));
+    private static void WriteCheckLine(string labelResourceName, string value) => Console.WriteLine(Format("ManagementField", Get(labelResourceName), value));
 
-    private static string Get(string resourceName)
-        => LocalizationService.GetString(resourceName);
+    private static string Get(string resourceName) => LocalizationService.GetString(resourceName);
 
-    private static string Format(string resourceName, params object[] arguments)
-        => string.Format(System.Globalization.CultureInfo.CurrentCulture, Get(resourceName), arguments);
+    private static string Format(string resourceName, params object[] arguments) => string.Format(System.Globalization.CultureInfo.CurrentCulture, Get(resourceName), arguments);
 
     private static void TryDeleteTemporaryFile(string temporaryRuleFilePath)
     {

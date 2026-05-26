@@ -26,17 +26,14 @@ public sealed class ClaudeHookInstaller : HookInstallerBase
         return Path.GetFullPath(claudeConfigurationDirectoryPath);
     }
 
-    public static string GetDefaultClaudeConfigurationFilePath()
-        => Path.Combine(GetDefaultClaudeConfigurationDirectoryPath(), ClaudeConfigurationFileName);
+    public static string GetDefaultClaudeConfigurationFilePath() => Path.Combine(GetDefaultClaudeConfigurationDirectoryPath(), ClaudeConfigurationFileName);
 
     protected override string GetDefaultConfigurationFilePath() => GetDefaultClaudeConfigurationFilePath();
 
     protected override HookInstallationInspection InspectConfiguration(HookInstallationRequest request, string hookCommand, string content, bool configurationFileExists)
         => ClaudeHookSettingsJsonDocument.InspectSettingsJson(request.ConfigurationFilePath, request.HookExecutablePath, hookCommand, content, configurationFileExists);
 
-    protected override bool TryCreateInstalledContent(string originalContent, string hookCommand, out string updatedContent, out string message)
-        => ClaudeHookSettingsJsonDocument.TryInstallManagedHooks(originalContent, hookCommand, out updatedContent, out message);
+    protected override bool TryCreateInstalledContent(string originalContent, string hookCommand, out string updatedContent, out string message) => ClaudeHookSettingsJsonDocument.TryInstallManagedHooks(originalContent, hookCommand, out updatedContent, out message);
 
-    protected override bool TryCreateRemovedContent(string originalContent, out string updatedContent, out bool changed, out string message)
-        => ClaudeHookSettingsJsonDocument.TryRemoveManagedHooks(originalContent, out updatedContent, out changed, out message);
+    protected override bool TryCreateRemovedContent(string originalContent, out string updatedContent, out bool changed, out string message) => ClaudeHookSettingsJsonDocument.TryRemoveManagedHooks(originalContent, out updatedContent, out changed, out message);
 }

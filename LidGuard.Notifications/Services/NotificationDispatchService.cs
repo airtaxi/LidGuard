@@ -15,14 +15,8 @@ internal sealed class NotificationDispatchService(WebhookEventProcessingSignal p
         {
             await ProcessAvailableEventsAsync(stoppingToken);
 
-            try
-            {
-                await processingSignal.WaitAsync(stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                return;
-            }
+            try { await processingSignal.WaitAsync(stoppingToken); }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { return; }
         }
     }
 
@@ -52,10 +46,7 @@ internal sealed class NotificationDispatchService(WebhookEventProcessingSignal p
 
             await webhookEventStore.CompleteAsync(webhookEvent.WebhookEventIdentifier, cancellationToken);
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception exception)
         {
             logger.LogError(exception, "Failed to process LidGuard webhook event {WebhookEventIdentifier}.", webhookEvent.WebhookEventIdentifier);

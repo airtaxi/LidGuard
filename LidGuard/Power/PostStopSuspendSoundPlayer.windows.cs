@@ -47,10 +47,7 @@ public sealed partial class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPl
     {
         string fullWaveFilePath;
         try { fullWaveFilePath = Path.GetFullPath(configuredValue); }
-        catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
-        {
-            return LidGuardOperationResult<string>.Failure($"The configured sound path is invalid: {exception.Message}");
-        }
+        catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException) { return LidGuardOperationResult<string>.Failure($"The configured sound path is invalid: {exception.Message}"); }
 
         if (!string.Equals(Path.GetExtension(fullWaveFilePath), ".wav", StringComparison.OrdinalIgnoreCase))
         {
@@ -71,10 +68,7 @@ public sealed partial class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPl
             soundPlayer.Load();
             return LidGuardOperationResult<string>.Success(fullWaveFilePath);
         }
-        catch (Exception exception) when (exception is FileNotFoundException or InvalidOperationException or TimeoutException or UnauthorizedAccessException or IOException)
-        {
-            return LidGuardOperationResult<string>.Failure($"The configured WAV file could not be loaded as a playable WAV file: {exception.Message}");
-        }
+        catch (Exception exception) when (exception is FileNotFoundException or InvalidOperationException or TimeoutException or UnauthorizedAccessException or IOException) { return LidGuardOperationResult<string>.Failure($"The configured WAV file could not be loaded as a playable WAV file: {exception.Message}"); }
     }
 
     private static LidGuardOperationResult PlaySystemSound(string canonicalSystemSoundName)
@@ -94,10 +88,7 @@ public sealed partial class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPl
             soundPlayer.PlaySync();
             return LidGuardOperationResult.Success();
         }
-        catch (Exception exception) when (exception is FileNotFoundException or InvalidOperationException or TimeoutException or UnauthorizedAccessException or IOException)
-        {
-            return LidGuardOperationResult.Failure($"Failed to play the configured WAV file: {exception.Message}");
-        }
+        catch (Exception exception) when (exception is FileNotFoundException or InvalidOperationException or TimeoutException or UnauthorizedAccessException or IOException) { return LidGuardOperationResult.Failure($"Failed to play the configured WAV file: {exception.Message}"); }
     }
 
     private static bool TryGetCanonicalSystemSoundName(string configuredValue, out string canonicalSystemSoundName)

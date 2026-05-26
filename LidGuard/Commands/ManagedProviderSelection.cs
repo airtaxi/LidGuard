@@ -26,8 +26,7 @@ internal static class ManagedProviderSelection
         skippedProviderMessages = skippedProviderMessageList;
     }
 
-    public static bool TrySelectProviders(IReadOnlyDictionary<string, string> options, string prompt, out IReadOnlyList<AgentProvider> providers, out string message)
-        => TrySelectProviders(GetOption(options, "provider"), prompt, out providers, out message);
+    public static bool TrySelectProviders(IReadOnlyDictionary<string, string> options, string prompt, out IReadOnlyList<AgentProvider> providers, out string message) => TrySelectProviders(GetOption(options, "provider"), prompt, out providers, out message);
 
     public static bool TrySelectProviders(string providerText, string prompt, out IReadOnlyList<AgentProvider> providers, out string message)
     {

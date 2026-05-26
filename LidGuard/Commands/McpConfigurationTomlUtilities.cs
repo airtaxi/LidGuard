@@ -57,8 +57,7 @@ internal static class McpConfigurationTomlUtilities
         return !string.IsNullOrWhiteSpace(serverCommand) || serverArgumentValues.Length > 0;
     }
 
-    public static string DescribeArgumentValues(string[] serverArgumentValues)
-        => serverArgumentValues.Length == 0 ? LocalizationService.GetString("TextDisplayNone") : string.Join(" | ", serverArgumentValues);
+    public static string DescribeArgumentValues(string[] serverArgumentValues) => serverArgumentValues.Length == 0 ? LocalizationService.GetString("TextDisplayNone") : string.Join(" | ", serverArgumentValues);
 
     public static bool ContainsArgument(string[] serverArgumentValues, string expectedArgument)
     {

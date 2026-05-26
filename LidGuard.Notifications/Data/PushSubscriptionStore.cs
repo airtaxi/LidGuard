@@ -73,10 +73,7 @@ internal sealed class PushSubscriptionStore(SqliteConnectionFactory connectionFa
             ORDER BY Id;
             """;
         using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            subscriptions.Add(new ActivePushSubscription(reader.GetInt64(0), reader.GetString(1), reader.GetString(2), reader.GetString(3)));
-        }
+        while (await reader.ReadAsync(cancellationToken)) subscriptions.Add(new ActivePushSubscription(reader.GetInt64(0), reader.GetString(1), reader.GetString(2), reader.GetString(3)));
 
         return subscriptions;
     }

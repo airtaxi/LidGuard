@@ -11,8 +11,7 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
 {
     public bool IsSupported => OperatingSystem.IsMacOS();
 
-    public string UnsupportedMessage
-        => LocalizationService.GetString("PlatformUnsupportedMacOS");
+    public string UnsupportedMessage => LocalizationService.GetString("PlatformUnsupportedMacOS");
 
     public LidGuardOperationResult<LidGuardRuntimeServiceSet> CreateRuntimeServiceSet()
     {
@@ -30,9 +29,7 @@ public sealed class LidGuardRuntimePlatform : ILidGuardRuntimePlatform
         return LidGuardOperationResult<LidGuardRuntimeServiceSet>.Success(serviceSet);
     }
 
-    public LidGuardOperationResult<IPostStopSuspendSoundPlayer> CreatePostStopSuspendSoundPlayer()
-        => OperatingSystem.IsMacOS() ? LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Success(new PostStopSuspendSoundPlayer()) : LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Failure(UnsupportedMessage);
+    public LidGuardOperationResult<IPostStopSuspendSoundPlayer> CreatePostStopSuspendSoundPlayer() => OperatingSystem.IsMacOS() ? LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Success(new PostStopSuspendSoundPlayer()) : LidGuardOperationResult<IPostStopSuspendSoundPlayer>.Failure(UnsupportedMessage);
 
-    public LidGuardOperationResult<ISystemAudioVolumeController> CreateSystemAudioVolumeController()
-        => OperatingSystem.IsMacOS() ? LidGuardOperationResult<ISystemAudioVolumeController>.Success(new SystemAudioVolumeController()) : LidGuardOperationResult<ISystemAudioVolumeController>.Failure(UnsupportedMessage);
+    public LidGuardOperationResult<ISystemAudioVolumeController> CreateSystemAudioVolumeController() => OperatingSystem.IsMacOS() ? LidGuardOperationResult<ISystemAudioVolumeController>.Success(new SystemAudioVolumeController()) : LidGuardOperationResult<ISystemAudioVolumeController>.Failure(UnsupportedMessage);
 }

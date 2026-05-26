@@ -68,19 +68,14 @@ internal static partial class HookParentProcessResolver
     {
         var normalizedProcessName = NormalizeProcessName(processInfo.ProcessName);
         if (normalizedProcessName.Contains("copilot", StringComparison.OrdinalIgnoreCase)) return true;
-        if (normalizedProcessName.Equals("gh", StringComparison.OrdinalIgnoreCase) && processInfo.CommandLine.Contains("copilot", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
+        if (normalizedProcessName.Equals("gh", StringComparison.OrdinalIgnoreCase) && processInfo.CommandLine.Contains("copilot", StringComparison.OrdinalIgnoreCase)) return true;
 
         return IsNodePackageManagerProcess(normalizedProcessName) && processInfo.CommandLine.Contains("copilot", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static bool IsProcessName(string processName, string expectedProcessName)
-        => NormalizeProcessName(processName).Equals(expectedProcessName, StringComparison.OrdinalIgnoreCase);
+    private static bool IsProcessName(string processName, string expectedProcessName) => NormalizeProcessName(processName).Equals(expectedProcessName, StringComparison.OrdinalIgnoreCase);
 
-    private static bool IsNodePackageManagerProcess(string normalizedProcessName)
-        => s_nodePackageManagerProcessNames.Contains(normalizedProcessName);
+    private static bool IsNodePackageManagerProcess(string normalizedProcessName) => s_nodePackageManagerProcessNames.Contains(normalizedProcessName);
 
     private static string NormalizeProcessName(string processName)
     {

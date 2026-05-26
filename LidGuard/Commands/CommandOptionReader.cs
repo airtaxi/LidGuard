@@ -45,8 +45,7 @@ internal static class CommandOptionReader
         return true;
     }
 
-    public static string GetOption(IReadOnlyDictionary<string, string> options, params string[] optionNames)
-        => TryGetOption(options, out var optionValue, optionNames) ? optionValue : string.Empty;
+    public static string GetOption(IReadOnlyDictionary<string, string> options, params string[] optionNames) => TryGetOption(options, out var optionValue, optionNames) ? optionValue : string.Empty;
 
     public static bool TryGetOption(IReadOnlyDictionary<string, string> options, out string optionValue, params string[] optionNames)
     {

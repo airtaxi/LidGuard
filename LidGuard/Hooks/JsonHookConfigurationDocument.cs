@@ -264,8 +264,7 @@ internal static class JsonHookConfigurationDocument
 
     public static void AddJsonNode(JsonArray jsonArray, JsonNode jsonNode) => jsonArray.Add(jsonNode);
 
-    public static string GetStringProperty(JsonObject jsonObject, string propertyName)
-        => HookJsonPropertyReader.GetStringProperty(jsonObject, propertyName);
+    public static string GetStringProperty(JsonObject jsonObject, string propertyName) => HookJsonPropertyReader.GetStringProperty(jsonObject, propertyName);
 
     private static bool HasExpectedMatcher(string actualMatcher, string expectedMatcher)
     {
