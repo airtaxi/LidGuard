@@ -66,6 +66,20 @@ lidguard hook-install --provider all
 lidguard mcp-install all
 ```
 
+### Webhook Notification Server
+
+LidGuard can send pre-suspend, post-session-end, and ask-before-sleep reply events to an optional companion server. `LidGuard.Notifications` receives those webhooks, forwards Web Push notifications to subscribed browsers, and lets you reply from a small dashboard when a follow-up response is needed.
+
+For setup, security notes, and deployment details, see the [LidGuard.Notifications README](LidGuard.Notifications/README.md).
+
+### Ask Before Sleep Replies
+
+When a closed-lid session reaches the point where LidGuard would normally let the machine sleep, it can pause briefly and ask for one last instruction first. If you reply from the notification dashboard, LidGuard keeps the session alive and hands that reply back to the provider instead of ending the flow immediately.
+
+This is useful for long-running coding or agent tasks where "done" sometimes means "almost done, but I need your call." You can keep the reply window short, extend it from the dashboard when needed, or cancel the wait and let the normal sleep path continue.
+
+With repeat replies enabled, that can become a lightweight back-and-forth loop: the laptop can stay closed in your bag while you keep nudging follow-up work from your phone or browser, without opening the machine just to type the next instruction.
+
 ### Windows WSL Integration
 
 On Windows, LidGuard can also install hook, MCP, and Provider MCP configuration inside WSL distributions. Nothing needs to run or be installed as a separate LidGuard binary inside WSL. The WSL-side provider config points back to the current Windows `lidguard.exe` through its `wslpath`-converted absolute path.
