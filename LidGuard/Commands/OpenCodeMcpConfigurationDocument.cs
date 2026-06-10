@@ -173,8 +173,7 @@ internal static class OpenCodeMcpConfigurationDocument
         return false;
     }
 
-    private static JsonArray CreateCommandArray(string executableReference) =>
-    [executableReference, LidGuardMcpServerCommand.CommandName];
+    private static JsonArray CreateCommandArray(string executableReference) => new(JsonValue.Create(executableReference), JsonValue.Create(LidGuardMcpServerCommand.CommandName));
 
     private static ManagedMcpInspectionResult CreateInspection(string configurationFilePath, bool configurationFileExists, bool hasProviderCli, string providerCliDisplayText, bool hasServerEntry, bool matchesCurrentLidGuardExecutable, bool containsExpectedServerCommand, string serverCommand, string serverArguments, string message, string serverType = "")
         => new(AgentProvider.OpenCode, configurationFilePath, configurationFileExists, hasProviderCli, providerCliDisplayText, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, serverType, serverCommand, serverArguments, string.Empty, message);
