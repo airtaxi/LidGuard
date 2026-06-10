@@ -1,6 +1,6 @@
 ---
 name: lidguard-provider-integrations
-description: "LidGuard provider integration reference. Use when working on Provider MCP, generic Provider MCP, Codex CLI hooks, Claude Code hooks, GitHub Copilot CLI hooks, hook installation/status/removal, MCP registration, provider-specific payloads, or deployment notes."
+description: "LidGuard provider integration reference. Use when working on Provider MCP, generic Provider MCP, Codex CLI hooks, Claude Code hooks, GitHub Copilot CLI hooks, OpenCode hooks, hook installation/status/removal, MCP registration, provider-specific payloads, or deployment notes."
 ---
 
 # LidGuard Provider Integrations
@@ -142,14 +142,42 @@ Reference:
 - https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference
 - https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference
 
+### OpenCode
+
+- Provider enum: `AgentProvider.OpenCode`.
+- Start event: `chat.message`.
+- Permission decision event: `permission.ask`.
+- Activity events: `tool.execute.before`, `tool.execute.after`, `permission.replied`, `question.replied`, `question.rejected`, `question.v2.replied`, and `question.v2.rejected`.
+- Soft-lock events: `permission.asked`, `question.asked`, and `question.v2.asked`.
+- Stop trigger events: `session.idle`, `session.status` when the status is `idle`, `session.deleted`, and `session.error`.
+- Command path: `lidguard opencode-hook --event <event-name>` when the global tool is available on PATH, otherwise the current executable path plus `opencode-hook --event <event-name>`.
+- Snippet command: `lidguard opencode-hooks plugin-js`.
+- Install/status/remove commands: `lidguard hook-install --provider opencode`, `lidguard hook-status --provider opencode`, and `lidguard hook-remove --provider opencode`.
+- MCP status/install/remove commands: `lidguard mcp-status opencode`, `lidguard mcp-install opencode`, and `lidguard mcp-remove opencode`.
+- Default plugin path: `OPENCODE_CONFIG_DIR\plugins\lidguard.js` when `OPENCODE_CONFIG_DIR` is set, otherwise `%USERPROFILE%\.config\opencode\plugins\lidguard.js`.
+- Default MCP configuration path: `OPENCODE_CONFIG` when set, otherwise `OPENCODE_CONFIG_DIR\opencode.json` if it exists, otherwise `OPENCODE_CONFIG_DIR\opencode.jsonc`.
+- OpenCode MCP registration edits the global/user OpenCode config directly under the `mcp` object with a `lidguard` entry shaped as `{ "type": "local", "command": [<lidguard>, "mcp-server"], "enabled": true }`.
+- OpenCode MCP status must not report the managed server as installed unless the entry is `type = local`, is not disabled, points at the current LidGuard executable, and contains `mcp-server` in the command array.
+- `hook-install` writes a managed global OpenCode plugin file from `LidGuard/Assets/OpenCode/lidguard.js`; `hook-status` checks the managed plugin version marker so older generated plugins need update; `hook-remove` removes that managed plugin file when it becomes empty.
+- When selected provider `all` is used for native hook management, treat an existing OpenCode config directory as enough to include OpenCode even if the `plugins` subdirectory does not exist yet.
+- `opencode-hook` reads plugin JSON from stdin and uses the command-line `--event` value as the authoritative event name.
+- For `chat.message`, it sends internal `start --provider opencode`.
+- For `permission.ask`, it does not stop the runtime; it queries the runtime lid state and visible display monitor count. When the lid is closed and the visible display monitor count is `0`, Deny and Allow return OpenCode-specific structured JSON with `status` of `deny` or `allow`; Ask marks the session soft-locked with reason `closed_lid_permission_request_ask` and returns empty stdout so OpenCode's normal permission flow continues. The observed OpenCode plugin type contract only exposes `output.status` for `permission.ask`, so do not promise or wire a deny message there unless a future OpenCode contract adds one.
+- For activity events, it records provider activity and clears the current session soft-lock state.
+- For soft-lock events, it marks the session soft-locked with the event name as the reason.
+- For stop trigger events, it sends internal `stop --provider opencode`. Only `session.idle` and `session.status` with `idle` are treated as normal provider session ends.
+- OpenCode ask-before-sleep reply continuation is not implemented because the current plugin event surface does not expose a verified blocking Stop-hook continuation contract.
+- OpenCode plugin payloads do not provide a stable parent process id, so LidGuard resolves the watched process from hook process ancestry when `WatchParentProcess` is enabled, accepting OpenCode CLI and bun/node/npm/npx wrapper processes. Working directory remains metadata only.
+- OpenCode `permission.ask` exits successfully with structured JSON stdout only for effective closed-lid Deny/Allow decisions; when Ask is configured, the lid is open, lid state is unknown, any visible display monitor remains active, or runtime status is unavailable, it exits successfully with empty stdout so the normal permission flow continues.
+
 ## Operational Notes
 
-- Existing Codex and Claude config should point directly to the intended `lidguard.exe` path after `hook-install`.
+- Existing Codex, Claude, GitHub Copilot, and OpenCode config should point directly to the intended `lidguard.exe` path after managed hook or MCP install.
 - Windows WSL integration commands must install or inspect configuration inside the selected/default WSL distro while pointing hook, MCP, and Provider MCP commands back to the current Windows `lidguard.exe` through its `wslpath`-converted absolute path.
-- WSL hook commands are `wsl-hook-status`, `wsl-hook-install`, and `wsl-hook-remove` with `--provider codex|claude|copilot|all` and optional `--distro <name>`.
-- WSL hook snippet commands are `wsl-codex-hooks`, `wsl-claude-hooks`, and `wsl-copilot-hooks`; generated Claude and GitHub Copilot hook config must use the `bash` shell, not Windows `powershell`.
+- WSL hook commands are `wsl-hook-status`, `wsl-hook-install`, and `wsl-hook-remove` with `--provider codex|claude|copilot|opencode|all` and optional `--distro <name>`.
+- WSL hook snippet commands are `wsl-codex-hooks`, `wsl-claude-hooks`, `wsl-copilot-hooks`, and `wsl-opencode-hooks`; generated Claude and GitHub Copilot hook config must use the `bash` shell, not Windows `powershell`.
 - Settings-triggered automatic WSL managed hook refresh must normalize `wsl.exe --list --quiet` output before using distro names, including removing NUL characters from UTF-16LE-style output, and an empty distro name must mean the default WSL distro rather than a named empty distro.
-- WSL provider-specific MCP aliases are `wsl-codex-mcp-status/install/remove`, `wsl-claude-mcp-status/install/remove`, and `wsl-copilot-mcp-status/install/remove`. The generic selected-provider forms are `wsl-mcp-status/install/remove [codex|claude|copilot|all]`.
+- WSL provider-specific MCP aliases are `wsl-codex-mcp-status/install/remove`, `wsl-claude-mcp-status/install/remove`, `wsl-copilot-mcp-status/install/remove`, and `wsl-opencode-mcp-status/install/remove`. The generic selected-provider forms are `wsl-mcp-status/install/remove [codex|claude|copilot|opencode|all]`.
 - WSL generic Provider MCP direct JSON commands are `wsl-provider-mcp-status`, `wsl-provider-mcp-install`, and `wsl-provider-mcp-remove`, using WSL-side JSON config paths and a server entry that runs the Windows `lidguard.exe` WSL path.
 - WSL hook status must treat a managed hook that points at an older `lidguard.exe` version path as needing update, matching MCP refresh behavior.
 - When helping a user with Claude deployment or configuration, explicitly and strongly warn them not to rely on third-party prompt hooks with LidGuard. State that LidGuard can only make its own closed-lid permission or elicitation decisions and cannot safely respond on behalf of unrelated Claude hook prompts.

@@ -14,6 +14,7 @@ internal static class AgentProviderOptionParser
             "codex" => AgentProvider.Codex,
             "claude" => AgentProvider.Claude,
             "copilot" or "github-copilot" or "githubcopilot" => AgentProvider.GitHubCopilot,
+            "opencode" or "open-code" => AgentProvider.OpenCode,
             "custom" => AgentProvider.Custom,
             "mcp" => AgentProvider.Mcp,
             "unknown" => AgentProvider.Unknown,

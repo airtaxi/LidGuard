@@ -9,6 +9,7 @@ namespace LidGuard.Ipc;
 
 [JsonSerializable(typeof(ClaudeHookInput))]
 [JsonSerializable(typeof(CodexHookInput))]
+[JsonSerializable(typeof(OpenCodePermissionAskDecisionOutput))]
 [JsonSerializable(typeof(StopHookContinuationDecisionOutput))]
 [JsonSerializable(typeof(LidGuardPipeRequest))]
 [JsonSerializable(typeof(LidGuardPipeResponse))]
@@ -29,4 +30,3 @@ namespace LidGuard.Ipc;
 internal sealed partial class LidGuardJsonSerializerContext : JsonSerializerContext
 {
 }
-

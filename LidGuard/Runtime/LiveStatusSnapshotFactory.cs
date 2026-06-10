@@ -34,6 +34,7 @@ internal static class LiveStatusSnapshotFactory
         AddProviderHookEventLines(AgentProvider.Codex, CodexHookEventLog.ReadRecentLines(HookEventReadLineCount), hookEventLines);
         AddProviderHookEventLines(AgentProvider.Claude, ClaudeHookEventLog.ReadRecentLines(HookEventReadLineCount), hookEventLines);
         AddProviderHookEventLines(AgentProvider.GitHubCopilot, GitHubCopilotHookEventLog.ReadRecentLines(HookEventReadLineCount), hookEventLines);
+        AddProviderHookEventLines(AgentProvider.OpenCode, OpenCodeHookEventLog.ReadRecentLines(HookEventReadLineCount), hookEventLines);
         return [.. hookEventLines.OrderByDescending(static hookEventLine => hookEventLine.Timestamp)];
     }
 

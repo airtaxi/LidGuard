@@ -1,5 +1,51 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
@@ -7,16 +53,31 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CommandUnexpectedArgument" xml:space="preserve">
-    <value>未預期的引數: {0}</value>
+  <data name="ClosedLidStopFollowUpConfigurationIssuePostStopDelayTooShort" xml:space="preserve">
+    <value>緊接著出現的提示可能還沒顯示，睡眠或回覆等待就過早開始。請將 post-stop-suspend-delay-seconds 設為至少 10。</value>
+  </data>
+  <data name="ClosedLidStopFollowUpConfigurationIssueReplyWaitTooShort" xml:space="preserve">
+    <value>回覆視窗太短，可能來不及看到推播通知並回覆。設為 0 秒可關閉；若要使用回覆，請設為至少 20 秒。</value>
+  </data>
+  <data name="CommandBooleanOptionValidation" xml:space="preserve">
+    <value>{0} 選項必須是 true 或 false。</value>
   </data>
   <data name="CommandDoesNotAcceptOptions" xml:space="preserve">
     <value>{0} 命令不接受選項。</value>
+  </data>
+  <data name="CommandOptionNameRequired" xml:space="preserve">
+    <value>-- 後面必須接選項名稱。</value>
+  </data>
+  <data name="CommandRequiredOption" xml:space="preserve">
+    <value>必須提供 --{0} 選項。</value>
+  </data>
+  <data name="CommandUnexpectedArgument" xml:space="preserve">
+    <value>未預期的引數: {0}</value>
   </data>
   <data name="CommandUnknownCommand" xml:space="preserve">
     <value>未知的命令: {0}</value>
@@ -30,6 +91,15 @@
   <data name="ConsoleCurrentMonitorCount" xml:space="preserve">
     <value>目前可見的顯示器數量: {0}</value>
   </data>
+  <data name="ConsoleCurrentTemperature" xml:space="preserve">
+    <value>目前系統溫度（{0} 模式）: 攝氏 {1} 度</value>
+  </data>
+  <data name="ConsoleCurrentTemperatureModeValidation" xml:space="preserve">
+    <value>溫度模式必須是 default、low、average 或 high。</value>
+  </data>
+  <data name="ConsoleCurrentTemperatureUnavailable" xml:space="preserve">
+    <value>使用 {0} 模式時，這個平台支援的溫度感測器無法提供目前系統溫度。</value>
+  </data>
   <data name="ConsoleLidState" xml:space="preserve">
     <value>上蓋狀態: {0}</value>
   </data>
@@ -42,11 +112,17 @@
   <data name="ConsoleRuntimeNotRunningNoSessionRemoved" xml:space="preserve">
     <value>LidGuard 未在執行中。沒有移除任何進行中的工作階段。</value>
   </data>
+  <data name="ConsoleSessionLine" xml:space="preserve">
+    <value>- {0}:{1} 處理程序={2} 軟鎖定={3} 工作目錄="{4}" 開始={5} 最後活動={6}</value>
+  </data>
   <data name="ConsoleSettingsFile" xml:space="preserve">
     <value>設定檔: {0}</value>
   </data>
   <data name="ConsoleVisibleDisplayMonitorCount" xml:space="preserve">
     <value>可見的顯示器數量: {0}</value>
+  </data>
+  <data name="CultureAutomaticStoredValueCannotBeExplicitCultureName" xml:space="preserve">
+    <value>auto 是儲存用設定值，不能當成明確的 CultureInfo 名稱使用。</value>
   </data>
   <data name="CultureInvalidUserInterfaceCulture" xml:space="preserve">
     <value>無效的使用者介面語言/地區設定 '{0}': {1}</value>
@@ -57,8 +133,80 @@
   <data name="CultureSettingsLoadWarning" xml:space="preserve">
     <value>警告: LidGuard 在判斷 UI 語言/地區設定時無法讀取設定: {0}</value>
   </data>
-  <data name="CultureAutomaticStoredValueCannotBeExplicitCultureName" xml:space="preserve">
-    <value>auto 是儲存用設定值，不能當成明確的 CultureInfo 名稱使用。</value>
+  <data name="DisplayClosedLidPermissionRequestDecisionAllow" xml:space="preserve">
+    <value>允許</value>
+  </data>
+  <data name="DisplayClosedLidPermissionRequestDecisionAsk" xml:space="preserve">
+    <value>詢問</value>
+  </data>
+  <data name="DisplayClosedLidPermissionRequestDecisionDeny" xml:space="preserve">
+    <value>拒絕</value>
+  </data>
+  <data name="DisplayClosedLidStopFollowUpFeatureStateConfigurationError" xml:space="preserve">
+    <value>設定錯誤</value>
+  </data>
+  <data name="DisplayClosedLidStopFollowUpFeatureStateOff" xml:space="preserve">
+    <value>關閉</value>
+  </data>
+  <data name="DisplayClosedLidStopFollowUpFeatureStateOn" xml:space="preserve">
+    <value>開啟</value>
+  </data>
+  <data name="DisplayEmergencyHibernationTemperatureModeAverage" xml:space="preserve">
+    <value>平均</value>
+  </data>
+  <data name="DisplayEmergencyHibernationTemperatureModeHigh" xml:space="preserve">
+    <value>高</value>
+  </data>
+  <data name="DisplayEmergencyHibernationTemperatureModeLow" xml:space="preserve">
+    <value>低</value>
+  </data>
+  <data name="DisplayHookInstallationStatusInstalled" xml:space="preserve">
+    <value>已安裝</value>
+  </data>
+  <data name="DisplayHookInstallationStatusNeedsUpdate" xml:space="preserve">
+    <value>需要更新</value>
+  </data>
+  <data name="DisplayHookInstallationStatusNotInstalled" xml:space="preserve">
+    <value>未安裝</value>
+  </data>
+  <data name="DisplayHookInstallationStatusUnknown" xml:space="preserve">
+    <value>未知</value>
+  </data>
+  <data name="DisplayLidSwitchStateClosed" xml:space="preserve">
+    <value>關閉</value>
+  </data>
+  <data name="DisplayLidSwitchStateOpen" xml:space="preserve">
+    <value>開啟</value>
+  </data>
+  <data name="DisplayLidSwitchStateUnknown" xml:space="preserve">
+    <value>未知</value>
+  </data>
+  <data name="DisplayMinuteCount" xml:space="preserve">
+    <value>{0} 分鐘</value>
+  </data>
+  <data name="DisplaySessionSoftLockStateNone" xml:space="preserve">
+    <value>無</value>
+  </data>
+  <data name="DisplaySessionSoftLockStateSoftLocked" xml:space="preserve">
+    <value>已軟鎖定</value>
+  </data>
+  <data name="DisplaySuspendHistoryEntryCount" xml:space="preserve">
+    <value>{0} 筆</value>
+  </data>
+  <data name="DisplaySuspendModeHibernate" xml:space="preserve">
+    <value>休眠</value>
+  </data>
+  <data name="DisplaySuspendModeSleep" xml:space="preserve">
+    <value>睡眠</value>
+  </data>
+  <data name="DisplaySuspendWebhookReasonCompleted" xml:space="preserve">
+    <value>已完成</value>
+  </data>
+  <data name="DisplaySuspendWebhookReasonEmergencyHibernation" xml:space="preserve">
+    <value>緊急休眠</value>
+  </data>
+  <data name="DisplaySuspendWebhookReasonSoftLocked" xml:space="preserve">
+    <value>已軟鎖定</value>
   </data>
   <data name="HelpAliasLabel" xml:space="preserve">
     <value>別名</value>
@@ -96,521 +244,500 @@
   <data name="HelpSectionUsage" xml:space="preserve">
     <value>用法</value>
   </data>
-  <data name="SessionProcessNone" xml:space="preserve">
-    <value>無</value>
-  </data>
-  <data name="SettingsChangeLidAction" xml:space="preserve">
-    <value>  上蓋關閉動作覆寫: {0}</value>
-  </data>
-  <data name="SettingsClosedLidPermissionRequestDecision" xml:space="preserve">
-    <value>  上蓋關閉權限要求決定: {0}</value>
-  </data>
-  <data name="SettingsClosedLidStopFollowUpFeatureState" xml:space="preserve">
-    <value>  睡眠前回覆提醒: {0}</value>
-  </data>
-  <data name="SettingsClosedLidStopFollowUpWebhookUrl" xml:space="preserve">
-    <value>  睡眠前回覆提醒 URL: {0}</value>
-  </data>
-  <data name="SettingsClosedLidStopFollowUpDelaySeconds" xml:space="preserve">
-    <value>  睡眠前回覆等待時間（秒）: {0}</value>
-  </data>
-  <data name="SettingsClosedLidStopFollowUpConfigurationIssue" xml:space="preserve">
-    <value>    設定問題: {0}</value>
-  </data>
-  <data name="SettingsRepeatClosedLidStopFollowUp" xml:space="preserve">
-    <value>  回覆後再次詢問: {0}</value>
-  </data>
-  <data name="SettingsEmergencyHibernationOnHighTemperature" xml:space="preserve">
-    <value>  高溫時啟用緊急休眠: {0}</value>
-  </data>
-  <data name="SettingsEmergencyHibernationTemperatureCelsius" xml:space="preserve">
-    <value>  緊急休眠溫度（攝氏）: {0}</value>
-  </data>
-  <data name="SettingsEmergencyHibernationTemperatureMode" xml:space="preserve">
-    <value>  緊急休眠溫度模式: {0}</value>
-  </data>
-  <data name="SettingsNoPostSessionEndWebhookConfigured" xml:space="preserve">
-    <value>未設定工作階段完成 Webhook URL。</value>
-  </data>
-  <data name="SettingsNoPreSuspendWebhookConfigured" xml:space="preserve">
-    <value>未設定睡眠/休眠前 Webhook URL。</value>
-  </data>
-  <data name="SettingsNoClosedLidStopFollowUpWebhookConfigured" xml:space="preserve">
-    <value>未設定睡眠前回覆提醒 URL。</value>
-  </data>
-  <data name="SettingsPostSessionEndWebhookUrl" xml:space="preserve">
-    <value>  工作階段完成 Webhook URL: {0}</value>
-  </data>
-  <data name="SettingsPostSessionEndWebhookUrlRemoved" xml:space="preserve">
-    <value>已移除工作階段完成 Webhook URL。</value>
-  </data>
-  <data name="SettingsPostStopSuspendDelaySeconds" xml:space="preserve">
-    <value>  工作階段結束後進入睡眠/休眠前的延遲（秒）: {0}</value>
-  </data>
-  <data name="SettingsPostStopSuspendSound" xml:space="preserve">
-    <value>  工作階段結束後的睡眠/休眠警告音: {0}</value>
-  </data>
-  <data name="SettingsPostStopSuspendSoundVolumeOverridePercent" xml:space="preserve">
-    <value>  警告音暫時音量百分比: {0}</value>
-  </data>
-  <data name="SettingsClosedLidStopFollowUpSound" xml:space="preserve">
-    <value>  睡眠前回覆等待提示音: {0}</value>
-  </data>
-  <data name="SettingsClosedLidStopFollowUpSoundVolumeOverridePercent" xml:space="preserve">
-    <value>  回覆等待提示音暫時音量百分比: {0}</value>
-  </data>
-  <data name="SettingsPreSuspendWebhookUrl" xml:space="preserve">
-    <value>  睡眠/休眠前 Webhook URL: {0}</value>
-  </data>
-  <data name="SettingsPreSuspendWebhookUrlRemoved" xml:space="preserve">
-    <value>已移除睡眠/休眠前 Webhook URL。</value>
-  </data>
-  <data name="SettingsClosedLidStopFollowUpWebhookUrlRemoved" xml:space="preserve">
-    <value>已移除睡眠前回覆提醒 URL。</value>
-  </data>
-  <data name="SettingsPreventAwayModeSleep" xml:space="preserve">
-    <value>  Away Mode 睡眠防止: {0}</value>
-  </data>
-  <data name="SettingsPreventDisplaySleep" xml:space="preserve">
-    <value>  顯示器睡眠防止: {0}</value>
-  </data>
-  <data name="SettingsPreventSystemSleep" xml:space="preserve">
-    <value>  系統睡眠防止: {0}</value>
-  </data>
-  <data name="SettingsReason" xml:space="preserve">
-    <value>  原因: {0}</value>
-  </data>
-  <data name="SettingsRuntimeNotRunningSaved" xml:space="preserve">
-    <value>執行階段未在執行中；下次啟動時會使用已儲存的設定。</value>
-  </data>
-  <data name="SettingsRuntimeUpdated" xml:space="preserve">
-    <value>已更新執行階段設定。</value>
-  </data>
-  <data name="SettingsServerRuntimeCleanupDelay" xml:space="preserve">
-    <value>  LidGuard 自動結束延遲: {0}</value>
-  </data>
-  <data name="SettingsSessionTimeout" xml:space="preserve">
-    <value>  閒置工作階段逾時: {0}</value>
-  </data>
-  <data name="SettingsSuspendHistoryCount" xml:space="preserve">
-    <value>  睡眠/休眠記錄數量: {0}</value>
-  </data>
-  <data name="SettingsSuspendMode" xml:space="preserve">
-    <value>  睡眠動作: {0}</value>
-  </data>
-  <data name="SettingsTitle" xml:space="preserve">
-    <value>設定:</value>
-  </data>
-  <data name="SettingsUserInterfaceCulture" xml:space="preserve">
-    <value>  CLI 顯示語言/地區設定: {0}</value>
-  </data>
-  <data name="SettingsWatchParentProcess" xml:space="preserve">
-    <value>  處理程序監看: {0}</value>
-  </data>
-  <data name="SettingsOptionSessionTimeoutValidation" xml:space="preserve">
-    <value>session-timeout-minutes 選項必須是 off，或至少為 {0} 的整數。</value>
-  </data>
-  <data name="SettingsInteractiveClosedLidPermissionRequestDecisionValidation" xml:space="preserve">
-    <value>上蓋關閉權限要求決定必須是 deny、allow 或 ask。</value>
-  </data>
-  <data name="ManagementLabelStatus" xml:space="preserve">
-    <value>狀態</value>
-  </data>
-  <data name="ManagementLabelExpectedShell" xml:space="preserve">
-    <value>預期的 shell</value>
-  </data>
-  <data name="ManagementHookStatusTitle" xml:space="preserve">
-    <value>{0} Hook 狀態:</value>
-  </data>
-  <data name="ManagementMcpInstallationTitle" xml:space="preserve">
-    <value>MCP 安裝:</value>
-  </data>
   <data name="HelpSessionLogFile" xml:space="preserve">
     <value>工作階段記錄: {0}</value>
-  </data>
-  <data name="SettingsPreviewVolumeOverrideSetting" xml:space="preserve">
-    <value>音量覆寫設定: {0}</value>
-  </data>
-  <data name="ManagementLabelExecutable" xml:space="preserve">
-    <value>可執行檔</value>
-  </data>
-  <data name="SettingsInteractiveEmergencyHibernationTemperatureModeValidation" xml:space="preserve">
-    <value>{0} 必須是 low、average 或 high。</value>
-  </data>
-  <data name="TextDisplayNone" xml:space="preserve">
-    <value>&lt;無&gt;</value>
-  </data>
-  <data name="SettingsInteractiveRangeValidation" xml:space="preserve">
-    <value>{0} 必須是 {1} 到 {2} 之間的整數。</value>
-  </data>
-  <data name="SettingsInteractiveValueOffOrMinimumValidation" xml:space="preserve">
-    <value>{0} 必須是 off，或至少為 {1} 的整數。</value>
-  </data>
-  <data name="SettingsOptionPostStopSuspendDelaySecondsValidation" xml:space="preserve">
-    <value>post-stop-suspend-delay-seconds 選項必須是非負整數。</value>
-  </data>
-  <data name="SettingsOptionClosedLidStopFollowUpDelaySecondsValidation" xml:space="preserve">
-    <value>closed-lid-stop-follow-up-delay-seconds 選項必須是非負整數。</value>
-  </data>
-  <data name="ManagementContainsMcpServerCommand" xml:space="preserve">
-    <value>含有 mcp-server 命令: {0}</value>
-  </data>
-  <data name="ManagementLabelFeatureFlag" xml:space="preserve">
-    <value>功能旗標</value>
-  </data>
-  <data name="SettingsNameSuspendMode" xml:space="preserve">
-    <value>睡眠模式</value>
-  </data>
-  <data name="SettingsOptionEmergencyHibernationTemperatureModeValidation" xml:space="preserve">
-    <value>emergency-hibernation-temperature-mode 選項必須是 low、average 或 high。</value>
-  </data>
-  <data name="ManagementMcpServerDoesNotPointAtManagedCommand" xml:space="preserve">
-    <value>MCP 伺服器 '{0}' 已存在，但未指向 '{1}'。</value>
-  </data>
-  <data name="ManagementMcpServerDoesNotPointAtCurrentExecutable" xml:space="preserve">
-    <value>MCP 伺服器 '{0}' 已存在，但未指向目前的 LidGuard 可執行檔。</value>
-  </data>
-  <data name="ManagementProvider" xml:space="preserve">
-    <value>  Provider: {0}</value>
-  </data>
-  <data name="SettingsInteractiveServerRuntimeCleanupDelayDetails" xml:space="preserve">
-    <value>最小值: {0}，off 可讓執行階段持續執行</value>
-  </data>
-  <data name="SettingsInteractiveInputEnded" xml:space="preserve">
-    <value>在輸入 {0} 之前輸入就已結束。</value>
-  </data>
-  <data name="SettingsNameSessionTimeoutMinutes" xml:space="preserve">
-    <value>工作階段逾時分鐘數</value>
-  </data>
-  <data name="ManagementPromptHookRemove" xml:space="preserve">
-    <value>移除 Provider 的 Hook</value>
-  </data>
-  <data name="SettingsInteractiveSuspendModeValidation" xml:space="preserve">
-    <value>{0} 必須是 sleep 或 hibernate。</value>
-  </data>
-  <data name="SettingsPreviewPlayedCurrentPostStopSuspendSound" xml:space="preserve">
-    <value>已播放目前的睡眠/休眠警告音: {0}</value>
-  </data>
-  <data name="ManagementRequiredStopHooks" xml:space="preserve">
-    <value>必要的 stop Hook: {0}</value>
-  </data>
-  <data name="ManagementHookInstallationTitle" xml:space="preserve">
-    <value>Hook 安裝:</value>
-  </data>
-  <data name="ManagementPromptMcpRemove" xml:space="preserve">
-    <value>移除 Provider 的 MCP 伺服器</value>
-  </data>
-  <data name="ManagementMcpStatusTitle" xml:space="preserve">
-    <value>{0} MCP 狀態:</value>
-  </data>
-  <data name="TextDisplayBooleanTrue" xml:space="preserve">
-    <value>開啟</value>
-  </data>
-  <data name="ManagementLabelExpectedNotificationMatcher" xml:space="preserve">
-    <value>預期的通知比對器</value>
-  </data>
-  <data name="ManagementPromptHookStatus" xml:space="preserve">
-    <value>顯示 Provider 的 Hook 狀態</value>
-  </data>
-  <data name="ManagementLabelPostToolUseFailureHook" xml:space="preserve">
-    <value>PostToolUseFailure Hook</value>
-  </data>
-  <data name="ManagementConfigurationFileDoesNotExist" xml:space="preserve">
-    <value>設定檔不存在: {0}</value>
-  </data>
-  <data name="SettingsInteractiveRangeDetails" xml:space="preserve">
-    <value>範圍: {0}-{1}</value>
-  </data>
-  <data name="ManagementSkippedAbsentProvider" xml:space="preserve">
-    <value>跳過不存在的 Provider: {0}（在以下位置找不到既有的設定根目錄: {1}）</value>
-  </data>
-  <data name="ManagementNoMcpServerNamedFound" xml:space="preserve">
-    <value>找不到名為 '{0}' 的 MCP 伺服器。</value>
-  </data>
-  <data name="ManagementProviderMcpInstallationTitle" xml:space="preserve">
-    <value>Provider MCP 安裝:</value>
-  </data>
-  <data name="ManagementLabelValidCommand" xml:space="preserve">
-    <value>有效的命令</value>
-  </data>
-  <data name="SettingsOptionPreSuspendWebhookRemovalCommand" xml:space="preserve">
-    <value>使用 {0} {1} 移除睡眠/休眠前 Webhook URL。</value>
-  </data>
-  <data name="SettingsOptionClosedLidStopFollowUpWebhookRemovalCommand" xml:space="preserve">
-    <value>使用 {0} {1} 移除睡眠前回覆提醒 URL。</value>
-  </data>
-  <data name="ManagementLabelManagedBlock" xml:space="preserve">
-    <value>受管理區塊</value>
-  </data>
-  <data name="ManagementUnsupportedMcpManagement" xml:space="preserve">
-    <value>目前只實作了 Codex、Claude 與 GitHub Copilot 的 MCP 管理。</value>
-  </data>
-  <data name="ManagementLabelStopFailureHook" xml:space="preserve">
-    <value>StopFailure Hook</value>
-  </data>
-  <data name="HelpSettingsPostStopSuspendSoundOption" xml:space="preserve">
-    <value>停用睡眠/休眠警告音、使用一個支援的 SystemSound 名稱 ({0})，或提供現有可播放的 .wav 路徑。</value>
   </data>
   <data name="HelpSettingsClosedLidStopFollowUpSoundOption" xml:space="preserve">
     <value>停用睡眠前回覆等待提示音、使用一個支援的 SystemSound 名稱 ({0})，或提供現有可播放的 .wav 路徑。</value>
   </data>
-  <data name="SettingsNameChangeLidAction" xml:space="preserve">
-    <value>上蓋關閉動作覆寫</value>
-  </data>
-  <data name="SettingsPreviewVolumeOverrideGuidance" xml:space="preserve">
-    <value>選用的暫時音量: {0} settings --post-stop-suspend-sound-volume-override-percent 75</value>
-  </data>
-  <data name="SettingsInteractiveEmergencyHibernationTemperatureModeDetails" xml:space="preserve">
-    <value>可選值: Low、Average、High</value>
-  </data>
-  <data name="ManagementPromptHookEvents" xml:space="preserve">
-    <value>顯示 Provider 的 Hook 事件</value>
-  </data>
-  <data name="SettingsInteractiveNonNegativeIntegerValidation" xml:space="preserve">
-    <value>{0} 必須是非負整數。</value>
-  </data>
-  <data name="ManagementLabelUserPromptSubmittedHook" xml:space="preserve">
-    <value>UserPromptSubmitted Hook</value>
-  </data>
-  <data name="SettingsOptionEmergencyHibernationTemperatureCelsiusValidation" xml:space="preserve">
-    <value>emergency-hibernation-temperature-celsius 選項必須是 {0} 到 {1} 之間的整數。</value>
-  </data>
-  <data name="ManagementLabelRequiredStopHooks" xml:space="preserve">
-    <value>必要的 stop Hook</value>
-  </data>
-  <data name="SettingsInteractiveUserInterfaceCultureDetails" xml:space="preserve">
-    <value>auto、en、ko、ja、zh-Hans、zh-Hant，或像 ko-KR 這樣的文化名稱</value>
-  </data>
-  <data name="ManagementProviderMcpRegistered" xml:space="preserve">
-    <value>受管理 Provider MCP 伺服器已註冊。</value>
-  </data>
-  <data name="ManagementProviderMcpServerDoesNotPointAtCurrentExecutable" xml:space="preserve">
-    <value>Provider MCP 伺服器 '{0}' 已存在，但未指向目前的 LidGuard 可執行檔。</value>
-  </data>
-  <data name="ManagementProviderMcpServerDoesNotPointAtManagedCommand" xml:space="preserve">
-    <value>Provider MCP 伺服器 '{0}' 已存在，但未指向 '{1}'。</value>
-  </data>
-  <data name="SettingsPreviewSupportedSystemSounds" xml:space="preserve">
-    <value>支援的系統音效: {0}</value>
-  </data>
-  <data name="TextWarning" xml:space="preserve">
-    <value>警告: {0}</value>
-  </data>
-  <data name="SettingsPreviewPlayedSystemSound" xml:space="preserve">
-    <value>已播放系統音效: {0}</value>
-  </data>
-  <data name="ManagementLabelContainsMcpServerCommand" xml:space="preserve">
-    <value>含有 mcp-server 命令</value>
-  </data>
-  <data name="ManagementLabelContainsProviderMcpServerCommand" xml:space="preserve">
-    <value>含有 provider-mcp-server 命令</value>
-  </data>
-  <data name="ManagementLabelMatchesCurrentLidGuardExecutable" xml:space="preserve">
-    <value>符合目前的 LidGuard 可執行檔</value>
-  </data>
-  <data name="ManagementConfigExists" xml:space="preserve">
-    <value>  設定檔存在: {0}</value>
-  </data>
-  <data name="SettingsPreviewSystemSoundNameRequired" xml:space="preserve">
-    <value>必須提供系統音效名稱。支援的值: {0}</value>
-  </data>
-  <data name="ConsoleSessionLine" xml:space="preserve">
-    <value>- {0}:{1} 處理程序={2} 軟鎖定={3} 工作目錄="{4}" 開始={5} 最後活動={6}</value>
-  </data>
-  <data name="ManagementLabelArgs" xml:space="preserve">
-    <value>參數</value>
-  </data>
-  <data name="ManagementLabelMessage" xml:space="preserve">
-    <value>訊息</value>
-  </data>
-  <data name="CommandOptionNameRequired" xml:space="preserve">
-    <value>-- 後面必須接選項名稱。</value>
-  </data>
-  <data name="ManagementProviderName" xml:space="preserve">
-    <value>Provider 名稱: {0}</value>
-  </data>
-  <data name="SettingsPreviewUnsupportedSystemSoundName" xml:space="preserve">
-    <value>不支援的系統音效名稱: {0}</value>
-  </data>
-  <data name="ManagementLabelSessionStartHook" xml:space="preserve">
-    <value>SessionStart Hook</value>
-  </data>
-  <data name="SettingsOptionPostSessionEndWebhookRemovalCommand" xml:space="preserve">
-    <value>使用 {0} {1} 移除工作階段完成 Webhook URL。</value>
-  </data>
-  <data name="SettingsOptionSuspendHistoryCountValidation" xml:space="preserve">
-    <value>suspend-history-count 選項必須是 off，或至少為 {0} 的整數。</value>
-  </data>
-  <data name="ManagementLabelStopHook" xml:space="preserve">
-    <value>Stop Hook</value>
-  </data>
-  <data name="ManagementProviderMcpInstalled" xml:space="preserve">
-    <value>已在 {1} 安裝 Provider MCP 伺服器 '{0}'。</value>
-  </data>
-  <data name="SettingsOptionPostStopSuspendSoundVolumeOverrideValidation" xml:space="preserve">
-    <value>post-stop-suspend-sound-volume-override-percent 選項必須是 off，或 {0} 到 {1} 之間的整數。</value>
-  </data>
-  <data name="SettingsOptionClosedLidStopFollowUpSoundVolumeOverrideValidation" xml:space="preserve">
-    <value>closed-lid-stop-follow-up-sound-volume-override-percent 選項必須是 off，或 {0} 到 {1} 之間的整數。</value>
-  </data>
-  <data name="SettingsInteractivePromptWithDetails" xml:space="preserve">
-    <value>{0}（已儲存: {1}，預設: {2}，{3}，按 Enter 保留已儲存值）: </value>
-  </data>
-  <data name="TextDisplayEmpty" xml:space="preserve">
-    <value>&lt;空&gt;</value>
-  </data>
-  <data name="ManagementPromptMcpInstall" xml:space="preserve">
-    <value>安裝 Provider 的 MCP 伺服器</value>
-  </data>
-  <data name="ManagementRemovingHook" xml:space="preserve">
-    <value>正在移除 {0} Hook...</value>
-  </data>
-  <data name="ManagementInstalled" xml:space="preserve">
-    <value>已安裝: {0}</value>
-  </data>
-  <data name="ManagementLabelErrorOccurredHook" xml:space="preserve">
-    <value>ErrorOccurred Hook</value>
-  </data>
-  <data name="SettingsInteractiveGuidanceRemovePostSessionEndWebhook" xml:space="preserve">
-    <value>如要移除工作階段完成 Webhook URL，請執行: {0} {1}</value>
-  </data>
-  <data name="SettingsOptionServerRuntimeCleanupDelayValidation" xml:space="preserve">
-    <value>server-runtime-cleanup-delay-minutes 選項必須是 off 以停用自動結束執行階段，或至少為 {0} 的整數。</value>
-  </data>
-  <data name="ManagementLidGuardMcpServerRegistered" xml:space="preserve">
-    <value>LidGuard MCP 伺服器已註冊。</value>
-  </data>
-  <data name="SettingsInteractiveVolumeOverrideValidation" xml:space="preserve">
-    <value>{0} 必須是 off，或 {1} 到 {2} 之間的整數。</value>
-  </data>
-  <data name="SettingsInteractiveImmediateDetails" xml:space="preserve">
-    <value>0 = 立即</value>
-  </data>
-  <data name="ManagementProviderCliAvailable" xml:space="preserve">
-    <value>CLI 可用: {0}</value>
-  </data>
-  <data name="SettingsPreviewPlayableWavSupported" xml:space="preserve">
-    <value>也支援可播放的 .wav 檔案路徑。</value>
-  </data>
-  <data name="SettingsPreviewCurrentSoundNotConfigured" xml:space="preserve">
-    <value>未設定睡眠/休眠警告音。</value>
-  </data>
-  <data name="ManagementLabelManagedServerEntry" xml:space="preserve">
-    <value>受管理伺服器項目</value>
-  </data>
-  <data name="ManagementLabelExpectedCommands" xml:space="preserve">
-    <value>預期的命令</value>
-  </data>
-  <data name="ManagementLabelServerName" xml:space="preserve">
-    <value>伺服器名稱</value>
-  </data>
-  <data name="ManagementLabelProvider" xml:space="preserve">
-    <value>Provider</value>
-  </data>
-  <data name="ManagementHookEventCountValidation" xml:space="preserve">
-    <value>Hook 事件數量必須是正整數。</value>
-  </data>
-  <data name="ManagementLabelAllStopHooks" xml:space="preserve">
-    <value>所有 stop Hook</value>
-  </data>
-  <data name="ManagementNoProviderMcpServerNamedRemoved" xml:space="preserve">
-    <value>找不到名為 '{0}' 的 Provider MCP 伺服器可供移除。</value>
-  </data>
-  <data name="ManagementLidGuardExecutableMissing" xml:space="preserve">
-    <value>LidGuard 可執行檔或命令不存在: {0}</value>
-  </data>
-  <data name="SettingsNameServerRuntimeCleanupDelayMinutes" xml:space="preserve">
-    <value>執行階段清理延遲分鐘數</value>
-  </data>
-  <data name="ManagementRemovingMcpServer" xml:space="preserve">
-    <value>正在移除 {0} MCP 伺服器...</value>
-  </data>
-  <data name="ManagementProviderSelectionInputEnded" xml:space="preserve">
-    <value>在選取 Provider 之前輸入就已結束。</value>
-  </data>
-  <data name="SettingsNameEmergencyHibernationTemperatureMode" xml:space="preserve">
-    <value>緊急休眠溫度模式</value>
-  </data>
-  <data name="ManagementProviderSelectionPrompt" xml:space="preserve">
-    <value>{0}（codex、claude、copilot、all；預設: all）: </value>
-  </data>
-  <data name="SettingsInteractiveSuspendModeDetails" xml:space="preserve">
-    <value>可選值: Sleep、Hibernate</value>
-  </data>
-  <data name="SettingsNameWatchParentProcess" xml:space="preserve">
-    <value>處理程序監看</value>
-  </data>
-  <data name="SettingsNameSuspendHistoryEntryCount" xml:space="preserve">
-    <value>睡眠/休眠記錄項目數量</value>
-  </data>
-  <data name="ManagementNoProviderMcpServerNamedFound" xml:space="preserve">
-    <value>在 {1} 中找不到名為 '{0}' 的 Provider MCP 伺服器。</value>
-  </data>
-  <data name="ManagementMcpServersObjectNotFound" xml:space="preserve">
-    <value>mcpServers 物件在 {0} 中找不到。</value>
-  </data>
-  <data name="SettingsOptionSuspendModeValidation" xml:space="preserve">
-    <value>suspend-mode 選項必須是 sleep 或 hibernate。</value>
-  </data>
-  <data name="SettingsInteractiveBooleanValidation" xml:space="preserve">
-    <value>{0} 必須是 true 或 false。</value>
-  </data>
-  <data name="ManagementLabelTransport" xml:space="preserve">
-    <value>傳輸方式</value>
-  </data>
-  <data name="SettingsInteractiveClosedLidPermissionRequestDecisionDetails" xml:space="preserve">
-    <value>可選值: Deny、Allow、Ask</value>
-  </data>
-  <data name="ManagementCommandEmpty" xml:space="preserve">
-    <value>命令: &lt;無&gt;</value>
-  </data>
-  <data name="ManagementLabelPermissionRequestHook" xml:space="preserve">
-    <value>PermissionRequest Hook</value>
-  </data>
-  <data name="SettingsNamePreventAwayModeSleep" xml:space="preserve">
-    <value>Away Mode 睡眠防止</value>
-  </data>
-  <data name="ManagementStatus" xml:space="preserve">
-    <value>  狀態: {0}</value>
-  </data>
-  <data name="ManagementCommand" xml:space="preserve">
-    <value>命令: {0}</value>
-  </data>
-  <data name="ManagementProviderCli" xml:space="preserve">
-    <value>  CLI: {0}</value>
-  </data>
-  <data name="ManagementChanged" xml:space="preserve">
-    <value>已變更: {0}</value>
-  </data>
-  <data name="ManagementUnsupportedHookEventLogs" xml:space="preserve">
-    <value>目前只實作了 Codex、Claude 與 GitHub Copilot 的 Hook 事件記錄。</value>
-  </data>
-  <data name="ManagementTransport" xml:space="preserve">
-    <value>  傳輸方式: {0}</value>
-  </data>
-  <data name="SettingsNameEmergencyHibernationOnHighTemperature" xml:space="preserve">
-    <value>高溫時啟用緊急休眠</value>
-  </data>
-  <data name="ManagementBackup" xml:space="preserve">
-    <value>備份: {0}</value>
-  </data>
-  <data name="ManagementConfigCannotBeUsedWithAllProviders" xml:space="preserve">
-    <value>--config 選項不能和 --provider all 一起使用，因為每個 Provider 的設定檔都不同。</value>
-  </data>
-  <data name="SettingsInteractiveGuidanceRemovePreSuspendWebhook" xml:space="preserve">
-    <value>如要移除睡眠/休眠前 Webhook URL，請執行: {0} {1}</value>
-  </data>
-  <data name="ManagementConfig" xml:space="preserve">
-    <value>  設定檔: {0}</value>
-  </data>
-  <data name="ManagementLabelConflictingAgentStopHooks" xml:space="preserve">
-    <value>衝突的 agentStop Hook</value>
-  </data>
-  <data name="ManagementLabelUrl" xml:space="preserve">
-    <value>URL</value>
+  <data name="HelpSettingsPostStopSuspendSoundOption" xml:space="preserve">
+    <value>停用睡眠/休眠警告音、使用一個支援的 SystemSound 名稱 ({0})，或提供現有可播放的 .wav 路徑。</value>
   </data>
   <data name="HelpSuspendHistoryLogFile" xml:space="preserve">
     <value>睡眠/休眠記錄: {0}</value>
+  </data>
+  <data name="Help_ClaudeHooks_Description" xml:space="preserve">
+    <value>列印受管理的 Claude Code Hook 設定片段。</value>
+  </data>
+  <data name="Help_ClaudeHooks_FormatOption" xml:space="preserve">
+    <value>選用的位置參數。預設為 settings-json。接受 settings-json、json 或 hooks-json。</value>
+  </data>
+  <data name="Help_ClaudeHook_Description" xml:space="preserve">
+    <value>從標準輸入讀取 Claude Code Hook JSON，並將 start、stop、activity、soft-lock、elicitation 或 permission 決定轉送給 LidGuard。</value>
+  </data>
+  <data name="Help_CleanupOrphans_Description" xml:space="preserve">
+    <value>移除監看處理程序已經結束的工作階段。</value>
+  </data>
+  <data name="Help_CleanupOrphans_RuntimeNotRunningNote" xml:space="preserve">
+    <value>如果 LidGuard 未在執行中，cleanup-orphans 會回報沒有需要清理的項目。</value>
+  </data>
+  <data name="Help_CodexHooks_Description" xml:space="preserve">
+    <value>列印受管理的 Codex Hook 設定片段。</value>
+  </data>
+  <data name="Help_CodexHooks_FormatOption" xml:space="preserve">
+    <value>選用的位置參數。預設為 config-toml。接受 config-toml、toml、hooks-json 或 json。</value>
+  </data>
+  <data name="Help_CodexHook_Description" xml:space="preserve">
+    <value>從標準輸入讀取 Codex Hook JSON，並將 start、stop 或上蓋關閉權限決定轉送給執行階段。</value>
+  </data>
+  <data name="Help_Command_NoOptionsNote" xml:space="preserve">
+    <value>這個命令不接受任何選項。</value>
+  </data>
+  <data name="Help_CopilotHooks_Description" xml:space="preserve">
+    <value>列印受管理的 GitHub Copilot CLI Hook 設定片段。</value>
+  </data>
+  <data name="Help_CopilotHooks_FormatOption" xml:space="preserve">
+    <value>選用的位置參數。預設為 config-json。接受 config-json、json 或 hooks-json。</value>
+  </data>
+  <data name="Help_CopilotHook_Description" xml:space="preserve">
+    <value>從標準輸入讀取 GitHub Copilot CLI 某個已設定事件名稱的 Hook JSON。</value>
+  </data>
+  <data name="Help_CopilotHook_EventOption" xml:space="preserve">
+    <value>必要。常見值包括 sessionStart、sessionEnd、userPromptSubmitted、preToolUse、postToolUse、permissionRequest、agentStop、subagentStart、subagentStop、errorOccurred 和 notification。</value>
+  </data>
+  <data name="Help_CurrentLidState_Description" xml:space="preserve">
+    <value>使用與 LidGuard 判斷上蓋關閉政策時相同的平台上蓋狀態來源，回報目前的上蓋開關狀態。</value>
+  </data>
+  <data name="Help_CurrentLidState_StateNote" xml:space="preserve">
+    <value>這會依目前平台的上蓋狀態來源回報 Open、Closed 或 Unknown。</value>
+  </data>
+  <data name="Help_CurrentMonitorCount_Description" xml:space="preserve">
+    <value>使用與 LidGuard 判斷上蓋關閉政策時相同的基礎平台顯示器可見性檢查，回報目前可見的顯示器數量。</value>
+  </data>
+  <data name="Help_CurrentMonitorCount_InternalPanelNote" xml:space="preserve">
+    <value>只有在最後判斷是否可進入睡眠/休眠時，才會排除筆電內建面板連線。</value>
+  </data>
+  <data name="Help_CurrentTemperature_DefaultModeNote" xml:space="preserve">
+    <value>當設定檔尚不存在時，default 會使用 Average。</value>
+  </data>
+  <data name="Help_CurrentTemperature_Description" xml:space="preserve">
+    <value>使用選定的溫度模式，以攝氏回報目前系統溫度。</value>
+  </data>
+  <data name="Help_CurrentTemperature_TemperatureModeOption" xml:space="preserve">
+    <value>選用的位置參數。使用 default 會依照已儲存設定，或可只為這次命令選擇 low、average 或 high。</value>
+  </data>
+  <data name="Help_CurrentTemperature_UnavailableNote" xml:space="preserve">
+    <value>如果這個平台沒有可用的支援溫度感測器資料，此命令會回報目前無法取得該值。</value>
+  </data>
+  <data name="Help_Help_CommandOptionNote" xml:space="preserve">
+    <value>&lt;command&gt; --help 形式會使用相同的命令中繼資料。</value>
+  </data>
+  <data name="Help_Help_Description" xml:space="preserve">
+    <value>顯示分類後的命令總覽，或針對單一已知命令/別名顯示詳細說明。</value>
+  </data>
+  <data name="Help_HookEvents_CountOption" xml:space="preserve">
+    <value>選用的正整數行數。預設為 50。</value>
+  </data>
+  <data name="Help_HookEvents_Description" xml:space="preserve">
+    <value>列印所選 Provider 或多個 Provider 最近的 Hook 事件記錄行。</value>
+  </data>
+  <data name="Help_HookInstall_Description" xml:space="preserve">
+    <value>將受管理的 Provider Hook 項目安裝到所選設定檔中。</value>
+  </data>
+  <data name="Help_HookRemove_Description" xml:space="preserve">
+    <value>從所選設定檔中移除受管理的 Provider Hook 項目。</value>
+  </data>
+  <data name="Help_HookStatus_Description" xml:space="preserve">
+    <value>檢查某個 Provider 或所有已偵測到的 Provider 的受管理 Hook 設定。</value>
+  </data>
+  <data name="Help_LinuxPermission_CheckDescription" xml:space="preserve">
+    <value>驗證 Linux 執行階段所需的操作，但不會真的要求進入 suspend 或 hibernate。</value>
+  </data>
+  <data name="Help_LinuxPermission_Description" xml:space="preserve">
+    <value>檢查或管理 Linux 上用於 systemd/logind 睡眠、休眠與 inhibitor 操作的 polkit 權限。</value>
+  </data>
+  <data name="Help_LinuxPermission_InstallDescription" xml:space="preserve">
+    <value>為目前使用者安裝 LidGuard 管理的 polkit 規則。</value>
+  </data>
+  <data name="Help_LinuxPermission_InstallNote" xml:space="preserve">
+    <value>這個子命令會使用 sudo，一次性以管理員權限寫入 /etc/polkit-1/rules.d/49-lidguard.rules。</value>
+  </data>
+  <data name="Help_LinuxPermission_RemoveDescription" xml:space="preserve">
+    <value>當存在完全相同的受管理規則檔時，移除 LidGuard 管理的 polkit 規則。</value>
+  </data>
+  <data name="Help_LinuxPermission_RemoveNote" xml:space="preserve">
+    <value>如果規則檔不含 LidGuard 的受管理標記，就不會移除該檔案。</value>
+  </data>
+  <data name="Help_LinuxPermission_StatusDescription" xml:space="preserve">
+    <value>只顯示目前的 Linux 權限環境，不會做任何變更。</value>
+  </data>
+  <data name="Help_LiveStatus_Description" xml:space="preserve">
+    <value>以即時終端儀表板顯示執行階段狀態、進行中的工作階段，以及最近的 LidGuard 流程記錄。</value>
+  </data>
+  <data name="Help_LiveStatus_ExitNote" xml:space="preserve">
+    <value>按 q、Escape 或 Ctrl+C 可離開。</value>
+  </data>
+  <data name="Help_LiveStatus_RuntimeNotStartedNote" xml:space="preserve">
+    <value>這個命令不會啟動執行階段；當執行階段不可用時，它會等待並重新連線。</value>
+  </data>
+  <data name="Help_MacOSPermission_CheckDescription" xml:space="preserve">
+    <value>驗證 macOS 執行階段所需的操作，但不會真的要求進入睡眠或休眠。</value>
+  </data>
+  <data name="Help_MacOSPermission_Description" xml:space="preserve">
+    <value>檢查或管理 macOS 上 pmset 與 powermetrics 操作所需的 sudoers 權限。</value>
+  </data>
+  <data name="Help_MacOSPermission_InstallDescription" xml:space="preserve">
+    <value>為目前使用者安裝 LidGuard 管理的 sudoers 規則。</value>
+  </data>
+  <data name="Help_MacOSPermission_InstallNote" xml:space="preserve">
+    <value>這個子命令會使用 sudo，一次性以管理員權限寫入 /private/etc/sudoers.d/lidguard。</value>
+  </data>
+  <data name="Help_MacOSPermission_ManagedRuleNote" xml:space="preserve">
+    <value>受管理規則只允許 LidGuard 的 pmset disablesleep、pmset hibernatemode 與 powermetrics SMC sample 命令。</value>
+  </data>
+  <data name="Help_MacOSPermission_RemoveDescription" xml:space="preserve">
+    <value>當存在完全相同的受管理 sudoers 規則檔時，移除 LidGuard 管理的 sudoers 規則。</value>
+  </data>
+  <data name="Help_MacOSPermission_RemoveNote" xml:space="preserve">
+    <value>如果 sudoers 檔案不含 LidGuard 的受管理標記，就不會移除該檔案。</value>
+  </data>
+  <data name="Help_MacOSPermission_StatusDescription" xml:space="preserve">
+    <value>只顯示目前的 macOS 權限環境，不會做任何變更。</value>
+  </data>
+  <data name="Help_ManagedCommands_Detail" xml:space="preserve">
+    <value>這些命令主要用於 Provider 管理的整合與 stdio 主機，而不是一般日常直接在 CLI 使用。</value>
+  </data>
+  <data name="Help_ManagedProvider_AllProvidersArgumentNote" xml:space="preserve">
+    <value>使用 all 時，只會處理預設設定根目錄已存在的 Provider。缺少的 Provider 會回報並略過。</value>
+  </data>
+  <data name="Help_ManagedProvider_AllProvidersNote" xml:space="preserve">
+    <value>使用 --provider all 時，只會處理預設設定根目錄已存在的 Provider。缺少的 Provider 會回報並略過。</value>
+  </data>
+  <data name="Help_ManagedProvider_ConfigAllNote" xml:space="preserve">
+    <value>不要把 --config 和 --provider all 一起使用，因為每個 Provider 使用的設定檔都不同。</value>
+  </data>
+  <data name="Help_ManagedProvider_ConfigOption" xml:space="preserve">
+    <value>選用的 Provider 專屬設定檔覆寫。</value>
+  </data>
+  <data name="Help_ManagedProvider_ProviderOption" xml:space="preserve">
+    <value>選用。允許的值: codex、claude、copilot、opencode 或 all。省略時，LidGuard 會提示您選擇 Provider。</value>
+  </data>
+  <data name="Help_McpInstall_Description" xml:space="preserve">
+    <value>向選定的 Provider CLI 註冊或重新整理名為 lidguard 的受管理 stdio MCP 伺服器。</value>
+  </data>
+  <data name="Help_McpInstall_RefreshNote" xml:space="preserve">
+    <value>如果找到現有的受管理 LidGuard MCP 伺服器，mcp-install 會先移除它，再安裝目前的命令。</value>
+  </data>
+  <data name="Help_McpRemove_Description" xml:space="preserve">
+    <value>從選定的 Provider CLI 中移除名為 lidguard 的受管理 stdio MCP 伺服器。</value>
+  </data>
+  <data name="Help_McpServer_Description" xml:space="preserve">
+    <value>啟用一般 LidGuard stdio MCP 伺服器，公開設定與工作階段管理工具。</value>
+  </data>
+  <data name="Help_McpStatus_Description" xml:space="preserve">
+    <value>檢查某個 Provider 或所有已偵測到的 Provider 的受管理使用者/全域 LidGuard MCP 伺服器註冊狀態。</value>
+  </data>
+  <data name="Help_Mcp_ProviderArgument" xml:space="preserve">
+    <value>選用的位置參數。允許的值: codex、claude、copilot、opencode 或 all。省略時，LidGuard 會提示您選擇 Provider。</value>
+  </data>
+  <data name="Help_OpenCodeHooks_Description" xml:space="preserve">
+    <value>輸出受管理的 OpenCode 全域外掛程式片段。</value>
+  </data>
+  <data name="Help_OpenCodeHooks_FormatOption" xml:space="preserve">
+    <value>選用的位置參數。預設為 plugin-js。接受 plugin-js、js 或 javascript。</value>
+  </data>
+  <data name="Help_OpenCodeHook_Description" xml:space="preserve">
+    <value>從標準輸入讀取單一已設定事件名稱的 OpenCode 外掛程式 JSON。</value>
+  </data>
+  <data name="Help_OpenCodeHook_EventOption" xml:space="preserve">
+    <value>必要。常用值包括 chat.message、permission.ask、tool.execute.before、tool.execute.after、session.idle/status/deleted/error，也可以使用 permission/question 生命週期事件。</value>
+  </data>
+  <data name="Help_Paths_LinuxRuntimeBehavior" xml:space="preserve">
+    <value>Linux 支援是為 systemd/logind 環境實作的。macOS 支援則在 macOS 建置中實作。</value>
+  </data>
+  <data name="Help_Paths_MacOSRuntimeBehavior" xml:space="preserve">
+    <value>macOS 支援使用 caffeinate 與 pmset。Windows 與 Linux 支援則在各自的平台建置中實作。</value>
+  </data>
+  <data name="Help_Paths_ProviderMcpBestEffort" xml:space="preserve">
+    <value>Provider MCP 整合僅能盡力而為，因為正確行為完全取決於模型是否在正確時機呼叫 LidGuard MCP 工具。</value>
+  </data>
+  <data name="Help_Paths_WindowsRuntimeBehavior" xml:space="preserve">
+    <value>這個建置包含 Windows 支援。Linux 與 macOS 支援則在各自的平台建置中實作。</value>
+  </data>
+  <data name="Help_PreviewCurrentSound_Description" xml:space="preserve">
+    <value>立即使用已儲存的暫時音量設定播放目前的睡眠/休眠警告音。</value>
+  </data>
+  <data name="Help_PreviewCurrentSound_NoSoundNote" xml:space="preserve">
+    <value>如果沒有設定警告音，這個命令不會失敗，而是改為列印設定指引。</value>
+  </data>
+  <data name="Help_PreviewSystemSound_Description" xml:space="preserve">
+    <value>立即使用已儲存的暫時音量設定播放一個支援的 SystemSound 名稱。</value>
+  </data>
+  <data name="Help_PreviewSystemSound_NameOption" xml:space="preserve">
+    <value>必要的位置參數。允許的值: Asterisk、Beep、Exclamation、Hand 或 Question。</value>
+  </data>
+  <data name="Help_ProviderMcpInstall_ConfigOption" xml:space="preserve">
+    <value>必要。要建立或更新的 JSON 設定檔。</value>
+  </data>
+  <data name="Help_ProviderMcpInstall_Description" xml:space="preserve">
+    <value>在呼叫端提供的 JSON 設定檔中寫入或更新受管理的 Provider MCP stdio 伺服器項目。</value>
+  </data>
+  <data name="Help_ProviderMcpInstall_DirectEditNote" xml:space="preserve">
+    <value>這條路徑會直接編輯提供的 JSON 檔案，不會呼叫 Provider 專屬的 mcp add/remove 命令。</value>
+  </data>
+  <data name="Help_ProviderMcpInstall_ProviderNameOption" xml:space="preserve">
+    <value>必要的 Provider 名稱，會直接傳給 provider-mcp-server。</value>
+  </data>
+  <data name="Help_ProviderMcpRemove_ConfigOption" xml:space="preserve">
+    <value>必要。要更新的 JSON 設定檔。</value>
+  </data>
+  <data name="Help_ProviderMcpRemove_Description" xml:space="preserve">
+    <value>從呼叫端提供的 JSON 設定檔中移除受管理的 Provider MCP 伺服器項目。</value>
+  </data>
+  <data name="Help_ProviderMcpServer_Description" xml:space="preserve">
+    <value>以呼叫端提供的單一 Provider 名稱啟用專用的 Provider MCP stdio 伺服器。</value>
+  </data>
+  <data name="Help_ProviderMcpServer_ProviderNameOption" xml:space="preserve">
+    <value>必要的 Provider 名稱，會公開給 Provider MCP 工具使用。</value>
+  </data>
+  <data name="Help_ProviderMcpStatus_ConfigOption" xml:space="preserve">
+    <value>必要。要檢查的 JSON 設定檔。</value>
+  </data>
+  <data name="Help_ProviderMcpStatus_Description" xml:space="preserve">
+    <value>檢查呼叫端提供的 JSON 設定檔中是否有受管理的 Provider MCP 伺服器項目。</value>
+  </data>
+  <data name="Help_ProviderMcp_ServerNameOption" xml:space="preserve">
+    <value>選用的受管理伺服器項目名稱。預設為 lidguard-provider。</value>
+  </data>
+  <data name="Help_RemoveClosedLidStopFollowUpWebhook_Description" xml:space="preserve">
+    <value>清除已儲存的睡眠前回覆提醒 URL。</value>
+  </data>
+  <data name="Help_RemovePostSessionEndWebhook_Description" xml:space="preserve">
+    <value>清除已儲存的工作階段完成 Webhook URL。</value>
+  </data>
+  <data name="Help_RemovePreSuspendWebhook_Description" xml:space="preserve">
+    <value>清除已儲存的睡眠/休眠前 Webhook URL。</value>
+  </data>
+  <data name="Help_RemoveSession_AllCannotCombineNote" xml:space="preserve">
+    <value>--all 不能和 --session、--provider 或 --provider-name 一起使用。</value>
+  </data>
+  <data name="Help_RemoveSession_AllDescription" xml:space="preserve">
+    <value>移除執行階段目前追蹤的所有仍在進行的工作階段。</value>
+  </data>
+  <data name="Help_RemoveSession_ByIdentifierDescription" xml:space="preserve">
+    <value>不等待 Provider stop Hook，直接依工作階段識別碼移除進行中的工作階段。</value>
+  </data>
+  <data name="Help_RemoveSession_Description" xml:space="preserve">
+    <value>移除執行階段目前追蹤、且仍在進行的工作階段。</value>
+  </data>
+  <data name="Help_RemoveSession_McpWithoutProviderNameNote" xml:space="preserve">
+    <value>當 --provider mcp 未搭配 --provider-name 使用時，LidGuard 會移除所有具有相同工作階段識別碼、且以 MCP 為後端的工作階段。</value>
+  </data>
+  <data name="Help_RemoveSession_NoProviderNote" xml:space="preserve">
+    <value>當省略 --provider 時，LidGuard 會移除所有工作階段識別碼相符、仍在進行中的工作階段。</value>
+  </data>
+  <data name="Help_RemoveSession_ProviderNameOption" xml:space="preserve">
+    <value>選用。當使用 --provider mcp 時，將移除範圍縮小到單一 MCP Provider 名稱。</value>
+  </data>
+  <data name="Help_RemoveSession_ProviderOption" xml:space="preserve">
+    <value>選用。將移除範圍縮小到單一 Provider。允許的值: codex、claude、copilot、opencode、custom、mcp 或 unknown。</value>
+  </data>
+  <data name="Help_RemoveSession_SessionOption" xml:space="preserve">
+    <value>必要。要移除的工作階段識別碼。</value>
+  </data>
+  <data name="Help_Session_ProviderOption" xml:space="preserve">
+    <value>必要。允許的值: codex、claude、copilot、opencode、custom 或 mcp。</value>
+  </data>
+  <data name="Help_Settings_ChangeLidActionOption" xml:space="preserve">
+    <value>變更 LidGuard 是否暫時把目前電源計畫的上蓋關閉動作設為 Do Nothing。</value>
+  </data>
+  <data name="Help_Settings_ClosedLidPermissionRequestDecisionOption" xml:space="preserve">
+    <value>選擇當 LidGuard 回報上蓋已關閉時，closed-lid PermissionRequest Hook 要如何回應。ask 會讓工作階段進入等待輸入狀態，並讓 Provider 的正常權限提示繼續顯示。</value>
+  </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpDelayOption" xml:space="preserve">
+    <value>設定送出睡眠前提醒後等待使用者回覆的時間。0 表示關閉；啟用回覆提醒時需要至少 20 秒。預設值為 180 秒。</value>
+  </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpSoundVolumeOption" xml:space="preserve">
+    <value>停用暫時音量調整，或設定睡眠前回覆等待提示音播放時的預設輸出音量。之後 LidGuard 會還原先前的音量與靜音狀態。</value>
+  </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpSoundVolumeOverrideAliasOption" xml:space="preserve">
+    <value>--closed-lid-stop-follow-up-sound-volume-override-percent 的別名。若兩者都提供，較長選項的值會優先。</value>
+  </data>
+  <data name="Help_Settings_ClosedLidStopFollowUpWebhookOption" xml:space="preserve">
+    <value>上蓋關閉時，如果工作準備結束，請設定在睡眠前送出回覆提醒的 URL。URL 有效、回覆等待時間至少 20 秒且 post-stop-suspend-delay-seconds 至少 10 秒時才會生效。</value>
+  </data>
+  <data name="Help_Settings_Description" xml:space="preserve">
+    <value>顯示並更新工作階段啟動時使用的預設設定。</value>
+  </data>
+  <data name="Help_Settings_EmergencyHibernationOption" xml:space="preserve">
+    <value>變更當受保護系統在上蓋關閉時達到設定溫度門檻，LidGuard 是否要求緊急休眠。</value>
+  </data>
+  <data name="Help_Settings_EmergencyHibernationTemperatureCelsiusOption" xml:space="preserve">
+    <value>將緊急休眠門檻設定為攝氏值。允許範圍: 70 到 110。</value>
+  </data>
+  <data name="Help_Settings_EmergencyHibernationTemperatureModeOption" xml:space="preserve">
+    <value>選擇 LidGuard 使用最低、平均或最高的可用溫度感測器值。</value>
+  </data>
+  <data name="Help_Settings_InteractiveModeNote" xml:space="preserve">
+    <value>不帶任何選項執行 settings，會進入互動式編輯模式。</value>
+  </data>
+  <data name="Help_Settings_PostSessionEndWebhookOption" xml:space="preserve">
+    <value>設定工作階段正常完成且 LidGuard 不會接著進入睡眠或休眠時要呼叫的 Webhook URL。</value>
+  </data>
+  <data name="Help_Settings_PostStopSuspendDelayOption" xml:space="preserve">
+    <value>設定工作結束後的安全等待時間，讓緊接著到來的下一則訊息能先被接收，然後才開始睡眠/休眠或回覆等待。</value>
+  </data>
+  <data name="Help_Settings_PostStopSuspendSoundOption" xml:space="preserve">
+    <value>停用睡眠或休眠警告音、使用一個支援的 SystemSound 名稱 ({supportedPostStopSuspendSystemSounds})，或提供現有可播放的 .wav 路徑。</value>
+  </data>
+  <data name="Help_Settings_PostStopSuspendSoundVolumeOption" xml:space="preserve">
+    <value>停用暫時音量調整，或設定睡眠/休眠警告音播放時的預設輸出音量。之後 LidGuard 會還原先前的音量與靜音狀態。</value>
+  </data>
+  <data name="Help_Settings_PowerRequestReasonOption" xml:space="preserve">
+    <value>設定 Windows 顯示給使用者的 LidGuard 防止睡眠原因文字。</value>
+  </data>
+  <data name="Help_Settings_PreSuspendWebhookOption" xml:space="preserve">
+    <value>設定 LidGuard 在要求睡眠或休眠前要呼叫的 Webhook URL。</value>
+  </data>
+  <data name="Help_Settings_PreventAwayModeSleepOption" xml:space="preserve">
+    <value>變更 Windows 在支援時是否使用 Away Mode 讓背景工作持續執行。</value>
+  </data>
+  <data name="Help_Settings_PreventDisplaySleepOption" xml:space="preserve">
+    <value>變更 LidGuard 是否在工作階段進行中時防止顯示器進入睡眠。</value>
+  </data>
+  <data name="Help_Settings_PreventSystemSleepOption" xml:space="preserve">
+    <value>變更 LidGuard 是否在工作階段進行中時防止一般系統睡眠。</value>
+  </data>
+  <data name="Help_Settings_RemoveWebhookNote" xml:space="preserve">
+    <value>請使用 remove-pre-suspend-webhook 或 remove-post-session-end-webhook 來清除 Webhook URL；Webhook URL 選項不接受 off 或空值。</value>
+  </data>
+  <data name="Help_Settings_RepeatClosedLidStopFollowUpOption" xml:space="preserve">
+    <value>設定在回覆讓工作繼續後，下次該工作再次準備結束時是否再通知一次。預設值為 true。</value>
+  </data>
+  <data name="Help_Settings_ResetOption" xml:space="preserve">
+    <value>為 true 時，會在套用這次命令中的值之前，先將設定重設為 LidGuard 預設值。</value>
+  </data>
+  <data name="Help_Settings_ServerRuntimeCleanupDelayOption" xml:space="preserve">
+    <value>設定所有工作階段結束且清理完成後，LidGuard 還要持續執行多久。傳入 off 可讓執行階段持續執行，0 會立刻結束，正整數分鐘則表示等待時間。</value>
+  </data>
+  <data name="Help_Settings_SessionTimeoutOption" xml:space="preserve">
+    <value>關閉閒置工作階段逾時，或讓閒置工作階段在這麼多分鐘沒有活動後停止保持系統喚醒。啟用時最小值為 1。</value>
+  </data>
+  <data name="Help_Settings_SuspendHistoryOption" xml:space="preserve">
+    <value>停用睡眠/休眠歷史記錄，或保留最近的睡眠/休眠要求項目。啟用時最小值為 1。</value>
+  </data>
+  <data name="Help_Settings_SuspendModeOption" xml:space="preserve">
+    <value>選擇在最後一個進行中的工作階段結束，或最後一個工作階段不再需要保持系統喚醒後，LidGuard 要求睡眠還是休眠。</value>
+  </data>
+  <data name="Help_Settings_UserInterfaceCultureOption" xml:space="preserve">
+    <value>設定 CLI 顯示語言/地區。常見選項包含 en、ko、ja、zh-Hans 和 zh-Hant。auto 會跟隨目前處理程序或作業系統的設定，而 LIDGUARD_UI_CULTURE 的優先順序高於已儲存的值。</value>
+  </data>
+  <data name="Help_Settings_WatchParentProcessOption" xml:space="preserve">
+    <value>變更追蹤工作階段的處理程序監看政策。</value>
+  </data>
+  <data name="Help_SoundPreview_WaitsForPlaybackNote" xml:space="preserve">
+    <value>這個命令會等待播放完成。</value>
+  </data>
+  <data name="Help_Start_Description" xml:space="preserve">
+    <value>啟動或重新整理追蹤工作階段，並載入已儲存的預設設定。</value>
+  </data>
+  <data name="Help_Start_ParentProcessOption" xml:space="preserve">
+    <value>選用的處理程序 ID，用來監看處理程序；若該處理程序結束，LidGuard 就能清理。</value>
+  </data>
+  <data name="Help_Start_ProviderNameOption" xml:space="preserve">
+    <value>當使用 --provider mcp 時為必要。用來區分不同的 MCP 後端 Provider。</value>
+  </data>
+  <data name="Help_Start_RuntimeLaunchNote" xml:space="preserve">
+    <value>如果沒有執行中的 runtime 在監聽，start 會自動啟動分離式 runtime 伺服器。</value>
+  </data>
+  <data name="Help_Start_SessionOption" xml:space="preserve">
+    <value>選用。要追蹤的工作階段識別碼。省略時，LidGuard 會根據 Provider 顯示名稱與標準化後的工作目錄自動產生。</value>
+  </data>
+  <data name="Help_Start_WorkingDirectoryOption" xml:space="preserve">
+    <value>用於後備工作階段識別與中繼資料的選用工作目錄。預設為目前目錄。</value>
+  </data>
+  <data name="Help_Status_Description" xml:space="preserve">
+    <value>顯示執行階段狀態、進行中的工作階段，以及目前生效的已儲存設定。</value>
+  </data>
+  <data name="Help_Status_RuntimeNotRunningNote" xml:space="preserve">
+    <value>如果 LidGuard 未在執行中，status 仍會列印已儲存的設定檔內容。</value>
+  </data>
+  <data name="Help_Stop_Description" xml:space="preserve">
+    <value>依工作階段啟動時使用的相同 Provider 與工作階段識別，比對後停止追蹤工作階段。</value>
+  </data>
+  <data name="Help_Stop_ParentProcessOption" xml:space="preserve">
+    <value>停止追蹤工作階段時使用的選用處理程序 ID，用來比對處理程序。</value>
+  </data>
+  <data name="Help_Stop_ProviderNameOption" xml:space="preserve">
+    <value>當使用 --provider mcp 時為必要。</value>
+  </data>
+  <data name="Help_Stop_SessionOption" xml:space="preserve">
+    <value>選用。省略時，LidGuard 會使用與 start 相同的後備工作階段識別策略。</value>
+  </data>
+  <data name="Help_Stop_WorkingDirectoryOption" xml:space="preserve">
+    <value>用於後備工作階段識別的選用工作目錄。預設為目前目錄。</value>
+  </data>
+  <data name="Help_SuspendHistory_CountNote" xml:space="preserve">
+    <value>已儲存的 suspend-history-count 設定會控制保留多少項目。count 引數只會限制顯示多少已保留的項目。</value>
+  </data>
+  <data name="Help_SuspendHistory_CountOption" xml:space="preserve">
+    <value>選用的正整數項目數。預設會使用已儲存的 suspend-history-count 值；若記錄已關閉，則為 10。</value>
+  </data>
+  <data name="Help_SuspendHistory_Description" xml:space="preserve">
+    <value>列印本機歷史記錄中最近的睡眠/休眠要求紀錄。</value>
+  </data>
+  <data name="Help_Usage_BooleanOptions" xml:space="preserve">
+    <value>布林選項接受 true/false、yes/no、on/off 與 1/0。</value>
+  </data>
+  <data name="Help_Usage_OptionSyntax" xml:space="preserve">
+    <value>選項請使用 --name value 或 --name=value。</value>
+  </data>
+  <data name="Help_Usage_QuoteValues" xml:space="preserve">
+    <value>當路徑或文字值包含空白時，請加上引號。</value>
+  </data>
+  <data name="Help_WslClaudeHooks_Description" xml:space="preserve">
+    <value>列印會從 WSL 執行 Windows LidGuard 的 Claude Hook 片段。</value>
+  </data>
+  <data name="Help_WslCodexHooks_Description" xml:space="preserve">
+    <value>列印會從 WSL 執行 Windows LidGuard 的 Codex Hook 片段。</value>
+  </data>
+  <data name="Help_WslCopilotHooks_Description" xml:space="preserve">
+    <value>列印會從 WSL 執行 Windows LidGuard 的 GitHub Copilot Hook 片段。</value>
+  </data>
+  <data name="Help_WslHookInstall_Description" xml:space="preserve">
+    <value>在 WSL 發行版內安裝 LidGuard 管理的 Hook。</value>
+  </data>
+  <data name="Help_WslHookRemove_Description" xml:space="preserve">
+    <value>從 WSL 發行版內移除 LidGuard 管理的 Hook。</value>
+  </data>
+  <data name="Help_WslHookStatus_Description" xml:space="preserve">
+    <value>顯示 WSL 發行版內的 LidGuard Hook 狀態。</value>
+  </data>
+  <data name="Help_WslMcpInstall_Description" xml:space="preserve">
+    <value>在 WSL 發行版內安裝 LidGuard MCP 伺服器。</value>
+  </data>
+  <data name="Help_WslMcpRemove_Description" xml:space="preserve">
+    <value>從 WSL 發行版內移除 LidGuard MCP 伺服器。</value>
+  </data>
+  <data name="Help_WslMcpStatus_Description" xml:space="preserve">
+    <value>顯示 WSL 發行版內的 LidGuard MCP 伺服器狀態。</value>
+  </data>
+  <data name="Help_WslOpenCodeHooks_Description" xml:space="preserve">
+    <value>輸出可從 WSL 執行 Windows LidGuard 的 OpenCode 外掛程式片段。</value>
+  </data>
+  <data name="Help_WslProviderMcpInstall_Description" xml:space="preserve">
+    <value>在 WSL 發行版內安裝通用 Provider MCP 伺服器。</value>
+  </data>
+  <data name="Help_WslProviderMcpRemove_Description" xml:space="preserve">
+    <value>從 WSL 發行版內移除通用 Provider MCP 伺服器。</value>
+  </data>
+  <data name="Help_WslProviderMcpStatus_Description" xml:space="preserve">
+    <value>顯示 WSL 發行版內的通用 Provider MCP 伺服器狀態。</value>
+  </data>
+  <data name="Help_Wsl_CommandNote" xml:space="preserve">
+    <value>產生的 WSL 設定會透過其 WSL 路徑執行目前的 Windows lidguard.exe。</value>
+  </data>
+  <data name="Help_Wsl_DistroOption" xml:space="preserve">
+    <value>使用指定的 WSL 發行版，而不是預設發行版。</value>
+  </data>
+  <data name="Help_Wsl_WindowsOnlyNote" xml:space="preserve">
+    <value>這個命令只在 Windows 建置中可用。</value>
+  </data>
+  <data name="HookCommandDefaultExecutableNotResolved" xml:space="preserve">
+    <value>無法解析預設的 LidGuard Hook 可執行檔或命令名稱。</value>
+  </data>
+  <data name="HookCommandUnsupportedSnippetFormat" xml:space="preserve">
+    <value>不支援的 {0} Hook 片段格式。請使用 {1}。</value>
   </data>
   <data name="HookManagementAlreadyInstalled" xml:space="preserve">
     <value>{0} Hook 已安裝。</value>
@@ -627,11 +754,11 @@
   <data name="HookManagementInstalled" xml:space="preserve">
     <value>已安裝 {0} Hook。</value>
   </data>
-  <data name="HookManagementIsInstalled" xml:space="preserve">
-    <value>已安裝 {0} Hook。</value>
-  </data>
   <data name="HookManagementInstalledNeedsUpdate" xml:space="preserve">
     <value>{0} Hook 已安裝，但需要更新。</value>
+  </data>
+  <data name="HookManagementIsInstalled" xml:space="preserve">
+    <value>已安裝 {0} Hook。</value>
   </data>
   <data name="HookManagementNoManagedHookFound" xml:space="preserve">
     <value>找不到 LidGuard 管理的 {0} Hook。</value>
@@ -651,26 +778,20 @@
   <data name="HookManagementWrittenNeedsAttention" xml:space="preserve">
     <value>已寫入 {0} Hook 設定，但仍需要進一步處理。</value>
   </data>
-  <data name="HookCommandDefaultExecutableNotResolved" xml:space="preserve">
-    <value>無法解析預設的 LidGuard Hook 可執行檔或命令名稱。</value>
-  </data>
-  <data name="HookCommandUnsupportedSnippetFormat" xml:space="preserve">
-    <value>不支援的 {0} Hook 片段格式。請使用 {1}。</value>
-  </data>
   <data name="HookStatusMessageBlockingClosedLidAskUserPrompt" xml:space="preserve">
     <value>阻擋上蓋關閉 ask_user 提示</value>
   </data>
   <data name="HookStatusMessageCancelingClosedLidElicitationRequest" xml:space="preserve">
     <value>正在取消上蓋關閉 elicitation 要求</value>
   </data>
-  <data name="HookStatusMessageRecordingClaudeFailedToolActivity" xml:space="preserve">
-    <value>記錄 Claude 失敗的工具活動</value>
-  </data>
   <data name="HookStatusMessageRecordingClaudeBackgroundTaskActivity" xml:space="preserve">
     <value>記錄 Claude 背景工作活動</value>
   </data>
   <data name="HookStatusMessageRecordingClaudeBackgroundTaskCompletion" xml:space="preserve">
     <value>記錄 Claude 背景工作完成</value>
+  </data>
+  <data name="HookStatusMessageRecordingClaudeFailedToolActivity" xml:space="preserve">
+    <value>記錄 Claude 失敗的工具活動</value>
   </data>
   <data name="HookStatusMessageRecordingClaudeSoftLockTelemetry" xml:space="preserve">
     <value>記錄 Claude 軟鎖定遙測</value>
@@ -720,110 +841,380 @@
   <data name="HookStatusMessageStoppingTurnProtection" xml:space="preserve">
     <value>停止 LidGuard 回合保護</value>
   </data>
-  <data name="ManagementLabelConfigExists" xml:space="preserve">
-    <value>設定檔存在</value>
+  <data name="LinuxPermissionBusctlUnrecognizedValue" xml:space="preserve">
+    <value>busctl 傳回無法識別的值。</value>
   </data>
-  <data name="SettingsNamePostStopSuspendSoundVolumeOverridePercent" xml:space="preserve">
-    <value>警告音暫時音量百分比</value>
+  <data name="LinuxPermissionCheckInhibitorAcquireRelease" xml:space="preserve">
+    <value>inhibitor 取得/釋放</value>
   </data>
-  <data name="SettingsNameClosedLidStopFollowUpSoundVolumeOverridePercent" xml:space="preserve">
-    <value>回覆等待提示音暫時音量百分比</value>
+  <data name="LinuxPermissionCheckLogindCapability" xml:space="preserve">
+    <value>{0}</value>
   </data>
-  <data name="ManagementLabelAgentStopHook" xml:space="preserve">
-    <value>AgentStop Hook</value>
+  <data name="LinuxPermissionCheckSystemctlVersion" xml:space="preserve">
+    <value>systemctl --version</value>
   </data>
-  <data name="ManagementLabelElicitationHook" xml:space="preserve">
-    <value>Elicitation Hook</value>
+  <data name="LinuxPermissionCheckTitle" xml:space="preserve">
+    <value>Linux 權限檢查:</value>
   </data>
-  <data name="ManagementLabelExpectedCommand" xml:space="preserve">
-    <value>預期的命令</value>
+  <data name="LinuxPermissionInspectPolkitRuleFailed" xml:space="preserve">
+    <value>檢查現有 polkit 規則失敗: {0}</value>
   </data>
-  <data name="ManagementLabelManagedHooks" xml:space="preserve">
-    <value>受管理 Hook</value>
+  <data name="LinuxPermissionInstallPolkitRuleFailed" xml:space="preserve">
+    <value>安裝 polkit 規則失敗: {0}</value>
   </data>
-  <data name="ManagementLabelCliAvailable" xml:space="preserve">
-    <value>CLI 可用</value>
+  <data name="LinuxPermissionLabelLogindCanHibernate" xml:space="preserve">
+    <value>logind CanHibernate</value>
   </data>
-  <data name="SettingsInteractiveVolumeOverrideDetails" xml:space="preserve">
-    <value>範圍: {0}-{1}，off 可停用</value>
+  <data name="LinuxPermissionLabelLogindCanSuspend" xml:space="preserve">
+    <value>logind CanSuspend</value>
   </data>
-  <data name="ManagementField" xml:space="preserve">
-    <value>  {0}: {1}</value>
+  <data name="LinuxPermissionLabelPolkitRule" xml:space="preserve">
+    <value>Polkit 規則</value>
   </data>
-  <data name="SettingsNamePreventSystemSleep" xml:space="preserve">
-    <value>防止系統睡眠</value>
+  <data name="LinuxPermissionLabelPolkitRulePath" xml:space="preserve">
+    <value>Polkit 規則路徑</value>
   </data>
-  <data name="ManagementLabelSessionEndHook" xml:space="preserve">
-    <value>工作階段結束 Hook</value>
+  <data name="LinuxPermissionLabelSystemctl" xml:space="preserve">
+    <value>systemctl</value>
   </data>
-  <data name="SettingsNamePostStopSuspendSound" xml:space="preserve">
-    <value>工作階段結束後的睡眠/休眠警告音</value>
+  <data name="LinuxPermissionLabelSystemdInhibit" xml:space="preserve">
+    <value>systemd-inhibit</value>
   </data>
-  <data name="SettingsNameClosedLidStopFollowUpSound" xml:space="preserve">
-    <value>睡眠前回覆等待提示音</value>
+  <data name="LinuxPermissionPolkitRuleInstalled" xml:space="preserve">
+    <value>已為使用者 {0} 安裝 LidGuard polkit 規則: {1}</value>
   </data>
-  <data name="SettingsNamePostStopSuspendDelaySeconds" xml:space="preserve">
-    <value>工作階段結束後進入睡眠/休眠的延遲秒數</value>
+  <data name="LinuxPermissionPolkitRuleNotInstalled" xml:space="preserve">
+    <value>LidGuard polkit 規則未安裝: {0}</value>
   </data>
-  <data name="SettingsInteractiveGuidanceChangeReason" xml:space="preserve">
-    <value>如要變更原因，請執行: {0} settings --power-request-reason &lt;text&gt;</value>
+  <data name="LinuxPermissionPolkitRuleRemoved" xml:space="preserve">
+    <value>已移除 LidGuard polkit 規則: {0}</value>
   </data>
-  <data name="SettingsManagedHookStatusMessageRefreshChanged" xml:space="preserve">
-    <value>已更新受管理 Hook 狀態訊息: {0}</value>
+  <data name="LinuxPermissionPreparePolkitRuleFailed" xml:space="preserve">
+    <value>準備 polkit 規則失敗: {0}</value>
   </data>
-  <data name="SettingsManagedHookStatusMessageRefreshFailed" xml:space="preserve">
-    <value>更新受管理 Hook 狀態訊息失敗: {0}</value>
+  <data name="LinuxPermissionRefusingOverwriteUnmanagedPolkitRule" xml:space="preserve">
+    <value>拒絕覆寫非 LidGuard 管理的 polkit 規則檔: {0}</value>
   </data>
-  <data name="SettingsManagedHookStatusMessageRefreshUnchanged" xml:space="preserve">
-    <value>受管理 Hook 狀態訊息已符合目前的 UI 語言/地區設定，或找不到任何受管理 Hook。</value>
+  <data name="LinuxPermissionRefusingRemoveUnmanagedPolkitRule" xml:space="preserve">
+    <value>拒絕移除非 LidGuard 管理的 polkit 規則檔: {0}</value>
   </data>
-  <data name="ManagementNoAvailableProviders" xml:space="preserve">
-    <value>找不到可用於 all-provider 執行的 Provider。</value>
+  <data name="LinuxPermissionRemovePolkitRuleFailed" xml:space="preserve">
+    <value>移除 polkit 規則失敗: {0}</value>
   </data>
-  <data name="ManagementMessage" xml:space="preserve">
-    <value>訊息: {0}</value>
+  <data name="LinuxPermissionRuleUnableToInspect" xml:space="preserve">
+    <value>無法檢查 ({0})</value>
   </data>
-  <data name="SettingsNamePreventDisplaySleep" xml:space="preserve">
-    <value>防止顯示器睡眠</value>
+  <data name="LinuxPermissionStatusTitle" xml:space="preserve">
+    <value>Linux 權限狀態:</value>
   </data>
-  <data name="ManagementLabelConflictSources" xml:space="preserve">
-    <value>衝突來源</value>
+  <data name="LiveStatusActiveSessionsShortLabel" xml:space="preserve">
+    <value>進行中</value>
   </data>
-  <data name="ManagementNoProviderMcpServerEntryFound" xml:space="preserve">
-    <value>找不到受管理的 Provider MCP 伺服器項目。</value>
+  <data name="LiveStatusDelaySeconds" xml:space="preserve">
+    <value>{0} 秒</value>
   </data>
-  <data name="ManagementServerName" xml:space="preserve">
-    <value>  伺服器名稱: {0}</value>
+  <data name="LiveStatusError" xml:space="preserve">
+    <value>錯誤</value>
   </data>
-  <data name="SettingsNameEmergencyHibernationTemperatureCelsius" xml:space="preserve">
-    <value>緊急休眠溫度（攝氏）</value>
+  <data name="LiveStatusExitHint" xml:space="preserve">
+    <value>每秒更新一次，且在無法連線時會重新連線。按 q、Escape 或 Ctrl+C 可離開。</value>
   </data>
-  <data name="SettingsInteractiveSuspendHistoryEntryCountDetails" xml:space="preserve">
-    <value>最小值: {0}，off 可停用</value>
+  <data name="LiveStatusFlowPanelTitle" xml:space="preserve">
+    <value>執行階段流程</value>
   </data>
-  <data name="SettingsInteractivePrompt" xml:space="preserve">
-    <value>{0}（已儲存: {1}，預設: {2}，按 Enter 保留已儲存值）: </value>
+  <data name="LiveStatusHookPanelTitle" xml:space="preserve">
+    <value>Hook 事件</value>
   </data>
-  <data name="ManagementLabelOptionalSessionEndHook" xml:space="preserve">
-    <value>選用的 SessionEnd Hook</value>
+  <data name="LiveStatusImmediate" xml:space="preserve">
+    <value>立即</value>
   </data>
-  <data name="SettingsOptionClosedLidPermissionRequestDecisionValidation" xml:space="preserve">
-    <value>上蓋關閉權限要求決定必須是 deny、allow 或 ask。</value>
+  <data name="LiveStatusMessageShortLabel" xml:space="preserve">
+    <value>訊息</value>
   </data>
-  <data name="ManagementLabelProviderName" xml:space="preserve">
-    <value>Provider 名稱</value>
+  <data name="LiveStatusMoreEntries" xml:space="preserve">
+    <value>... 另外還有 {0} 筆</value>
   </data>
-  <data name="ManagementProviderMcpRemoved" xml:space="preserve">
-    <value>已從 {1} 移除 Provider MCP 伺服器 '{0}'。</value>
+  <data name="LiveStatusNoFlowEvents" xml:space="preserve">
+    <value>沒有最近的執行階段流程事件。</value>
   </data>
-  <data name="SettingsInteractiveSessionTimeoutDetails" xml:space="preserve">
-    <value>最小值: {0}，off 可停用</value>
+  <data name="LiveStatusNoHookEvents" xml:space="preserve">
+    <value>沒有最近收到的 Hook 事件或 runtime-result Hook 事件。</value>
+  </data>
+  <data name="LiveStatusNone" xml:space="preserve">
+    <value>無</value>
+  </data>
+  <data name="LiveStatusNoRuntimeMessage" xml:space="preserve">
+    <value>執行階段訊息: 無</value>
+  </data>
+  <data name="LiveStatusNoSessions" xml:space="preserve">
+    <value>目前沒有進行中的工作階段。</value>
+  </data>
+  <data name="LiveStatusNotRunning" xml:space="preserve">
+    <value>未在執行中</value>
+  </data>
+  <data name="LiveStatusPendingSuspendDetails" xml:space="preserve">
+    <value>{0}，延遲={1}，原因={2}</value>
+  </data>
+  <data name="LiveStatusPendingSuspendLine" xml:space="preserve">
+    <value>待處理的睡眠/休眠: {0}</value>
+  </data>
+  <data name="LiveStatusRunning" xml:space="preserve">
+    <value>執行中</value>
+  </data>
+  <data name="LiveStatusRuntimeCountsLine" xml:space="preserve">
+    <value>進行中的工作階段: {0} | 上蓋: {1} | 可見顯示器: {2}</value>
+  </data>
+  <data name="LiveStatusRuntimeFlowPrefix" xml:space="preserve">
+    <value>執行階段</value>
+  </data>
+  <data name="LiveStatusRuntimeMessageLine" xml:space="preserve">
+    <value>執行階段訊息: {0}</value>
+  </data>
+  <data name="LiveStatusRuntimePanelTitle" xml:space="preserve">
+    <value>執行階段</value>
+  </data>
+  <data name="LiveStatusRuntimeStateLine" xml:space="preserve">
+    <value>狀態: {0} | 最後更新: {1}</value>
+  </data>
+  <data name="LiveStatusSessionLine" xml:space="preserve">
+    <value>{0} 工作階段={1} 處理程序={2} 軟鎖定={3} 開始={4} 最後活動={5} 工作目錄={6}</value>
+  </data>
+  <data name="LiveStatusSessionShortLabel" xml:space="preserve">
+    <value>工作階段</value>
+  </data>
+  <data name="LiveStatusSessionsPanelTitle" xml:space="preserve">
+    <value>工作階段</value>
+  </data>
+  <data name="LiveStatusStopFollowUpDelayLine" xml:space="preserve">
+    <value>睡眠前回覆等待: {0}</value>
+  </data>
+  <data name="LiveStatusStopFollowUpFeatureStateLine" xml:space="preserve">
+    <value>睡眠前回覆通知: {0}</value>
+  </data>
+  <data name="LiveStatusStopFollowUpRepeatLine" xml:space="preserve">
+    <value>回覆後再次詢問: {0}</value>
+  </data>
+  <data name="LiveStatusSucceededLabel" xml:space="preserve">
+    <value>成功</value>
+  </data>
+  <data name="LiveStatusSuspendHistoryPrefix" xml:space="preserve">
+    <value>記錄</value>
+  </data>
+  <data name="LiveStatusSuspendReasonCompleted" xml:space="preserve">
+    <value>已完成</value>
+  </data>
+  <data name="LiveStatusSuspendReasonSoftLocked" xml:space="preserve">
+    <value>等待輸入</value>
+  </data>
+  <data name="LiveStatusTitle" xml:space="preserve">
+    <value>LidGuard live-status</value>
+  </data>
+  <data name="MacOSPermissionCheckCaffeinateAcquireRelease" xml:space="preserve">
+    <value>caffeinate 取得/釋放</value>
+  </data>
+  <data name="MacOSPermissionCheckPmsetRead" xml:space="preserve">
+    <value>pmset -g</value>
+  </data>
+  <data name="MacOSPermissionCheckPrivilegedPmsetDisableSleep" xml:space="preserve">
+    <value>已授權的 pmset disablesleep</value>
+  </data>
+  <data name="MacOSPermissionCheckPrivilegedPmsetHibernateMode" xml:space="preserve">
+    <value>已授權的 pmset hibernatemode</value>
+  </data>
+  <data name="MacOSPermissionCheckPrivilegedPowermetricsSmcSample" xml:space="preserve">
+    <value>已授權的 powermetrics SMC sample</value>
+  </data>
+  <data name="MacOSPermissionCheckTitle" xml:space="preserve">
+    <value>macOS 權限檢查:</value>
+  </data>
+  <data name="MacOSPermissionInspectSudoersRuleFailed" xml:space="preserve">
+    <value>檢查現有 sudoers 規則失敗: {0}</value>
+  </data>
+  <data name="MacOSPermissionInstallSudoersRuleFailed" xml:space="preserve">
+    <value>安裝 sudoers 規則失敗: {0}</value>
+  </data>
+  <data name="MacOSPermissionLabelCaffeinate" xml:space="preserve">
+    <value>caffeinate</value>
+  </data>
+  <data name="MacOSPermissionLabelHibernateMode" xml:space="preserve">
+    <value>hibernatemode</value>
+  </data>
+  <data name="MacOSPermissionLabelIoreg" xml:space="preserve">
+    <value>ioreg</value>
+  </data>
+  <data name="MacOSPermissionLabelPmset" xml:space="preserve">
+    <value>pmset</value>
+  </data>
+  <data name="MacOSPermissionLabelPowermetrics" xml:space="preserve">
+    <value>powermetrics</value>
+  </data>
+  <data name="MacOSPermissionLabelPrivilegedPmsetUsability" xml:space="preserve">
+    <value>已授權的 pmset 可用性</value>
+  </data>
+  <data name="MacOSPermissionLabelSleepDisabled" xml:space="preserve">
+    <value>SleepDisabled</value>
+  </data>
+  <data name="MacOSPermissionLabelSudoersPath" xml:space="preserve">
+    <value>Sudoers 路徑</value>
+  </data>
+  <data name="MacOSPermissionLabelSudoersRule" xml:space="preserve">
+    <value>Sudoers 規則</value>
+  </data>
+  <data name="MacOSPermissionLabelSystemProfiler" xml:space="preserve">
+    <value>system_profiler</value>
+  </data>
+  <data name="MacOSPermissionPrepareSudoersRuleFailed" xml:space="preserve">
+    <value>準備 sudoers 規則失敗: {0}</value>
+  </data>
+  <data name="MacOSPermissionPrepareSudoersValidationFileFailed" xml:space="preserve">
+    <value>準備 sudoers 驗證檔失敗: {0}</value>
+  </data>
+  <data name="MacOSPermissionRefusingOverwriteUnmanagedSudoersRule" xml:space="preserve">
+    <value>拒絕覆寫非 LidGuard 管理的 sudoers 檔案: {0}</value>
+  </data>
+  <data name="MacOSPermissionRefusingRemoveUnmanagedSudoersRule" xml:space="preserve">
+    <value>拒絕移除非 LidGuard 管理的 sudoers 檔案: {0}</value>
+  </data>
+  <data name="MacOSPermissionRemoveSudoersRuleFailed" xml:space="preserve">
+    <value>移除 sudoers 規則失敗: {0}</value>
+  </data>
+  <data name="MacOSPermissionRuleContentInspectionUnavailable" xml:space="preserve">
+    <value>內容檢查不可用 ({0})</value>
+  </data>
+  <data name="MacOSPermissionStatusTitle" xml:space="preserve">
+    <value>macOS 權限狀態:</value>
+  </data>
+  <data name="MacOSPermissionSudoersRuleInstalled" xml:space="preserve">
+    <value>已為使用者 {0} 安裝 LidGuard sudoers 規則: {1}</value>
+  </data>
+  <data name="MacOSPermissionSudoersRuleNotInstalled" xml:space="preserve">
+    <value>LidGuard sudoers 規則未安裝: {0}</value>
+  </data>
+  <data name="MacOSPermissionSudoersRuleRemoved" xml:space="preserve">
+    <value>已移除 LidGuard sudoers 規則: {0}</value>
+  </data>
+  <data name="MacOSPermissionUnsupportedHibernateModeValue" xml:space="preserve">
+    <value>無法使用 - 不支援目前的值 {0}</value>
+  </data>
+  <data name="MacOSPermissionVisudoNotFound" xml:space="preserve">
+    <value>在 PATH 中找不到 visudo。拒絕安裝未經驗證的 sudoers 規則。</value>
+  </data>
+  <data name="ManagementBackup" xml:space="preserve">
+    <value>備份: {0}</value>
+  </data>
+  <data name="ManagementChanged" xml:space="preserve">
+    <value>已變更: {0}</value>
+  </data>
+  <data name="ManagementCommand" xml:space="preserve">
+    <value>命令: {0}</value>
+  </data>
+  <data name="ManagementCommandEmpty" xml:space="preserve">
+    <value>命令: &lt;無&gt;</value>
+  </data>
+  <data name="ManagementConfig" xml:space="preserve">
+    <value>  設定檔: {0}</value>
+  </data>
+  <data name="ManagementConfigCannotBeUsedWithAllProviders" xml:space="preserve">
+    <value>--config 選項不能和 --provider all 一起使用，因為每個 Provider 的設定檔都不同。</value>
+  </data>
+  <data name="ManagementConfigExists" xml:space="preserve">
+    <value>  設定檔存在: {0}</value>
+  </data>
+  <data name="ManagementConfigurationFileDoesNotExist" xml:space="preserve">
+    <value>設定檔不存在: {0}</value>
+  </data>
+  <data name="ManagementContainsMcpServerCommand" xml:space="preserve">
+    <value>含有 mcp-server 命令: {0}</value>
   </data>
   <data name="ManagementExistingMcpServerRefreshing" xml:space="preserve">
     <value>找到現有的 {0} 受管理 LidGuard MCP 伺服器。正在重新整理註冊。</value>
   </data>
-  <data name="TextDisplayBooleanFalse" xml:space="preserve">
-    <value>關閉</value>
+  <data name="ManagementFailedToStartProcess" xml:space="preserve">
+    <value>啟動處理程序失敗: {0}</value>
+  </data>
+  <data name="ManagementField" xml:space="preserve">
+    <value>  {0}: {1}</value>
+  </data>
+  <data name="ManagementHookEventCountValidation" xml:space="preserve">
+    <value>Hook 事件數量必須是正整數。</value>
+  </data>
+  <data name="ManagementHookEventsTitle" xml:space="preserve">
+    <value>{0} Hook 事件:</value>
+  </data>
+  <data name="ManagementHookInstallationTitle" xml:space="preserve">
+    <value>Hook 安裝:</value>
+  </data>
+  <data name="ManagementHookStatusTitle" xml:space="preserve">
+    <value>{0} Hook 狀態:</value>
+  </data>
+  <data name="ManagementInstalled" xml:space="preserve">
+    <value>已安裝: {0}</value>
+  </data>
+  <data name="ManagementInstallingHook" xml:space="preserve">
+    <value>正在安裝 {0} Hook...</value>
+  </data>
+  <data name="ManagementInstallingMcpServer" xml:space="preserve">
+    <value>正在安裝 {0} MCP 伺服器...</value>
+  </data>
+  <data name="ManagementLabelAgentStopHook" xml:space="preserve">
+    <value>AgentStop Hook</value>
+  </data>
+  <data name="ManagementLabelAllStopHooks" xml:space="preserve">
+    <value>所有 stop Hook</value>
+  </data>
+  <data name="ManagementLabelArgs" xml:space="preserve">
+    <value>參數</value>
+  </data>
+  <data name="ManagementLabelCli" xml:space="preserve">
+    <value>CLI</value>
+  </data>
+  <data name="ManagementLabelCliAvailable" xml:space="preserve">
+    <value>CLI 可用</value>
+  </data>
+  <data name="ManagementLabelCommand" xml:space="preserve">
+    <value>命令</value>
+  </data>
+  <data name="ManagementLabelConfig" xml:space="preserve">
+    <value>設定檔</value>
+  </data>
+  <data name="ManagementLabelConfigExists" xml:space="preserve">
+    <value>設定檔存在</value>
+  </data>
+  <data name="ManagementLabelConflictingAgentStopHooks" xml:space="preserve">
+    <value>衝突的 agentStop Hook</value>
+  </data>
+  <data name="ManagementLabelConflictSources" xml:space="preserve">
+    <value>衝突來源</value>
+  </data>
+  <data name="ManagementLabelContainsMcpServerCommand" xml:space="preserve">
+    <value>含有 mcp-server 命令</value>
+  </data>
+  <data name="ManagementLabelContainsProviderMcpServerCommand" xml:space="preserve">
+    <value>含有 provider-mcp-server 命令</value>
+  </data>
+  <data name="ManagementLabelElicitationHook" xml:space="preserve">
+    <value>Elicitation Hook</value>
+  </data>
+  <data name="ManagementLabelErrorOccurredHook" xml:space="preserve">
+    <value>ErrorOccurred Hook</value>
+  </data>
+  <data name="ManagementLabelExecutable" xml:space="preserve">
+    <value>可執行檔</value>
+  </data>
+  <data name="ManagementLabelExpectedCommand" xml:space="preserve">
+    <value>預期的命令</value>
+  </data>
+  <data name="ManagementLabelExpectedCommands" xml:space="preserve">
+    <value>預期的命令</value>
+  </data>
+  <data name="ManagementLabelExpectedNotificationMatcher" xml:space="preserve">
+    <value>預期的通知比對器</value>
+  </data>
+  <data name="ManagementLabelExpectedShell" xml:space="preserve">
+    <value>預期的 shell</value>
+  </data>
+  <data name="ManagementLabelFeatureFlag" xml:space="preserve">
+    <value>功能旗標</value>
   </data>
   <data name="ManagementLabelHookLog" xml:space="preserve">
     <value>Hook 記錄</value>
@@ -831,62 +1222,35 @@
   <data name="ManagementLabelHooksObject" xml:space="preserve">
     <value>Hooks 物件</value>
   </data>
-  <data name="SettingsInteractivePostStopSuspendSoundDetails" xml:space="preserve">
-    <value>off 表示停用，SystemSounds: {0}，或 .wav 路徑</value>
+  <data name="ManagementLabelInstalled" xml:space="preserve">
+    <value>已安裝</value>
   </data>
-  <data name="SettingsInteractiveGuidanceChangePostSessionEndWebhook" xml:space="preserve">
-    <value>如要變更工作階段完成 Webhook URL，請執行: {0} settings --post-session-end-webhook-url &lt;http-or-https-url&gt;</value>
+  <data name="ManagementLabelManagedBlock" xml:space="preserve">
+    <value>受管理區塊</value>
   </data>
-  <data name="ManagementInstallingMcpServer" xml:space="preserve">
-    <value>正在安裝 {0} MCP 伺服器...</value>
+  <data name="ManagementLabelManagedHooks" xml:space="preserve">
+    <value>受管理 Hook</value>
   </data>
-  <data name="ManagementLabelCli" xml:space="preserve">
-    <value>CLI</value>
+  <data name="ManagementLabelManagedServerEntry" xml:space="preserve">
+    <value>受管理伺服器項目</value>
   </data>
-  <data name="ManagementSkippingMcpInstallAfterRemoveFailure" xml:space="preserve">
-    <value>因為移除既有的受管理註冊失敗，略過安裝 {0} MCP。</value>
+  <data name="ManagementLabelMatchesCurrentLidGuardExecutable" xml:space="preserve">
+    <value>符合目前的 LidGuard 可執行檔</value>
   </data>
-  <data name="ManagementUnsupportedProviderSelection" xml:space="preserve">
-    <value>不支援的 Provider。請使用 codex、claude、copilot 或 all。</value>
+  <data name="ManagementLabelMessage" xml:space="preserve">
+    <value>訊息</value>
   </data>
-  <data name="ManagementServerArguments" xml:space="preserve">
-    <value>  參數: {0}</value>
+  <data name="ManagementLabelNotificationHook" xml:space="preserve">
+    <value>Notification Hook</value>
   </data>
-  <data name="ManagementLabelCommand" xml:space="preserve">
-    <value>命令</value>
+  <data name="ManagementLabelOptionalSessionEndHook" xml:space="preserve">
+    <value>選用的 SessionEnd Hook</value>
   </data>
-  <data name="ManagementLabelUserPromptSubmitHook" xml:space="preserve">
-    <value>UserPromptSubmit Hook</value>
+  <data name="ManagementLabelPermissionRequestHook" xml:space="preserve">
+    <value>PermissionRequest Hook</value>
   </data>
-  <data name="SettingsNameClosedLidPermissionRequestDecision" xml:space="preserve">
-    <value>上蓋關閉權限要求決定</value>
-  </data>
-  <data name="SettingsNameRepeatClosedLidStopFollowUp" xml:space="preserve">
-    <value>回覆後再次詢問</value>
-  </data>
-  <data name="SettingsNameClosedLidStopFollowUpDelaySeconds" xml:space="preserve">
-    <value>睡眠前回覆等待時間（秒）</value>
-  </data>
-  <data name="DisplayClosedLidStopFollowUpFeatureStateOn" xml:space="preserve">
-    <value>開啟</value>
-  </data>
-  <data name="DisplayClosedLidStopFollowUpFeatureStateOff" xml:space="preserve">
-    <value>關閉</value>
-  </data>
-  <data name="DisplayClosedLidStopFollowUpFeatureStateConfigurationError" xml:space="preserve">
-    <value>設定錯誤</value>
-  </data>
-  <data name="ClosedLidStopFollowUpConfigurationIssueReplyWaitTooShort" xml:space="preserve">
-    <value>回覆視窗太短，可能來不及看到推播通知並回覆。設為 0 秒可關閉；若要使用回覆，請設為至少 20 秒。</value>
-  </data>
-  <data name="ClosedLidStopFollowUpConfigurationIssuePostStopDelayTooShort" xml:space="preserve">
-    <value>緊接著出現的提示可能還沒顯示，睡眠或回覆等待就過早開始。請將 post-stop-suspend-delay-seconds 設為至少 10。</value>
-  </data>
-  <data name="TextDisplayOff" xml:space="preserve">
-    <value>關閉</value>
-  </data>
-  <data name="ManagementFailedToStartProcess" xml:space="preserve">
-    <value>啟動處理程序失敗: {0}</value>
+  <data name="ManagementLabelPostToolUseFailureHook" xml:space="preserve">
+    <value>PostToolUseFailure Hook</value>
   </data>
   <data name="ManagementLabelPostToolUseHook" xml:space="preserve">
     <value>PostToolUse Hook</value>
@@ -894,506 +1258,275 @@
   <data name="ManagementLabelPreToolUseHook" xml:space="preserve">
     <value>PreToolUse Hook</value>
   </data>
-  <data name="ManagementLabelNotificationHook" xml:space="preserve">
-    <value>Notification Hook</value>
+  <data name="ManagementLabelProvider" xml:space="preserve">
+    <value>Provider</value>
   </data>
-  <data name="CommandBooleanOptionValidation" xml:space="preserve">
-    <value>{0} 選項必須是 true 或 false。</value>
+  <data name="ManagementLabelProviderName" xml:space="preserve">
+    <value>Provider 名稱</value>
   </data>
-  <data name="SettingsPreviewConfigureCurrentSound" xml:space="preserve">
-    <value>可用以下指令設定一個: {0} settings --post-stop-suspend-sound Asterisk</value>
+  <data name="ManagementLabelRequiredStopHooks" xml:space="preserve">
+    <value>必要的 stop Hook</value>
   </data>
-  <data name="ManagementLabelInstalled" xml:space="preserve">
-    <value>已安裝</value>
+  <data name="ManagementLabelServerName" xml:space="preserve">
+    <value>伺服器名稱</value>
   </data>
-  <data name="ManagementLabelConfig" xml:space="preserve">
-    <value>設定檔</value>
+  <data name="ManagementLabelSessionEndHook" xml:space="preserve">
+    <value>工作階段結束 Hook</value>
+  </data>
+  <data name="ManagementLabelSessionStartHook" xml:space="preserve">
+    <value>SessionStart Hook</value>
+  </data>
+  <data name="ManagementLabelStatus" xml:space="preserve">
+    <value>狀態</value>
+  </data>
+  <data name="ManagementLabelStopFailureHook" xml:space="preserve">
+    <value>StopFailure Hook</value>
+  </data>
+  <data name="ManagementLabelStopHook" xml:space="preserve">
+    <value>Stop Hook</value>
+  </data>
+  <data name="ManagementLabelTransport" xml:space="preserve">
+    <value>傳輸方式</value>
+  </data>
+  <data name="ManagementLabelUrl" xml:space="preserve">
+    <value>URL</value>
+  </data>
+  <data name="ManagementLabelUserPromptSubmitHook" xml:space="preserve">
+    <value>UserPromptSubmit Hook</value>
+  </data>
+  <data name="ManagementLabelUserPromptSubmittedHook" xml:space="preserve">
+    <value>UserPromptSubmitted Hook</value>
+  </data>
+  <data name="ManagementLabelValidCommand" xml:space="preserve">
+    <value>有效的命令</value>
+  </data>
+  <data name="ManagementLidGuardExecutableMissing" xml:space="preserve">
+    <value>LidGuard 可執行檔或命令不存在: {0}</value>
+  </data>
+  <data name="ManagementLidGuardMcpServerRegistered" xml:space="preserve">
+    <value>LidGuard MCP 伺服器已註冊。</value>
+  </data>
+  <data name="ManagementMcpInstallationTitle" xml:space="preserve">
+    <value>MCP 安裝:</value>
+  </data>
+  <data name="ManagementMcpServerDoesNotPointAtCurrentExecutable" xml:space="preserve">
+    <value>MCP 伺服器 '{0}' 已存在，但未指向目前的 LidGuard 可執行檔。</value>
+  </data>
+  <data name="ManagementMcpServerDoesNotPointAtManagedCommand" xml:space="preserve">
+    <value>MCP 伺服器 '{0}' 已存在，但未指向 '{1}'。</value>
+  </data>
+  <data name="ManagementMcpServerInstalled" xml:space="preserve">
+    <value>已在 {1} 安裝 MCP 伺服器 '{0}'。</value>
+  </data>
+  <data name="ManagementMcpServerRemoved" xml:space="preserve">
+    <value>已從 {1} 移除 MCP 伺服器 '{0}'。</value>
+  </data>
+  <data name="ManagementMcpServersObjectNotFound" xml:space="preserve">
+    <value>mcpServers 物件在 {0} 中找不到。</value>
+  </data>
+  <data name="ManagementMcpStatusTitle" xml:space="preserve">
+    <value>{0} MCP 狀態:</value>
+  </data>
+  <data name="ManagementMessage" xml:space="preserve">
+    <value>訊息: {0}</value>
+  </data>
+  <data name="ManagementNoAvailableProviders" xml:space="preserve">
+    <value>找不到可用於 all-provider 執行的 Provider。</value>
+  </data>
+  <data name="ManagementNoMcpServerNamedFound" xml:space="preserve">
+    <value>找不到名為 '{0}' 的 MCP 伺服器。</value>
+  </data>
+  <data name="ManagementNoProviderMcpServerEntryFound" xml:space="preserve">
+    <value>找不到受管理的 Provider MCP 伺服器項目。</value>
+  </data>
+  <data name="ManagementNoProviderMcpServerNamedFound" xml:space="preserve">
+    <value>在 {1} 中找不到名為 '{0}' 的 Provider MCP 伺服器。</value>
+  </data>
+  <data name="ManagementNoProviderMcpServerNamedRemoved" xml:space="preserve">
+    <value>找不到名為 '{0}' 的 Provider MCP 伺服器可供移除。</value>
+  </data>
+  <data name="ManagementPromptHookEvents" xml:space="preserve">
+    <value>顯示 Provider 的 Hook 事件</value>
   </data>
   <data name="ManagementPromptHookInstall" xml:space="preserve">
     <value>安裝 Provider 的 Hook</value>
   </data>
-  <data name="ManagementHookEventsTitle" xml:space="preserve">
-    <value>{0} Hook 事件:</value>
+  <data name="ManagementPromptHookRemove" xml:space="preserve">
+    <value>移除 Provider 的 Hook</value>
   </data>
-  <data name="SettingsNameUserInterfaceCulture" xml:space="preserve">
-    <value>CLI 顯示語言/地區設定</value>
+  <data name="ManagementPromptHookStatus" xml:space="preserve">
+    <value>顯示 Provider 的 Hook 狀態</value>
   </data>
-  <data name="ManagementUnsupportedHookManagement" xml:space="preserve">
-    <value>目前只實作了 Codex、Claude 與 GitHub Copilot 的 Hook 管理。</value>
+  <data name="ManagementPromptMcpInstall" xml:space="preserve">
+    <value>安裝 Provider 的 MCP 伺服器</value>
   </data>
-  <data name="ManagementProviderCliNotFound" xml:space="preserve">
-    <value>找不到 Provider CLI: {0}（已檢查: {1}）</value>
+  <data name="ManagementPromptMcpRemove" xml:space="preserve">
+    <value>移除 Provider 的 MCP 伺服器</value>
   </data>
   <data name="ManagementPromptMcpStatus" xml:space="preserve">
     <value>顯示哪個 Provider 的 MCP 伺服器狀態</value>
   </data>
+  <data name="ManagementProvider" xml:space="preserve">
+    <value>  Provider: {0}</value>
+  </data>
+  <data name="ManagementProviderCli" xml:space="preserve">
+    <value>  CLI: {0}</value>
+  </data>
+  <data name="ManagementProviderCliAvailable" xml:space="preserve">
+    <value>CLI 可用: {0}</value>
+  </data>
+  <data name="ManagementProviderCliNotFound" xml:space="preserve">
+    <value>找不到 Provider CLI: {0}（已檢查: {1}）</value>
+  </data>
+  <data name="ManagementProviderMcpInstallationTitle" xml:space="preserve">
+    <value>Provider MCP 安裝:</value>
+  </data>
+  <data name="ManagementProviderMcpInstalled" xml:space="preserve">
+    <value>已在 {1} 安裝 Provider MCP 伺服器 '{0}'。</value>
+  </data>
+  <data name="ManagementProviderMcpRegistered" xml:space="preserve">
+    <value>受管理 Provider MCP 伺服器已註冊。</value>
+  </data>
+  <data name="ManagementProviderMcpRemoved" xml:space="preserve">
+    <value>已從 {1} 移除 Provider MCP 伺服器 '{0}'。</value>
+  </data>
+  <data name="ManagementProviderMcpServerDoesNotPointAtCurrentExecutable" xml:space="preserve">
+    <value>Provider MCP 伺服器 '{0}' 已存在，但未指向目前的 LidGuard 可執行檔。</value>
+  </data>
+  <data name="ManagementProviderMcpServerDoesNotPointAtManagedCommand" xml:space="preserve">
+    <value>Provider MCP 伺服器 '{0}' 已存在，但未指向 '{1}'。</value>
+  </data>
+  <data name="ManagementProviderName" xml:space="preserve">
+    <value>Provider 名稱: {0}</value>
+  </data>
+  <data name="ManagementProviderSelectionInputEnded" xml:space="preserve">
+    <value>在選取 Provider 之前輸入就已結束。</value>
+  </data>
+  <data name="ManagementProviderSelectionPrompt" xml:space="preserve">
+    <value>{0}（codex、claude、copilot、opencode、all；預設: all）: </value>
+  </data>
+  <data name="ManagementRemovingHook" xml:space="preserve">
+    <value>正在移除 {0} Hook...</value>
+  </data>
+  <data name="ManagementRemovingMcpServer" xml:space="preserve">
+    <value>正在移除 {0} MCP 伺服器...</value>
+  </data>
+  <data name="ManagementRequiredStopHooks" xml:space="preserve">
+    <value>必要的 stop Hook: {0}</value>
+  </data>
+  <data name="ManagementServerArguments" xml:space="preserve">
+    <value>  參數: {0}</value>
+  </data>
+  <data name="ManagementServerName" xml:space="preserve">
+    <value>  伺服器名稱: {0}</value>
+  </data>
+  <data name="ManagementSkippedAbsentProvider" xml:space="preserve">
+    <value>跳過不存在的 Provider: {0}（在以下位置找不到既有的設定根目錄: {1}）</value>
+  </data>
+  <data name="ManagementSkippingMcpInstallAfterRemoveFailure" xml:space="preserve">
+    <value>因為移除既有的受管理註冊失敗，略過安裝 {0} MCP。</value>
+  </data>
+  <data name="ManagementStatus" xml:space="preserve">
+    <value>  狀態: {0}</value>
+  </data>
+  <data name="ManagementTransport" xml:space="preserve">
+    <value>  傳輸方式: {0}</value>
+  </data>
+  <data name="ManagementUnsupportedHookEventLogs" xml:space="preserve">
+    <value>目前只實作了 Codex、Claude、GitHub Copilot 與 OpenCode 的 Hook 事件記錄。</value>
+  </data>
+  <data name="ManagementUnsupportedHookManagement" xml:space="preserve">
+    <value>目前只實作了 Codex、Claude、GitHub Copilot 與 OpenCode 的 Hook 管理。</value>
+  </data>
+  <data name="ManagementUnsupportedMcpManagement" xml:space="preserve">
+    <value>目前只實作了 Codex、Claude、GitHub Copilot 與 OpenCode 的 MCP 管理。</value>
+  </data>
+  <data name="ManagementUnsupportedProviderSelection" xml:space="preserve">
+    <value>不支援的 Provider。請使用 codex、claude、copilot、opencode 或 all。</value>
+  </data>
   <data name="ManagementUrl" xml:space="preserve">
     <value>  URL: {0}</value>
   </data>
-  <data name="SettingsInteractiveGuidanceChangePreSuspendWebhook" xml:space="preserve">
-    <value>如要變更睡眠/休眠前 Webhook URL，請執行: {0} settings --pre-suspend-webhook-url &lt;http-or-https-url&gt;</value>
+  <data name="McpConfigurationFileDoesNotExist" xml:space="preserve">
+    <value>設定檔不存在: {0}</value>
   </data>
-  <data name="ManagementInstallingHook" xml:space="preserve">
-    <value>正在安裝 {0} Hook...</value>
+  <data name="McpConfigurationJsonInvalid" xml:space="preserve">
+    <value>設定 JSON 無效: {0}</value>
   </data>
-  <data name="CommandRequiredOption" xml:space="preserve">
-    <value>必須提供 --{0} 選項。</value>
+  <data name="McpConfigurationNamedServerNotFound" xml:space="preserve">
+    <value>找不到名為 '{0}' 的 MCP 伺服器。</value>
   </data>
-  <data name="Help_ManagedProvider_ProviderOption" xml:space="preserve">
-    <value>選用。允許的值: codex、claude、copilot 或 all。省略時，LidGuard 會提示您選擇 Provider。</value>
+  <data name="McpConfigurationRootNotObject" xml:space="preserve">
+    <value>設定根目錄不是 JSON 物件。</value>
   </data>
-  <data name="Help_Mcp_ProviderArgument" xml:space="preserve">
-    <value>選用的位置參數。允許的值: codex、claude、copilot 或 all。省略時，LidGuard 會提示您選擇 Provider。</value>
+  <data name="McpConfigurationServersObjectNotFound" xml:space="preserve">
+    <value>找不到 mcpServers 物件。</value>
   </data>
-  <data name="Help_ProviderMcp_ServerNameOption" xml:space="preserve">
-    <value>選用的受管理伺服器項目名稱。預設為 lidguard-provider。</value>
+  <data name="PermissionExecutableAvailable" xml:space="preserve">
+    <value>可用 ({0})</value>
   </data>
-  <data name="Help_CodexHook_Description" xml:space="preserve">
-    <value>從標準輸入讀取 Codex Hook JSON，並將 start、stop 或上蓋關閉權限決定轉送給執行階段。</value>
+  <data name="PermissionExecutableMissing" xml:space="preserve">
+    <value>找不到</value>
   </data>
-  <data name="Help_CurrentTemperature_UnavailableNote" xml:space="preserve">
-    <value>如果這個平台沒有可用的支援溫度感測器資料，此命令會回報目前無法取得該值。</value>
+  <data name="PermissionExecutableNotFound" xml:space="preserve">
+    <value>在 PATH 中找不到 {0}。</value>
   </data>
-  <data name="Help_ProviderMcpServer_ProviderNameOption" xml:space="preserve">
-    <value>必要的 Provider 名稱，會公開給 Provider MCP 工具使用。</value>
+  <data name="PermissionLabelUser" xml:space="preserve">
+    <value>使用者</value>
   </data>
-  <data name="Help_SuspendHistory_Description" xml:space="preserve">
-    <value>列印本機歷史記錄中最近的睡眠/休眠要求紀錄。</value>
+  <data name="PermissionResultFailed" xml:space="preserve">
+    <value>失敗 - {0}</value>
   </data>
-  <data name="Help_Settings_Description" xml:space="preserve">
-    <value>顯示並更新工作階段啟動時使用的預設設定。</value>
+  <data name="PermissionResultFailedParenthesized" xml:space="preserve">
+    <value>失敗 ({0})</value>
   </data>
-  <data name="Help_MacOSPermission_StatusDescription" xml:space="preserve">
-    <value>只顯示目前的 macOS 權限環境，不會做任何變更。</value>
+  <data name="PermissionResultOk" xml:space="preserve">
+    <value>正常</value>
   </data>
-  <data name="Help_Help_Description" xml:space="preserve">
-    <value>顯示分類後的命令總覽，或針對單一已知命令/別名顯示詳細說明。</value>
+  <data name="PermissionResultUnavailable" xml:space="preserve">
+    <value>無法使用 - {0}</value>
   </data>
-  <data name="Help_Settings_PreventSystemSleepOption" xml:space="preserve">
-    <value>變更 LidGuard 是否在工作階段進行中時防止一般系統睡眠。</value>
+  <data name="PermissionResultUnavailableParenthesized" xml:space="preserve">
+    <value>無法使用 ({0})</value>
   </data>
-  <data name="Help_Settings_PreventAwayModeSleepOption" xml:space="preserve">
-    <value>變更 Windows 在支援時是否使用 Away Mode 讓背景工作持續執行。</value>
+  <data name="PermissionRuleInstalledForAnotherUser" xml:space="preserve">
+    <value>已為其他使用者安裝</value>
   </data>
-  <data name="Help_MacOSPermission_InstallNote" xml:space="preserve">
-    <value>這個子命令會使用 sudo，一次性以管理員權限寫入 /private/etc/sudoers.d/lidguard。</value>
+  <data name="PermissionRuleInstalledForCurrentUser" xml:space="preserve">
+    <value>已為目前使用者安裝</value>
   </data>
-  <data name="Help_CleanupOrphans_RuntimeNotRunningNote" xml:space="preserve">
-    <value>如果 LidGuard 未在執行中，cleanup-orphans 會回報沒有需要清理的項目。</value>
+  <data name="PermissionRuleNotInstalled" xml:space="preserve">
+    <value>未安裝</value>
   </data>
-  <data name="Help_LinuxPermission_Description" xml:space="preserve">
-    <value>檢查或管理 Linux 上用於 systemd/logind 睡眠、休眠與 inhibitor 操作的 polkit 權限。</value>
+  <data name="PermissionRulePresentUnmanaged" xml:space="preserve">
+    <value>存在，但不是 LidGuard 管理的</value>
   </data>
-  <data name="Help_PreviewCurrentSound_Description" xml:space="preserve">
-    <value>立即使用已儲存的暫時音量設定播放目前的睡眠/休眠警告音。</value>
+  <data name="PermissionSubcommandRequired" xml:space="preserve">
+    <value>必須提供子命令。請使用: {0} status|check|install|remove</value>
   </data>
-  <data name="Help_Usage_OptionSyntax" xml:space="preserve">
-    <value>選項請使用 --name value 或 --name=value。</value>
+  <data name="PermissionSubcommandUsage" xml:space="preserve">
+    <value>請使用: {0} status|check|install|remove</value>
   </data>
-  <data name="Help_ProviderMcpServer_Description" xml:space="preserve">
-    <value>以呼叫端提供的單一 Provider 名稱啟用專用的 Provider MCP stdio 伺服器。</value>
+  <data name="PermissionSudoNotFound" xml:space="preserve">
+    <value>在 PATH 中找不到 sudo。請以 root 身分執行這個命令，或先安裝 sudo。</value>
   </data>
-  <data name="Help_Settings_PreSuspendWebhookOption" xml:space="preserve">
-    <value>設定 LidGuard 在要求睡眠或休眠前要呼叫的 Webhook URL。</value>
+  <data name="PermissionSudoNotFoundShort" xml:space="preserve">
+    <value>在 PATH 中找不到 sudo。</value>
   </data>
-  <data name="Help_Settings_SessionTimeoutOption" xml:space="preserve">
-    <value>關閉閒置工作階段逾時，或讓閒置工作階段在這麼多分鐘沒有活動後停止保持系統喚醒。啟用時最小值為 1。</value>
+  <data name="PermissionUnknownSubcommand" xml:space="preserve">
+    <value>未知的 {0} 子命令: {1}</value>
   </data>
-  <data name="Help_Status_Description" xml:space="preserve">
-    <value>顯示執行階段狀態、進行中的工作階段，以及目前生效的已儲存設定。</value>
-  </data>
-  <data name="Help_CurrentMonitorCount_Description" xml:space="preserve">
-    <value>使用與 LidGuard 判斷上蓋關閉政策時相同的基礎平台顯示器可見性檢查，回報目前可見的顯示器數量。</value>
-  </data>
-  <data name="Help_Settings_PreventDisplaySleepOption" xml:space="preserve">
-    <value>變更 LidGuard 是否在工作階段進行中時防止顯示器進入睡眠。</value>
-  </data>
-  <data name="Help_Settings_SuspendHistoryOption" xml:space="preserve">
-    <value>停用睡眠/休眠歷史記錄，或保留最近的睡眠/休眠要求項目。啟用時最小值為 1。</value>
-  </data>
-  <data name="Help_Usage_BooleanOptions" xml:space="preserve">
-    <value>布林選項接受 true/false、yes/no、on/off 與 1/0。</value>
-  </data>
-  <data name="Help_Settings_PostStopSuspendSoundVolumeOption" xml:space="preserve">
-    <value>停用暫時音量調整，或設定睡眠/休眠警告音播放時的預設輸出音量。之後 LidGuard 會還原先前的音量與靜音狀態。</value>
-  </data>
-  <data name="Help_Settings_ClosedLidStopFollowUpSoundVolumeOption" xml:space="preserve">
-    <value>停用暫時音量調整，或設定睡眠前回覆等待提示音播放時的預設輸出音量。之後 LidGuard 會還原先前的音量與靜音狀態。</value>
-  </data>
-  <data name="Help_Settings_ClosedLidStopFollowUpSoundVolumeOverrideAliasOption" xml:space="preserve">
-    <value>--closed-lid-stop-follow-up-sound-volume-override-percent 的別名。若兩者都提供，較長選項的值會優先。</value>
-  </data>
-  <data name="Help_Settings_PostStopSuspendDelayOption" xml:space="preserve">
-    <value>設定工作結束後的安全等待時間，讓緊接著到來的下一則訊息能先被接收，然後才開始睡眠/休眠或回覆等待。</value>
-  </data>
-  <data name="Help_SuspendHistory_CountOption" xml:space="preserve">
-    <value>選用的正整數項目數。預設會使用已儲存的 suspend-history-count 值；若記錄已關閉，則為 10。</value>
-  </data>
-  <data name="Help_ClaudeHooks_Description" xml:space="preserve">
-    <value>列印受管理的 Claude Code Hook 設定片段。</value>
-  </data>
-  <data name="Help_RemoveSession_ProviderNameOption" xml:space="preserve">
-    <value>選用。當使用 --provider mcp 時，將移除範圍縮小到單一 MCP Provider 名稱。</value>
-  </data>
-  <data name="Help_ProviderMcpStatus_Description" xml:space="preserve">
-    <value>檢查呼叫端提供的 JSON 設定檔中是否有受管理的 Provider MCP 伺服器項目。</value>
-  </data>
-  <data name="Help_MacOSPermission_RemoveNote" xml:space="preserve">
-    <value>如果 sudoers 檔案不含 LidGuard 的受管理標記，就不會移除該檔案。</value>
-  </data>
-  <data name="Help_CurrentTemperature_TemperatureModeOption" xml:space="preserve">
-    <value>選用的位置參數。使用 default 會依照已儲存設定，或可只為這次命令選擇 low、average 或 high。</value>
-  </data>
-  <data name="Help_RemoveSession_ProviderOption" xml:space="preserve">
-    <value>選用。將移除範圍縮小到單一 Provider。允許的值: codex、claude、copilot、custom、mcp 或 unknown。</value>
-  </data>
-  <data name="Help_Settings_ResetOption" xml:space="preserve">
-    <value>為 true 時，會在套用這次命令中的值之前，先將設定重設為 LidGuard 預設值。</value>
-  </data>
-  <data name="Help_CurrentTemperature_Description" xml:space="preserve">
-    <value>使用選定的溫度模式，以攝氏回報目前系統溫度。</value>
-  </data>
-  <data name="Help_RemoveSession_ByIdentifierDescription" xml:space="preserve">
-    <value>不等待 Provider stop Hook，直接依工作階段識別碼移除進行中的工作階段。</value>
-  </data>
-  <data name="Help_Status_RuntimeNotRunningNote" xml:space="preserve">
-    <value>如果 LidGuard 未在執行中，status 仍會列印已儲存的設定檔內容。</value>
-  </data>
-  <data name="Help_Stop_WorkingDirectoryOption" xml:space="preserve">
-    <value>用於後備工作階段識別的選用工作目錄。預設為目前目錄。</value>
-  </data>
-  <data name="Help_ManagedCommands_Detail" xml:space="preserve">
-    <value>這些命令主要用於 Provider 管理的整合與 stdio 主機，而不是一般日常直接在 CLI 使用。</value>
-  </data>
-  <data name="Help_SoundPreview_WaitsForPlaybackNote" xml:space="preserve">
-    <value>這個命令會等待播放完成。</value>
-  </data>
-  <data name="Help_Usage_QuoteValues" xml:space="preserve">
-    <value>當路徑或文字值包含空白時，請加上引號。</value>
-  </data>
-  <data name="Help_MacOSPermission_ManagedRuleNote" xml:space="preserve">
-    <value>受管理規則只允許 LidGuard 的 pmset disablesleep、pmset hibernatemode 與 powermetrics SMC sample 命令。</value>
-  </data>
-  <data name="Help_CleanupOrphans_Description" xml:space="preserve">
-    <value>移除監看處理程序已經結束的工作階段。</value>
-  </data>
-  <data name="Help_LinuxPermission_InstallNote" xml:space="preserve">
-    <value>這個子命令會使用 sudo，一次性以管理員權限寫入 /etc/polkit-1/rules.d/49-lidguard.rules。</value>
-  </data>
-  <data name="Help_CurrentLidState_Description" xml:space="preserve">
-    <value>使用與 LidGuard 判斷上蓋關閉政策時相同的平台上蓋狀態來源，回報目前的上蓋開關狀態。</value>
-  </data>
-  <data name="Help_MacOSPermission_CheckDescription" xml:space="preserve">
-    <value>驗證 macOS 執行階段所需的操作，但不會真的要求進入睡眠或休眠。</value>
-  </data>
-  <data name="Help_Settings_EmergencyHibernationTemperatureCelsiusOption" xml:space="preserve">
-    <value>將緊急休眠門檻設定為攝氏值。允許範圍: 70 到 110。</value>
-  </data>
-  <data name="Help_RemoveSession_NoProviderNote" xml:space="preserve">
-    <value>當省略 --provider 時，LidGuard 會移除所有工作階段識別碼相符、仍在進行中的工作階段。</value>
-  </data>
-  <data name="Help_McpInstall_Description" xml:space="preserve">
-    <value>向選定的 Provider CLI 註冊或重新整理名為 lidguard 的受管理 stdio MCP 伺服器。</value>
-  </data>
-  <data name="Help_MacOSPermission_RemoveDescription" xml:space="preserve">
-    <value>當存在完全相同的受管理 sudoers 規則檔時，移除 LidGuard 管理的 sudoers 規則。</value>
-  </data>
-  <data name="Help_Stop_ParentProcessOption" xml:space="preserve">
-    <value>停止追蹤工作階段時使用的選用處理程序 ID，用來比對處理程序。</value>
-  </data>
-  <data name="Help_Settings_EmergencyHibernationTemperatureModeOption" xml:space="preserve">
-    <value>選擇 LidGuard 使用最低、平均或最高的可用溫度感測器值。</value>
-  </data>
-  <data name="Help_CurrentMonitorCount_InternalPanelNote" xml:space="preserve">
-    <value>只有在最後判斷是否可進入睡眠/休眠時，才會排除筆電內建面板連線。</value>
-  </data>
-  <data name="Help_LinuxPermission_RemoveNote" xml:space="preserve">
-    <value>如果規則檔不含 LidGuard 的受管理標記，就不會移除該檔案。</value>
-  </data>
-  <data name="Help_Stop_SessionOption" xml:space="preserve">
-    <value>選用。省略時，LidGuard 會使用與 start 相同的後備工作階段識別策略。</value>
-  </data>
-  <data name="Help_CodexHooks_Description" xml:space="preserve">
-    <value>列印受管理的 Codex Hook 設定片段。</value>
-  </data>
-  <data name="Help_ProviderMcpInstall_ProviderNameOption" xml:space="preserve">
-    <value>必要的 Provider 名稱，會直接傳給 provider-mcp-server。</value>
-  </data>
-  <data name="Help_ProviderMcpRemove_Description" xml:space="preserve">
-    <value>從呼叫端提供的 JSON 設定檔中移除受管理的 Provider MCP 伺服器項目。</value>
-  </data>
-  <data name="Help_Command_NoOptionsNote" xml:space="preserve">
-    <value>這個命令不接受任何選項。</value>
-  </data>
-  <data name="Help_HookInstall_Description" xml:space="preserve">
-    <value>將受管理的 Provider Hook 項目安裝到所選設定檔中。</value>
-  </data>
-  <data name="Help_McpRemove_Description" xml:space="preserve">
-    <value>從選定的 Provider CLI 中移除名為 lidguard 的受管理 stdio MCP 伺服器。</value>
-  </data>
-  <data name="Help_Settings_PostSessionEndWebhookOption" xml:space="preserve">
-    <value>設定工作階段正常完成且 LidGuard 不會接著進入睡眠或休眠時要呼叫的 Webhook URL。</value>
-  </data>
-  <data name="Help_Paths_MacOSRuntimeBehavior" xml:space="preserve">
-    <value>macOS 支援使用 caffeinate 與 pmset。Windows 與 Linux 支援則在各自的平台建置中實作。</value>
-  </data>
-  <data name="Help_ManagedProvider_ConfigAllNote" xml:space="preserve">
-    <value>不要把 --config 和 --provider all 一起使用，因為每個 Provider 使用的設定檔都不同。</value>
-  </data>
-  <data name="Help_Settings_SuspendModeOption" xml:space="preserve">
-    <value>選擇在最後一個進行中的工作階段結束，或最後一個工作階段不再需要保持系統喚醒後，LidGuard 要求睡眠還是休眠。</value>
-  </data>
-  <data name="Help_ProviderMcpInstall_DirectEditNote" xml:space="preserve">
-    <value>這條路徑會直接編輯提供的 JSON 檔案，不會呼叫 Provider 專屬的 mcp add/remove 命令。</value>
-  </data>
-  <data name="Help_PreviewCurrentSound_NoSoundNote" xml:space="preserve">
-    <value>如果沒有設定警告音，這個命令不會失敗，而是改為列印設定指引。</value>
-  </data>
-  <data name="Help_LinuxPermission_StatusDescription" xml:space="preserve">
-    <value>只顯示目前的 Linux 權限環境，不會做任何變更。</value>
-  </data>
-  <data name="Help_Start_WorkingDirectoryOption" xml:space="preserve">
-    <value>用於後備工作階段識別與中繼資料的選用工作目錄。預設為目前目錄。</value>
-  </data>
-  <data name="Help_Settings_ServerRuntimeCleanupDelayOption" xml:space="preserve">
-    <value>設定所有工作階段結束且清理完成後，LidGuard 還要持續執行多久。傳入 off 可讓執行階段持續執行，0 會立刻結束，正整數分鐘則表示等待時間。</value>
-  </data>
-  <data name="Help_Stop_Description" xml:space="preserve">
-    <value>依工作階段啟動時使用的相同 Provider 與工作階段識別，比對後停止追蹤工作階段。</value>
-  </data>
-  <data name="Help_ManagedProvider_AllProvidersNote" xml:space="preserve">
-    <value>使用 --provider all 時，只會處理預設設定根目錄已存在的 Provider。缺少的 Provider 會回報並略過。</value>
-  </data>
-  <data name="Help_ManagedProvider_AllProvidersArgumentNote" xml:space="preserve">
-    <value>使用 all 時，只會處理預設設定根目錄已存在的 Provider。缺少的 Provider 會回報並略過。</value>
-  </data>
-  <data name="Help_Paths_WindowsRuntimeBehavior" xml:space="preserve">
-    <value>這個建置包含 Windows 支援。Linux 與 macOS 支援則在各自的平台建置中實作。</value>
-  </data>
-  <data name="Help_RemovePreSuspendWebhook_Description" xml:space="preserve">
-    <value>清除已儲存的睡眠/休眠前 Webhook URL。</value>
-  </data>
-  <data name="Help_HookEvents_Description" xml:space="preserve">
-    <value>列印所選 Provider 或多個 Provider 最近的 Hook 事件記錄行。</value>
-  </data>
-  <data name="Help_ClaudeHook_Description" xml:space="preserve">
-    <value>從標準輸入讀取 Claude Code Hook JSON，並將 start、stop、activity、soft-lock、elicitation 或 permission 決定轉送給 LidGuard。</value>
-  </data>
-  <data name="Help_SuspendHistory_CountNote" xml:space="preserve">
-    <value>已儲存的 suspend-history-count 設定會控制保留多少項目。count 引數只會限制顯示多少已保留的項目。</value>
-  </data>
-  <data name="Help_Settings_ClosedLidPermissionRequestDecisionOption" xml:space="preserve">
-    <value>選擇當 LidGuard 回報上蓋已關閉時，closed-lid PermissionRequest Hook 要如何回應。ask 會讓工作階段進入等待輸入狀態，並讓 Provider 的正常權限提示繼續顯示。</value>
-  </data>
-  <data name="Help_Settings_ClosedLidStopFollowUpWebhookOption" xml:space="preserve">
-    <value>上蓋關閉時，如果工作準備結束，請設定在睡眠前送出回覆提醒的 URL。URL 有效、回覆等待時間至少 20 秒且 post-stop-suspend-delay-seconds 至少 10 秒時才會生效。</value>
-  </data>
-  <data name="Help_Settings_ClosedLidStopFollowUpDelayOption" xml:space="preserve">
-    <value>設定送出睡眠前提醒後等待使用者回覆的時間。0 表示關閉；啟用回覆提醒時需要至少 20 秒。預設值為 180 秒。</value>
-  </data>
-  <data name="Help_Settings_RepeatClosedLidStopFollowUpOption" xml:space="preserve">
-    <value>設定在回覆讓工作繼續後，下次該工作再次準備結束時是否再通知一次。預設值為 true。</value>
-  </data>
-  <data name="Help_ProviderMcpRemove_ConfigOption" xml:space="preserve">
-    <value>必要。要更新的 JSON 設定檔。</value>
-  </data>
-  <data name="Help_Paths_LinuxRuntimeBehavior" xml:space="preserve">
-    <value>Linux 支援是為 systemd/logind 環境實作的。macOS 支援則在 macOS 建置中實作。</value>
-  </data>
-  <data name="Help_RemoveSession_AllDescription" xml:space="preserve">
-    <value>移除執行階段目前追蹤的所有仍在進行的工作階段。</value>
-  </data>
-  <data name="Help_McpStatus_Description" xml:space="preserve">
-    <value>檢查某個 Provider 或所有已偵測到的 Provider 的受管理使用者/全域 LidGuard MCP 伺服器註冊狀態。</value>
-  </data>
-  <data name="Help_CurrentLidState_StateNote" xml:space="preserve">
-    <value>這會依目前平台的上蓋狀態來源回報 Open、Closed 或 Unknown。</value>
-  </data>
-  <data name="Help_Start_ParentProcessOption" xml:space="preserve">
-    <value>選用的處理程序 ID，用來監看處理程序；若該處理程序結束，LidGuard 就能清理。</value>
-  </data>
-  <data name="Help_Session_ProviderOption" xml:space="preserve">
-    <value>必要。允許的值: codex、claude、copilot、custom 或 mcp。</value>
-  </data>
-  <data name="Help_LinuxPermission_InstallDescription" xml:space="preserve">
-    <value>為目前使用者安裝 LidGuard 管理的 polkit 規則。</value>
-  </data>
-  <data name="Help_ProviderMcpStatus_ConfigOption" xml:space="preserve">
-    <value>必要。要檢查的 JSON 設定檔。</value>
-  </data>
-  <data name="Help_RemoveSession_Description" xml:space="preserve">
-    <value>移除執行階段目前追蹤、且仍在進行的工作階段。</value>
-  </data>
-  <data name="Help_RemovePostSessionEndWebhook_Description" xml:space="preserve">
-    <value>清除已儲存的工作階段完成 Webhook URL。</value>
-  </data>
-  <data name="Help_RemoveClosedLidStopFollowUpWebhook_Description" xml:space="preserve">
-    <value>清除已儲存的睡眠前回覆提醒 URL。</value>
-  </data>
-  <data name="Help_PreviewSystemSound_Description" xml:space="preserve">
-    <value>立即使用已儲存的暫時音量設定播放一個支援的 SystemSound 名稱。</value>
-  </data>
-  <data name="Help_MacOSPermission_InstallDescription" xml:space="preserve">
-    <value>為目前使用者安裝 LidGuard 管理的 sudoers 規則。</value>
-  </data>
-  <data name="Help_LinuxPermission_RemoveDescription" xml:space="preserve">
-    <value>當存在完全相同的受管理規則檔時，移除 LidGuard 管理的 polkit 規則。</value>
-  </data>
-  <data name="Help_MacOSPermission_Description" xml:space="preserve">
-    <value>檢查或管理 macOS 上 pmset 與 powermetrics 操作所需的 sudoers 權限。</value>
-  </data>
-  <data name="Help_Settings_EmergencyHibernationOption" xml:space="preserve">
-    <value>變更當受保護系統在上蓋關閉時達到設定溫度門檻，LidGuard 是否要求緊急休眠。</value>
-  </data>
-  <data name="Help_HookStatus_Description" xml:space="preserve">
-    <value>檢查某個 Provider 或所有已偵測到的 Provider 的受管理 Hook 設定。</value>
-  </data>
-  <data name="Help_McpInstall_RefreshNote" xml:space="preserve">
-    <value>如果找到現有的受管理 LidGuard MCP 伺服器，mcp-install 會先移除它，再安裝目前的命令。</value>
-  </data>
-  <data name="Help_CurrentTemperature_DefaultModeNote" xml:space="preserve">
-    <value>當設定檔尚不存在時，default 會使用 Average。</value>
-  </data>
-  <data name="Help_ProviderMcpInstall_Description" xml:space="preserve">
-    <value>在呼叫端提供的 JSON 設定檔中寫入或更新受管理的 Provider MCP stdio 伺服器項目。</value>
-  </data>
-  <data name="Help_HookEvents_CountOption" xml:space="preserve">
-    <value>選用的正整數行數。預設為 50。</value>
-  </data>
-  <data name="Help_Stop_ProviderNameOption" xml:space="preserve">
-    <value>當使用 --provider mcp 時為必要。</value>
-  </data>
-  <data name="Help_ManagedProvider_ConfigOption" xml:space="preserve">
-    <value>選用的 Provider 專屬設定檔覆寫。</value>
-  </data>
-  <data name="Help_Settings_PowerRequestReasonOption" xml:space="preserve">
-    <value>設定 Windows 顯示給使用者的 LidGuard 防止睡眠原因文字。</value>
-  </data>
-  <data name="Help_Settings_InteractiveModeNote" xml:space="preserve">
-    <value>不帶任何選項執行 settings，會進入互動式編輯模式。</value>
-  </data>
-  <data name="Help_LinuxPermission_CheckDescription" xml:space="preserve">
-    <value>驗證 Linux 執行階段所需的操作，但不會真的要求進入 suspend 或 hibernate。</value>
-  </data>
-  <data name="Help_Settings_RemoveWebhookNote" xml:space="preserve">
-    <value>請使用 remove-pre-suspend-webhook 或 remove-post-session-end-webhook 來清除 Webhook URL；Webhook URL 選項不接受 off 或空值。</value>
-  </data>
-  <data name="Help_McpServer_Description" xml:space="preserve">
-    <value>啟用一般 LidGuard stdio MCP 伺服器，公開設定與工作階段管理工具。</value>
-  </data>
-  <data name="Help_HookRemove_Description" xml:space="preserve">
-    <value>從所選設定檔中移除受管理的 Provider Hook 項目。</value>
-  </data>
-  <data name="Help_Settings_UserInterfaceCultureOption" xml:space="preserve">
-    <value>設定 CLI 顯示語言/地區。常見選項包含 en、ko、ja、zh-Hans 和 zh-Hant。auto 會跟隨目前處理程序或作業系統的設定，而 LIDGUARD_UI_CULTURE 的優先順序高於已儲存的值。</value>
-  </data>
-  <data name="Help_Paths_ProviderMcpBestEffort" xml:space="preserve">
-    <value>Provider MCP 整合僅能盡力而為，因為正確行為完全取決於模型是否在正確時機呼叫 LidGuard MCP 工具。</value>
-  </data>
-  <data name="Help_Settings_WatchParentProcessOption" xml:space="preserve">
-    <value>變更追蹤工作階段的處理程序監看政策。</value>
-  </data>
-  <data name="Help_ProviderMcpInstall_ConfigOption" xml:space="preserve">
-    <value>必要。要建立或更新的 JSON 設定檔。</value>
-  </data>
-  <data name="Help_Start_Description" xml:space="preserve">
-    <value>啟動或重新整理追蹤工作階段，並載入已儲存的預設設定。</value>
-  </data>
-  <data name="Help_RemoveSession_SessionOption" xml:space="preserve">
-    <value>必要。要移除的工作階段識別碼。</value>
-  </data>
-  <data name="Help_RemoveSession_AllCannotCombineNote" xml:space="preserve">
-    <value>--all 不能和 --session、--provider 或 --provider-name 一起使用。</value>
-  </data>
-  <data name="Help_CopilotHooks_Description" xml:space="preserve">
-    <value>列印受管理的 GitHub Copilot CLI Hook 設定片段。</value>
-  </data>
-  <data name="Help_Help_CommandOptionNote" xml:space="preserve">
-    <value>&lt;command&gt; --help 形式會使用相同的命令中繼資料。</value>
-  </data>
-  <data name="Help_RemoveSession_McpWithoutProviderNameNote" xml:space="preserve">
-    <value>當 --provider mcp 未搭配 --provider-name 使用時，LidGuard 會移除所有具有相同工作階段識別碼、且以 MCP 為後端的工作階段。</value>
-  </data>
-  <data name="Help_Start_ProviderNameOption" xml:space="preserve">
-    <value>當使用 --provider mcp 時為必要。用來區分不同的 MCP 後端 Provider。</value>
-  </data>
-  <data name="Help_Settings_PostStopSuspendSoundOption" xml:space="preserve">
-    <value>停用睡眠或休眠警告音、使用一個支援的 SystemSound 名稱 ({supportedPostStopSuspendSystemSounds})，或提供現有可播放的 .wav 路徑。</value>
-  </data>
-  <data name="Help_CopilotHook_Description" xml:space="preserve">
-    <value>從標準輸入讀取 GitHub Copilot CLI 某個已設定事件名稱的 Hook JSON。</value>
-  </data>
-  <data name="Help_Start_RuntimeLaunchNote" xml:space="preserve">
-    <value>如果沒有執行中的 runtime 在監聽，start 會自動啟動分離式 runtime 伺服器。</value>
-  </data>
-  <data name="Help_PreviewSystemSound_NameOption" xml:space="preserve">
-    <value>必要的位置參數。允許的值: Asterisk、Beep、Exclamation、Hand 或 Question。</value>
-  </data>
-  <data name="Help_Settings_ChangeLidActionOption" xml:space="preserve">
-    <value>變更 LidGuard 是否暫時把目前電源計畫的上蓋關閉動作設為 Do Nothing。</value>
-  </data>
-  <data name="Help_Start_SessionOption" xml:space="preserve">
-    <value>選用。要追蹤的工作階段識別碼。省略時，LidGuard 會根據 Provider 顯示名稱與標準化後的工作目錄自動產生。</value>
-  </data>
-  <data name="Help_CodexHooks_FormatOption" xml:space="preserve">
-    <value>選用的位置參數。預設為 config-toml。接受 config-toml、toml、hooks-json 或 json。</value>
-  </data>
-  <data name="Help_ClaudeHooks_FormatOption" xml:space="preserve">
-    <value>選用的位置參數。預設為 settings-json。接受 settings-json、json 或 hooks-json。</value>
-  </data>
-  <data name="Help_CopilotHook_EventOption" xml:space="preserve">
-    <value>必要。常見值包括 sessionStart、sessionEnd、userPromptSubmitted、preToolUse、postToolUse、permissionRequest、agentStop、subagentStart、subagentStop、errorOccurred 和 notification。</value>
-  </data>
-  <data name="Help_CopilotHooks_FormatOption" xml:space="preserve">
-    <value>選用的位置參數。預設為 config-json。接受 config-json、json 或 hooks-json。</value>
-  </data>
-  <data name="DisplayClosedLidPermissionRequestDecisionDeny" xml:space="preserve">
-    <value>拒絕</value>
-  </data>
-  <data name="DisplayClosedLidPermissionRequestDecisionAllow" xml:space="preserve">
-    <value>允許</value>
-  </data>
-  <data name="DisplayClosedLidPermissionRequestDecisionAsk" xml:space="preserve">
-    <value>詢問</value>
-  </data>
-  <data name="DisplayEmergencyHibernationTemperatureModeAverage" xml:space="preserve">
-    <value>平均</value>
-  </data>
-  <data name="DisplayEmergencyHibernationTemperatureModeLow" xml:space="preserve">
-    <value>低</value>
-  </data>
-  <data name="DisplayEmergencyHibernationTemperatureModeHigh" xml:space="preserve">
-    <value>高</value>
-  </data>
-  <data name="DisplayLidSwitchStateUnknown" xml:space="preserve">
+  <data name="PermissionUnknownUser" xml:space="preserve">
     <value>未知</value>
   </data>
-  <data name="DisplayLidSwitchStateOpen" xml:space="preserve">
-    <value>開啟</value>
+  <data name="PlatformUnsupportedLinux" xml:space="preserve">
+    <value>LidGuard 的 Linux 支援需要 systemd/logind 環境。</value>
   </data>
-  <data name="DisplayLidSwitchStateClosed" xml:space="preserve">
-    <value>關閉</value>
+  <data name="PlatformUnsupportedMacOS" xml:space="preserve">
+    <value>這個 LidGuard 建置需要 macOS。</value>
   </data>
-  <data name="DisplaySessionSoftLockStateNone" xml:space="preserve">
-    <value>無</value>
-  </data>
-  <data name="DisplaySessionSoftLockStateSoftLocked" xml:space="preserve">
-    <value>已軟鎖定</value>
-  </data>
-  <data name="DisplaySuspendModeSleep" xml:space="preserve">
-    <value>睡眠</value>
-  </data>
-  <data name="DisplaySuspendModeHibernate" xml:space="preserve">
-    <value>休眠</value>
-  </data>
-  <data name="DisplaySuspendWebhookReasonCompleted" xml:space="preserve">
-    <value>已完成</value>
-  </data>
-  <data name="DisplaySuspendWebhookReasonSoftLocked" xml:space="preserve">
-    <value>已軟鎖定</value>
-  </data>
-  <data name="DisplaySuspendWebhookReasonEmergencyHibernation" xml:space="preserve">
-    <value>緊急休眠</value>
+  <data name="PlatformUnsupportedWindows" xml:space="preserve">
+    <value>這個 LidGuard 建置需要 Windows 7 或更新版本。</value>
   </data>
   <data name="RuntimeResponseCleanupOrphansCompleted" xml:space="preserve">
     <value>已清理 {0} 個孤兒工作階段。</value>
@@ -1434,14 +1567,14 @@
   <data name="RuntimeResponseSessionStartedCodexCliFallback" xml:space="preserve">
     <value>已啟動 {0}。透過 Codex CLI 後備機制監看處理程序 {1}。</value>
   </data>
-  <data name="RuntimeResponseSessionStartedWatchedProcess" xml:space="preserve">
-    <value>已啟動 {0}。正在監看處理程序 {1}。</value>
-  </data>
   <data name="RuntimeResponseSessionStartedCodexCliFallbackSkipped" xml:space="preserve">
     <value>已啟動 {0}。Codex 後備 watchdog 只有在解析出的處理程序是 {1} 時才會附掛；需要 stop Hook。</value>
   </data>
   <data name="RuntimeResponseSessionStartedNoWatchedProcess" xml:space="preserve">
     <value>已啟動 {0}。沒有解析到要監看的處理程序；需要 stop Hook。</value>
+  </data>
+  <data name="RuntimeResponseSessionStartedWatchedProcess" xml:space="preserve">
+    <value>已啟動 {0}。正在監看處理程序 {1}。</value>
   </data>
   <data name="RuntimeResponseSessionStopped" xml:space="preserve">
     <value>已停止 {0}。</value>
@@ -1467,35 +1600,392 @@
   <data name="RuntimeResponseWatchedProcessOrphanCleaned" xml:space="preserve">
     <value>已清理孤兒工作階段 {0}。</value>
   </data>
-  <data name="ConsoleCurrentTemperatureUnavailable" xml:space="preserve">
-    <value>使用 {0} 模式時，這個平台支援的溫度感測器無法提供目前系統溫度。</value>
+  <data name="SessionProcessNone" xml:space="preserve">
+    <value>無</value>
   </data>
-  <data name="ConsoleCurrentTemperature" xml:space="preserve">
-    <value>目前系統溫度（{0} 模式）: 攝氏 {1} 度</value>
+  <data name="SessionRequestAllCannotCombineWithProvider" xml:space="preserve">
+    <value>--all 選項不能和 --provider 一起使用。</value>
   </data>
-  <data name="ConsoleCurrentTemperatureModeValidation" xml:space="preserve">
-    <value>溫度模式必須是 default、low、average 或 high。</value>
+  <data name="SessionRequestAllCannotCombineWithProviderName" xml:space="preserve">
+    <value>--all 選項不能和 --provider-name 一起使用。</value>
   </data>
-  <data name="SuspendHistoryFile" xml:space="preserve">
-    <value>睡眠/休眠記錄檔: {0}</value>
+  <data name="SessionRequestAllCannotCombineWithSession" xml:space="preserve">
+    <value>--all 選項不能和 --session 一起使用。</value>
   </data>
-  <data name="SuspendHistoryRecording" xml:space="preserve">
-    <value>睡眠/休眠記錄: {0}</value>
+  <data name="SessionRequestProviderNameRequiredForMcp" xml:space="preserve">
+    <value>當使用 --provider mcp 時，必須提供 --provider-name 選項。</value>
   </data>
-  <data name="SuspendHistoryNoEntries" xml:space="preserve">
-    <value>沒有記錄任何睡眠/休眠歷史項目。</value>
+  <data name="SessionRequestProviderRequired" xml:space="preserve">
+    <value>必須提供 Provider。請使用 codex、claude、copilot、opencode、custom、mcp 或 unknown。</value>
   </data>
-  <data name="SuspendHistoryRecentEntries" xml:space="preserve">
-    <value>最近的睡眠/休眠歷史項目: {0}</value>
+  <data name="SessionRequestSessionIdentifierRequired" xml:space="preserve">
+    <value>必須提供工作階段識別碼。</value>
   </data>
-  <data name="SuspendHistoryOptionNotAccepted" xml:space="preserve">
-    <value>{0} 不接受 --{1}。</value>
+  <data name="SessionRequestUnsupportedProvider" xml:space="preserve">
+    <value>不支援的 Provider。請使用 codex、claude、copilot、opencode、custom、mcp 或 unknown。</value>
+  </data>
+  <data name="SessionRequestWatchedProcessIdentifierValidation" xml:space="preserve">
+    <value>要監看的處理程序 ID 必須是非負整數。</value>
+  </data>
+  <data name="SettingsChangeLidAction" xml:space="preserve">
+    <value>  上蓋關閉動作覆寫: {0}</value>
+  </data>
+  <data name="SettingsClosedLidPermissionRequestDecision" xml:space="preserve">
+    <value>  上蓋關閉權限要求決定: {0}</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpConfigurationIssue" xml:space="preserve">
+    <value>    設定問題: {0}</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpDelaySeconds" xml:space="preserve">
+    <value>  睡眠前回覆等待時間（秒）: {0}</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpFeatureState" xml:space="preserve">
+    <value>  睡眠前回覆提醒: {0}</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpSound" xml:space="preserve">
+    <value>  睡眠前回覆等待提示音: {0}</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpSoundVolumeOverridePercent" xml:space="preserve">
+    <value>  回覆等待提示音暫時音量百分比: {0}</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpWebhookUrl" xml:space="preserve">
+    <value>  睡眠前回覆提醒 URL: {0}</value>
+  </data>
+  <data name="SettingsClosedLidStopFollowUpWebhookUrlRemoved" xml:space="preserve">
+    <value>已移除睡眠前回覆提醒 URL。</value>
+  </data>
+  <data name="SettingsEmergencyHibernationOnHighTemperature" xml:space="preserve">
+    <value>  高溫時啟用緊急休眠: {0}</value>
+  </data>
+  <data name="SettingsEmergencyHibernationTemperatureCelsius" xml:space="preserve">
+    <value>  緊急休眠溫度（攝氏）: {0}</value>
+  </data>
+  <data name="SettingsEmergencyHibernationTemperatureMode" xml:space="preserve">
+    <value>  緊急休眠溫度模式: {0}</value>
+  </data>
+  <data name="SettingsInteractiveBooleanValidation" xml:space="preserve">
+    <value>{0} 必須是 true 或 false。</value>
+  </data>
+  <data name="SettingsInteractiveClosedLidPermissionRequestDecisionDetails" xml:space="preserve">
+    <value>可選值: Deny、Allow、Ask</value>
+  </data>
+  <data name="SettingsInteractiveClosedLidPermissionRequestDecisionValidation" xml:space="preserve">
+    <value>上蓋關閉權限要求決定必須是 deny、allow 或 ask。</value>
+  </data>
+  <data name="SettingsInteractiveEmergencyHibernationTemperatureModeDetails" xml:space="preserve">
+    <value>可選值: Low、Average、High</value>
+  </data>
+  <data name="SettingsInteractiveEmergencyHibernationTemperatureModeValidation" xml:space="preserve">
+    <value>{0} 必須是 low、average 或 high。</value>
+  </data>
+  <data name="SettingsInteractiveGuidanceChangePostSessionEndWebhook" xml:space="preserve">
+    <value>如要變更工作階段完成 Webhook URL，請執行: {0} settings --post-session-end-webhook-url &lt;http-or-https-url&gt;</value>
+  </data>
+  <data name="SettingsInteractiveGuidanceChangePreSuspendWebhook" xml:space="preserve">
+    <value>如要變更睡眠/休眠前 Webhook URL，請執行: {0} settings --pre-suspend-webhook-url &lt;http-or-https-url&gt;</value>
+  </data>
+  <data name="SettingsInteractiveGuidanceChangeReason" xml:space="preserve">
+    <value>如要變更原因，請執行: {0} settings --power-request-reason &lt;text&gt;</value>
+  </data>
+  <data name="SettingsInteractiveGuidanceRemovePostSessionEndWebhook" xml:space="preserve">
+    <value>如要移除工作階段完成 Webhook URL，請執行: {0} {1}</value>
+  </data>
+  <data name="SettingsInteractiveGuidanceRemovePreSuspendWebhook" xml:space="preserve">
+    <value>如要移除睡眠/休眠前 Webhook URL，請執行: {0} {1}</value>
+  </data>
+  <data name="SettingsInteractiveImmediateDetails" xml:space="preserve">
+    <value>0 = 立即</value>
+  </data>
+  <data name="SettingsInteractiveInputEnded" xml:space="preserve">
+    <value>在輸入 {0} 之前輸入就已結束。</value>
+  </data>
+  <data name="SettingsInteractiveNonNegativeIntegerValidation" xml:space="preserve">
+    <value>{0} 必須是非負整數。</value>
+  </data>
+  <data name="SettingsInteractivePostStopSuspendSoundDetails" xml:space="preserve">
+    <value>off 表示停用，SystemSounds: {0}，或 .wav 路徑</value>
+  </data>
+  <data name="SettingsInteractivePrompt" xml:space="preserve">
+    <value>{0}（已儲存: {1}，預設: {2}，按 Enter 保留已儲存值）: </value>
+  </data>
+  <data name="SettingsInteractivePromptWithDetails" xml:space="preserve">
+    <value>{0}（已儲存: {1}，預設: {2}，{3}，按 Enter 保留已儲存值）: </value>
+  </data>
+  <data name="SettingsInteractiveRangeDetails" xml:space="preserve">
+    <value>範圍: {0}-{1}</value>
+  </data>
+  <data name="SettingsInteractiveRangeValidation" xml:space="preserve">
+    <value>{0} 必須是 {1} 到 {2} 之間的整數。</value>
+  </data>
+  <data name="SettingsInteractiveServerRuntimeCleanupDelayDetails" xml:space="preserve">
+    <value>最小值: {0}，off 可讓執行階段持續執行</value>
+  </data>
+  <data name="SettingsInteractiveSessionTimeoutDetails" xml:space="preserve">
+    <value>最小值: {0}，off 可停用</value>
+  </data>
+  <data name="SettingsInteractiveSuspendHistoryEntryCountDetails" xml:space="preserve">
+    <value>最小值: {0}，off 可停用</value>
+  </data>
+  <data name="SettingsInteractiveSuspendModeDetails" xml:space="preserve">
+    <value>可選值: Sleep、Hibernate</value>
+  </data>
+  <data name="SettingsInteractiveSuspendModeValidation" xml:space="preserve">
+    <value>{0} 必須是 sleep 或 hibernate。</value>
+  </data>
+  <data name="SettingsInteractiveUserInterfaceCultureDetails" xml:space="preserve">
+    <value>auto、en、ko、ja、zh-Hans、zh-Hant，或像 ko-KR 這樣的文化名稱</value>
+  </data>
+  <data name="SettingsInteractiveValueOffOrMinimumValidation" xml:space="preserve">
+    <value>{0} 必須是 off，或至少為 {1} 的整數。</value>
+  </data>
+  <data name="SettingsInteractiveVolumeOverrideDetails" xml:space="preserve">
+    <value>範圍: {0}-{1}，off 可停用</value>
+  </data>
+  <data name="SettingsInteractiveVolumeOverrideValidation" xml:space="preserve">
+    <value>{0} 必須是 off，或 {1} 到 {2} 之間的整數。</value>
+  </data>
+  <data name="SettingsManagedHookStatusMessageRefreshChanged" xml:space="preserve">
+    <value>已更新受管理 Hook 狀態訊息: {0}</value>
+  </data>
+  <data name="SettingsManagedHookStatusMessageRefreshFailed" xml:space="preserve">
+    <value>更新受管理 Hook 狀態訊息失敗: {0}</value>
+  </data>
+  <data name="SettingsManagedHookStatusMessageRefreshUnchanged" xml:space="preserve">
+    <value>受管理 Hook 狀態訊息已符合目前的 UI 語言/地區設定，或找不到任何受管理 Hook。</value>
+  </data>
+  <data name="SettingsNameChangeLidAction" xml:space="preserve">
+    <value>上蓋關閉動作覆寫</value>
+  </data>
+  <data name="SettingsNameClosedLidPermissionRequestDecision" xml:space="preserve">
+    <value>上蓋關閉權限要求決定</value>
+  </data>
+  <data name="SettingsNameClosedLidStopFollowUpDelaySeconds" xml:space="preserve">
+    <value>睡眠前回覆等待時間（秒）</value>
+  </data>
+  <data name="SettingsNameClosedLidStopFollowUpSound" xml:space="preserve">
+    <value>睡眠前回覆等待提示音</value>
+  </data>
+  <data name="SettingsNameClosedLidStopFollowUpSoundVolumeOverridePercent" xml:space="preserve">
+    <value>回覆等待提示音暫時音量百分比</value>
+  </data>
+  <data name="SettingsNameEmergencyHibernationOnHighTemperature" xml:space="preserve">
+    <value>高溫時啟用緊急休眠</value>
+  </data>
+  <data name="SettingsNameEmergencyHibernationTemperatureCelsius" xml:space="preserve">
+    <value>緊急休眠溫度（攝氏）</value>
+  </data>
+  <data name="SettingsNameEmergencyHibernationTemperatureMode" xml:space="preserve">
+    <value>緊急休眠溫度模式</value>
+  </data>
+  <data name="SettingsNamePostStopSuspendDelaySeconds" xml:space="preserve">
+    <value>工作階段結束後進入睡眠/休眠的延遲秒數</value>
+  </data>
+  <data name="SettingsNamePostStopSuspendSound" xml:space="preserve">
+    <value>工作階段結束後的睡眠/休眠警告音</value>
+  </data>
+  <data name="SettingsNamePostStopSuspendSoundVolumeOverridePercent" xml:space="preserve">
+    <value>警告音暫時音量百分比</value>
+  </data>
+  <data name="SettingsNamePreventAwayModeSleep" xml:space="preserve">
+    <value>Away Mode 睡眠防止</value>
+  </data>
+  <data name="SettingsNamePreventDisplaySleep" xml:space="preserve">
+    <value>防止顯示器睡眠</value>
+  </data>
+  <data name="SettingsNamePreventSystemSleep" xml:space="preserve">
+    <value>防止系統睡眠</value>
+  </data>
+  <data name="SettingsNameRepeatClosedLidStopFollowUp" xml:space="preserve">
+    <value>回覆後再次詢問</value>
+  </data>
+  <data name="SettingsNameServerRuntimeCleanupDelayMinutes" xml:space="preserve">
+    <value>執行階段清理延遲分鐘數</value>
+  </data>
+  <data name="SettingsNameSessionTimeoutMinutes" xml:space="preserve">
+    <value>工作階段逾時分鐘數</value>
+  </data>
+  <data name="SettingsNameSuspendHistoryEntryCount" xml:space="preserve">
+    <value>睡眠/休眠記錄項目數量</value>
+  </data>
+  <data name="SettingsNameSuspendMode" xml:space="preserve">
+    <value>睡眠模式</value>
+  </data>
+  <data name="SettingsNameUserInterfaceCulture" xml:space="preserve">
+    <value>CLI 顯示語言/地區設定</value>
+  </data>
+  <data name="SettingsNameWatchParentProcess" xml:space="preserve">
+    <value>處理程序監看</value>
+  </data>
+  <data name="SettingsNoClosedLidStopFollowUpWebhookConfigured" xml:space="preserve">
+    <value>未設定睡眠前回覆提醒 URL。</value>
+  </data>
+  <data name="SettingsNoPostSessionEndWebhookConfigured" xml:space="preserve">
+    <value>未設定工作階段完成 Webhook URL。</value>
+  </data>
+  <data name="SettingsNoPreSuspendWebhookConfigured" xml:space="preserve">
+    <value>未設定睡眠/休眠前 Webhook URL。</value>
+  </data>
+  <data name="SettingsOptionClosedLidPermissionRequestDecisionValidation" xml:space="preserve">
+    <value>上蓋關閉權限要求決定必須是 deny、allow 或 ask。</value>
+  </data>
+  <data name="SettingsOptionClosedLidStopFollowUpDelaySecondsValidation" xml:space="preserve">
+    <value>closed-lid-stop-follow-up-delay-seconds 選項必須是非負整數。</value>
+  </data>
+  <data name="SettingsOptionClosedLidStopFollowUpSoundVolumeOverrideValidation" xml:space="preserve">
+    <value>closed-lid-stop-follow-up-sound-volume-override-percent 選項必須是 off，或 {0} 到 {1} 之間的整數。</value>
+  </data>
+  <data name="SettingsOptionClosedLidStopFollowUpWebhookRemovalCommand" xml:space="preserve">
+    <value>使用 {0} {1} 移除睡眠前回覆提醒 URL。</value>
+  </data>
+  <data name="SettingsOptionEmergencyHibernationTemperatureCelsiusValidation" xml:space="preserve">
+    <value>emergency-hibernation-temperature-celsius 選項必須是 {0} 到 {1} 之間的整數。</value>
+  </data>
+  <data name="SettingsOptionEmergencyHibernationTemperatureModeValidation" xml:space="preserve">
+    <value>emergency-hibernation-temperature-mode 選項必須是 low、average 或 high。</value>
+  </data>
+  <data name="SettingsOptionPostSessionEndWebhookRemovalCommand" xml:space="preserve">
+    <value>使用 {0} {1} 移除工作階段完成 Webhook URL。</value>
+  </data>
+  <data name="SettingsOptionPostStopSuspendDelaySecondsValidation" xml:space="preserve">
+    <value>post-stop-suspend-delay-seconds 選項必須是非負整數。</value>
+  </data>
+  <data name="SettingsOptionPostStopSuspendSoundVolumeOverrideValidation" xml:space="preserve">
+    <value>post-stop-suspend-sound-volume-override-percent 選項必須是 off，或 {0} 到 {1} 之間的整數。</value>
+  </data>
+  <data name="SettingsOptionPreSuspendWebhookRemovalCommand" xml:space="preserve">
+    <value>使用 {0} {1} 移除睡眠/休眠前 Webhook URL。</value>
+  </data>
+  <data name="SettingsOptionPreventAwayModeSleepUnsupported" xml:space="preserve">
+    <value>prevent-away-mode-sleep 選項只在 Windows 上支援。請在這個平台上使用 prevent-system-sleep。</value>
+  </data>
+  <data name="SettingsOptionServerRuntimeCleanupDelayValidation" xml:space="preserve">
+    <value>server-runtime-cleanup-delay-minutes 選項必須是 off 以停用自動結束執行階段，或至少為 {0} 的整數。</value>
+  </data>
+  <data name="SettingsOptionSessionTimeoutValidation" xml:space="preserve">
+    <value>session-timeout-minutes 選項必須是 off，或至少為 {0} 的整數。</value>
+  </data>
+  <data name="SettingsOptionSuspendHistoryCountValidation" xml:space="preserve">
+    <value>suspend-history-count 選項必須是 off，或至少為 {0} 的整數。</value>
+  </data>
+  <data name="SettingsOptionSuspendModeValidation" xml:space="preserve">
+    <value>suspend-mode 選項必須是 sleep 或 hibernate。</value>
+  </data>
+  <data name="SettingsPostSessionEndWebhookUrl" xml:space="preserve">
+    <value>  工作階段完成 Webhook URL: {0}</value>
+  </data>
+  <data name="SettingsPostSessionEndWebhookUrlRemoved" xml:space="preserve">
+    <value>已移除工作階段完成 Webhook URL。</value>
+  </data>
+  <data name="SettingsPostStopSuspendDelaySeconds" xml:space="preserve">
+    <value>  工作階段結束後進入睡眠/休眠前的延遲（秒）: {0}</value>
+  </data>
+  <data name="SettingsPostStopSuspendSound" xml:space="preserve">
+    <value>  工作階段結束後的睡眠/休眠警告音: {0}</value>
+  </data>
+  <data name="SettingsPostStopSuspendSoundVolumeOverridePercent" xml:space="preserve">
+    <value>  警告音暫時音量百分比: {0}</value>
+  </data>
+  <data name="SettingsPreSuspendWebhookUrl" xml:space="preserve">
+    <value>  睡眠/休眠前 Webhook URL: {0}</value>
+  </data>
+  <data name="SettingsPreSuspendWebhookUrlRemoved" xml:space="preserve">
+    <value>已移除睡眠/休眠前 Webhook URL。</value>
+  </data>
+  <data name="SettingsPreventAwayModeSleep" xml:space="preserve">
+    <value>  Away Mode 睡眠防止: {0}</value>
+  </data>
+  <data name="SettingsPreventDisplaySleep" xml:space="preserve">
+    <value>  顯示器睡眠防止: {0}</value>
+  </data>
+  <data name="SettingsPreventSystemSleep" xml:space="preserve">
+    <value>  系統睡眠防止: {0}</value>
+  </data>
+  <data name="SettingsPreviewConfigureCurrentSound" xml:space="preserve">
+    <value>可用以下指令設定一個: {0} settings --post-stop-suspend-sound Asterisk</value>
+  </data>
+  <data name="SettingsPreviewCurrentSoundNotConfigured" xml:space="preserve">
+    <value>未設定睡眠/休眠警告音。</value>
+  </data>
+  <data name="SettingsPreviewPlayableWavSupported" xml:space="preserve">
+    <value>也支援可播放的 .wav 檔案路徑。</value>
+  </data>
+  <data name="SettingsPreviewPlayedCurrentPostStopSuspendSound" xml:space="preserve">
+    <value>已播放目前的睡眠/休眠警告音: {0}</value>
+  </data>
+  <data name="SettingsPreviewPlayedSystemSound" xml:space="preserve">
+    <value>已播放系統音效: {0}</value>
+  </data>
+  <data name="SettingsPreviewSupportedSystemSounds" xml:space="preserve">
+    <value>支援的系統音效: {0}</value>
+  </data>
+  <data name="SettingsPreviewSystemSoundNameRequired" xml:space="preserve">
+    <value>必須提供系統音效名稱。支援的值: {0}</value>
+  </data>
+  <data name="SettingsPreviewUnsupportedSystemSoundName" xml:space="preserve">
+    <value>不支援的系統音效名稱: {0}</value>
+  </data>
+  <data name="SettingsPreviewVolumeOverrideGuidance" xml:space="preserve">
+    <value>選用的暫時音量: {0} settings --post-stop-suspend-sound-volume-override-percent 75</value>
+  </data>
+  <data name="SettingsPreviewVolumeOverrideSetting" xml:space="preserve">
+    <value>音量覆寫設定: {0}</value>
+  </data>
+  <data name="SettingsReason" xml:space="preserve">
+    <value>  原因: {0}</value>
+  </data>
+  <data name="SettingsRepeatClosedLidStopFollowUp" xml:space="preserve">
+    <value>  回覆後再次詢問: {0}</value>
+  </data>
+  <data name="SettingsRuntimeNotRunningSaved" xml:space="preserve">
+    <value>執行階段未在執行中；下次啟動時會使用已儲存的設定。</value>
+  </data>
+  <data name="SettingsRuntimeUpdated" xml:space="preserve">
+    <value>已更新執行階段設定。</value>
+  </data>
+  <data name="SettingsServerRuntimeCleanupDelay" xml:space="preserve">
+    <value>  LidGuard 自動結束延遲: {0}</value>
+  </data>
+  <data name="SettingsSessionTimeout" xml:space="preserve">
+    <value>  閒置工作階段逾時: {0}</value>
+  </data>
+  <data name="SettingsSuspendHistoryCount" xml:space="preserve">
+    <value>  睡眠/休眠記錄數量: {0}</value>
+  </data>
+  <data name="SettingsSuspendMode" xml:space="preserve">
+    <value>  睡眠動作: {0}</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>設定:</value>
+  </data>
+  <data name="SettingsUserInterfaceCulture" xml:space="preserve">
+    <value>  CLI 顯示語言/地區設定: {0}</value>
+  </data>
+  <data name="SettingsWatchParentProcess" xml:space="preserve">
+    <value>  處理程序監看: {0}</value>
   </data>
   <data name="SuspendHistoryCountValidation" xml:space="preserve">
     <value>count 引數必須是至少為 {0} 的整數。</value>
   </data>
   <data name="SuspendHistoryEntryLine" xml:space="preserve">
     <value>- {0} mode={1} reason={2} succeeded={3} activeSessions={4} triggerSessions={5}</value>
+  </data>
+  <data name="SuspendHistoryFile" xml:space="preserve">
+    <value>睡眠/休眠記錄檔: {0}</value>
+  </data>
+  <data name="SuspendHistoryMessage" xml:space="preserve">
+    <value>  message={0}</value>
+  </data>
+  <data name="SuspendHistoryNoEntries" xml:space="preserve">
+    <value>沒有記錄任何睡眠/休眠歷史項目。</value>
+  </data>
+  <data name="SuspendHistoryOptionNotAccepted" xml:space="preserve">
+    <value>{0} 不接受 --{1}。</value>
+  </data>
+  <data name="SuspendHistoryRecentEntries" xml:space="preserve">
+    <value>最近的睡眠/休眠歷史項目: {0}</value>
+  </data>
+  <data name="SuspendHistoryRecording" xml:space="preserve">
+    <value>睡眠/休眠記錄: {0}</value>
   </data>
   <data name="SuspendHistorySession" xml:space="preserve">
     <value>  session={0}:{1}</value>
@@ -1506,466 +1996,43 @@
   <data name="SuspendHistoryWorkingDirectory" xml:space="preserve">
     <value>  cwd="{0}"</value>
   </data>
-  <data name="SuspendHistoryMessage" xml:space="preserve">
-    <value>  message={0}</value>
+  <data name="TextDisplayBooleanFalse" xml:space="preserve">
+    <value>關閉</value>
   </data>
-  <data name="SessionRequestProviderRequired" xml:space="preserve">
-    <value>必須提供 Provider。請使用 codex、claude、copilot、custom、mcp 或 unknown。</value>
+  <data name="TextDisplayBooleanTrue" xml:space="preserve">
+    <value>開啟</value>
   </data>
-  <data name="SessionRequestProviderNameRequiredForMcp" xml:space="preserve">
-    <value>當使用 --provider mcp 時，必須提供 --provider-name 選項。</value>
+  <data name="TextDisplayEmpty" xml:space="preserve">
+    <value>&lt;空&gt;</value>
   </data>
-  <data name="SessionRequestAllCannotCombineWithSession" xml:space="preserve">
-    <value>--all 選項不能和 --session 一起使用。</value>
+  <data name="TextDisplayNone" xml:space="preserve">
+    <value>&lt;無&gt;</value>
   </data>
-  <data name="SessionRequestAllCannotCombineWithProvider" xml:space="preserve">
-    <value>--all 選項不能和 --provider 一起使用。</value>
+  <data name="TextDisplayOff" xml:space="preserve">
+    <value>關閉</value>
   </data>
-  <data name="SessionRequestAllCannotCombineWithProviderName" xml:space="preserve">
-    <value>--all 選項不能和 --provider-name 一起使用。</value>
-  </data>
-  <data name="SessionRequestSessionIdentifierRequired" xml:space="preserve">
-    <value>必須提供工作階段識別碼。</value>
-  </data>
-  <data name="SessionRequestUnsupportedProvider" xml:space="preserve">
-    <value>不支援的 Provider。請使用 codex、claude、copilot、custom、mcp 或 unknown。</value>
-  </data>
-  <data name="SessionRequestWatchedProcessIdentifierValidation" xml:space="preserve">
-    <value>要監看的處理程序 ID 必須是非負整數。</value>
-  </data>
-  <data name="SettingsOptionPreventAwayModeSleepUnsupported" xml:space="preserve">
-    <value>prevent-away-mode-sleep 選項只在 Windows 上支援。請在這個平台上使用 prevent-system-sleep。</value>
-  </data>
-  <data name="McpConfigurationRootNotObject" xml:space="preserve">
-    <value>設定根目錄不是 JSON 物件。</value>
-  </data>
-  <data name="McpConfigurationJsonInvalid" xml:space="preserve">
-    <value>設定 JSON 無效: {0}</value>
-  </data>
-  <data name="McpConfigurationServersObjectNotFound" xml:space="preserve">
-    <value>找不到 mcpServers 物件。</value>
-  </data>
-  <data name="McpConfigurationNamedServerNotFound" xml:space="preserve">
-    <value>找不到名為 '{0}' 的 MCP 伺服器。</value>
-  </data>
-  <data name="McpConfigurationFileDoesNotExist" xml:space="preserve">
-    <value>設定檔不存在: {0}</value>
-  </data>
-  <data name="PermissionSubcommandRequired" xml:space="preserve">
-    <value>必須提供子命令。請使用: {0} status|check|install|remove</value>
-  </data>
-  <data name="PermissionUnknownSubcommand" xml:space="preserve">
-    <value>未知的 {0} 子命令: {1}</value>
-  </data>
-  <data name="PermissionSubcommandUsage" xml:space="preserve">
-    <value>請使用: {0} status|check|install|remove</value>
-  </data>
-  <data name="PermissionLabelUser" xml:space="preserve">
-    <value>使用者</value>
-  </data>
-  <data name="PermissionResultOk" xml:space="preserve">
-    <value>正常</value>
-  </data>
-  <data name="PermissionResultFailed" xml:space="preserve">
-    <value>失敗 - {0}</value>
-  </data>
-  <data name="PermissionResultFailedParenthesized" xml:space="preserve">
-    <value>失敗 ({0})</value>
-  </data>
-  <data name="PermissionResultUnavailable" xml:space="preserve">
-    <value>無法使用 - {0}</value>
-  </data>
-  <data name="PermissionResultUnavailableParenthesized" xml:space="preserve">
-    <value>無法使用 ({0})</value>
-  </data>
-  <data name="PermissionExecutableAvailable" xml:space="preserve">
-    <value>可用 ({0})</value>
-  </data>
-  <data name="PermissionExecutableMissing" xml:space="preserve">
-    <value>找不到</value>
-  </data>
-  <data name="PermissionExecutableNotFound" xml:space="preserve">
-    <value>在 PATH 中找不到 {0}。</value>
-  </data>
-  <data name="PermissionSudoNotFound" xml:space="preserve">
-    <value>在 PATH 中找不到 sudo。請以 root 身分執行這個命令，或先安裝 sudo。</value>
-  </data>
-  <data name="PermissionSudoNotFoundShort" xml:space="preserve">
-    <value>在 PATH 中找不到 sudo。</value>
-  </data>
-  <data name="PermissionUnknownUser" xml:space="preserve">
-    <value>未知</value>
-  </data>
-  <data name="PermissionRuleNotInstalled" xml:space="preserve">
-    <value>未安裝</value>
-  </data>
-  <data name="PermissionRulePresentUnmanaged" xml:space="preserve">
-    <value>存在，但不是 LidGuard 管理的</value>
-  </data>
-  <data name="PermissionRuleInstalledForCurrentUser" xml:space="preserve">
-    <value>已為目前使用者安裝</value>
-  </data>
-  <data name="PermissionRuleInstalledForAnotherUser" xml:space="preserve">
-    <value>已為其他使用者安裝</value>
-  </data>
-  <data name="LinuxPermissionStatusTitle" xml:space="preserve">
-    <value>Linux 權限狀態:</value>
-  </data>
-  <data name="LinuxPermissionCheckTitle" xml:space="preserve">
-    <value>Linux 權限檢查:</value>
-  </data>
-  <data name="LinuxPermissionLabelPolkitRulePath" xml:space="preserve">
-    <value>Polkit 規則路徑</value>
-  </data>
-  <data name="LinuxPermissionLabelPolkitRule" xml:space="preserve">
-    <value>Polkit 規則</value>
-  </data>
-  <data name="LinuxPermissionLabelSystemdInhibit" xml:space="preserve">
-    <value>systemd-inhibit</value>
-  </data>
-  <data name="LinuxPermissionLabelSystemctl" xml:space="preserve">
-    <value>systemctl</value>
-  </data>
-  <data name="LinuxPermissionLabelLogindCanSuspend" xml:space="preserve">
-    <value>logind CanSuspend</value>
-  </data>
-  <data name="LinuxPermissionLabelLogindCanHibernate" xml:space="preserve">
-    <value>logind CanHibernate</value>
-  </data>
-  <data name="LinuxPermissionCheckInhibitorAcquireRelease" xml:space="preserve">
-    <value>inhibitor 取得/釋放</value>
-  </data>
-  <data name="LinuxPermissionCheckSystemctlVersion" xml:space="preserve">
-    <value>systemctl --version</value>
-  </data>
-  <data name="LinuxPermissionCheckLogindCapability" xml:space="preserve">
-    <value>{0}</value>
-  </data>
-  <data name="LinuxPermissionInspectPolkitRuleFailed" xml:space="preserve">
-    <value>檢查現有 polkit 規則失敗: {0}</value>
-  </data>
-  <data name="LinuxPermissionRefusingOverwriteUnmanagedPolkitRule" xml:space="preserve">
-    <value>拒絕覆寫非 LidGuard 管理的 polkit 規則檔: {0}</value>
-  </data>
-  <data name="LinuxPermissionPolkitRuleInstalled" xml:space="preserve">
-    <value>已為使用者 {0} 安裝 LidGuard polkit 規則: {1}</value>
-  </data>
-  <data name="LinuxPermissionInstallPolkitRuleFailed" xml:space="preserve">
-    <value>安裝 polkit 規則失敗: {0}</value>
-  </data>
-  <data name="LinuxPermissionPreparePolkitRuleFailed" xml:space="preserve">
-    <value>準備 polkit 規則失敗: {0}</value>
-  </data>
-  <data name="LinuxPermissionPolkitRuleNotInstalled" xml:space="preserve">
-    <value>LidGuard polkit 規則未安裝: {0}</value>
-  </data>
-  <data name="LinuxPermissionRefusingRemoveUnmanagedPolkitRule" xml:space="preserve">
-    <value>拒絕移除非 LidGuard 管理的 polkit 規則檔: {0}</value>
-  </data>
-  <data name="LinuxPermissionPolkitRuleRemoved" xml:space="preserve">
-    <value>已移除 LidGuard polkit 規則: {0}</value>
-  </data>
-  <data name="LinuxPermissionRemovePolkitRuleFailed" xml:space="preserve">
-    <value>移除 polkit 規則失敗: {0}</value>
-  </data>
-  <data name="LinuxPermissionBusctlUnrecognizedValue" xml:space="preserve">
-    <value>busctl 傳回無法識別的值。</value>
-  </data>
-  <data name="LinuxPermissionRuleUnableToInspect" xml:space="preserve">
-    <value>無法檢查 ({0})</value>
-  </data>
-  <data name="MacOSPermissionStatusTitle" xml:space="preserve">
-    <value>macOS 權限狀態:</value>
-  </data>
-  <data name="MacOSPermissionCheckTitle" xml:space="preserve">
-    <value>macOS 權限檢查:</value>
-  </data>
-  <data name="MacOSPermissionLabelSudoersPath" xml:space="preserve">
-    <value>Sudoers 路徑</value>
-  </data>
-  <data name="MacOSPermissionLabelSudoersRule" xml:space="preserve">
-    <value>Sudoers 規則</value>
-  </data>
-  <data name="MacOSPermissionLabelPrivilegedPmsetUsability" xml:space="preserve">
-    <value>已授權的 pmset 可用性</value>
-  </data>
-  <data name="MacOSPermissionLabelCaffeinate" xml:space="preserve">
-    <value>caffeinate</value>
-  </data>
-  <data name="MacOSPermissionLabelPmset" xml:space="preserve">
-    <value>pmset</value>
-  </data>
-  <data name="MacOSPermissionLabelPowermetrics" xml:space="preserve">
-    <value>powermetrics</value>
-  </data>
-  <data name="MacOSPermissionLabelIoreg" xml:space="preserve">
-    <value>ioreg</value>
-  </data>
-  <data name="MacOSPermissionLabelSystemProfiler" xml:space="preserve">
-    <value>system_profiler</value>
-  </data>
-  <data name="MacOSPermissionLabelSleepDisabled" xml:space="preserve">
-    <value>SleepDisabled</value>
-  </data>
-  <data name="MacOSPermissionLabelHibernateMode" xml:space="preserve">
-    <value>hibernatemode</value>
-  </data>
-  <data name="MacOSPermissionCheckCaffeinateAcquireRelease" xml:space="preserve">
-    <value>caffeinate 取得/釋放</value>
-  </data>
-  <data name="MacOSPermissionCheckPmsetRead" xml:space="preserve">
-    <value>pmset -g</value>
-  </data>
-  <data name="MacOSPermissionCheckPrivilegedPmsetDisableSleep" xml:space="preserve">
-    <value>已授權的 pmset disablesleep</value>
-  </data>
-  <data name="MacOSPermissionCheckPrivilegedPmsetHibernateMode" xml:space="preserve">
-    <value>已授權的 pmset hibernatemode</value>
-  </data>
-  <data name="MacOSPermissionCheckPrivilegedPowermetricsSmcSample" xml:space="preserve">
-    <value>已授權的 powermetrics SMC sample</value>
-  </data>
-  <data name="MacOSPermissionInspectSudoersRuleFailed" xml:space="preserve">
-    <value>檢查現有 sudoers 規則失敗: {0}</value>
-  </data>
-  <data name="MacOSPermissionRefusingOverwriteUnmanagedSudoersRule" xml:space="preserve">
-    <value>拒絕覆寫非 LidGuard 管理的 sudoers 檔案: {0}</value>
-  </data>
-  <data name="MacOSPermissionSudoersRuleInstalled" xml:space="preserve">
-    <value>已為使用者 {0} 安裝 LidGuard sudoers 規則: {1}</value>
-  </data>
-  <data name="MacOSPermissionInstallSudoersRuleFailed" xml:space="preserve">
-    <value>安裝 sudoers 規則失敗: {0}</value>
-  </data>
-  <data name="MacOSPermissionPrepareSudoersRuleFailed" xml:space="preserve">
-    <value>準備 sudoers 規則失敗: {0}</value>
-  </data>
-  <data name="MacOSPermissionSudoersRuleNotInstalled" xml:space="preserve">
-    <value>LidGuard sudoers 規則未安裝: {0}</value>
-  </data>
-  <data name="MacOSPermissionRefusingRemoveUnmanagedSudoersRule" xml:space="preserve">
-    <value>拒絕移除非 LidGuard 管理的 sudoers 檔案: {0}</value>
-  </data>
-  <data name="MacOSPermissionSudoersRuleRemoved" xml:space="preserve">
-    <value>已移除 LidGuard sudoers 規則: {0}</value>
-  </data>
-  <data name="MacOSPermissionRemoveSudoersRuleFailed" xml:space="preserve">
-    <value>移除 sudoers 規則失敗: {0}</value>
-  </data>
-  <data name="MacOSPermissionUnsupportedHibernateModeValue" xml:space="preserve">
-    <value>無法使用 - 不支援目前的值 {0}</value>
-  </data>
-  <data name="MacOSPermissionRuleContentInspectionUnavailable" xml:space="preserve">
-    <value>內容檢查不可用 ({0})</value>
-  </data>
-  <data name="MacOSPermissionVisudoNotFound" xml:space="preserve">
-    <value>在 PATH 中找不到 visudo。拒絕安裝未經驗證的 sudoers 規則。</value>
-  </data>
-  <data name="MacOSPermissionPrepareSudoersValidationFileFailed" xml:space="preserve">
-    <value>準備 sudoers 驗證檔失敗: {0}</value>
-  </data>
-  <data name="DisplayHookInstallationStatusUnknown" xml:space="preserve">
-    <value>未知</value>
-  </data>
-  <data name="DisplayHookInstallationStatusNotInstalled" xml:space="preserve">
-    <value>未安裝</value>
-  </data>
-  <data name="DisplayHookInstallationStatusInstalled" xml:space="preserve">
-    <value>已安裝</value>
-  </data>
-  <data name="DisplayHookInstallationStatusNeedsUpdate" xml:space="preserve">
-    <value>需要更新</value>
-  </data>
-  <data name="Help_LiveStatus_Description" xml:space="preserve">
-    <value>以即時終端儀表板顯示執行階段狀態、進行中的工作階段，以及最近的 LidGuard 流程記錄。</value>
-  </data>
-  <data name="Help_LiveStatus_RuntimeNotStartedNote" xml:space="preserve">
-    <value>這個命令不會啟動執行階段；當執行階段不可用時，它會等待並重新連線。</value>
-  </data>
-  <data name="Help_LiveStatus_ExitNote" xml:space="preserve">
-    <value>按 q、Escape 或 Ctrl+C 可離開。</value>
-  </data>
-  <data name="LiveStatusTitle" xml:space="preserve">
-    <value>LidGuard live-status</value>
-  </data>
-  <data name="LiveStatusExitHint" xml:space="preserve">
-    <value>每秒更新一次，且在無法連線時會重新連線。按 q、Escape 或 Ctrl+C 可離開。</value>
-  </data>
-  <data name="LiveStatusRuntimePanelTitle" xml:space="preserve">
-    <value>執行階段</value>
-  </data>
-  <data name="LiveStatusSessionsPanelTitle" xml:space="preserve">
-    <value>工作階段</value>
-  </data>
-  <data name="LiveStatusHookPanelTitle" xml:space="preserve">
-    <value>Hook 事件</value>
-  </data>
-  <data name="LiveStatusFlowPanelTitle" xml:space="preserve">
-    <value>執行階段流程</value>
-  </data>
-  <data name="LiveStatusRunning" xml:space="preserve">
-    <value>執行中</value>
-  </data>
-  <data name="LiveStatusNotRunning" xml:space="preserve">
-    <value>未在執行中</value>
-  </data>
-  <data name="LiveStatusError" xml:space="preserve">
-    <value>錯誤</value>
-  </data>
-  <data name="LiveStatusNone" xml:space="preserve">
-    <value>無</value>
-  </data>
-  <data name="LiveStatusRuntimeStateLine" xml:space="preserve">
-    <value>狀態: {0} | 最後更新: {1}</value>
-  </data>
-  <data name="LiveStatusRuntimeCountsLine" xml:space="preserve">
-    <value>進行中的工作階段: {0} | 上蓋: {1} | 可見顯示器: {2}</value>
-  </data>
-  <data name="LiveStatusPendingSuspendLine" xml:space="preserve">
-    <value>待處理的睡眠/休眠: {0}</value>
-  </data>
-  <data name="LiveStatusStopFollowUpFeatureStateLine" xml:space="preserve">
-    <value>睡眠前回覆通知: {0}</value>
-  </data>
-  <data name="LiveStatusStopFollowUpDelayLine" xml:space="preserve">
-    <value>睡眠前回覆等待: {0}</value>
-  </data>
-  <data name="LiveStatusStopFollowUpRepeatLine" xml:space="preserve">
-    <value>回覆後再次詢問: {0}</value>
-  </data>
-  <data name="LiveStatusNoRuntimeMessage" xml:space="preserve">
-    <value>執行階段訊息: 無</value>
-  </data>
-  <data name="LiveStatusRuntimeMessageLine" xml:space="preserve">
-    <value>執行階段訊息: {0}</value>
-  </data>
-  <data name="LiveStatusNoSessions" xml:space="preserve">
-    <value>目前沒有進行中的工作階段。</value>
-  </data>
-  <data name="LiveStatusSessionLine" xml:space="preserve">
-    <value>{0} 工作階段={1} 處理程序={2} 軟鎖定={3} 開始={4} 最後活動={5} 工作目錄={6}</value>
-  </data>
-  <data name="LiveStatusNoHookEvents" xml:space="preserve">
-    <value>沒有最近收到的 Hook 事件或 runtime-result Hook 事件。</value>
-  </data>
-  <data name="LiveStatusNoFlowEvents" xml:space="preserve">
-    <value>沒有最近的執行階段流程事件。</value>
-  </data>
-  <data name="LiveStatusRuntimeFlowPrefix" xml:space="preserve">
-    <value>執行階段</value>
-  </data>
-  <data name="LiveStatusSuspendHistoryPrefix" xml:space="preserve">
-    <value>記錄</value>
-  </data>
-  <data name="LiveStatusSucceededLabel" xml:space="preserve">
-    <value>成功</value>
-  </data>
-  <data name="LiveStatusActiveSessionsShortLabel" xml:space="preserve">
-    <value>進行中</value>
-  </data>
-  <data name="LiveStatusSessionShortLabel" xml:space="preserve">
-    <value>工作階段</value>
-  </data>
-  <data name="LiveStatusMessageShortLabel" xml:space="preserve">
-    <value>訊息</value>
-  </data>
-  <data name="LiveStatusImmediate" xml:space="preserve">
-    <value>立即</value>
-  </data>
-  <data name="LiveStatusDelaySeconds" xml:space="preserve">
-    <value>{0} 秒</value>
-  </data>
-  <data name="LiveStatusPendingSuspendDetails" xml:space="preserve">
-    <value>{0}，延遲={1}，原因={2}</value>
-  </data>
-  <data name="LiveStatusSuspendReasonSoftLocked" xml:space="preserve">
-    <value>等待輸入</value>
-  </data>
-  <data name="LiveStatusSuspendReasonCompleted" xml:space="preserve">
-    <value>已完成</value>
-  </data>
-  <data name="LiveStatusMoreEntries" xml:space="preserve">
-    <value>... 另外還有 {0} 筆</value>
-  </data>
-  <data name="PlatformUnsupportedWindows" xml:space="preserve">
-    <value>這個 LidGuard 建置需要 Windows 7 或更新版本。</value>
-  </data>
-  <data name="PlatformUnsupportedLinux" xml:space="preserve">
-    <value>LidGuard 的 Linux 支援需要 systemd/logind 環境。</value>
-  </data>
-  <data name="PlatformUnsupportedMacOS" xml:space="preserve">
-    <value>這個 LidGuard 建置需要 macOS。</value>
-  </data>
-  <data name="DisplayMinuteCount" xml:space="preserve">
-    <value>{0} 分鐘</value>
-  </data>
-  <data name="DisplaySuspendHistoryEntryCount" xml:space="preserve">
-    <value>{0} 筆</value>
-  </data>
-  <data name="WslExecutableNotFound" xml:space="preserve">
-    <value>無法啟動 wsl.exe。使用 WSL 整合命令前請先安裝 WSL。</value>
-  </data>
-  <data name="WslStatusFailed" xml:space="preserve">
-    <value>WSL 無法使用: {0}</value>
+  <data name="TextWarning" xml:space="preserve">
+    <value>警告: {0}</value>
   </data>
   <data name="WslDefaultDistroUnavailable" xml:space="preserve">
     <value>預設的 WSL 發行版無法使用: {0}</value>
   </data>
-  <data name="WslNamedDistroUnavailable" xml:space="preserve">
-    <value>WSL 發行版 '{0}' 無法使用: {1}</value>
-  </data>
-  <data name="WslPathConversionFailed" xml:space="preserve">
-    <value>使用 wslpath 轉換 LidGuard 可執行檔路徑失敗: {0}</value>
-  </data>
-  <data name="WslPathConversionEmpty" xml:space="preserve">
-    <value>wslpath 傳回空的 LidGuard 可執行檔路徑。</value>
+  <data name="WslExecutableNotFound" xml:space="preserve">
+    <value>無法啟動 wsl.exe。使用 WSL 整合命令前請先安裝 WSL。</value>
   </data>
   <data name="WslLidGuardExecutableNotResolved" xml:space="preserve">
     <value>無法為 WSL 整合解析 Windows 版 lidguard.exe 路徑。</value>
   </data>
-  <data name="Help_Wsl_DistroOption" xml:space="preserve">
-    <value>使用指定的 WSL 發行版，而不是預設發行版。</value>
+  <data name="WslNamedDistroUnavailable" xml:space="preserve">
+    <value>WSL 發行版 '{0}' 無法使用: {1}</value>
   </data>
-  <data name="Help_Wsl_WindowsOnlyNote" xml:space="preserve">
-    <value>這個命令只在 Windows 建置中可用。</value>
+  <data name="WslPathConversionEmpty" xml:space="preserve">
+    <value>wslpath 傳回空的 LidGuard 可執行檔路徑。</value>
   </data>
-  <data name="Help_Wsl_CommandNote" xml:space="preserve">
-    <value>產生的 WSL 設定會透過其 WSL 路徑執行目前的 Windows lidguard.exe。</value>
+  <data name="WslPathConversionFailed" xml:space="preserve">
+    <value>使用 wslpath 轉換 LidGuard 可執行檔路徑失敗: {0}</value>
   </data>
-  <data name="Help_WslHookStatus_Description" xml:space="preserve">
-    <value>顯示 WSL 發行版內的 LidGuard Hook 狀態。</value>
-  </data>
-  <data name="Help_WslHookInstall_Description" xml:space="preserve">
-    <value>在 WSL 發行版內安裝 LidGuard 管理的 Hook。</value>
-  </data>
-  <data name="Help_WslHookRemove_Description" xml:space="preserve">
-    <value>從 WSL 發行版內移除 LidGuard 管理的 Hook。</value>
-  </data>
-  <data name="Help_WslCodexHooks_Description" xml:space="preserve">
-    <value>列印會從 WSL 執行 Windows LidGuard 的 Codex Hook 片段。</value>
-  </data>
-  <data name="Help_WslClaudeHooks_Description" xml:space="preserve">
-    <value>列印會從 WSL 執行 Windows LidGuard 的 Claude Hook 片段。</value>
-  </data>
-  <data name="Help_WslCopilotHooks_Description" xml:space="preserve">
-    <value>列印會從 WSL 執行 Windows LidGuard 的 GitHub Copilot Hook 片段。</value>
-  </data>
-  <data name="Help_WslMcpStatus_Description" xml:space="preserve">
-    <value>顯示 WSL 發行版內的 LidGuard MCP 伺服器狀態。</value>
-  </data>
-  <data name="Help_WslMcpInstall_Description" xml:space="preserve">
-    <value>在 WSL 發行版內安裝 LidGuard MCP 伺服器。</value>
-  </data>
-  <data name="Help_WslMcpRemove_Description" xml:space="preserve">
-    <value>從 WSL 發行版內移除 LidGuard MCP 伺服器。</value>
-  </data>
-  <data name="Help_WslProviderMcpStatus_Description" xml:space="preserve">
-    <value>顯示 WSL 發行版內的通用 Provider MCP 伺服器狀態。</value>
-  </data>
-  <data name="Help_WslProviderMcpInstall_Description" xml:space="preserve">
-    <value>在 WSL 發行版內安裝通用 Provider MCP 伺服器。</value>
-  </data>
-  <data name="Help_WslProviderMcpRemove_Description" xml:space="preserve">
-    <value>從 WSL 發行版內移除通用 Provider MCP 伺服器。</value>
+  <data name="WslStatusFailed" xml:space="preserve">
+    <value>WSL 無法使用: {0}</value>
   </data>
 </root>

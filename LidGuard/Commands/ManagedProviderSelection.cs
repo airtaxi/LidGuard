@@ -43,6 +43,7 @@ internal static class ManagedProviderSelection
             AgentProvider.Codex => "Codex",
             AgentProvider.Claude => "Claude",
             AgentProvider.GitHubCopilot => "GitHub Copilot",
+            AgentProvider.OpenCode => "OpenCode",
             _ => provider.ToString()
         };
     }
@@ -99,7 +100,8 @@ internal static class ManagedProviderSelection
             "codex" => [AgentProvider.Codex],
             "claude" => [AgentProvider.Claude],
             "copilot" or "github-copilot" or "githubcopilot" => [AgentProvider.GitHubCopilot],
-            "all" => [AgentProvider.Codex, AgentProvider.Claude, AgentProvider.GitHubCopilot],
+            "opencode" or "open-code" => [AgentProvider.OpenCode],
+            "all" => [AgentProvider.Codex, AgentProvider.Claude, AgentProvider.GitHubCopilot, AgentProvider.OpenCode],
             _ => []
         };
 

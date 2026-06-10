@@ -17,14 +17,14 @@ Use this skill as the lightweight entry point for LidGuard runtime behavior. For
 
 ## Product Goal
 
-LidGuard is a Windows-first utility with systemd/logind Linux support and macOS support for long-running local AI coding agents such as Codex, Claude Code, and GitHub Copilot CLI.
+LidGuard is a Windows-first utility with systemd/logind Linux support and macOS support for long-running local AI coding agents such as Codex, Claude Code, GitHub Copilot CLI, and OpenCode.
 
 The goal is to keep the supported local system awake while at least one tracked agent session still needs protection, then restore the user's original power policy after the session ends or becomes suspend-eligible.
 
 - Agent sessions start through provider hooks or Provider MCP tools.
 - LidGuard detects and tracks active sessions.
-- Claude Code and GitHub Copilot CLI sessions can enter a runtime-managed soft-lock state when provider notifications show the agent is waiting on user input.
-- Codex, Claude Code, GitHub Copilot CLI, and Provider MCP sessions can also be soft-locked through runtime policy or MCP tools when autonomous work has paused.
+- Claude Code, GitHub Copilot CLI, and OpenCode sessions can enter a runtime-managed soft-lock state when provider notifications or events show the agent is waiting on user input.
+- Codex, Claude Code, GitHub Copilot CLI, OpenCode, and Provider MCP sessions can also be soft-locked through runtime policy or MCP tools when autonomous work has paused.
 - While at least one non-soft-locked session is active, LidGuard applies platform keep-awake protection.
 - If every remaining active session is soft-locked, LidGuard releases temporary keep-awake protection, restores temporary lid policy changes, and starts the configured suspend flow only when the lid is closed and no suspend-blocking visible display monitors remain attached.
 - If a session has no activity after the configured session timeout, LidGuard transitions it to the soft-locked state and applies the same keep-awake release flow used for normal soft-lock operations.

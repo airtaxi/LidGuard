@@ -132,6 +132,8 @@ internal static class McpManagementCommand
 
     private static int AddProviderMcp(AgentProvider provider, string managedExecutableReference)
     {
+        if (provider == AgentProvider.OpenCode) return AddOpenCodeMcp(managedExecutableReference);
+
         if (!ManagedProviderCliResolver.TryResolveProviderCliExecutablePath(provider, out var providerCliExecutablePath, out var message))
         {
             Console.Error.WriteLine(message);
@@ -150,6 +152,8 @@ internal static class McpManagementCommand
 
     private static int RemoveProviderMcp(AgentProvider provider)
     {
+        if (provider == AgentProvider.OpenCode) return RemoveOpenCodeMcp();
+
         if (!ManagedProviderCliResolver.TryResolveProviderCliExecutablePath(provider, out var providerCliExecutablePath, out var message))
         {
             Console.Error.WriteLine(message);
@@ -164,6 +168,32 @@ internal static class McpManagementCommand
         }
 
         return ManagedProviderCliResolver.RunProviderProcess(providerCliExecutablePath, processArguments);
+    }
+
+    private static int AddOpenCodeMcp(string managedExecutableReference)
+    {
+        var configurationFilePath = OpenCodeHookInstaller.GetDefaultOpenCodeConfigurationFilePath();
+        if (!OpenCodeMcpConfigurationDocument.TryInstall(configurationFilePath, managedExecutableReference, out var message))
+        {
+            Console.Error.WriteLine(message);
+            return 1;
+        }
+
+        Console.WriteLine(LocalizationService.GetFormattedString("ManagementMcpServerInstalled", McpConfigurationTomlUtilities.ManagedMcpServerName, configurationFilePath));
+        return 0;
+    }
+
+    private static int RemoveOpenCodeMcp()
+    {
+        var configurationFilePath = OpenCodeHookInstaller.GetDefaultOpenCodeConfigurationFilePath();
+        if (!OpenCodeMcpConfigurationDocument.TryRemove(configurationFilePath, out var removed, out var message))
+        {
+            Console.Error.WriteLine(message);
+            return 1;
+        }
+
+        Console.WriteLine(removed ? LocalizationService.GetFormattedString("ManagementMcpServerRemoved", McpConfigurationTomlUtilities.ManagedMcpServerName, configurationFilePath) : message);
+        return 0;
     }
 
     private static ManagedMcpInspectionResult InspectCodexMcp()
@@ -233,6 +263,14 @@ internal static class McpManagementCommand
         return new ManagedMcpInspectionResult(provider, configurationFilePath, configurationFileExists, hasProviderCli, providerCliDisplayText, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, serverType, serverCommand, serverArguments, serverUrl, ManagedMcpInspectionResult.GetStatusMessage(configurationFilePath, configurationFileExists, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, message));
     }
 
+    private static ManagedMcpInspectionResult InspectOpenCodeMcp()
+    {
+        var configurationFilePath = OpenCodeHookInstaller.GetDefaultOpenCodeConfigurationFilePath();
+        var managedExecutableReference = HookCommandUtilities.GetDefaultMcpExecutableReference();
+        OpenCodeMcpConfigurationDocument.TryInspect(configurationFilePath, managedExecutableReference, out var inspectionResult, out _);
+        return inspectionResult;
+    }
+
     private static bool TryInspectProviderMcp(AgentProvider provider, out ManagedMcpInspectionResult inspectionResult)
     {
         inspectionResult = provider switch
@@ -240,10 +278,11 @@ internal static class McpManagementCommand
             AgentProvider.Codex => InspectCodexMcp(),
             AgentProvider.Claude => InspectJsonProviderMcp(AgentProvider.Claude, ManagedProviderConfigurationRoots.ClaudeUserConfigurationFilePath),
             AgentProvider.GitHubCopilot => InspectJsonProviderMcp(AgentProvider.GitHubCopilot, ManagedProviderConfigurationRoots.GitHubCopilotMcpConfigurationFilePath),
+            AgentProvider.OpenCode => InspectOpenCodeMcp(),
             _ => default
         };
 
-        return provider is AgentProvider.Codex or AgentProvider.Claude or AgentProvider.GitHubCopilot;
+        return provider is AgentProvider.Codex or AgentProvider.Claude or AgentProvider.GitHubCopilot or AgentProvider.OpenCode;
     }
 
     private static int WriteUnsupportedProvider()

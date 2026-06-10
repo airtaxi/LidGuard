@@ -36,6 +36,7 @@ internal static class LidGuardHelpCommandCatalog
             CodexHooksHelpContent.Create(documentContext),
             ClaudeHooksHelpContent.Create(documentContext),
             CopilotHooksHelpContent.Create(documentContext),
+            OpenCodeHooksHelpContent.Create(documentContext),
 #if LIDGUARD_WINDOWS
             WslHookStatusHelpContent.Create(documentContext),
             WslHookInstallHelpContent.Create(documentContext),
@@ -43,6 +44,7 @@ internal static class LidGuardHelpCommandCatalog
             WslCodexHooksHelpContent.Create(documentContext),
             WslClaudeHooksHelpContent.Create(documentContext),
             WslCopilotHooksHelpContent.Create(documentContext),
+            WslOpenCodeHooksHelpContent.Create(documentContext),
 #endif
             McpStatusHelpContent.Create(documentContext),
             McpInstallHelpContent.Create(documentContext),
@@ -62,7 +64,8 @@ internal static class LidGuardHelpCommandCatalog
             ProviderMcpServerHelpContent.Create(documentContext),
             CodexHookHelpContent.Create(documentContext),
             ClaudeHookHelpContent.Create(documentContext),
-            CopilotHookHelpContent.Create(documentContext)
+            CopilotHookHelpContent.Create(documentContext),
+            OpenCodeHookHelpContent.Create(documentContext)
         ];
     }
 }

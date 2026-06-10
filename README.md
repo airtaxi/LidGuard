@@ -7,7 +7,7 @@
 
 🌐 English | [한국어](README.ko.md)
 
-LidGuard lets long-running local AI coding agents keep working after you close your laptop lid. It tracks Codex, Claude Code, and GitHub Copilot CLI sessions, temporarily prevents idle sleep and lid-close sleep while protected work is active, then restores the original operating system power policy when that work finishes or becomes suspend-eligible.
+LidGuard lets long-running local AI coding agents keep working after you close your laptop lid. It tracks Codex, Claude Code, GitHub Copilot CLI, and OpenCode sessions, temporarily prevents idle sleep and lid-close sleep while protected work is active, then restores the original operating system power policy when that work finishes or becomes suspend-eligible.
 
 Most keep-awake tools protect a process, a timer, or the whole machine. LidGuard protects an AI coding agent session, so the workflow is simpler: start the agent, close the lid when the device is safe to leave running, and let LidGuard release protection or enter Sleep/Hibernate when the work is done.
 
@@ -17,11 +17,11 @@ Most keep-awake tools protect a process, a timer, or the whole machine. LidGuard
 
 ## Highlights
 
-- Agent-aware sleep prevention for Codex, Claude Code, and GitHub Copilot CLI.
+- Agent-aware sleep prevention for Codex, Claude Code, GitHub Copilot CLI, and OpenCode.
 - Optional lid-close protection so protected agent work can continue after the laptop closes, with automatic restoration of the original OS policy.
 - Windows-to-WSL hook and MCP setup, so providers running inside WSL can call the Windows LidGuard runtime without installing LidGuard inside the distro.
 - Automatic Sleep or Hibernate after protected sessions finish, helping avoid unnecessary battery drain.
-- Ask-before-sleep replies, so LidGuard can ask before sleeping and keep the session alive when you reply.
+- Ask-before-sleep replies for supported providers, so LidGuard can ask before sleeping and keep the session alive when you reply.
 - Cross-platform power control for Windows, systemd/logind Linux, and macOS.
 - Safety controls such as SoftLock, inactive timeout, pre-suspend hooks, diagnostics, and emergency hibernation.
 
@@ -80,6 +80,8 @@ This is useful for long-running coding or agent tasks where "done" sometimes mea
 
 With repeat replies enabled, that can become a lightweight back-and-forth loop: the laptop can stay closed in your bag while you keep nudging follow-up work from your phone or browser, without opening the machine just to type the next instruction.
 
+OpenCode support currently uses OpenCode's global plugin system. It can start, soft-lock, and stop LidGuard protection, but OpenCode does not yet support handing an ask-before-sleep reply back into the same finishing flow.
+
 ### Windows WSL Integration
 
 On Windows, LidGuard can also install hook, MCP, and Provider MCP configuration inside WSL distributions. Nothing needs to run or be installed as a separate LidGuard binary inside WSL. The WSL-side provider config points back to the current Windows `lidguard.exe` through its `wslpath`-converted absolute path.
@@ -106,17 +108,17 @@ Provider MCP behavior is not guaranteed. Correct operation depends entirely on t
 
 ## Current Support Status
 
-LidGuard is currently officially tested with Codex on Windows. Linux, macOS, Claude Code, and GitHub Copilot CLI support are implemented, but broader real-world validation is still ongoing. Reports and pull requests are welcome.
+LidGuard is currently officially tested with Codex on Windows. Linux, macOS, Claude Code, GitHub Copilot CLI, and OpenCode support are implemented, but broader real-world validation is still ongoing. Reports and pull requests are welcome.
 
 ## Full Feature Overview
 
 - Session tracking and status: active session count, provider/session identity, watched process id, SoftLock state, working directory, local start and last-activity times, current lid state, visible display monitor count, and a live terminal status dashboard.
-- Provider integration: Codex, Claude Code, and GitHub Copilot CLI hooks; hook install/status/remove/events commands; regular MCP install/status/remove commands; Windows WSL hook/MCP setup commands; and Provider MCP for other tools that can call a custom stdio MCP server.
+- Provider integration: Codex, Claude Code, GitHub Copilot CLI, and OpenCode hooks/plugins; hook install/status/remove/events commands; regular MCP install/status/remove commands; Windows WSL hook/MCP setup commands; and Provider MCP for other tools that can call a custom stdio MCP server.
 - Keep-awake controls: configurable system sleep prevention, display sleep prevention, Windows away-mode requests, and the Windows power request reason text shown by the operating system.
 - Lid-close handling: temporary Windows lid-action override, Linux `handle-lid-switch` inhibitor, macOS `pmset disablesleep`, and restoration of the user's original policy after protection ends or recovery runs.
 - Process and runtime cleanup: parent-process watching, orphan cleanup, inactive-session timeout SoftLocking, and automatic runtime exit after the configured cleanup delay once all sessions are gone.
 - Completion suspend flow: configurable Sleep or Hibernate, post-stop suspend delay in seconds, cancellation when sessions resume or the environment is no longer suspend-eligible, and recent suspend history retention.
-- Ask-before-sleep replies: optional notifications when a closed-lid session tries to finish. A reply keeps the session alive, and the default setting asks again if that continued work later tries to finish again.
+- Ask-before-sleep replies: optional notifications when a supported closed-lid session tries to finish. A reply keeps the session alive, and the default setting asks again if that continued work later tries to finish again.
 - Pre-suspend audio warning: optional off/system-sound/`.wav` warning sound before Sleep or Hibernate, plus an optional temporary master volume override from 1 through 100 percent that restores the previous volume and mute state afterward.
 - SoftLock and closed-lid permissions: provider waiting/input events and inactive timeouts can release keep-awake protection without removing the session. Closed-lid PermissionRequest can `deny`, `allow`, or `ask`; `ask` soft-locks the session and leaves the provider's normal prompt in control, while `allow` can approve permission-required work when the user may not be watching. The safer default is `deny`.
 - Emergency Hibernation: optional closed-lid high-temperature monitor with low, average, or high sensor aggregation, a configurable Celsius threshold, immediate Hibernate, and Sleep fallback if Hibernate fails.
@@ -140,7 +142,7 @@ SoftLock detection, provider hooks, process watchers, operating system behavior,
 
 If you enable ask-before-sleep replies, the laptop intentionally stays awake during the reply window before suspend. That extra wake time increases heat risk, so use short delays and monitor the machine carefully.
 
-Managed hook cleanup uses the hook process ancestry to attach a watched parent process when possible, including Codex App `app-server`, Codex CLI, Claude Code, and GitHub Copilot CLI owners. Working directory is kept for status, logs, transcript fallback, and webhook metadata; it is not used to find a watched process. If the watched parent exits, LidGuard treats that as cancel cleanup rather than a provider-reported normal session end, suppressing `PostSessionEnd` and any new `PreSuspend` webhook that cleanup would otherwise schedule.
+Managed hook cleanup uses the hook process ancestry to attach a watched parent process when possible, including Codex App `app-server`, Codex CLI, Claude Code, GitHub Copilot CLI, and OpenCode owners. Working directory is kept for status, logs, transcript fallback, and webhook metadata; it is not used to find a watched process. If the watched parent exits, LidGuard treats that as cancel cleanup rather than a provider-reported normal session end, suppressing `PostSessionEnd` and any new `PreSuspend` webhook that cleanup would otherwise schedule.
 
 You are responsible for monitoring device state and heat risk. Device damage, data loss, property damage, or other loss caused by ignoring those risks is your responsibility.
 

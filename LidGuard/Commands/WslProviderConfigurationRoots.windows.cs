@@ -13,6 +13,7 @@ internal static class WslProviderConfigurationRoots
             AgentProvider.Codex => WslCommandUtilities.TryResolveDefaultPath(distroName, "printf '%s' \"${CODEX_HOME:-$HOME/.codex}/config.toml\"", out configurationFilePath, out message),
             AgentProvider.Claude => WslCommandUtilities.TryResolveDefaultPath(distroName, "printf '%s' \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json\"", out configurationFilePath, out message),
             AgentProvider.GitHubCopilot => WslCommandUtilities.TryResolveDefaultPath(distroName, "printf '%s' \"${COPILOT_HOME:-$HOME/.copilot}/hooks/lidguard-copilot-cli.json\"", out configurationFilePath, out message),
+            AgentProvider.OpenCode => WslCommandUtilities.TryResolveDefaultPath(distroName, "printf '%s' \"${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}/plugins/lidguard.js\"", out configurationFilePath, out message),
             _ => UnsupportedProvider(out configurationFilePath, out message)
         };
     }
@@ -24,6 +25,7 @@ internal static class WslProviderConfigurationRoots
             AgentProvider.Codex => WslCommandUtilities.TryResolveDefaultPath(distroName, "printf '%s' \"${CODEX_HOME:-$HOME/.codex}/config.toml\"", out configurationFilePath, out message),
             AgentProvider.Claude => WslCommandUtilities.TryResolveDefaultPath(distroName, "printf '%s' \"$HOME/.claude.json\"", out configurationFilePath, out message),
             AgentProvider.GitHubCopilot => WslCommandUtilities.TryResolveDefaultPath(distroName, "printf '%s' \"${COPILOT_HOME:-$HOME/.copilot}/mcp-config.json\"", out configurationFilePath, out message),
+            AgentProvider.OpenCode => WslCommandUtilities.TryResolveDefaultPath(distroName, "if [ -n \"${OPENCODE_CONFIG:-}\" ]; then printf '%s' \"$OPENCODE_CONFIG\"; elif [ -f \"${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}/opencode.json\" ]; then printf '%s' \"${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}/opencode.json\"; else printf '%s' \"${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}/opencode.jsonc\"; fi", out configurationFilePath, out message),
             _ => UnsupportedProvider(out configurationFilePath, out message)
         };
     }
@@ -38,6 +40,7 @@ internal static class WslProviderConfigurationRoots
             AgentProvider.Codex => TryResolveCandidatePaths(distroName, "printf '%s\n%s' \"${CODEX_HOME:-$HOME/.codex}\" \"${CODEX_HOME:-$HOME/.codex}/config.toml\"", out candidatePaths, out message),
             AgentProvider.Claude => TryResolveCandidatePaths(distroName, "printf '%s\n%s' \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json\"", out candidatePaths, out message),
             AgentProvider.GitHubCopilot => TryResolveCandidatePaths(distroName, "printf '%s\n%s\n%s' \"${COPILOT_HOME:-$HOME/.copilot}\" \"$PWD/.github/hooks\" \"$PWD/.github/copilot\"", out candidatePaths, out message),
+            AgentProvider.OpenCode => TryResolveCandidatePaths(distroName, "printf '%s\n%s' \"${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}\" \"${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}/plugins\"", out candidatePaths, out message),
             _ => UnsupportedProvider(out candidatePaths, out message)
         };
     }
@@ -52,6 +55,7 @@ internal static class WslProviderConfigurationRoots
             AgentProvider.Codex => TryResolveCandidatePaths(distroName, "printf '%s\n%s' \"${CODEX_HOME:-$HOME/.codex}\" \"${CODEX_HOME:-$HOME/.codex}/config.toml\"", out candidatePaths, out message),
             AgentProvider.Claude => TryResolveCandidatePaths(distroName, "printf '%s\n%s' \"$HOME/.claude.json\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\"", out candidatePaths, out message),
             AgentProvider.GitHubCopilot => TryResolveCandidatePaths(distroName, "printf '%s\n%s' \"${COPILOT_HOME:-$HOME/.copilot}/mcp-config.json\" \"${COPILOT_HOME:-$HOME/.copilot}\"", out candidatePaths, out message),
+            AgentProvider.OpenCode => TryResolveCandidatePaths(distroName, "if [ -n \"${OPENCODE_CONFIG:-}\" ]; then printf '%s\n' \"$OPENCODE_CONFIG\"; fi; printf '%s\n%s\n%s' \"${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}\" \"${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}/opencode.json\" \"${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}/opencode.jsonc\"", out candidatePaths, out message),
             _ => UnsupportedProvider(out candidatePaths, out message)
         };
     }

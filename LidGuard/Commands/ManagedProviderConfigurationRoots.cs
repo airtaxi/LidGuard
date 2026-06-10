@@ -31,6 +31,11 @@ internal static class ManagedProviderConfigurationRoots
                 GitHubCopilotMcpConfigurationFilePath,
                 GitHubCopilotHookInstaller.GetDefaultGitHubCopilotConfigurationDirectoryPath()
             ],
+            AgentProvider.OpenCode =>
+            [
+                OpenCodeHookInstaller.GetDefaultOpenCodeConfigurationFilePath(),
+                OpenCodeHookInstaller.GetDefaultOpenCodeConfigurationDirectoryPath()
+            ],
             _ => []
         };
     }
@@ -46,6 +51,11 @@ internal static class ManagedProviderConfigurationRoots
                 GitHubCopilotHookInstaller.GetDefaultGitHubCopilotConfigurationDirectoryPath(),
                 Path.Combine(Environment.CurrentDirectory, ".github", "hooks"),
                 Path.Combine(Environment.CurrentDirectory, ".github", "copilot")
+            ],
+            AgentProvider.OpenCode =>
+            [
+                OpenCodeHookInstaller.GetDefaultOpenCodeConfigurationDirectoryPath(),
+                OpenCodeHookInstaller.GetDefaultOpenCodePluginsDirectoryPath()
             ],
             _ => []
         };

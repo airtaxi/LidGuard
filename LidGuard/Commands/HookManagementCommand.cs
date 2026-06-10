@@ -109,6 +109,7 @@ internal static class HookManagementCommand
                 AgentProvider.Codex => CodexHookEventLog.ReadRecentLines(maximumLineCount),
                 AgentProvider.Claude => ClaudeHookEventLog.ReadRecentLines(maximumLineCount),
                 AgentProvider.GitHubCopilot => GitHubCopilotHookEventLog.ReadRecentLines(maximumLineCount),
+                AgentProvider.OpenCode => OpenCodeHookEventLog.ReadRecentLines(maximumLineCount),
                 _ => null
             };
 
@@ -185,6 +186,7 @@ internal static class HookManagementCommand
             AgentProvider.Codex => new CodexHookInstaller(),
             AgentProvider.Claude => new ClaudeHookInstaller(),
             AgentProvider.GitHubCopilot => new GitHubCopilotHookInstaller(),
+            AgentProvider.OpenCode => new OpenCodeHookInstaller(),
             _ => null
         };
 
@@ -245,6 +247,9 @@ internal static class HookManagementCommand
                 break;
             case AgentProvider.GitHubCopilot:
                 WriteGitHubCopilotHookInspection(inspection);
+                break;
+            case AgentProvider.OpenCode:
+                WriteOpenCodeHookInspection(inspection);
                 break;
             default:
                 WriteUnsupportedProvider();
@@ -342,6 +347,23 @@ internal static class HookManagementCommand
 
     private static bool HasClaudeAllStopHooks(HookInstallationInspection inspection) => inspection.HasCheck(HookInstallationCheck.StopHook) && inspection.HasCheck(HookInstallationCheck.StopFailureHook) && inspection.HasCheck(HookInstallationCheck.SessionEndHook);
 
+    private static void WriteOpenCodeHookInspection(HookInstallationInspection inspection)
+    {
+        Console.WriteLine(LocalizationService.GetString("ManagementHookInstallationTitle"));
+        ManagementFieldWriter.WriteField("ManagementLabelProvider", inspection.Provider);
+        ManagementFieldWriter.WriteField("ManagementLabelStatus", inspection.Status);
+        ManagementFieldWriter.WriteField("ManagementLabelInstalled", inspection.IsInstalled);
+        ManagementFieldWriter.WriteField("ManagementLabelConfig", inspection.ConfigurationFilePath);
+        ManagementFieldWriter.WriteField("ManagementLabelConfigExists", inspection.ConfigurationFileExists);
+        ManagementFieldWriter.WriteField("ManagementLabelExecutable", inspection.HookExecutablePath);
+        ManagementFieldWriter.WriteField("ManagementLabelCommand", inspection.HookCommand);
+        ManagementFieldWriter.WriteField("ManagementLabelHookLog", GetHookLogFilePath(inspection.Provider));
+        ManagementFieldWriter.WriteField("ManagementLabelManagedBlock", inspection.HasCheck(HookInstallationCheck.ManagedBlock));
+        ManagementFieldWriter.WriteField("ManagementLabelManagedHooks", inspection.HasCheck(HookInstallationCheck.ManagedHookEntries));
+        ManagementFieldWriter.WriteField("ManagementLabelExpectedCommand", inspection.HasCheck(HookInstallationCheck.ExpectedHookCommand));
+        ManagementFieldWriter.WriteField("ManagementLabelMessage", DisplayHookManagementMessage(inspection.Provider, inspection.Message));
+    }
+
     private static string DisplayHookManagementMessage(AgentProvider provider, string message)
     {
         var providerName = ManagedProviderSelection.GetProviderDisplayName(provider);
@@ -370,6 +392,7 @@ internal static class HookManagementCommand
         if (provider == AgentProvider.Codex) return CodexHookEventLog.GetDefaultLogFilePath();
         if (provider == AgentProvider.Claude) return ClaudeHookEventLog.GetDefaultLogFilePath();
         if (provider == AgentProvider.GitHubCopilot) return GitHubCopilotHookEventLog.GetDefaultLogFilePath();
+        if (provider == AgentProvider.OpenCode) return OpenCodeHookEventLog.GetDefaultLogFilePath();
         return string.Empty;
     }
 
@@ -380,4 +403,3 @@ internal static class HookManagementCommand
     }
 
 }
-

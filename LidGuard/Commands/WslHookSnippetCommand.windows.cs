@@ -7,7 +7,7 @@ namespace LidGuard.Commands;
 
 internal static class WslHookSnippetCommand
 {
-    public static bool IsCommandName(string commandName) => commandName is LidGuardPipeCommands.WslCodexHooks or LidGuardPipeCommands.WslClaudeHooks or LidGuardPipeCommands.WslCopilotHooks;
+    public static bool IsCommandName(string commandName) => commandName is LidGuardPipeCommands.WslCodexHooks or LidGuardPipeCommands.WslClaudeHooks or LidGuardPipeCommands.WslCopilotHooks or LidGuardPipeCommands.WslOpenCodeHooks;
 
     public static int WriteHookSnippet(string commandName, string[] commandLineArguments)
     {
@@ -44,6 +44,7 @@ internal static class WslHookSnippetCommand
             AgentProvider.Codex => CodexHookCommand.WriteHookSnippet(format, hookCommand),
             AgentProvider.Claude => ClaudeHookCommand.WriteHookSnippet(format, hookCommand, HookCommandUtilities.BashShellName),
             AgentProvider.GitHubCopilot => GitHubCopilotHookCommand.WriteHookSnippet(format, hookCommand, HookCommandUtilities.BashShellName),
+            AgentProvider.OpenCode => OpenCodeHookCommand.WriteHookSnippet(format, hookCommand),
             _ => WriteUnsupportedProvider()
         };
     }
@@ -108,6 +109,7 @@ internal static class WslHookSnippetCommand
             LidGuardPipeCommands.WslCodexHooks => AgentProvider.Codex,
             LidGuardPipeCommands.WslClaudeHooks => AgentProvider.Claude,
             LidGuardPipeCommands.WslCopilotHooks => AgentProvider.GitHubCopilot,
+            LidGuardPipeCommands.WslOpenCodeHooks => AgentProvider.OpenCode,
             _ => AgentProvider.Unknown
         };
     }

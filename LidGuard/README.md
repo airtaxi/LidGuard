@@ -2,7 +2,7 @@
 
 🌐 [한국어](README.ko.md)
 
-LidGuard is a command-line tool for long-running local AI coding agent sessions. Windows protection, systemd/logind Linux protection, and macOS protection are implemented.
+LidGuard is a command-line tool for long-running local AI coding agent sessions, including Codex, Claude Code, GitHub Copilot CLI, and OpenCode. Windows protection, systemd/logind Linux protection, and macOS protection are implemented.
 
 ## Install
 
@@ -126,15 +126,17 @@ lidguard hook-events --provider codex --count 20
 lidguard codex-hooks
 lidguard claude-hooks
 lidguard copilot-hooks
+lidguard opencode-hooks
 lidguard wsl-hook-status --provider codex
 lidguard wsl-hook-install --provider all --distro Ubuntu
 lidguard wsl-hook-remove --provider claude
 lidguard wsl-codex-hooks config-toml --distro Ubuntu
 lidguard wsl-claude-hooks settings-json
 lidguard wsl-copilot-hooks config-json
+lidguard wsl-opencode-hooks plugin-js
 ```
 
-If `--provider` is omitted on `hook-status`, `hook-install`, `hook-remove`, or `hook-events`, LidGuard prompts for a provider. With `--provider all`, LidGuard only processes providers whose default configuration roots already exist and reports missing providers as skipped.
+If `--provider` is omitted on `hook-status`, `hook-install`, `hook-remove`, or `hook-events`, LidGuard prompts for a provider. With `--provider all`, LidGuard only processes providers whose default configuration roots already exist and reports missing providers as skipped. OpenCode uses a global plugin file, so no project-by-project OpenCode setup is needed.
 
 The `wsl-*` hook commands are available only in Windows builds. They inspect or edit provider configuration inside WSL and write hook commands that call the current Windows `lidguard.exe` through its WSL path. Pass `--distro <name>` to select a distro; when omitted, `wsl.exe` uses the default distro. WSL hook status treats older managed `lidguard.exe` paths as needing update so reinstalling refreshes versioned tool paths.
 
@@ -142,6 +144,7 @@ The `wsl-*` hook commands are available only in Windows builds. They inspect or 
 
 ```powershell
 lidguard mcp-status codex
+lidguard mcp-status opencode
 lidguard mcp-install codex
 lidguard mcp-remove codex
 lidguard wsl-mcp-status codex
@@ -150,6 +153,7 @@ lidguard wsl-mcp-remove claude
 lidguard wsl-codex-mcp-install
 lidguard wsl-claude-mcp-status --distro Ubuntu
 lidguard wsl-copilot-mcp-remove
+lidguard wsl-opencode-mcp-install
 lidguard provider-mcp-status --config "<json-path>"
 lidguard provider-mcp-install --config "<json-path>" --provider-name "<name>"
 lidguard provider-mcp-remove --config "<json-path>"
@@ -160,7 +164,7 @@ lidguard wsl-provider-mcp-remove --config "~/.example/mcp.json"
 
 If the provider positional value is omitted on `mcp-status`, `mcp-install`, or `mcp-remove`, LidGuard prompts for a provider. Re-running `mcp-install` refreshes an existing managed LidGuard MCP server by removing it first and then installing the current command. With `all`, LidGuard only processes providers whose default configuration roots already exist and reports missing providers as skipped.
 
-The WSL MCP commands are Windows-only and run the provider CLI inside the selected/default WSL distro while registering the Windows `lidguard.exe` WSL path as the stdio server command. `wsl-codex-mcp-*`, `wsl-claude-mcp-*`, and `wsl-copilot-mcp-*` are provider-specific aliases for `wsl-mcp-*`. `wsl-provider-mcp-*` directly edits a WSL-side JSON config path.
+The WSL MCP commands are Windows-only and run the provider CLI inside the selected/default WSL distro while registering the Windows `lidguard.exe` WSL path as the stdio server command. `wsl-codex-mcp-*`, `wsl-claude-mcp-*`, `wsl-copilot-mcp-*`, and `wsl-opencode-mcp-*` are provider-specific aliases for `wsl-mcp-*`. `wsl-provider-mcp-*` directly edits a WSL-side JSON config path.
 
 ## Managed / Internal Commands
 
@@ -170,6 +174,7 @@ lidguard provider-mcp-server --provider-name "<name>"
 lidguard codex-hook
 lidguard claude-hook
 lidguard copilot-hook --event notification
+lidguard opencode-hook --event chat.message
 ```
 
 These commands are primarily intended for managed integrations and stdio hosts rather than direct everyday CLI use.

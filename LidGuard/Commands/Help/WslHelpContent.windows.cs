@@ -36,6 +36,12 @@ internal static class WslCopilotHooksHelpContent
         => WslHelpContentFactory.CreateHookSnippetEntry(context, LidGuardPipeCommands.WslCopilotHooks, "wsl-copilot-hooks", "[config-json|json|hooks-json]", LocalizationService.GetString("Help_WslCopilotHooks_Description"), LocalizationService.GetString("Help_CopilotHooks_FormatOption"));
 }
 
+internal static class WslOpenCodeHooksHelpContent
+{
+    internal static LidGuardHelpCommandEntry Create(LidGuardHelpDocumentContext context)
+        => WslHelpContentFactory.CreateHookSnippetEntry(context, LidGuardPipeCommands.WslOpenCodeHooks, "wsl-opencode-hooks", "[plugin-js|js|javascript]", LocalizationService.GetString("Help_WslOpenCodeHooks_Description"), LocalizationService.GetString("Help_OpenCodeHooks_FormatOption"));
+}
+
 internal static class WslMcpStatusHelpContent
 {
     internal static LidGuardHelpCommandEntry Create(LidGuardHelpDocumentContext context) => WslHelpContentFactory.CreateMcpManagementEntry(context, LidGuardPipeCommands.WslMcpStatus, "wsl-mcp-status", LocalizationService.GetString("Help_WslMcpStatus_Description"));
@@ -73,7 +79,7 @@ internal static class WslHelpContentFactory
 {
     internal static LidGuardHelpCommandEntry CreateHookManagementEntry(LidGuardHelpDocumentContext context, string commandName, string synopsisCommandName, string description)
     {
-        return LidGuardHelpCommandEntryFactory.CreateSingleCommandEntry(commandName, [], LidGuardHelpSectionTitles.HookIntegration, $"{context.CommandDisplayName} {synopsisCommandName} [--provider codex|claude|copilot|all] [--config <path>] [--distro <name>]", description, [new LidGuardHelpOption("--provider <provider>", LocalizationService.GetString("Help_ManagedProvider_ProviderOption")), new LidGuardHelpOption("--config <path>", LocalizationService.GetString("Help_ManagedProvider_ConfigOption")), CreateDistroOption()], CreateWslNotes());
+        return LidGuardHelpCommandEntryFactory.CreateSingleCommandEntry(commandName, [], LidGuardHelpSectionTitles.HookIntegration, $"{context.CommandDisplayName} {synopsisCommandName} [--provider codex|claude|copilot|opencode|all] [--config <path>] [--distro <name>]", description, [new LidGuardHelpOption("--provider <provider>", LocalizationService.GetString("Help_ManagedProvider_ProviderOption")), new LidGuardHelpOption("--config <path>", LocalizationService.GetString("Help_ManagedProvider_ConfigOption")), CreateDistroOption()], CreateWslNotes());
     }
 
     internal static LidGuardHelpCommandEntry CreateHookSnippetEntry(LidGuardHelpDocumentContext context, string commandName, string synopsisCommandName, string formatSynopsis, string description, string formatDescription)
@@ -83,7 +89,7 @@ internal static class WslHelpContentFactory
 
     internal static LidGuardHelpCommandEntry CreateMcpManagementEntry(LidGuardHelpDocumentContext context, string commandName, string synopsisCommandName, string description)
     {
-        return LidGuardHelpCommandEntryFactory.CreateSingleCommandEntry(commandName, CreateProviderMcpAliases(synopsisCommandName), LidGuardHelpSectionTitles.McpIntegration, $"{context.CommandDisplayName} {synopsisCommandName} [codex|claude|copilot|all] [--distro <name>]", description, [new LidGuardHelpOption("<provider>", LocalizationService.GetString("Help_Mcp_ProviderArgument")), CreateDistroOption()], CreateWslNotes());
+        return LidGuardHelpCommandEntryFactory.CreateSingleCommandEntry(commandName, CreateProviderMcpAliases(synopsisCommandName), LidGuardHelpSectionTitles.McpIntegration, $"{context.CommandDisplayName} {synopsisCommandName} [codex|claude|copilot|opencode|all] [--distro <name>]", description, [new LidGuardHelpOption("<provider>", LocalizationService.GetString("Help_Mcp_ProviderArgument")), CreateDistroOption()], CreateWslNotes());
     }
 
     internal static LidGuardHelpCommandEntry CreateProviderMcpEntry(LidGuardHelpDocumentContext context, string commandName, string synopsisCommandName, string argumentSynopsis, string description, bool includeProviderName)
@@ -123,7 +129,8 @@ internal static class WslHelpContentFactory
         [
             $"wsl-codex-mcp-{operationName}",
             $"wsl-claude-mcp-{operationName}",
-            $"wsl-copilot-mcp-{operationName}"
+            $"wsl-copilot-mcp-{operationName}",
+            $"wsl-opencode-mcp-{operationName}"
         ];
     }
 }

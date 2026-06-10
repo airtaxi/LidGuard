@@ -121,6 +121,8 @@ internal static class WslMcpManagementCommand
 
     private static int AddProviderMcp(AgentProvider provider, string distroName, string wslExecutablePath)
     {
+        if (provider == AgentProvider.OpenCode) return AddOpenCodeMcp(distroName, wslExecutablePath);
+
         if (!TryResolveProviderCli(provider, distroName, out var providerCliExecutableName)) return 1;
 
         var processArguments = McpManagementCommand.CreateProviderMcpInstallArguments(provider, wslExecutablePath);
@@ -131,12 +133,50 @@ internal static class WslMcpManagementCommand
 
     private static int RemoveProviderMcp(AgentProvider provider, string distroName)
     {
+        if (provider == AgentProvider.OpenCode) return RemoveOpenCodeMcp(distroName);
+
         if (!TryResolveProviderCli(provider, distroName, out var providerCliExecutableName)) return 1;
 
         var processArguments = McpManagementCommand.CreateProviderMcpRemoveArguments(provider);
         if (processArguments.Count == 0) return WriteUnsupportedProvider();
 
         return RunProviderProcess(distroName, providerCliExecutableName, processArguments);
+    }
+
+    private static int AddOpenCodeMcp(string distroName, string wslExecutablePath)
+    {
+        if (!WslProviderConfigurationRoots.TryGetMcpConfigurationFilePath(distroName, AgentProvider.OpenCode, out var configurationFilePath, out var message))
+        {
+            Console.Error.WriteLine(message);
+            return 1;
+        }
+
+        if (!OpenCodeMcpConfigurationDocument.TryInstallWsl(distroName, configurationFilePath, wslExecutablePath, out message))
+        {
+            Console.Error.WriteLine(message);
+            return 1;
+        }
+
+        Console.WriteLine(LocalizationService.GetFormattedString("ManagementMcpServerInstalled", McpConfigurationTomlUtilities.ManagedMcpServerName, configurationFilePath));
+        return 0;
+    }
+
+    private static int RemoveOpenCodeMcp(string distroName)
+    {
+        if (!WslProviderConfigurationRoots.TryGetMcpConfigurationFilePath(distroName, AgentProvider.OpenCode, out var configurationFilePath, out var message))
+        {
+            Console.Error.WriteLine(message);
+            return 1;
+        }
+
+        if (!OpenCodeMcpConfigurationDocument.TryRemoveWsl(distroName, configurationFilePath, out var removed, out message))
+        {
+            Console.Error.WriteLine(message);
+            return 1;
+        }
+
+        Console.WriteLine(removed ? LocalizationService.GetFormattedString("ManagementMcpServerRemoved", McpConfigurationTomlUtilities.ManagedMcpServerName, configurationFilePath) : message);
+        return 0;
     }
 
     private static ManagedMcpInspectionResult InspectCodexMcp(string distroName, string wslExecutablePath)
@@ -222,10 +262,18 @@ internal static class WslMcpManagementCommand
             AgentProvider.Codex => InspectCodexMcp(distroName, wslExecutablePath),
             AgentProvider.Claude => InspectJsonProviderMcp(AgentProvider.Claude, distroName, wslExecutablePath),
             AgentProvider.GitHubCopilot => InspectJsonProviderMcp(AgentProvider.GitHubCopilot, distroName, wslExecutablePath),
+            AgentProvider.OpenCode => InspectOpenCodeMcp(distroName, wslExecutablePath),
             _ => default
         };
 
-        return provider is AgentProvider.Codex or AgentProvider.Claude or AgentProvider.GitHubCopilot;
+        return provider is AgentProvider.Codex or AgentProvider.Claude or AgentProvider.GitHubCopilot or AgentProvider.OpenCode;
+    }
+
+    private static ManagedMcpInspectionResult InspectOpenCodeMcp(string distroName, string wslExecutablePath)
+    {
+        if (!WslProviderConfigurationRoots.TryGetMcpConfigurationFilePath(distroName, AgentProvider.OpenCode, out var configurationFilePath, out var message)) configurationFilePath = string.Empty;
+        OpenCodeMcpConfigurationDocument.TryInspectWsl(distroName, configurationFilePath, wslExecutablePath, out var inspectionResult, out message);
+        return inspectionResult;
     }
 
     private static bool TrySelectMcpProviders(string providerText, string prompt, string distroName, out IReadOnlyList<AgentProvider> providers, out string message)
@@ -329,6 +377,7 @@ internal static class WslMcpManagementCommand
             "codex" => "codex",
             "claude" => "claude",
             "copilot" => "copilot",
+            "opencode" => "opencode",
             _ => string.Empty
         };
         if (string.IsNullOrWhiteSpace(providerText)) return false;

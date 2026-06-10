@@ -9,9 +9,10 @@ description: "LidGuard MCP runtime reference. Use when working on regular MCP se
 
 - Host the regular stdio MCP server through `lidguard mcp-server`.
 - `mcp-status` inspects the provider's global/user MCP configuration and reports whether the `lidguard` server entry is present and still points at the current LidGuard executable plus `mcp-server`.
-- `mcp-install` and `mcp-remove` register or remove the user/global LidGuard stdio MCP server named `lidguard` for Codex, Claude Code, and GitHub Copilot CLI.
+- `mcp-install` and `mcp-remove` register or remove the user/global LidGuard stdio MCP server named `lidguard` for Codex, Claude Code, GitHub Copilot CLI, and OpenCode.
 - `mcp-install` refreshes an existing managed LidGuard MCP registration, including one that points at an older LidGuard executable, by removing the existing provider entry first, then reinstalling it with the current command and arguments.
-- Windows WSL MCP management mirrors regular MCP management with WSL-side provider CLIs and config files, but the registered command must be the current Windows `lidguard.exe` converted through `wslpath`. Supported commands are `wsl-mcp-status/install/remove [codex|claude|copilot|all]` plus `wsl-codex-mcp-*`, `wsl-claude-mcp-*`, and `wsl-copilot-mcp-*` aliases.
+- Windows WSL MCP management mirrors regular MCP management with WSL-side provider CLIs and config files, but the registered command must be the current Windows `lidguard.exe` converted through `wslpath`. Supported commands are `wsl-mcp-status/install/remove [codex|claude|copilot|opencode|all]` plus `wsl-codex-mcp-*`, `wsl-claude-mcp-*`, `wsl-copilot-mcp-*`, and `wsl-opencode-mcp-*` aliases.
+- OpenCode MCP management edits the OpenCode JSON/JSONC config directly under the `mcp` object using a local `command` array instead of calling an OpenCode CLI registration command. OpenCode MCP status should only report the managed server as installed when the entry is `type = local`, not disabled, points at the current LidGuard executable, and contains `mcp-server` in the command array.
 - Prefer the current `lidguard.exe` path over the Windows `.cmd` shim when registering stdio MCP servers, because shim wrapper processes can remain visible under MCP clients and should not be mistaken for agent work.
 - Expose `get_settings_status`, `list_sessions`, `update_settings`, `remove_session`, `set_session_soft_lock`, and `clear_session_soft_lock`.
 - Make `list_sessions` return the active session list plus runtime lid/session state without the full settings payload.
@@ -61,12 +62,16 @@ lidguard mcp-remove claude
 lidguard mcp-status copilot
 lidguard mcp-install copilot
 lidguard mcp-remove copilot
+lidguard mcp-status opencode
+lidguard mcp-install opencode
+lidguard mcp-remove opencode
 lidguard mcp-status all
 lidguard mcp-install all
 lidguard mcp-remove all
 lidguard wsl-mcp-status codex --distro Ubuntu
 lidguard wsl-codex-mcp-install
 lidguard wsl-claude-mcp-remove --distro Ubuntu
+lidguard wsl-opencode-mcp-install --distro Ubuntu
 lidguard provider-mcp-status --config "C:\path\to\mcp.json"
 lidguard provider-mcp-install --config "C:\path\to\mcp.json" --provider-name "ExampleProvider"
 lidguard provider-mcp-remove --config "C:\path\to\mcp.json"

@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace LidGuard.Sessions;
 
@@ -10,5 +10,6 @@ public enum AgentProvider
     Claude = 2,
     GitHubCopilot = 3,
     Custom = 4,
-    Mcp = 5
+    Mcp = 5,
+    OpenCode = 6
 }

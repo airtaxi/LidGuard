@@ -96,6 +96,11 @@ internal static class ManagedProviderCliResolver
                 "copilot",
                 Path.Combine(wingetLinksDirectoryPath, "copilot.exe")
             ],
+            AgentProvider.OpenCode =>
+            [
+                "opencode",
+                Path.Combine(wingetLinksDirectoryPath, "opencode.exe")
+            ],
             _ => []
         };
     }

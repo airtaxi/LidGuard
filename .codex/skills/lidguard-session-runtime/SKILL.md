@@ -10,7 +10,7 @@ description: "LidGuard session lifecycle reference. Use when working on active s
 Hook stop events may be missed, so LidGuard also watches the agent process.
 
 - Prefer a provided parent process id when hooks can supply one.
-- Managed Codex, Claude Code, and GitHub Copilot CLI hooks should resolve a watched process id from the hook process ancestry on `UserPromptSubmit` / `userPromptSubmitted` when `WatchParentProcess` is enabled.
+- Managed Codex, Claude Code, GitHub Copilot CLI, and OpenCode hooks should resolve a watched process id from the hook process ancestry on their start events when `WatchParentProcess` is enabled.
 - Working directory must not be used to auto-resolve watched processes. Keep it only for status, logs, transcript fallback, and webhook payload metadata.
 - If neither an explicit parent process id nor a hook ancestry owner process id is available, start or update the session with `process=none`.
 - On Windows, open the target process with synchronize/query rights and wait with `WaitForSingleObject`.
@@ -36,7 +36,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - When a session reaches the configured inactive session timeout, transition it to soft-locked with reason metadata and apply the same suspend-eligibility handling as other soft-locked sessions.
 - Do not auto-resolve watched processes from the working directory for any provider.
 - Preserve an existing watched process for the same active session when a later start/update does not provide a new watched process id and `WatchParentProcess` is still enabled.
-- Provider hook ancestry owner detection should accept Codex CLI, Codex App `app-server`, Claude Code CLI/wrappers, GitHub Copilot CLI, `gh ... copilot`, and provider-specific node/npm/npx wrappers.
+- Provider hook ancestry owner detection should accept Codex CLI, Codex App `app-server`, Claude Code CLI/wrappers, GitHub Copilot CLI, `gh ... copilot`, OpenCode CLI, and provider-specific bun/node/npm/npx wrappers.
 - Back up optional lid action changes once to pending JSON, preserve any existing pending JSON, and restore only from that JSON after the last active session stops.
 - While shared protection remains applied and the lid is closed, keep the Emergency Hibernation thermal monitor polling every 10 seconds and stop it automatically once protection is restored or disabled.
 - Keep multiple stop signals for the same session from causing repeated cleanup side effects.
@@ -66,7 +66,7 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Keep unhandled runtime exceptions logged under the platform local application data directory at `log/exceptions.log`, including inner exception details.
 - Mark unobserved task exceptions observed as part of runtime exception handling.
 - Record recent suspend request history as JSON lines under the platform local application data directory, keeping the latest configured entry count when enabled.
-- Record provider hook event `prompt` fields on start events: Codex and Claude `UserPromptSubmit`, and GitHub Copilot CLI `userPromptSubmitted`.
+- Record provider hook event `prompt` fields on start events: Codex and Claude `UserPromptSubmit`, GitHub Copilot CLI `userPromptSubmitted`, and OpenCode `chat.message`.
 - Store default settings under the platform local application data directory.
 
 ## Session-End Webhooks

@@ -62,7 +62,8 @@ public abstract class HookInstallerBase : IHookInstaller
             File.Copy(normalizedRequest.ConfigurationFilePath, backupFilePath, false);
         }
 
-        File.WriteAllText(normalizedRequest.ConfigurationFilePath, updatedContent);
+        if (ShouldDeleteConfigurationFileWhenRemoved && string.IsNullOrWhiteSpace(updatedContent)) File.Delete(normalizedRequest.ConfigurationFilePath);
+        else File.WriteAllText(normalizedRequest.ConfigurationFilePath, updatedContent);
 
         var inspection = Inspect(normalizedRequest);
         var message = inspection.IsInstalled ? CreateInstalledMessage() : CreateWrittenNeedsAttentionMessage();
@@ -91,7 +92,8 @@ public abstract class HookInstallerBase : IHookInstaller
             File.Copy(normalizedRequest.ConfigurationFilePath, backupFilePath, false);
         }
 
-        File.WriteAllText(normalizedRequest.ConfigurationFilePath, updatedContent);
+        if (ShouldDeleteConfigurationFileWhenRemoved && string.IsNullOrWhiteSpace(updatedContent)) File.Delete(normalizedRequest.ConfigurationFilePath);
+        else File.WriteAllText(normalizedRequest.ConfigurationFilePath, updatedContent);
 
         var inspection = Inspect(normalizedRequest);
         return HookInstallationResult.Success(inspection, true, CreateRemovedMessage(), backupFilePath);
@@ -124,6 +126,8 @@ public abstract class HookInstallerBase : IHookInstaller
         message = string.Empty;
         return false;
     }
+
+    protected virtual bool ShouldDeleteConfigurationFileWhenRemoved => false;
 
     private HookInstallationInspection CreateMissingConfigurationInspection(HookInstallationRequest request, string hookCommand)
     {

@@ -2,7 +2,7 @@
 
 🌐 [English](README.md)
 
-LidGuard는 오래 실행되는 로컬 AI 코딩 에이전트 세션을 위한 명령줄 도구입니다. Windows 보호, systemd/logind Linux 보호, macOS 보호 기능이 구현되어 있습니다.
+LidGuard는 Codex, Claude Code, GitHub Copilot CLI, OpenCode 같은 오래 실행되는 로컬 AI 코딩 에이전트 세션을 위한 명령줄 도구입니다. Windows 보호, systemd/logind Linux 보호, macOS 보호 기능이 구현되어 있습니다.
 
 ## 설치
 
@@ -126,15 +126,17 @@ lidguard hook-events --provider codex --count 20
 lidguard codex-hooks
 lidguard claude-hooks
 lidguard copilot-hooks
+lidguard opencode-hooks
 lidguard wsl-hook-status --provider codex
 lidguard wsl-hook-install --provider all --distro Ubuntu
 lidguard wsl-hook-remove --provider claude
 lidguard wsl-codex-hooks config-toml --distro Ubuntu
 lidguard wsl-claude-hooks settings-json
 lidguard wsl-copilot-hooks config-json
+lidguard wsl-opencode-hooks plugin-js
 ```
 
-`hook-status`, `hook-install`, `hook-remove`, `hook-events`에서 `--provider`를 생략하면 LidGuard가 provider를 물어봅니다. `--provider all`을 사용하면 LidGuard는 기본 설정 루트가 이미 존재하는 provider만 처리하고, 없는 provider는 skipped로 보고합니다.
+`hook-status`, `hook-install`, `hook-remove`, `hook-events`에서 `--provider`를 생략하면 LidGuard가 provider를 물어봅니다. `--provider all`을 사용하면 LidGuard는 기본 설정 루트가 이미 존재하는 provider만 처리하고, 없는 provider는 skipped로 보고합니다. OpenCode는 전역 plugin 파일을 사용하므로 프로젝트마다 따로 OpenCode 설정을 만들 필요는 없습니다.
 
 `wsl-*` hook 명령은 Windows 빌드에서만 사용할 수 있습니다. 이 명령은 WSL 내부의 provider 설정을 검사하거나 수정하고, hook 명령에는 WSL 경로로 변환한 현재 Windows `lidguard.exe`를 기록합니다. 특정 distro를 선택하려면 `--distro <name>`을 전달하세요. 생략하면 `wsl.exe`가 기본 distro를 사용합니다. WSL hook 상태 검사는 이전 버전의 managed `lidguard.exe` 경로를 업데이트 필요 상태로 인식하므로 재설치하면 versioned tool path가 갱신됩니다.
 
@@ -142,6 +144,7 @@ lidguard wsl-copilot-hooks config-json
 
 ```powershell
 lidguard mcp-status codex
+lidguard mcp-status opencode
 lidguard mcp-install codex
 lidguard mcp-remove codex
 lidguard wsl-mcp-status codex
@@ -150,6 +153,7 @@ lidguard wsl-mcp-remove claude
 lidguard wsl-codex-mcp-install
 lidguard wsl-claude-mcp-status --distro Ubuntu
 lidguard wsl-copilot-mcp-remove
+lidguard wsl-opencode-mcp-install
 lidguard provider-mcp-status --config "<json-path>"
 lidguard provider-mcp-install --config "<json-path>" --provider-name "<name>"
 lidguard provider-mcp-remove --config "<json-path>"
@@ -160,7 +164,7 @@ lidguard wsl-provider-mcp-remove --config "~/.example/mcp.json"
 
 `mcp-status`, `mcp-install`, `mcp-remove`에서 provider 위치 인자를 생략하면 LidGuard가 provider를 물어봅니다. `mcp-install`을 다시 실행하면 기존 managed LidGuard MCP server를 먼저 제거한 뒤 현재 명령으로 다시 설치하여 갱신합니다. `all`을 사용하면 LidGuard는 기본 설정 루트가 이미 존재하는 provider만 처리하고, 없는 provider는 skipped로 보고합니다.
 
-WSL MCP 명령은 Windows 전용입니다. 선택한 또는 기본 WSL distro 안에서 provider CLI를 실행하지만, stdio server command에는 Windows `lidguard.exe`의 WSL 경로를 등록합니다. `wsl-codex-mcp-*`, `wsl-claude-mcp-*`, `wsl-copilot-mcp-*`는 `wsl-mcp-*`의 provider별 별칭입니다. `wsl-provider-mcp-*`는 WSL 쪽 JSON config path를 직접 편집합니다.
+WSL MCP 명령은 Windows 전용입니다. 선택한 또는 기본 WSL distro 안에서 provider CLI를 실행하지만, stdio server command에는 Windows `lidguard.exe`의 WSL 경로를 등록합니다. `wsl-codex-mcp-*`, `wsl-claude-mcp-*`, `wsl-copilot-mcp-*`, `wsl-opencode-mcp-*`는 `wsl-mcp-*`의 provider별 별칭입니다. `wsl-provider-mcp-*`는 WSL 쪽 JSON config path를 직접 편집합니다.
 
 ## Managed / 내부 명령
 
@@ -170,6 +174,7 @@ lidguard provider-mcp-server --provider-name "<name>"
 lidguard codex-hook
 lidguard claude-hook
 lidguard copilot-hook --event notification
+lidguard opencode-hook --event chat.message
 ```
 
 이 명령들은 직접 사용하는 일상 CLI 명령이라기보다 managed integration과 stdio host를 위한 용도입니다.

@@ -35,6 +35,7 @@ internal static class LidGuardCommandLineApplication
         if (commandName == LidGuardPipeCommands.ClaudeHook) return await ClaudeHookCommand.RunAsync();
         if (commandName == LidGuardPipeCommands.CopilotHook) return await GitHubCopilotHookCommand.RunAsync(commandLineArguments[1..]);
         if (commandName == LidGuardPipeCommands.CodexHook) return await CodexHookCommand.RunAsync();
+        if (commandName == LidGuardPipeCommands.OpenCodeHook) return await OpenCodeHookCommand.RunAsync(commandLineArguments[1..]);
         if (commandName == LidGuardPipeCommands.LiveStatus) return await LiveStatusCommand.RunAsync(commandLineArguments[1..]);
         if (commandName == LidGuardMcpServerCommand.CommandName) return await LidGuardMcpServerCommand.RunAsync(commandLineArguments[1..]);
         if (commandName == ProviderMcpServerCommand.CommandName) return await ProviderMcpServerCommand.RunAsync(commandLineArguments[1..]);
@@ -142,6 +143,7 @@ internal static class LidGuardCommandLineApplication
             or LidGuardPipeCommands.ClaudeHooks
             or LidGuardPipeCommands.CopilotHooks
             or LidGuardPipeCommands.CodexHooks
+            or LidGuardPipeCommands.OpenCodeHooks
             or LidGuardPipeCommands.McpStatus
             or LidGuardPipeCommands.McpInstall
             or LidGuardPipeCommands.McpRemove
@@ -180,6 +182,7 @@ internal static class LidGuardCommandLineApplication
             LidGuardPipeCommands.ClaudeHooks => ClaudeHookCommand.WriteHookSnippet(commandArgument),
             LidGuardPipeCommands.CopilotHooks => GitHubCopilotHookCommand.WriteHookSnippet(commandArgument),
             LidGuardPipeCommands.CodexHooks => CodexHookCommand.WriteHookSnippet(commandArgument),
+            LidGuardPipeCommands.OpenCodeHooks => OpenCodeHookCommand.WriteHookSnippet(commandArgument),
             LidGuardPipeCommands.McpStatus => McpManagementCommand.WriteMcpStatus(commandArgument),
             LidGuardPipeCommands.McpInstall => McpManagementCommand.InstallMcp(commandArgument),
             LidGuardPipeCommands.McpRemove or "mcp-uninstall" => McpManagementCommand.RemoveMcp(commandArgument),

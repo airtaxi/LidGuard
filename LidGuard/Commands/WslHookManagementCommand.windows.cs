@@ -135,7 +135,9 @@ internal static class WslHookManagementCommand
             }
         }
 
-        if (!WslCommandUtilities.TryWriteTextFile(context.DistroName, currentInspection.ConfigurationFilePath, updatedContent, out message))
+        var removedFile = currentInspection.Provider == AgentProvider.OpenCode && string.IsNullOrWhiteSpace(updatedContent);
+        var updateSucceeded = removedFile ? WslCommandUtilities.TryRemoveFile(context.DistroName, currentInspection.ConfigurationFilePath, out message) : WslCommandUtilities.TryWriteTextFile(context.DistroName, currentInspection.ConfigurationFilePath, updatedContent, out message);
+        if (!updateSucceeded)
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -189,7 +191,9 @@ internal static class WslHookManagementCommand
             return 1;
         }
 
-        if (!WslCommandUtilities.TryWriteTextFile(context.DistroName, currentInspection.ConfigurationFilePath, updatedContent, out message))
+        var removedFile = currentInspection.Provider == AgentProvider.OpenCode && string.IsNullOrWhiteSpace(updatedContent);
+        var updateSucceeded = removedFile ? WslCommandUtilities.TryRemoveFile(context.DistroName, currentInspection.ConfigurationFilePath, out message) : WslCommandUtilities.TryWriteTextFile(context.DistroName, currentInspection.ConfigurationFilePath, updatedContent, out message);
+        if (!updateSucceeded)
         {
             Console.Error.WriteLine(message);
             return 1;
@@ -229,6 +233,7 @@ internal static class WslHookManagementCommand
             AgentProvider.Codex => CodexHookConfigTomlDocument.InspectConfigToml(configurationFilePath, context.WslExecutablePath, hookCommand, content, configurationFileExists),
             AgentProvider.Claude => ClaudeHookSettingsJsonDocument.InspectSettingsJson(configurationFilePath, context.WslExecutablePath, hookCommand, content, configurationFileExists, HookCommandUtilities.BashShellName),
             AgentProvider.GitHubCopilot => CreateGitHubCopilotInspection(configurationFilePath, context.WslExecutablePath, hookCommand, content, configurationFileExists),
+            AgentProvider.OpenCode => OpenCodeHookPluginDocument.InspectPlugin(configurationFilePath, context.WslExecutablePath, hookCommand, content, configurationFileExists),
             _ => new HookInstallationInspection()
         };
 
@@ -259,6 +264,9 @@ internal static class WslHookManagementCommand
             case AgentProvider.GitHubCopilot:
                 var hookCommandsByEvent = GitHubCopilotHookConfigurationJsonDocument.CreateManagedHookCommands(hookCommand);
                 return GitHubCopilotHookConfigurationJsonDocument.TryInstallManagedHooks(originalContent, hookCommandsByEvent, HookCommandUtilities.BashShellName, out updatedContent, out message);
+            case AgentProvider.OpenCode:
+                updatedContent = OpenCodeHookPluginDocument.InstallManagedPlugin(hookCommand);
+                return true;
             default:
                 message = LocalizationService.GetString("ManagementUnsupportedHookManagement");
                 return false;
@@ -276,6 +284,7 @@ internal static class WslHookManagementCommand
             AgentProvider.Codex => TryCreateRemovedCodexContent(originalContent, out updatedContent, out changed, out message),
             AgentProvider.Claude => ClaudeHookSettingsJsonDocument.TryRemoveManagedHooks(originalContent, out updatedContent, out changed, out message),
             AgentProvider.GitHubCopilot => GitHubCopilotHookConfigurationJsonDocument.TryRemoveManagedHooks(originalContent, out updatedContent, out changed, out message),
+            AgentProvider.OpenCode => OpenCodeHookPluginDocument.TryRemoveManagedPlugin(originalContent, out updatedContent, out changed, out message),
             _ => UnsupportedProvider(out updatedContent, out changed, out message)
         };
     }

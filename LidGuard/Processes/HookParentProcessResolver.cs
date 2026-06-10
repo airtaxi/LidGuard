@@ -8,6 +8,7 @@ internal static partial class HookParentProcessResolver
 
     private static readonly HashSet<string> s_nodePackageManagerProcessNames = new(StringComparer.OrdinalIgnoreCase)
     {
+        "bun",
         "node",
         "npm",
         "npx"
@@ -48,6 +49,7 @@ internal static partial class HookParentProcessResolver
             AgentProvider.Codex => IsCodexOwnerProcess(processInfo),
             AgentProvider.Claude => IsClaudeOwnerProcess(processInfo),
             AgentProvider.GitHubCopilot => IsGitHubCopilotOwnerProcess(processInfo),
+            AgentProvider.OpenCode => IsOpenCodeOwnerProcess(processInfo),
             _ => false
         };
 
@@ -71,6 +73,13 @@ internal static partial class HookParentProcessResolver
         if (normalizedProcessName.Equals("gh", StringComparison.OrdinalIgnoreCase) && processInfo.CommandLine.Contains("copilot", StringComparison.OrdinalIgnoreCase)) return true;
 
         return IsNodePackageManagerProcess(normalizedProcessName) && processInfo.CommandLine.Contains("copilot", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsOpenCodeOwnerProcess(HookParentProcessInfo processInfo)
+    {
+        var normalizedProcessName = NormalizeProcessName(processInfo.ProcessName);
+        if (normalizedProcessName.Contains("opencode", StringComparison.OrdinalIgnoreCase)) return true;
+        return IsNodePackageManagerProcess(normalizedProcessName) && processInfo.CommandLine.Contains("opencode", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsProcessName(string processName, string expectedProcessName) => NormalizeProcessName(processName).Equals(expectedProcessName, StringComparison.OrdinalIgnoreCase);

@@ -23,6 +23,8 @@ internal static class LidGuardPipeCommands
     public const string McpInstall = "mcp-install";
     public const string McpRemove = "mcp-remove";
     public const string McpStatus = "mcp-status";
+    public const string OpenCodeHook = "opencode-hook";
+    public const string OpenCodeHooks = "opencode-hooks";
     public const string PreviewCurrentSound = "preview-current-sound";
     public const string PreviewSystemSound = "preview-system-sound";
     public const string ProviderMcpInstall = "provider-mcp-install";
@@ -47,8 +49,8 @@ internal static class LidGuardPipeCommands
     public const string WslMcpInstall = "wsl-mcp-install";
     public const string WslMcpRemove = "wsl-mcp-remove";
     public const string WslMcpStatus = "wsl-mcp-status";
+    public const string WslOpenCodeHooks = "wsl-opencode-hooks";
     public const string WslProviderMcpInstall = "wsl-provider-mcp-install";
     public const string WslProviderMcpRemove = "wsl-provider-mcp-remove";
     public const string WslProviderMcpStatus = "wsl-provider-mcp-status";
 }
-

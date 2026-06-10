@@ -7,6 +7,7 @@ internal static class HookJsonPropertyReader
 {
     public static JsonElement GetElementProperty(JsonElement jsonElement, string primaryPropertyName, string secondaryPropertyName = "")
     {
+        if (jsonElement.ValueKind != JsonValueKind.Object) return default;
         if (jsonElement.TryGetProperty(primaryPropertyName, out var primaryPropertyElement)) return primaryPropertyElement.Clone();
         if (!string.IsNullOrWhiteSpace(secondaryPropertyName) && jsonElement.TryGetProperty(secondaryPropertyName, out var secondaryPropertyElement)) return secondaryPropertyElement.Clone();
         return default;

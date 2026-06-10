@@ -112,6 +112,7 @@ internal static class WslCommandUtilities
             AgentProvider.Codex => LidGuardPipeCommands.CodexHook,
             AgentProvider.Claude => LidGuardPipeCommands.ClaudeHook,
             AgentProvider.GitHubCopilot => LidGuardPipeCommands.CopilotHook,
+            AgentProvider.OpenCode => LidGuardPipeCommands.OpenCodeHook,
             _ => string.Empty
         };
     }
@@ -186,6 +187,13 @@ internal static class WslCommandUtilities
         return false;
     }
 
+    public static bool TryRemoveFile(string distroName, string filePath, out string message)
+    {
+        var result = RunShell(distroName, "rm -f \"$1\"", [filePath]);
+        message = result.GetDisplayError();
+        return result.ExitCode == 0;
+    }
+
     public static bool TryResolveDefaultPath(string distroName, string script, out string path, out string message)
     {
         path = string.Empty;
@@ -221,6 +229,7 @@ internal static class WslCommandUtilities
             AgentProvider.Codex => "codex",
             AgentProvider.Claude => "claude",
             AgentProvider.GitHubCopilot => "copilot",
+            AgentProvider.OpenCode => "opencode",
             _ => string.Empty
         };
     }
