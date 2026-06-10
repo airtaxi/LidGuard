@@ -5,6 +5,13 @@ description: "LidGuard provider integration reference. Use when working on Provi
 
 # LidGuard Provider Integrations
 
+## AgentProvider Enum
+
+- File: `LidGuard/Sessions/AgentProvider.cs`.
+- Enum ordering: `Unknown = -1`, `Codex = 0`, then `Claude`, `GitHubCopilot`, and `OpenCode` in increasing order, then `Custom`, then `Mcp`.
+- When adding a new named provider, insert it **immediately before `Custom`** with the next consecutive integer value.
+- The `[JsonConverter(typeof(JsonStringEnumConverter<AgentProvider>))]` attribute means all serialization uses string names, so the integer values are only for ordering and do not affect persistence. Renumbering existing members is safe as long as every reference uses the named enum member.
+
 ## Provider MCP Mapping
 
 ### Generic Provider MCP
