@@ -187,7 +187,10 @@ internal static class OpenCodeMcpConfigurationDocument
         var arguments = new List<string>();
         for (var itemIndex = 1; itemIndex < commandArray.Count; itemIndex++)
         {
-            if (commandArray[itemIndex] is JsonValue jsonValue && jsonValue.TryGetValue<string>(out var value)) arguments.Add(value);
+            if (commandArray[itemIndex] is JsonValue jsonValue && jsonValue.TryGetValue<string>(out var value))
+            {
+                arguments.Add(value);
+            }
         }
 
         return [.. arguments];

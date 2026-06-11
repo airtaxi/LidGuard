@@ -211,10 +211,7 @@ internal static class WslMcpManagementCommand
                 message = LocalizationService.GetFormattedString("ManagementNoMcpServerNamedFound", McpConfigurationTomlUtilities.ManagedMcpServerName);
             }
         }
-        else
-        {
-            message = LocalizationService.GetFormattedString("ManagementConfigurationFileDoesNotExist", configurationFilePath);
-        }
+        else message = LocalizationService.GetFormattedString("ManagementConfigurationFileDoesNotExist", configurationFilePath);
 
         return new ManagedMcpInspectionResult(AgentProvider.Codex, configurationFilePath, configurationFileExists, hasProviderCli, providerCliDisplayText, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, string.Empty, serverCommand, serverArguments, string.Empty, ManagedMcpInspectionResult.GetStatusMessage(configurationFilePath, configurationFileExists, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, message));
     }

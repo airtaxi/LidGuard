@@ -215,7 +215,10 @@ public static class CodexHookConfigTomlDocument
 
     private static void AppendHookBlock(StringBuilder builder, string hookEventName, string tomlCommandLiteral, string statusMessage)
     {
-        foreach (var line in CreateHookBlockLines(hookEventName, tomlCommandLiteral, statusMessage)) builder.AppendLine(line);
+        foreach (var line in CreateHookBlockLines(hookEventName, tomlCommandLiteral, statusMessage))
+        {
+            builder.AppendLine(line);
+        }
     }
 
     private static bool ContainsHookBlock(string content, string hookEventName) => content.Contains($"[[hooks.{hookEventName}]]", StringComparison.Ordinal);
@@ -292,7 +295,10 @@ public static class CodexHookConfigTomlDocument
 
             for (var commandLineIndex = lineIndex + 1; commandLineIndex < commandLineEndIndex; commandLineIndex++)
             {
-                if (TryReadIntegerValue(lines[commandLineIndex], "timeout", out var timeoutSeconds) && timeoutSeconds >= expectedTimeoutSeconds) return true;
+                if (TryReadIntegerValue(lines[commandLineIndex], "timeout", out var timeoutSeconds) && timeoutSeconds >= expectedTimeoutSeconds)
+                {
+                    return true;
+                }
             }
         }
 

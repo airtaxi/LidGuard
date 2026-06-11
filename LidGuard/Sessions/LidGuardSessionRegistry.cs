@@ -9,7 +9,10 @@ public sealed class LidGuardSessionRegistry
     {
         get
         {
-            lock (_gate) return _sessions.Count;
+            lock (_gate)
+            {
+                return _sessions.Count;
+            }
         }
     }
 
@@ -17,7 +20,10 @@ public sealed class LidGuardSessionRegistry
     {
         get
         {
-            lock (_gate) return _sessions.Count > 0;
+            lock (_gate)
+            {
+                return _sessions.Count > 0;
+            }
         }
     }
 
@@ -71,7 +77,10 @@ public sealed class LidGuardSessionRegistry
 
         lock (_gate)
         {
-            if (_sessions.Remove(key, out snapshot)) return true;
+            if (_sessions.Remove(key, out snapshot))
+            {
+                return true;
+            }
         }
 
         snapshot = LidGuardSessionSnapshot.Empty;
@@ -149,12 +158,18 @@ public sealed class LidGuardSessionRegistry
 
     public IReadOnlyList<LidGuardSessionSnapshot> GetSnapshots()
     {
-        lock (_gate) return [.. _sessions.Values];
+        lock (_gate)
+        {
+            return [.._sessions.Values];
+        }
     }
 
     public void Clear()
     {
-        lock (_gate) _sessions.Clear();
+        lock (_gate)
+        {
+            _sessions.Clear();
+        }
     }
 
     private static LidGuardSessionSnapshot CloneSnapshot(LidGuardSessionSnapshot snapshot, LidGuardSessionSoftLockState softLockState, string softLockReason, DateTimeOffset? softLockedAt, DateTimeOffset lastActivityAt, bool? hasPendingProviderWork = null, string pendingProviderWorkReason = null)

@@ -64,7 +64,10 @@ internal sealed class VisibleDisplayMonitorCountProvider : IVisibleDisplayMonito
             var propertyValue = GetElementText(property.Value);
             if (propertyName.Contains("builtin", StringComparison.OrdinalIgnoreCase) || propertyName.Contains("built-in", StringComparison.OrdinalIgnoreCase) || propertyName.Contains("internal", StringComparison.OrdinalIgnoreCase))
             {
-                if (string.IsNullOrWhiteSpace(propertyValue) || IsPositiveValue(propertyValue)) return true;
+                if (string.IsNullOrWhiteSpace(propertyValue) || IsPositiveValue(propertyValue))
+                {
+                    return true;
+                }
             }
 
             if (propertyValue.Contains("built-in", StringComparison.OrdinalIgnoreCase) || propertyValue.Contains("builtin", StringComparison.OrdinalIgnoreCase) || propertyValue.Contains("internal", StringComparison.OrdinalIgnoreCase)) return true;

@@ -54,7 +54,10 @@ internal sealed class LidGuardPipeServer(LidGuardRuntimeCoordinator runtimeCoord
         try { await WriteResponseAsync(streamWriter, response, cancellationToken); }
         finally
         {
-            if (await runtimeCoordinator.TryConsumeServerRuntimeStopRequestAsync(cancellationToken)) requestRuntimeStop();
+            if (await runtimeCoordinator.TryConsumeServerRuntimeStopRequestAsync(cancellationToken))
+            {
+                requestRuntimeStop();
+            }
         }
     }
 

@@ -166,7 +166,7 @@ internal static class AgentTranscriptResponseExtractor
                 .TakeLast(lineLimit)
                 .ToArray();
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException) { return[]; }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException) { return []; }
     }
 
     private static bool TryGetStringProperty(JsonElement element, string propertyName, out string value)

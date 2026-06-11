@@ -41,7 +41,7 @@ internal static class HookEventLogWriter
             if (lines.Length <= maximumLineCount) return lines;
             return lines[^maximumLineCount..];
         }
-        catch { return[]; }
+        catch { return []; }
     }
 
     public static string CreateLogLine(string kind, string hookEventName, string sessionIdentifier, string workingDirectory, string details)

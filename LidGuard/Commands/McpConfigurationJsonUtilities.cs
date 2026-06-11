@@ -14,10 +14,7 @@ internal static partial class McpConfigurationJsonUtilities
         foreach (var item in jsonArray)
         {
             if (item is JsonValue jsonValue && jsonValue.TryGetValue<string>(out var stringValue)) values.Add(stringValue);
-            else
-            {
-                values.Add(item?.ToJsonString() ?? "null");
-            }
+            else values.Add(item?.ToJsonString() ?? "null");
         }
 
         return string.Join(" | ", values);

@@ -446,7 +446,10 @@ internal static class MacOSPermissionCommand
     {
         try
         {
-            if (File.Exists(temporaryRuleFilePath)) File.Delete(temporaryRuleFilePath);
+            if (File.Exists(temporaryRuleFilePath))
+            {
+                File.Delete(temporaryRuleFilePath);
+            }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
     }

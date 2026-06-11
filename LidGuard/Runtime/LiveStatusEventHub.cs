@@ -132,7 +132,10 @@ internal sealed class LiveStatusEventHub : IDisposable
 
         private void DrainCoalescedSignals()
         {
-            while (_signal.Wait(0)) Interlocked.Exchange(ref _hasPendingSignal, 0);
+            while (_signal.Wait(0))
+            {
+                Interlocked.Exchange(ref _hasPendingSignal, 0);
+            }
         }
     }
 }

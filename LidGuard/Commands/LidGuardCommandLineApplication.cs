@@ -325,7 +325,10 @@ internal static class LidGuardCommandLineApplication
         }
         finally
         {
-            if (ownsRuntimeMutex) runtimeMutex.ReleaseMutex();
+            if (ownsRuntimeMutex)
+            {
+                runtimeMutex.ReleaseMutex();
+            }
         }
     }
 
@@ -396,10 +399,7 @@ internal static class LidGuardCommandLineApplication
                 Console.WriteLine(LocalizationService.GetFormattedString("ConsoleSettingsFile", LidGuardSettingsStore.GetDefaultSettingsFilePath()));
                 LidGuardCommandConsole.WriteSettings(settings);
             }
-            else
-            {
-                Console.Error.WriteLine(settingsMessage);
-            }
+            else Console.Error.WriteLine(settingsMessage);
 
             return 0;
         }

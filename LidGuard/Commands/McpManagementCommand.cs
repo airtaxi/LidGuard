@@ -219,15 +219,9 @@ internal static class McpManagementCommand
                 matchesCurrentLidGuardExecutable = HookCommandUtilities.ExecutableReferencesMatch(serverCommand, HookCommandUtilities.GetDefaultMcpExecutableReference());
                 containsExpectedServerCommand = McpConfigurationTomlUtilities.ContainsArgument(serverArgumentValues, LidGuardMcpServerCommand.CommandName);
             }
-            else
-            {
-                message = LocalizationService.GetFormattedString("ManagementNoMcpServerNamedFound", McpConfigurationTomlUtilities.ManagedMcpServerName);
-            }
+            else message = LocalizationService.GetFormattedString("ManagementNoMcpServerNamedFound", McpConfigurationTomlUtilities.ManagedMcpServerName);
         }
-        else
-        {
-            message = LocalizationService.GetFormattedString("ManagementConfigurationFileDoesNotExist", configurationFilePath);
-        }
+        else message = LocalizationService.GetFormattedString("ManagementConfigurationFileDoesNotExist", configurationFilePath);
 
         return new ManagedMcpInspectionResult(AgentProvider.Codex, configurationFilePath, configurationFileExists, hasProviderCli, providerCliDisplayText, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, string.Empty, serverCommand, serverArguments, string.Empty, ManagedMcpInspectionResult.GetStatusMessage(configurationFilePath, configurationFileExists, hasServerEntry, matchesCurrentLidGuardExecutable, containsExpectedServerCommand, message));
     }

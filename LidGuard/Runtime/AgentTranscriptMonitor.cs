@@ -79,7 +79,10 @@ internal sealed class AgentTranscriptMonitor(AgentTranscriptMonitoringProfile mo
 
     public void RemoveSession(LidGuardSessionKey sessionKey)
     {
-        lock (_gate) RemoveSessionInsideGate(sessionKey);
+        lock (_gate)
+        {
+            RemoveSessionInsideGate(sessionKey);
+        }
     }
 
     private void HandleTranscriptFileChanged(LidGuardSessionKey sessionKey)
@@ -446,7 +449,7 @@ internal static class AgentTranscriptSoftLockDetectors
                 .TakeLast(lineLimit)
                 .ToArray();
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException) { return[]; }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException) { return []; }
     }
 
     private static bool TryGetStringProperty(JsonElement element, string propertyName, out string value)

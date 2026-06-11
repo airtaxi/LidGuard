@@ -16,10 +16,7 @@ internal static class ManagedProviderSelection
         foreach (var provider in selectedProviders)
         {
             if (TryGetProviderAvailability(provider, getProviderConfigurationRootCandidatePaths(provider), out var skippedProviderMessage)) availableProviderList.Add(provider);
-            else
-            {
-                skippedProviderMessageList.Add(skippedProviderMessage);
-            }
+            else skippedProviderMessageList.Add(skippedProviderMessage);
         }
 
         availableProviders = availableProviderList;

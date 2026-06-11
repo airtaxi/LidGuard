@@ -114,7 +114,10 @@ internal static class LidGuardPendingLidActionBackupStore
     {
         try
         {
-            if (File.Exists(temporaryFilePath)) File.Delete(temporaryFilePath);
+            if (File.Exists(temporaryFilePath))
+            {
+                File.Delete(temporaryFilePath);
+            }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
     }

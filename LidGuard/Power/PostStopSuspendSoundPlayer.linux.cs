@@ -36,7 +36,10 @@ public sealed class PostStopSuspendSoundPlayer : IPostStopSuspendSoundPlayer
         var soundPath = normalizeResult.Value;
         if (TryGetCanonicalSystemSoundName(normalizeResult.Value, out var canonicalSystemSoundName))
         {
-            if (!TryResolveSystemSoundPath(canonicalSystemSoundName, audioPlayer, out soundPath)) return LidGuardOperationResult.Failure($"Could not find a Linux desktop sound-theme file for system sound {canonicalSystemSoundName}.");
+            if (!TryResolveSystemSoundPath(canonicalSystemSoundName, audioPlayer, out soundPath))
+            {
+                return LidGuardOperationResult.Failure($"Could not find a Linux desktop sound-theme file for system sound {canonicalSystemSoundName}.");
+            }
         }
 
         var commandResult = await LinuxCommandRunner.RunAsync(audioPlayer.ExecutablePath, [soundPath], cancellationToken);

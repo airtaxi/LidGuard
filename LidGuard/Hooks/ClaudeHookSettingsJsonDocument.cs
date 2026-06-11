@@ -186,7 +186,10 @@ public static class ClaudeHookSettingsJsonDocument
 
         foreach (var hookDefinition in s_requiredHookDefinitions)
         {
-            if (!TryUpsertManagedHook(hooksObject, hookDefinition.HookEventName, hookCommand, hookShellName, hookDefinition.GetStatusMessage(), hookDefinition.Matcher, out message)) return false;
+            if (!TryUpsertManagedHook(hooksObject, hookDefinition.HookEventName, hookCommand, hookShellName, hookDefinition.GetStatusMessage(), hookDefinition.Matcher, out message))
+            {
+                return false;
+            }
         }
 
         updatedContent = settingsObject.ToJsonString(s_jsonSerializerOptions) + Environment.NewLine;

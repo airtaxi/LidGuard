@@ -76,7 +76,10 @@ internal sealed class CaffeinateAssertion : IDisposable
 
         try
         {
-            if (!_process.WaitForExit((int)s_disposeWaitTimeout.TotalMilliseconds)) _process.Kill(entireProcessTree: true);
+            if (!_process.WaitForExit((int)s_disposeWaitTimeout.TotalMilliseconds))
+            {
+                _process.Kill(entireProcessTree: true);
+            }
         }
         catch (Exception exception) when (exception is InvalidOperationException or System.ComponentModel.Win32Exception) { }
 

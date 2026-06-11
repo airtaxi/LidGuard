@@ -791,7 +791,7 @@ internal static class GitHubCopilotHookWorkTracker
                     .TakeLast(RecentTranscriptLineLimit)
                     .ToArray();
             }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException) { return[]; }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException or PathTooLongException) { return []; }
         }
     }
 

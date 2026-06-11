@@ -64,7 +64,7 @@ internal static class Program
     private static void WriteUsage()
     {
         Console.WriteLine("Usage: CSharpStyleGuard (--check|--fix [--all]) <file-or-directory> [more paths]");
-        Console.WriteLine($"Checks or safely rewrites multiline ternary conditional expressions, logical/null-coalescing binary expressions, parameter/argument lists, single-statement control flow, nested braced blocks, constructor initializers, expression-bodied members, and single-statement try/catch/finally blocks. The line-length threshold for newly compressed lines is {LineLengthThreshold} characters.");
+        Console.WriteLine($"Checks or safely rewrites multiline ternary conditional expressions, logical/null-coalescing binary expressions, parameter/argument lists, collection-expression keyword spacing, object-creation argument-list spacing, top-level single-statement control flow, nested control-statement blocks, constructor initializers, expression-bodied members, and single-statement try/catch/finally blocks. The line-length threshold for newly compressed lines is {LineLengthThreshold} characters.");
         Console.WriteLine("--fix rewrites only spans that intersect staged or unstaged git diff lines by default. Use --fix --all to rewrite every matching span in the input paths.");
         Console.WriteLine("When --fix runs outside a git repository, it rewrites every matching span in the input paths and reports a warning.");
     }
@@ -159,7 +159,7 @@ internal static class Program
 
     private static List<StyleDiagnostic> SelectDiagnosticsInChangedLineRanges(IReadOnlyList<StyleDiagnostic> diagnostics, SourceText sourceText, IReadOnlyList<LineRange>? changedLineRanges)
     {
-        if (changedLineRanges is null) return [.. diagnostics];
+        if (changedLineRanges is null) return [..diagnostics];
         if (changedLineRanges.Count == 0) return [];
 
         return diagnostics.Where(styleDiagnostic => DiagnosticIntersectsChangedLineRanges(styleDiagnostic, sourceText, changedLineRanges)).ToList();
@@ -192,11 +192,19 @@ internal static class Program
     internal static string CreateSingleLineText(SyntaxNode syntaxNode)
     {
         var normalizedNode = syntaxNode.NormalizeWhitespace(indentation: string.Empty, eol: " ", elasticTrivia: false);
-        var spacedNode = IsPatternSpacingRewriter.Shared.Visit(normalizedNode);
+        var spacedNode = ApplySpacingRewriters(normalizedNode);
+        return spacedNode?.ToString() ?? normalizedNode.ToString();
+    }
+
+    internal static SyntaxNode? ApplySpacingRewriters(SyntaxNode syntaxNode)
+    {
+        var spacedNode = IsPatternSpacingRewriter.Shared.Visit(syntaxNode);
         spacedNode = RelationalPatternSpacingRewriter.Shared.Visit(spacedNode);
         spacedNode = CatchFilterSpacingRewriter.Shared.Visit(spacedNode);
         spacedNode = SwitchExpressionSpacingRewriter.Shared.Visit(spacedNode);
-        return spacedNode?.ToString() ?? normalizedNode.ToString();
+        spacedNode = CollectionExpressionSpacingRewriter.Shared.Visit(spacedNode);
+        spacedNode = ObjectCreationArgumentListSpacingRewriter.Shared.Visit(spacedNode);
+        return spacedNode;
     }
 
     internal static void AddGitDiffLineRanges(string repositoryRootPath, string gitDiffOutput, ISet<string> sourceFilePathSet, Dictionary<string, List<LineRange>> changedLineRangesByFilePath)
@@ -375,27 +383,49 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
         base.VisitIsPatternExpression(node);
     }
 
+    public override void VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
+    {
+        ReportObjectCreationArgumentListSpacingIfNeeded(node);
+        base.VisitObjectCreationExpression(node);
+    }
+
+    public override void VisitReturnStatement(ReturnStatementSyntax node)
+    {
+        ReportCollectionExpressionKeywordSpacingIfNeeded(node, node.ReturnKeyword, node.Expression);
+        base.VisitReturnStatement(node);
+    }
+
+    public override void VisitYieldStatement(YieldStatementSyntax node)
+    {
+        ReportCollectionExpressionKeywordSpacingIfNeeded(node, node.ReturnOrBreakKeyword, node.Expression);
+        base.VisitYieldStatement(node);
+    }
+
     public override void VisitArgumentList(ArgumentListSyntax node)
     {
-        ReportIfMultiline(node, "CSG0002", $"Parameter and argument lists must stay on one physical line; lines over {Program.LineLengthThreshold} characters are allowed for this rule.");
+        ReportParameterOrArgumentListIfNeeded(node, $"Simple parameter and argument lists must stay on one physical line; lines over {Program.LineLengthThreshold} characters are allowed for this rule.");
         base.VisitArgumentList(node);
     }
 
     public override void VisitParameterList(ParameterListSyntax node)
     {
-        ReportIfMultiline(node, "CSG0002", $"Parameter and argument lists must stay on one physical line; declarations must remain one physical line even over {Program.LineLengthThreshold} characters.");
+        ReportParameterOrArgumentListIfNeeded(node, $"Simple parameter and argument lists must stay on one physical line; declarations must remain one physical line even over {Program.LineLengthThreshold} characters.");
         base.VisitParameterList(node);
     }
 
     public override void VisitIfStatement(IfStatementSyntax node)
     {
+        ReportNestedControlStatementIfNeeded(node);
+        ReportIfChainDirectControlBranchExpansionIfNeeded(node);
         ReportNestedBlockExpansionIfNeeded(node, node.Statement, node.Span, true);
         ReportSingleStatementIfNeeded(node);
+        ReportSingleLineElseClauseIfNeeded(node);
         base.VisitIfStatement(node);
     }
 
     public override void VisitForStatement(ForStatementSyntax node)
     {
+        ReportNestedControlStatementIfNeeded(node);
         ReportNestedBlockExpansionIfNeeded(node, node.Statement, node.Span, true);
         ReportSingleStatementControlIfNeeded(node, node.Statement, statement => node.WithStatement(statement));
         base.VisitForStatement(node);
@@ -403,6 +433,7 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
 
     public override void VisitForEachStatement(ForEachStatementSyntax node)
     {
+        ReportNestedControlStatementIfNeeded(node);
         ReportNestedBlockExpansionIfNeeded(node, node.Statement, node.Span, true);
         ReportSingleStatementControlIfNeeded(node, node.Statement, statement => node.WithStatement(statement));
         base.VisitForEachStatement(node);
@@ -410,6 +441,7 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
 
     public override void VisitForEachVariableStatement(ForEachVariableStatementSyntax node)
     {
+        ReportNestedControlStatementIfNeeded(node);
         ReportNestedBlockExpansionIfNeeded(node, node.Statement, node.Span, true);
         ReportSingleStatementControlIfNeeded(node, node.Statement, statement => node.WithStatement(statement));
         base.VisitForEachVariableStatement(node);
@@ -417,21 +449,42 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
 
     public override void VisitWhileStatement(WhileStatementSyntax node)
     {
+        ReportNestedControlStatementIfNeeded(node);
         ReportNestedBlockExpansionIfNeeded(node, node.Statement, node.Span, true);
         ReportSingleStatementControlIfNeeded(node, node.Statement, statement => node.WithStatement(statement));
         base.VisitWhileStatement(node);
     }
 
+    public override void VisitDoStatement(DoStatementSyntax node)
+    {
+        ReportNestedControlStatementIfNeeded(node);
+        ReportNestedBlockExpansionIfNeeded(node, node.Statement, node.Span, true);
+        ReportSingleStatementControlIfNeeded(node, node.Statement, statement => node.WithStatement(statement));
+        base.VisitDoStatement(node);
+    }
+
     public override void VisitUsingStatement(UsingStatementSyntax node)
     {
+        ReportNestedControlStatementIfNeeded(node);
         ReportNestedBlockExpansionIfNeeded(node, node.Statement, node.Span, true);
+        ReportSingleStatementControlIfNeeded(node, node.Statement, statement => node.WithStatement(statement));
         base.VisitUsingStatement(node);
     }
 
     public override void VisitLockStatement(LockStatementSyntax node)
     {
+        ReportNestedControlStatementIfNeeded(node);
         ReportNestedBlockExpansionIfNeeded(node, node.Statement, node.Span, true);
+        ReportSingleStatementControlIfNeeded(node, node.Statement, statement => node.WithStatement(statement));
         base.VisitLockStatement(node);
+    }
+
+    public override void VisitFixedStatement(FixedStatementSyntax node)
+    {
+        ReportNestedControlStatementIfNeeded(node);
+        ReportNestedBlockExpansionIfNeeded(node, node.Statement, node.Span, true);
+        ReportSingleStatementControlIfNeeded(node, node.Statement, statement => node.WithStatement(statement));
+        base.VisitFixedStatement(node);
     }
 
     public override void VisitTryStatement(TryStatementSyntax node)
@@ -457,10 +510,37 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
     {
         var linePositionSpan = _sourceText.Lines.GetLinePositionSpan(node.Span);
         if (linePositionSpan.Start.Line == linePositionSpan.End.Line) return;
+        if (ContainsMultilineSwitchExpression(node)) return;
 
         var canFixAutomatically = CanRewriteAutomatically(node);
         var fullMessage = canFixAutomatically ? message : $"{message} Automatic rewriting was skipped because the span contains comments, directives, disabled text, or multiline braced syntax.";
         Diagnostics.Add(new StyleDiagnostic(_sourceFilePath, node.Span, linePositionSpan.Start.Line + 1, linePositionSpan.Start.Character + 1, diagnosticId, fullMessage, canFixAutomatically, node));
+    }
+
+    private void ReportParameterOrArgumentListIfNeeded(SyntaxNode node, string message)
+    {
+        var replacementText = TryCreateParameterOrArgumentListReplacementText(node);
+        if (replacementText is null) return;
+
+        var linePositionSpan = _sourceText.Lines.GetLinePositionSpan(node.Span);
+        Diagnostics.Add(new StyleDiagnostic(_sourceFilePath, node.Span, linePositionSpan.Start.Line + 1, linePositionSpan.Start.Character + 1, "CSG0002", message, true, node, replacementText));
+    }
+
+    private string? TryCreateParameterOrArgumentListReplacementText(SyntaxNode node)
+    {
+        var linePositionSpan = _sourceText.Lines.GetLinePositionSpan(node.Span);
+        if (linePositionSpan.Start.Line == linePositionSpan.End.Line) return null;
+        if (ContainsMultilineSwitchExpression(node)) return null;
+        if (ContainsUnsafeTrivia(node)) return null;
+
+        var rewrittenNode = SimpleLambdaBlockExpressionRewriter.Shared.Visit(node) ?? node;
+        if (ContainsMultilineBracedSyntax(rewrittenNode)) return null;
+
+        var replacementText = Program.CreateSingleLineText(rewrittenNode);
+        if (replacementText.Contains('\r') || replacementText.Contains('\n')) return null;
+        if (replacementText == _sourceText.ToString(node.Span)) return null;
+
+        return replacementText;
     }
 
     private void ReportIsPatternSpacingIfNeeded(IsPatternExpressionSyntax node)
@@ -479,6 +559,37 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
         var fullMessage = canFixAutomatically ? message : $"{message} Automatic rewriting was skipped because the span contains comments, directives, or disabled text.";
         var linePositionSpan = _sourceText.Lines.GetLinePositionSpan(node.Span);
         Diagnostics.Add(new StyleDiagnostic(_sourceFilePath, node.Span, linePositionSpan.Start.Line + 1, linePositionSpan.Start.Character + 1, "CSG0009", fullMessage, canFixAutomatically, node, replacementText));
+    }
+
+    private void ReportCollectionExpressionKeywordSpacingIfNeeded(SyntaxNode node, SyntaxToken keywordToken, ExpressionSyntax? expression)
+    {
+        if (expression is not CollectionExpressionSyntax) return;
+        if (keywordToken.TrailingTrivia.Any(trivia => trivia.IsKind(SyntaxKind.WhitespaceTrivia) || trivia.IsKind(SyntaxKind.EndOfLineTrivia))) return;
+
+        var canFixAutomatically = !ContainsUnsafeTrivia(node);
+        var message = "Collection expressions returned by return or yield return must have one space after the keyword.";
+        var fullMessage = canFixAutomatically ? message : $"{message} Automatic rewriting was skipped because the span contains comments, directives, or disabled text.";
+        var linePositionSpan = _sourceText.Lines.GetLinePositionSpan(keywordToken.Span);
+        Diagnostics.Add(new StyleDiagnostic(_sourceFilePath, keywordToken.Span, linePositionSpan.Start.Line + 1, linePositionSpan.Start.Character + 1, "CSG0011", fullMessage, canFixAutomatically, node, keywordToken.Text + " "));
+    }
+
+    private void ReportObjectCreationArgumentListSpacingIfNeeded(ObjectCreationExpressionSyntax node)
+    {
+        if (node.ArgumentList is null) return;
+
+        var typeLastToken = node.Type.GetLastToken();
+        var openParenthesisToken = node.ArgumentList.OpenParenToken;
+        if (typeLastToken.RawKind == 0 || openParenthesisToken.RawKind == 0) return;
+
+        var spacingSpan = TextSpan.FromBounds(typeLastToken.Span.End, openParenthesisToken.SpanStart);
+        if (spacingSpan.Length == 0) return;
+
+        var spacingText = _sourceText.ToString(spacingSpan);
+        if (spacingText.Contains('\r') || spacingText.Contains('\n') || !spacingText.All(char.IsWhiteSpace)) return;
+
+        var message = "Object creation argument lists must not have whitespace between the type and opening parenthesis.";
+        var linePositionSpan = _sourceText.Lines.GetLinePositionSpan(spacingSpan);
+        Diagnostics.Add(new StyleDiagnostic(_sourceFilePath, spacingSpan, linePositionSpan.Start.Line + 1, linePositionSpan.Start.Character + 1, "CSG0012", message, true, node, string.Empty));
     }
 
     private void ReportTryBlockIfMultiline(TryStatementSyntax tryStatement)
@@ -513,31 +624,198 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
 
     private void ReportSingleStatementIfNeeded(IfStatementSyntax node)
     {
-        if (node.Else is not null) return;
-        ReportSingleStatementControlIfNeeded(node, node.Statement, statement => node.WithStatement(statement));
+        if (node.Parent is ElseClauseSyntax) return;
+        if (ShouldExpandNestedControlStatement(node) && !ShouldFormatNestedIfChainAsSingleLine(node)) return;
+
+        var replacementText = TryCreateIfStatementReplacementText(node);
+        if (replacementText is null) return;
+
+        ReportControlReplacementIfNeeded(node, node.Span, replacementText, "CSG0005", CreateSingleStatementControlMessage(), true);
+    }
+
+    private void ReportSingleLineElseClauseIfNeeded(IfStatementSyntax node)
+    {
+        if (node.Parent is ElseClauseSyntax) return;
+        if (node.Else is null) return;
+        if (node.Else.Statement is IfStatementSyntax) return;
+        if (ShouldExpandNestedControlStatement(node) && !ShouldFormatNestedIfChainAsSingleLine(node)) return;
+
+        var elseStatement = TryCreateSingleLineElseBranchStatement(node.Else.Statement);
+        if (elseStatement is null) return;
+
+        var replacementText = $"else {Program.CreateSingleLineText(elseStatement)}";
+        ReportSingleLineReplacementIfNeeded(node.Else, node.Else.Span, replacementText, "CSG0005", CreateSingleStatementControlMessage(), true);
     }
 
     private void ReportSingleStatementControlIfNeeded<TNode>(TNode node, StatementSyntax statement, Func<StatementSyntax, TNode> createReplacementNode)
         where TNode : SyntaxNode
     {
-        if (statement is BlockSyntax block)
+        if (node is StatementSyntax statementNode && ShouldExpandNestedControlStatement(statementNode)) return;
+
+        var bodyStatement = TryCreateSingleLineControlBodyStatement(statement);
+        if (bodyStatement is null) return;
+
+        var replacementNode = createReplacementNode(bodyStatement);
+        var replacementText = Program.CreateSingleLineText(replacementNode);
+        ReportSingleLineReplacementIfNeeded(node, node.Span, replacementText, "CSG0005", CreateSingleStatementControlMessage(), true);
+    }
+
+    private void ReportNestedControlStatementIfNeeded(StatementSyntax node)
+    {
+        if (node.Parent is ElseClauseSyntax) return;
+        if (node is IfStatementSyntax ifStatement && ShouldFormatNestedIfChainAsSingleLine(ifStatement)) return;
+        if (!ShouldExpandNestedControlStatement(node)) return;
+        if (!ControlStatementNeedsBlockExpansion(node)) return;
+
+        ReportNestedBlockExpansion(node, node.Span, "CSG0010", "A nested control statement that is the only statement inside a braced block must use expanded block formatting with braces.");
+    }
+
+    private void ReportIfChainDirectControlBranchExpansionIfNeeded(IfStatementSyntax ifStatement)
+    {
+        if (ifStatement.Parent is ElseClauseSyntax) return;
+        if (!IfChainHasDirectControlBranch(ifStatement)) return;
+
+        ReportNestedBlockExpansion(ifStatement, ifStatement.Span, "CSG0010", "If, else if, and else branches whose body is another control statement must use expanded block formatting with braces.");
+    }
+
+    private static string CreateSingleStatementControlMessage() => $"Top-level single-statement if, else if, else, for, foreach, while, do, lock, using, and fixed statements must omit braces and stay on one physical line when the resulting line is {Program.LineLengthThreshold} characters or shorter.";
+
+    private static bool ShouldFormatNestedIfChainAsSingleLine(IfStatementSyntax ifStatement) => ifStatement.Else is not null && ShouldExpandNestedControlStatement(ifStatement);
+
+    private static bool IfChainHasDirectControlBranch(IfStatementSyntax ifStatement)
+    {
+        var currentIfStatement = ifStatement;
+        while (true)
         {
-            if (block.Statements.Count != 1) return;
+            if (IsDirectControlBranch(currentIfStatement.Statement)) return true;
+            if (currentIfStatement.Else is null) return false;
+            if (currentIfStatement.Else.Statement is IfStatementSyntax elseIfStatement)
+            {
+                currentIfStatement = elseIfStatement;
+                continue;
+            }
 
-            if (IsNestedControlOrBracedStatement(block.Statements[0])) return;
+            return IsDirectControlBranch(currentIfStatement.Else.Statement);
+        }
+    }
 
-            var replacementNode = createReplacementNode(block.Statements[0]);
-            var replacementText = Program.CreateSingleLineText(replacementNode);
-            ReportSingleLineReplacementIfNeeded(node, node.Span, replacementText, "CSG0005", $"Single-statement if, for, foreach, and while statements must omit braces and stay on one physical line when the resulting line is {Program.LineLengthThreshold} characters or shorter.", true);
-            return;
+    private static bool IsDirectControlBranch(StatementSyntax statement) => statement is not BlockSyntax && IsNestedControlOrBracedStatement(statement);
+
+    private string? TryCreateIfStatementReplacementText(IfStatementSyntax ifStatement)
+    {
+        var outputLines = new List<string>();
+        var currentIfStatement = ifStatement;
+        var isFirstBranch = true;
+
+        while (true)
+        {
+            var statement = TryCreateSingleLineIfBranchStatement(currentIfStatement.Statement);
+            if (statement is null) return null;
+
+            var branchText = Program.CreateSingleLineText(currentIfStatement.WithStatement(statement).WithElse(null));
+            outputLines.Add(isFirstBranch ? branchText : $"else {branchText}");
+
+            if (currentIfStatement.Else is null) break;
+            if (currentIfStatement.Else.Statement is IfStatementSyntax elseIfStatement)
+            {
+                currentIfStatement = elseIfStatement;
+                isFirstBranch = false;
+                continue;
+            }
+
+            var elseStatement = TryCreateSingleLineElseBranchStatement(currentIfStatement.Else.Statement);
+            if (elseStatement is null) return null;
+
+            outputLines.Add($"else {Program.CreateSingleLineText(elseStatement)}");
+            break;
         }
 
-        if (IsNestedControlOrBracedStatement(statement)) return;
-        var linePositionSpan = _sourceText.Lines.GetLinePositionSpan(node.Span);
-        if (linePositionSpan.Start.Line == linePositionSpan.End.Line) return;
+        var replacementText = string.Join(_endOfLine, outputLines);
+        return IndentContinuationLines(replacementText, GetLineIndentation(ifStatement.SpanStart));
+    }
 
-        var singleLineText = Program.CreateSingleLineText(node);
-        ReportSingleLineReplacementIfNeeded(node, node.Span, singleLineText, "CSG0005", $"Single-statement if, for, foreach, and while statements must keep the control statement and body on one physical line when the resulting line is {Program.LineLengthThreshold} characters or shorter.");
+    private static IfStatementSyntax? TryCreateSingleLineIfStatement(IfStatementSyntax ifStatement)
+    {
+        var statement = TryCreateSingleLineIfBranchStatement(ifStatement.Statement);
+        if (statement is null) return null;
+
+        var replacementIfStatement = ifStatement.WithStatement(statement);
+        if (ifStatement.Else is null) return replacementIfStatement;
+
+        var elseStatement = TryCreateSingleLineElseBranchStatement(ifStatement.Else.Statement);
+        if (elseStatement is null) return null;
+
+        return replacementIfStatement.WithElse(ifStatement.Else.WithStatement(elseStatement));
+    }
+
+    private static StatementSyntax? TryCreateSingleLineIfBranchStatement(StatementSyntax statement)
+    {
+        if (statement is BlockSyntax block)
+        {
+            if (block.Statements.Count != 1) return null;
+
+            return TryCreateSingleLineIfBranchStatement(block.Statements[0]);
+        }
+
+        return IsNestedControlOrBracedStatement(statement) ? null : statement;
+    }
+
+    private static StatementSyntax? TryCreateSingleLineElseBranchStatement(StatementSyntax statement)
+    {
+        if (statement is BlockSyntax block)
+        {
+            if (block.Statements.Count != 1) return null;
+
+            return TryCreateSingleLineElseBranchStatement(block.Statements[0]);
+        }
+
+        if (statement is IfStatementSyntax elseIfStatement) return TryCreateSingleLineIfStatement(elseIfStatement);
+
+        return TryCreateSingleLineControlBodyStatement(statement);
+    }
+
+    private static StatementSyntax? TryCreateSingleLineControlBodyStatement(StatementSyntax statement)
+    {
+        if (statement is BlockSyntax block)
+        {
+            if (block.Statements.Count != 1) return null;
+
+            return TryCreateSingleLineControlBodyStatement(block.Statements[0]);
+        }
+
+        return IsNestedControlOrBracedStatement(statement) ? null : statement;
+    }
+
+    private static bool ControlStatementNeedsBlockExpansion(StatementSyntax statement)
+        => statement switch
+        {
+            IfStatementSyntax ifStatement => IfStatementNeedsBlockExpansion(ifStatement),
+            ForStatementSyntax forStatement => forStatement.Statement is not BlockSyntax,
+            ForEachStatementSyntax forEachStatement => forEachStatement.Statement is not BlockSyntax,
+            ForEachVariableStatementSyntax forEachVariableStatement => forEachVariableStatement.Statement is not BlockSyntax,
+            WhileStatementSyntax whileStatement => whileStatement.Statement is not BlockSyntax,
+            DoStatementSyntax doStatement => doStatement.Statement is not BlockSyntax,
+            UsingStatementSyntax usingStatement => usingStatement.Statement is not BlockSyntax,
+            LockStatementSyntax lockStatement => lockStatement.Statement is not BlockSyntax,
+            FixedStatementSyntax fixedStatement => fixedStatement.Statement is not BlockSyntax,
+            _ => false
+        };
+
+    private static bool IfStatementNeedsBlockExpansion(IfStatementSyntax ifStatement)
+    {
+        var currentIfStatement = ifStatement;
+        while (true)
+        {
+            if (currentIfStatement.Statement is not BlockSyntax) return true;
+            if (currentIfStatement.Else is null) return false;
+            if (currentIfStatement.Else.Statement is IfStatementSyntax elseIfStatement)
+            {
+                currentIfStatement = elseIfStatement;
+                continue;
+            }
+
+            return currentIfStatement.Else.Statement is not BlockSyntax;
+        }
     }
 
     private void ReportConstructorInitializerIfNeeded(ConstructorDeclarationSyntax node)
@@ -591,6 +869,8 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
 
     private void ReportExpressionBodiedMemberIfNeeded(SyntaxNode memberNode, ArrowExpressionClauseSyntax expressionBody, SyntaxToken semicolonToken)
     {
+        if (ContainsMultilineSwitchExpression(expressionBody.Expression)) return;
+
         var replacementText = TryCreateExpressionBodiedMemberReplacement(memberNode, expressionBody, semicolonToken);
         if (replacementText is null || replacementText == _sourceText.ToString(memberNode.Span)) return;
 
@@ -603,7 +883,20 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
 
     private void ReportSingleLineReplacementIfNeeded(SyntaxNode node, TextSpan span, string replacementText, string diagnosticId, string message, bool allowOwnBracedSyntax = false)
     {
+        if (ContainsMultilineSwitchExpression(node)) return;
         if (!FitsSinglePhysicalLine(span, replacementText)) return;
+        if (replacementText == _sourceText.ToString(span)) return;
+
+        var canFixAutomatically = allowOwnBracedSyntax ? !ContainsUnsafeTrivia(node) : CanRewriteAutomatically(node);
+        var fullMessage = canFixAutomatically ? message : $"{message} Automatic rewriting was skipped because the span contains comments, directives, disabled text, or multiline braced syntax.";
+        var linePositionSpan = _sourceText.Lines.GetLinePositionSpan(span);
+        Diagnostics.Add(new StyleDiagnostic(_sourceFilePath, span, linePositionSpan.Start.Line + 1, linePositionSpan.Start.Character + 1, diagnosticId, fullMessage, canFixAutomatically, node, replacementText));
+    }
+
+    private void ReportControlReplacementIfNeeded(SyntaxNode node, TextSpan span, string replacementText, string diagnosticId, string message, bool allowOwnBracedSyntax = false)
+    {
+        if (ContainsMultilineSwitchExpression(node)) return;
+        if (!FitsReplacementPhysicalLines(span, replacementText)) return;
         if (replacementText == _sourceText.ToString(span)) return;
 
         var canFixAutomatically = allowOwnBracedSyntax ? !ContainsUnsafeTrivia(node) : CanRewriteAutomatically(node);
@@ -627,7 +920,8 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
             var firstLine = $"{headerText} => {expressionHeadText}";
             if (!FitsPhysicalLine(memberNode.SpanStart, firstLine)) return null;
 
-            return CreateExpressionWithAlignedDelimiterReplacement(firstLine, objectInitializer, baseIndentation, semicolonText);
+            var replacementText = CreateExpressionWithAlignedDelimiterReplacement(firstLine, objectInitializer, baseIndentation, semicolonText);
+            return AddAttributeLinesToExpressionBodiedMemberReplacement(memberNode, replacementText, baseIndentation);
         }
 
         if (expression is CollectionExpressionSyntax collectionExpression)
@@ -636,7 +930,7 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
             if (collectionExpressionText.Length == 0)
             {
                 var emptyCollectionLine = $"{headerText} => []{semicolonText}";
-                return FitsPhysicalLine(memberNode.SpanStart, emptyCollectionLine) ? emptyCollectionLine : null;
+                return FitsPhysicalLine(memberNode.SpanStart, emptyCollectionLine) ? AddAttributeLinesToExpressionBodiedMemberReplacement(memberNode, emptyCollectionLine, baseIndentation) : null;
             }
 
             var firstLine = $"{headerText} =>";
@@ -645,16 +939,30 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
             var outputLines = new List<string> { firstLine };
             outputLines.AddRange(SplitLines(collectionExpressionText));
 
-            return string.Join(_endOfLine, outputLines);
+            return AddAttributeLinesToExpressionBodiedMemberReplacement(memberNode, string.Join(_endOfLine, outputLines), baseIndentation);
         }
 
+        if (IsExpressionBodiedMemberArrowOnDeclarationLine(expressionBody)) return null;
+
         var singleLineReplacementText = $"{headerText} => {Program.CreateSingleLineText(expression)}{semicolonText}";
-        return FitsPhysicalLine(memberNode.SpanStart, singleLineReplacementText) ? singleLineReplacementText : null;
+        return FitsPhysicalLine(memberNode.SpanStart, singleLineReplacementText) ? AddAttributeLinesToExpressionBodiedMemberReplacement(memberNode, singleLineReplacementText, baseIndentation) : null;
+    }
+
+    private bool IsExpressionBodiedMemberArrowOnDeclarationLine(ArrowExpressionClauseSyntax expressionBody)
+    {
+        var previousToken = expressionBody.ArrowToken.GetPreviousToken();
+        if (previousToken.RawKind == 0) return false;
+
+        var previousTokenLine = _sourceText.Lines.GetLinePosition(previousToken.Span.End).Line;
+        var arrowLine = _sourceText.Lines.GetLinePosition(expressionBody.ArrowToken.SpanStart).Line;
+        return previousTokenLine == arrowLine;
     }
 
     private string CreateExpressionWithAlignedDelimiterReplacement(string firstLine, InitializerExpressionSyntax initializer, string baseIndentation, string semicolonText)
     {
-        var normalizedInitializerLines = SplitLines(initializer.NormalizeWhitespace(indentation: "    ", eol: _endOfLine, elasticTrivia: false).ToString());
+        var normalizedInitializer = initializer.NormalizeWhitespace(indentation: "    ", eol: _endOfLine, elasticTrivia: false);
+        var spacedInitializer = Program.ApplySpacingRewriters(normalizedInitializer) ?? normalizedInitializer;
+        var normalizedInitializerLines = SplitLines(spacedInitializer.ToString());
         if (normalizedInitializerLines.Count == 0) return firstLine + semicolonText;
         if (normalizedInitializerLines.Count == 1) return string.Join(_endOfLine, firstLine, baseIndentation + normalizedInitializerLines[0] + semicolonText);
 
@@ -666,6 +974,23 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
 
             outputLines.Add(baseIndentation + line);
         }
+
+        return string.Join(_endOfLine, outputLines);
+    }
+
+    private string AddAttributeLinesToExpressionBodiedMemberReplacement(SyntaxNode memberNode, string replacementText, string baseIndentation)
+    {
+        var attributeLines = CreateExpressionBodiedMemberAttributeLines(memberNode);
+        if (attributeLines.Count == 0) return replacementText;
+
+        var replacementLines = SplitLines(replacementText);
+        if (replacementLines.Count == 0) return replacementText;
+
+        var outputLines = new List<string> { attributeLines[0] };
+        for (var index = 1; index < attributeLines.Count; index++) outputLines.Add(baseIndentation + attributeLines[index]);
+
+        outputLines.Add(baseIndentation + replacementLines[0]);
+        outputLines.AddRange(replacementLines.Skip(1));
 
         return string.Join(_endOfLine, outputLines);
     }
@@ -684,6 +1009,23 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
         return FitsPhysicalLine(span.Start, replacementText);
     }
 
+    private bool FitsReplacementPhysicalLines(TextSpan span, string replacementText)
+    {
+        var replacementLines = SplitLines(replacementText);
+        if (replacementLines.Count == 0) return true;
+        if (!FitsPhysicalLine(span.Start, replacementLines[0])) return false;
+
+        for (var index = 1; index < replacementLines.Count; index++)
+        {
+            if (replacementLines[index].Length > Program.LineLengthThreshold)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private bool FitsPhysicalLine(int spanStart, string lineText)
     {
         var linePosition = _sourceText.Lines.GetLinePosition(spanStart);
@@ -694,10 +1036,7 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
     {
         var rewrittenNode = NestedControlBlockRewriter.Shared.Visit(node) ?? node;
         var normalizedNode = rewrittenNode.NormalizeWhitespace(indentation: "    ", eol: _endOfLine, elasticTrivia: false);
-        var spacedNode = IsPatternSpacingRewriter.Shared.Visit(normalizedNode);
-        spacedNode = RelationalPatternSpacingRewriter.Shared.Visit(spacedNode);
-        spacedNode = CatchFilterSpacingRewriter.Shared.Visit(spacedNode);
-        spacedNode = SwitchExpressionSpacingRewriter.Shared.Visit(spacedNode);
+        var spacedNode = Program.ApplySpacingRewriters(normalizedNode);
         var normalizedText = (spacedNode ?? normalizedNode).ToString();
         return IndentContinuationLines(normalizedText, GetLineIndentation(span.Start));
     }
@@ -715,7 +1054,10 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
 
         for (var index = 1; index < lines.Count; index++)
         {
-            if (lines[index].Length > 0) lines[index] = baseIndentation + lines[index];
+            if (lines[index].Length > 0)
+            {
+                lines[index] = baseIndentation + lines[index];
+            }
         }
 
         return string.Join(_endOfLine, lines);
@@ -730,6 +1072,54 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
 
         return IsNestedControlOrBracedStatement(statement) && TryGetDirectNestedBodyBlock(statement) is { } nestedBlock && IsSingleLine(nestedBlock.Span);
     }
+
+    private static bool ShouldExpandNestedControlStatement(StatementSyntax statement)
+    {
+        if (statement.Parent is not BlockSyntax block) return false;
+        if (!IsControlStatementBodyBlock(block)) return false;
+        if (statement is IfStatementSyntax && IsMethodLikeBodyBlock(block)) return false;
+        return block.Statements.Count == 1 && IsSameNode(block.Statements[0], statement);
+    }
+
+    private static bool IsMethodLikeBodyBlock(BlockSyntax block)
+        => block.Parent switch
+        {
+            MethodDeclarationSyntax methodDeclaration => methodDeclaration.Body is not null && IsSameNode(methodDeclaration.Body, block),
+            LocalFunctionStatementSyntax localFunctionStatement => localFunctionStatement.Body is not null && IsSameNode(localFunctionStatement.Body, block),
+            ConstructorDeclarationSyntax constructorDeclaration => constructorDeclaration.Body is not null && IsSameNode(constructorDeclaration.Body, block),
+            DestructorDeclarationSyntax destructorDeclaration => destructorDeclaration.Body is not null && IsSameNode(destructorDeclaration.Body, block),
+            OperatorDeclarationSyntax operatorDeclaration => operatorDeclaration.Body is not null && IsSameNode(operatorDeclaration.Body, block),
+            ConversionOperatorDeclarationSyntax conversionOperatorDeclaration => conversionOperatorDeclaration.Body is not null && IsSameNode(conversionOperatorDeclaration.Body, block),
+            AccessorDeclarationSyntax accessorDeclaration => accessorDeclaration.Body is not null && IsSameNode(accessorDeclaration.Body, block),
+            ParenthesizedLambdaExpressionSyntax parenthesizedLambdaExpression => parenthesizedLambdaExpression.Block is not null && IsSameNode(parenthesizedLambdaExpression.Block, block),
+            SimpleLambdaExpressionSyntax simpleLambdaExpression => simpleLambdaExpression.Block is not null && IsSameNode(simpleLambdaExpression.Block, block),
+            AnonymousMethodExpressionSyntax anonymousMethodExpression => anonymousMethodExpression.Block is not null && IsSameNode(anonymousMethodExpression.Block, block),
+            _ => false
+        };
+
+    private static bool IsControlStatementBodyBlock(BlockSyntax block)
+        => block.Parent switch
+        {
+            _ when IsMethodLikeBodyBlock(block) => true,
+            IfStatementSyntax ifStatement => IsSameNode(ifStatement.Statement, block),
+            ElseClauseSyntax elseClause => IsSameNode(elseClause.Statement, block),
+            ForStatementSyntax forStatement => IsSameNode(forStatement.Statement, block),
+            ForEachStatementSyntax forEachStatement => IsSameNode(forEachStatement.Statement, block),
+            ForEachVariableStatementSyntax forEachVariableStatement => IsSameNode(forEachVariableStatement.Statement, block),
+            WhileStatementSyntax whileStatement => IsSameNode(whileStatement.Statement, block),
+            DoStatementSyntax doStatement => IsSameNode(doStatement.Statement, block),
+            UsingStatementSyntax usingStatement => IsSameNode(usingStatement.Statement, block),
+            LockStatementSyntax lockStatement => IsSameNode(lockStatement.Statement, block),
+            FixedStatementSyntax fixedStatement => IsSameNode(fixedStatement.Statement, block),
+            TryStatementSyntax tryStatement => IsSameNode(tryStatement.Block, block),
+            CatchClauseSyntax catchClause => IsSameNode(catchClause.Block, block),
+            FinallyClauseSyntax finallyClause => IsSameNode(finallyClause.Block, block),
+            CheckedStatementSyntax checkedStatement => IsSameNode(checkedStatement.Block, block),
+            UnsafeStatementSyntax unsafeStatement => IsSameNode(unsafeStatement.Block, block),
+            _ => false
+        };
+
+    private static bool IsSameNode(SyntaxNode firstNode, SyntaxNode secondNode) => firstNode.RawKind == secondNode.RawKind && firstNode.Span == secondNode.Span;
 
     private bool ContainsDirectNestedControlOrBracedStatement(BlockSyntax block) => block.Statements.Any(IsNestedControlOrBracedStatement);
 
@@ -747,6 +1137,7 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
             ForEachStatementSyntax forEachStatement => forEachStatement.Statement as BlockSyntax,
             ForEachVariableStatementSyntax forEachVariableStatement => forEachVariableStatement.Statement as BlockSyntax,
             WhileStatementSyntax whileStatement => whileStatement.Statement as BlockSyntax,
+            DoStatementSyntax doStatement => doStatement.Statement as BlockSyntax,
             UsingStatementSyntax usingStatement => usingStatement.Statement as BlockSyntax,
             LockStatementSyntax lockStatement => lockStatement.Statement as BlockSyntax,
             TryStatementSyntax tryStatement => tryStatement.Block,
@@ -758,21 +1149,39 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
         };
 
     private static bool IsNestedControlOrBracedStatement(StatementSyntax statement)
-        => statement is IfStatementSyntax or ForStatementSyntax or ForEachStatementSyntax or ForEachVariableStatementSyntax or WhileStatementSyntax or UsingStatementSyntax or LockStatementSyntax or TryStatementSyntax or SwitchStatementSyntax or LocalFunctionStatementSyntax or CheckedStatementSyntax or UnsafeStatementSyntax or FixedStatementSyntax;
+        => statement is IfStatementSyntax or ForStatementSyntax or ForEachStatementSyntax or ForEachVariableStatementSyntax or WhileStatementSyntax or DoStatementSyntax or UsingStatementSyntax or LockStatementSyntax or TryStatementSyntax or SwitchStatementSyntax or LocalFunctionStatementSyntax or CheckedStatementSyntax or UnsafeStatementSyntax or FixedStatementSyntax;
 
     private static string? TryCreateExpressionBodiedMemberHeaderText(SyntaxNode memberNode)
         => memberNode switch
         {
-            MethodDeclarationSyntax methodDeclaration => Program.CreateSingleLineText(methodDeclaration.WithBody(null).WithExpressionBody(null).WithSemicolonToken(default)),
-            LocalFunctionStatementSyntax localFunctionStatement => Program.CreateSingleLineText(localFunctionStatement.WithBody(null).WithExpressionBody(null).WithSemicolonToken(default)),
-            ConstructorDeclarationSyntax constructorDeclaration => Program.CreateSingleLineText(constructorDeclaration.WithBody(null).WithExpressionBody(null).WithSemicolonToken(default)),
-            DestructorDeclarationSyntax destructorDeclaration => Program.CreateSingleLineText(destructorDeclaration.WithBody(null).WithExpressionBody(null).WithSemicolonToken(default)),
-            PropertyDeclarationSyntax propertyDeclaration => Program.CreateSingleLineText(propertyDeclaration.WithExpressionBody(null).WithSemicolonToken(default)),
-            IndexerDeclarationSyntax indexerDeclaration => Program.CreateSingleLineText(indexerDeclaration.WithExpressionBody(null).WithSemicolonToken(default)),
-            OperatorDeclarationSyntax operatorDeclaration => Program.CreateSingleLineText(operatorDeclaration.WithBody(null).WithExpressionBody(null).WithSemicolonToken(default)),
-            ConversionOperatorDeclarationSyntax conversionOperatorDeclaration => Program.CreateSingleLineText(conversionOperatorDeclaration.WithBody(null).WithExpressionBody(null).WithSemicolonToken(default)),
+            MethodDeclarationSyntax methodDeclaration => Program.CreateSingleLineText(methodDeclaration.WithAttributeLists(SyntaxFactory.List<AttributeListSyntax>()).WithBody(null).WithExpressionBody(null).WithSemicolonToken(default)),
+            LocalFunctionStatementSyntax localFunctionStatement => Program.CreateSingleLineText(localFunctionStatement.WithAttributeLists(SyntaxFactory.List<AttributeListSyntax>()).WithBody(null).WithExpressionBody(null).WithSemicolonToken(default)),
+            ConstructorDeclarationSyntax constructorDeclaration => Program.CreateSingleLineText(constructorDeclaration.WithAttributeLists(SyntaxFactory.List<AttributeListSyntax>()).WithBody(null).WithExpressionBody(null).WithSemicolonToken(default)),
+            DestructorDeclarationSyntax destructorDeclaration => Program.CreateSingleLineText(destructorDeclaration.WithAttributeLists(SyntaxFactory.List<AttributeListSyntax>()).WithBody(null).WithExpressionBody(null).WithSemicolonToken(default)),
+            PropertyDeclarationSyntax propertyDeclaration => Program.CreateSingleLineText(propertyDeclaration.WithAttributeLists(SyntaxFactory.List<AttributeListSyntax>()).WithExpressionBody(null).WithSemicolonToken(default)),
+            IndexerDeclarationSyntax indexerDeclaration => Program.CreateSingleLineText(indexerDeclaration.WithAttributeLists(SyntaxFactory.List<AttributeListSyntax>()).WithExpressionBody(null).WithSemicolonToken(default)),
+            OperatorDeclarationSyntax operatorDeclaration => Program.CreateSingleLineText(operatorDeclaration.WithAttributeLists(SyntaxFactory.List<AttributeListSyntax>()).WithBody(null).WithExpressionBody(null).WithSemicolonToken(default)),
+            ConversionOperatorDeclarationSyntax conversionOperatorDeclaration => Program.CreateSingleLineText(conversionOperatorDeclaration.WithAttributeLists(SyntaxFactory.List<AttributeListSyntax>()).WithBody(null).WithExpressionBody(null).WithSemicolonToken(default)),
             _ => null
         };
+
+    private static IReadOnlyList<string> CreateExpressionBodiedMemberAttributeLines(SyntaxNode memberNode)
+    {
+        var attributeLists = memberNode switch
+        {
+            MethodDeclarationSyntax methodDeclaration => methodDeclaration.AttributeLists,
+            LocalFunctionStatementSyntax localFunctionStatement => localFunctionStatement.AttributeLists,
+            ConstructorDeclarationSyntax constructorDeclaration => constructorDeclaration.AttributeLists,
+            DestructorDeclarationSyntax destructorDeclaration => destructorDeclaration.AttributeLists,
+            PropertyDeclarationSyntax propertyDeclaration => propertyDeclaration.AttributeLists,
+            IndexerDeclarationSyntax indexerDeclaration => indexerDeclaration.AttributeLists,
+            OperatorDeclarationSyntax operatorDeclaration => operatorDeclaration.AttributeLists,
+            ConversionOperatorDeclarationSyntax conversionOperatorDeclaration => conversionOperatorDeclaration.AttributeLists,
+            _ => SyntaxFactory.List<AttributeListSyntax>()
+        };
+
+        return attributeLists.Count == 0 ? [] : attributeLists.Select(Program.CreateSingleLineText).ToList();
+    }
 
     private static InitializerExpressionSyntax? TryGetObjectInitializer(ExpressionSyntax expression)
         => expression switch
@@ -836,6 +1245,19 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
 
             var linePositionSpan = _sourceText.Lines.GetLinePositionSpan(descendantNode.Span);
             if (linePositionSpan.Start.Line != linePositionSpan.End.Line) return true;
+        }
+
+        return false;
+    }
+
+    private bool ContainsMultilineSwitchExpression(SyntaxNode node)
+    {
+        foreach (var switchExpression in node.DescendantNodesAndSelf(descendIntoTrivia: false).OfType<SwitchExpressionSyntax>())
+        {
+            if (!IsSingleLine(switchExpression.Span))
+            {
+                return true;
+            }
         }
 
         return false;
@@ -932,6 +1354,12 @@ internal sealed class NestedControlBlockRewriter : CSharpSyntaxRewriter
         return whileStatement.WithStatement(EnsureBlock(whileStatement.Statement));
     }
 
+    public override SyntaxNode? VisitDoStatement(DoStatementSyntax node)
+    {
+        var doStatement = (DoStatementSyntax?)base.VisitDoStatement(node) ?? node;
+        return doStatement.WithStatement(EnsureBlock(doStatement.Statement));
+    }
+
     public override SyntaxNode? VisitUsingStatement(UsingStatementSyntax node)
     {
         var usingStatement = (UsingStatementSyntax?)base.VisitUsingStatement(node) ?? node;
@@ -942,6 +1370,12 @@ internal sealed class NestedControlBlockRewriter : CSharpSyntaxRewriter
     {
         var lockStatement = (LockStatementSyntax?)base.VisitLockStatement(node) ?? node;
         return lockStatement.WithStatement(EnsureBlock(lockStatement.Statement));
+    }
+
+    public override SyntaxNode? VisitFixedStatement(FixedStatementSyntax node)
+    {
+        var fixedStatement = (FixedStatementSyntax?)base.VisitFixedStatement(node) ?? node;
+        return fixedStatement.WithStatement(EnsureBlock(fixedStatement.Statement));
     }
 
     private static StatementSyntax EnsureBlock(StatementSyntax statement)
@@ -1022,6 +1456,54 @@ internal sealed class SwitchExpressionSpacingRewriter : CSharpSyntaxRewriter
     }
 
     private static bool HasEndOfLineTrivia(SyntaxTriviaList syntaxTriviaList) => syntaxTriviaList.Any(trivia => trivia.IsKind(SyntaxKind.EndOfLineTrivia));
+}
+
+internal sealed class CollectionExpressionSpacingRewriter : CSharpSyntaxRewriter
+{
+    public static CollectionExpressionSpacingRewriter Shared { get; } = new();
+
+    public override SyntaxNode? VisitReturnStatement(ReturnStatementSyntax node)
+    {
+        var returnStatement = (ReturnStatementSyntax?)base.VisitReturnStatement(node) ?? node;
+        return returnStatement.Expression is CollectionExpressionSyntax ? returnStatement.WithReturnKeyword(EnsureTrailingSpace(returnStatement.ReturnKeyword)) : returnStatement;
+    }
+
+    public override SyntaxNode? VisitYieldStatement(YieldStatementSyntax node)
+    {
+        var yieldStatement = (YieldStatementSyntax?)base.VisitYieldStatement(node) ?? node;
+        return yieldStatement.Expression is CollectionExpressionSyntax ? yieldStatement.WithReturnOrBreakKeyword(EnsureTrailingSpace(yieldStatement.ReturnOrBreakKeyword)) : yieldStatement;
+    }
+
+    private static SyntaxToken EnsureTrailingSpace(SyntaxToken syntaxToken)
+    {
+        if (syntaxToken.TrailingTrivia.Any(trivia => trivia.IsKind(SyntaxKind.WhitespaceTrivia) || trivia.IsKind(SyntaxKind.EndOfLineTrivia))) return syntaxToken;
+        return syntaxToken.WithTrailingTrivia(SyntaxFactory.Space);
+    }
+}
+
+internal sealed class ObjectCreationArgumentListSpacingRewriter : CSharpSyntaxRewriter
+{
+    public static ObjectCreationArgumentListSpacingRewriter Shared { get; } = new();
+
+    public override SyntaxNode? VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
+    {
+        var objectCreationExpression = (ObjectCreationExpressionSyntax?)base.VisitObjectCreationExpression(node) ?? node;
+        if (objectCreationExpression.ArgumentList is null) return objectCreationExpression;
+
+        var typeLastToken = objectCreationExpression.Type.GetLastToken();
+        var openParenthesisToken = objectCreationExpression.ArgumentList.OpenParenToken;
+        if (typeLastToken.RawKind == 0 || openParenthesisToken.RawKind == 0) return objectCreationExpression;
+        if (!CanRemoveSpacing(typeLastToken.TrailingTrivia, openParenthesisToken.LeadingTrivia)) return objectCreationExpression;
+        if (typeLastToken.TrailingTrivia.Count == 0 && openParenthesisToken.LeadingTrivia.Count == 0) return objectCreationExpression;
+
+        var type = objectCreationExpression.Type.ReplaceToken(typeLastToken, typeLastToken.WithTrailingTrivia());
+        var argumentList = objectCreationExpression.ArgumentList.WithOpenParenToken(openParenthesisToken.WithLeadingTrivia());
+        return objectCreationExpression.WithType(type).WithArgumentList(argumentList);
+    }
+
+    private static bool CanRemoveSpacing(SyntaxTriviaList trailingTrivia, SyntaxTriviaList leadingTrivia) => ContainsOnlyWhitespaceTrivia(trailingTrivia) && ContainsOnlyWhitespaceTrivia(leadingTrivia);
+
+    private static bool ContainsOnlyWhitespaceTrivia(SyntaxTriviaList triviaList) => triviaList.All(trivia => trivia.IsKind(SyntaxKind.WhitespaceTrivia));
 }
 
 internal sealed class FixPlan(bool fixEveryFile, ImmutableHashSet<string> fullFileFixPaths, ImmutableDictionary<string, ImmutableArray<LineRange>> changedLineRangesByFilePath, ImmutableArray<string> warningMessages)
@@ -1188,3 +1670,38 @@ internal sealed record StyleDiagnostic(string SourceFilePath, TextSpan Span, int
 }
 
 internal sealed record FileResult(IReadOnlyList<StyleDiagnostic> Diagnostics, bool Modified, int UnsafeFixCount);
+
+internal sealed class SimpleLambdaBlockExpressionRewriter : CSharpSyntaxRewriter
+{
+    public static SimpleLambdaBlockExpressionRewriter Shared { get; } = new();
+
+    public override SyntaxNode? VisitParenthesizedLambdaExpression(ParenthesizedLambdaExpressionSyntax node)
+    {
+        var lambdaExpression = (ParenthesizedLambdaExpressionSyntax?)base.VisitParenthesizedLambdaExpression(node) ?? node;
+        if (lambdaExpression.Block is not { } block) return lambdaExpression;
+
+        var expression = TryGetSingleLambdaBlockExpression(block);
+        return expression is null ? lambdaExpression : lambdaExpression.WithBlock(null).WithExpressionBody(expression.WithoutTrivia());
+    }
+
+    public override SyntaxNode? VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax node)
+    {
+        var lambdaExpression = (SimpleLambdaExpressionSyntax?)base.VisitSimpleLambdaExpression(node) ?? node;
+        if (lambdaExpression.Block is not { } block) return lambdaExpression;
+
+        var expression = TryGetSingleLambdaBlockExpression(block);
+        return expression is null ? lambdaExpression : lambdaExpression.WithBlock(null).WithExpressionBody(expression.WithoutTrivia());
+    }
+
+    private static ExpressionSyntax? TryGetSingleLambdaBlockExpression(BlockSyntax block)
+    {
+        if (block.Statements.Count != 1) return null;
+
+        return block.Statements[0] switch
+        {
+            ReturnStatementSyntax { Expression: { } expression } => expression,
+            ExpressionStatementSyntax expressionStatement => expressionStatement.Expression,
+            _ => null
+        };
+    }
+}

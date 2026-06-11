@@ -106,7 +106,10 @@ public sealed partial class SystemAudioVolumeController : ISystemAudioVolumeCont
         }
         finally
         {
-            if (shouldDisposeComApartment) comApartment.Dispose();
+            if (shouldDisposeComApartment)
+            {
+                comApartment.Dispose();
+            }
         }
     }
 
