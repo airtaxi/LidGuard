@@ -4,6 +4,7 @@ import { spawn } from "node:child_process";
 
 const lidGuardHookCommand = __LIDGUARD_HOOK_COMMAND_JSON__;
 const trackedEventTypes = new Set([
+  "message.part.updated",
   "permission.asked",
   "permission.replied",
   "question.asked",
@@ -17,6 +18,8 @@ const trackedEventTypes = new Set([
   "session.idle",
   "session.status"
 ]);
+
+const lastAssistantMessageBySession = new Map();
 
 function collectText(parts) {
   if (!Array.isArray(parts)) return "";
@@ -36,7 +39,14 @@ function createBasePayload(eventName, directory, worktree) {
 
 function extractSessionID(event) {
   const properties = event?.properties || {};
-  return properties.sessionID || properties.sessionId || properties.info?.id || "";
+  const part = properties.part || {};
+  return properties.sessionID || properties.sessionId || part.sessionID || part.sessionId || properties.info?.id || "";
+}
+
+function extractPartText(event) {
+  const part = event?.properties?.part;
+  if (!part || part.type !== "text" || typeof part.text !== "string") return "";
+  return part.text.trim();
 }
 
 function extractSessionStatus(event) {
@@ -114,12 +124,30 @@ export const LidGuardOpenCodePlugin = async ({ directory, worktree }) => ({
 
   event: async ({ event }) => {
     if (!event || !trackedEventTypes.has(event.type)) return;
-    await runHook(event.type, {
+
+    const sessionID = extractSessionID(event);
+
+    if (event.type === "message.part.updated") {
+      const text = extractPartText(event);
+      if (text.length > 0 && sessionID) lastAssistantMessageBySession.set(sessionID, text);
+      return;
+    }
+
+    const isIdleStatus = event.type === "session.status" && extractSessionStatus(event) === "idle";
+    const isStopEvent = event.type === "session.idle" || event.type === "session.deleted" || event.type === "session.error" || isIdleStatus;
+
+    const payload = {
       ...createBasePayload(event.type, directory, worktree),
-      sessionID: extractSessionID(event),
+      sessionID,
       sessionStatus: extractSessionStatus(event),
       event
-    });
+    };
+
+    if (isStopEvent) payload.lastAssistantMessage = lastAssistantMessageBySession.get(sessionID) || "";
+
+    await runHook(event.type, payload);
+
+    if (isStopEvent) lastAssistantMessageBySession.delete(sessionID);
   }
 });
 

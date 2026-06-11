@@ -102,8 +102,8 @@ internal static class PushNotificationMessageFactory
         if (!string.IsNullOrWhiteSpace(webhookEvent.EndReason)) details.Add(LidGuardNotificationText.PushEndReason(webhookEvent.EndReason));
         if (webhookEvent.ActiveSessionCount is not null) details.Add(LidGuardNotificationText.PushActiveSessionsRemaining(webhookEvent.ActiveSessionCount.Value));
         if (!string.IsNullOrWhiteSpace(webhookEvent.InputPromptPreview)) details.Add(LidGuardNotificationText.PushInputPrompt(webhookEvent.InputPromptPreview));
-        var lastResponsePreview = WebhookTextPreview.Create(webhookEvent.LastResponse);
-        if (!string.IsNullOrWhiteSpace(lastResponsePreview)) details.Add(LidGuardNotificationText.PushLastResponse(lastResponsePreview));
+        var lastAssistantMessagePreview = WebhookTextPreview.Create(webhookEvent.LastAssistantMessage);
+        if (!string.IsNullOrWhiteSpace(lastAssistantMessagePreview)) details.Add(LidGuardNotificationText.PushLastAssistantMessage(lastAssistantMessagePreview));
         return string.Join(" ", details);
     }
 

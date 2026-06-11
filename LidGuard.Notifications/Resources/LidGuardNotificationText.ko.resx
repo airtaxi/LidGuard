@@ -1,5 +1,51 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
@@ -7,10 +53,10 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AccessTokenLabel" xml:space="preserve">
     <value>접근 토큰</value>
@@ -39,6 +85,9 @@
   <data name="BrowserUnsubscribed" xml:space="preserve">
     <value>이 브라우저의 구독이 해제되었습니다.</value>
   </data>
+  <data name="ClosedLidStopFollowUpWebhookCommandLabel" xml:space="preserve">
+    <value>절전 전 답장 알림 웹훅</value>
+  </data>
   <data name="CommandExamplesTitle" xml:space="preserve">
     <value>LidGuard 설정 명령</value>
   </data>
@@ -50,6 +99,9 @@
   </data>
   <data name="CopyFailedButton" xml:space="preserve">
     <value>복사 실패</value>
+  </data>
+  <data name="CultureAutomaticStoredValueCannotBeExplicitCultureName" xml:space="preserve">
+    <value>auto는 저장용 설정 값이며 명시적인 CultureInfo 이름으로 사용할 수 없습니다.</value>
   </data>
   <data name="DashboardTitle" xml:space="preserve">
     <value>대시보드</value>
@@ -63,11 +115,29 @@
   <data name="DetailsLabel" xml:space="preserve">
     <value>세부 정보</value>
   </data>
+  <data name="DisplayStopFollowUpStatusAnswered" xml:space="preserve">
+    <value>답장 완료</value>
+  </data>
+  <data name="DisplayStopFollowUpStatusCanceled" xml:space="preserve">
+    <value>취소됨</value>
+  </data>
+  <data name="DisplayStopFollowUpStatusExpired" xml:space="preserve">
+    <value>만료됨</value>
+  </data>
+  <data name="DisplayStopFollowUpStatusPending" xml:space="preserve">
+    <value>대기 중</value>
+  </data>
   <data name="DisplayWebhookEventTypePostSessionEnd" xml:space="preserve">
     <value>세션 종료</value>
   </data>
   <data name="DisplayWebhookEventTypePreSuspend" xml:space="preserve">
     <value>절전 전</value>
+  </data>
+  <data name="DisplayWebhookEventTypeStopFollowUp" xml:space="preserve">
+    <value>절전 전 답장</value>
+  </data>
+  <data name="DisplayWebhookReasonAwaitingReply" xml:space="preserve">
+    <value>답장 대기 중</value>
   </data>
   <data name="DisplayWebhookReasonCompleted" xml:space="preserve">
     <value>완료됨</value>
@@ -93,41 +163,44 @@
   <data name="DisplayWebhookStatusProcessing" xml:space="preserve">
     <value>처리 중</value>
   </data>
+  <data name="EndedLabel" xml:space="preserve">
+    <value>종료됨</value>
+  </data>
   <data name="EndReasonLabel" xml:space="preserve">
     <value>종료 사유</value>
   </data>
-  <data name="EndedLabel" xml:space="preserve">
-    <value>종료됨</value>
+  <data name="EventDetailsLoadFailed" xml:space="preserve">
+    <value>이벤트 세부 정보를 불러오지 못했습니다.</value>
+  </data>
+  <data name="EventsLoadFailed" xml:space="preserve">
+    <value>이벤트를 더 불러오지 못했습니다.</value>
+  </data>
+  <data name="EventsLoading" xml:space="preserve">
+    <value>불러오는 중...</value>
+  </data>
+  <data name="EventsLoadMore" xml:space="preserve">
+    <value>더 보기</value>
   </data>
   <data name="EventsTitle" xml:space="preserve">
     <value>이벤트</value>
   </data>
-  <data name="FullLastResponseLabel" xml:space="preserve">
-    <value>마지막 응답 전체</value>
+  <data name="FullLastAssistantMessageLabel" xml:space="preserve">
+    <value>마지막 어시스턴트 메시지 전체</value>
   </data>
   <data name="InvalidAccessToken" xml:space="preserve">
     <value>접근 토큰이 올바르지 않습니다.</value>
   </data>
-  <data name="CultureAutomaticStoredValueCannotBeExplicitCultureName" xml:space="preserve">
-    <value>auto는 저장용 설정 값이며 명시적인 CultureInfo 이름으로 사용할 수 없습니다.</value>
-  </data>
-  <data name="LastActivityLabel" xml:space="preserve">
-    <value>마지막 활동</value>
-  </data>
-  <data name="LastErrorLabel" xml:space="preserve">
-    <value>마지막 오류</value>
-  </data>
-  <data name="LastResponseLabel" xml:space="preserve">
-    <value>마지막 응답</value>
-  </data>
   <data name="LanguageEnglish" xml:space="preserve">
     <value>English</value>
+  </data>
+  <data name="LanguageJapanese" xml:space="preserve">
+    <value>日本語</value>
   </data>
   <data name="LanguageKorean" xml:space="preserve">
     <value>한국어</value>
   </data>
-  <data name="LanguageJapanese" xml:space="preserve">
-    <value>日本語</value>
+  <data name="LanguageLabel" xml:space="preserve">
+    <value>언어</value>
   </data>
   <data name="LanguageSimplifiedChinese" xml:space="preserve">
     <value>简体中文</value>
@@ -135,8 +208,14 @@
   <data name="LanguageTraditionalChinese" xml:space="preserve">
     <value>繁體中文</value>
   </data>
-  <data name="LanguageLabel" xml:space="preserve">
-    <value>언어</value>
+  <data name="LastActivityLabel" xml:space="preserve">
+    <value>마지막 활동</value>
+  </data>
+  <data name="LastAssistantMessageLabel" xml:space="preserve">
+    <value>마지막 어시스턴트 메시지</value>
+  </data>
+  <data name="LastErrorLabel" xml:space="preserve">
+    <value>마지막 오류</value>
   </data>
   <data name="LidGuardWebhookTitle" xml:space="preserve">
     <value>LidGuard 웹훅</value>
@@ -144,29 +223,26 @@
   <data name="LoginTitle" xml:space="preserve">
     <value>로그인</value>
   </data>
+  <data name="NoAssistantMessageCaptured" xml:space="preserve">
+    <value>기록된 어시스턴트 메시지가 없습니다.</value>
+  </data>
   <data name="NoEventsRecorded" xml:space="preserve">
     <value>기록된 이벤트가 없습니다.</value>
   </data>
   <data name="NoPromptCaptured" xml:space="preserve">
     <value>기록된 시작 프롬프트가 없습니다.</value>
   </data>
-  <data name="NoResponseCaptured" xml:space="preserve">
-    <value>기록된 응답이 없습니다.</value>
-  </data>
   <data name="NotificationPermissionNotGranted" xml:space="preserve">
     <value>알림 권한이 허용되지 않았습니다.</value>
-  </data>
-  <data name="ProcessedLabel" xml:space="preserve">
-    <value>처리됨</value>
-  </data>
-  <data name="ClosedLidStopFollowUpWebhookCommandLabel" xml:space="preserve">
-    <value>절전 전 답장 알림 웹훅</value>
   </data>
   <data name="PostSessionEndWebhookCommandLabel" xml:space="preserve">
     <value>세션 종료 후 웹훅</value>
   </data>
   <data name="PreSuspendWebhookCommandLabel" xml:space="preserve">
     <value>절전 전 웹훅</value>
+  </data>
+  <data name="ProcessedLabel" xml:space="preserve">
+    <value>처리됨</value>
   </data>
   <data name="PublicBaseUrlNotConfigured" xml:space="preserve">
     <value>PublicBaseUrl이 설정되어 있지 않습니다.</value>
@@ -183,14 +259,17 @@
   <data name="PushBodyFallback" xml:space="preserve">
     <value>LidGuard가 절전 전 웹훅 이벤트를 받았습니다.</value>
   </data>
+  <data name="PushBodyStopFollowUp" xml:space="preserve">
+    <value>여기에 답장하면 예정된 절전을 취소하고 에이전트가 작업을 이어갑니다.</value>
+  </data>
   <data name="PushEndReason" xml:space="preserve">
     <value>사유: {0}.</value>
   </data>
   <data name="PushInputPrompt" xml:space="preserve">
     <value>프롬프트: {0}.</value>
   </data>
-  <data name="PushLastResponse" xml:space="preserve">
-    <value>마지막 응답: {0}.</value>
+  <data name="PushLastAssistantMessage" xml:space="preserve">
+    <value>마지막 어시스턴트 메시지: {0}.</value>
   </data>
   <data name="PushPostSessionEndStatus" xml:space="preserve">
     <value>정상 종료되었습니다.</value>
@@ -213,6 +292,9 @@
   <data name="PushSoftLockedSessionCount" xml:space="preserve">
     <value>{0}개 세션이 입력 대기 상태라 LidGuard가 설정된 절전 흐름을 준비하고 있습니다.</value>
   </data>
+  <data name="PushStopFollowUpStatus" xml:space="preserve">
+    <value>가 절전 전에 답장을 기다리고 있습니다</value>
+  </data>
   <data name="PushTitleCompleted" xml:space="preserve">
     <value>LidGuard 세션 완료</value>
   </data>
@@ -228,14 +310,17 @@
   <data name="PushTitleSoftLocked" xml:space="preserve">
     <value>LidGuard 세션 입력 대기</value>
   </data>
+  <data name="PushTitleStopFollowUp" xml:space="preserve">
+    <value>절전 전에 답장이 필요합니다</value>
+  </data>
   <data name="ReadyStatus" xml:space="preserve">
     <value>준비됨.</value>
   </data>
-  <data name="RememberLoginLabel" xml:space="preserve">
-    <value>로그인 상태 기억</value>
-  </data>
   <data name="RecentEvents" xml:space="preserve">
     <value>최근 {0}개</value>
+  </data>
+  <data name="RememberLoginLabel" xml:space="preserve">
+    <value>로그인 상태 기억</value>
   </data>
   <data name="ServiceWorkersUnavailable" xml:space="preserve">
     <value>이 브라우저에서는 서비스 워커를 사용할 수 없습니다.</value>
@@ -249,71 +334,11 @@
   <data name="SoftLockedSessionCount" xml:space="preserve">
     <value>입력 대기 {0}개</value>
   </data>
-  <data name="StartingPromptLabel" xml:space="preserve">
-    <value>시작 프롬프트</value>
-  </data>
   <data name="StartedLabel" xml:space="preserve">
     <value>시작됨</value>
   </data>
-  <data name="SubscribeBrowserButton" xml:space="preserve">
-    <value>브라우저 구독</value>
-  </data>
-  <data name="SubscriptionFailed" xml:space="preserve">
-    <value>구독에 실패했습니다.</value>
-  </data>
-  <data name="ThemeDarkMode" xml:space="preserve">
-    <value>다크 모드</value>
-  </data>
-  <data name="ThemeLightMode" xml:space="preserve">
-    <value>라이트 모드</value>
-  </data>
-  <data name="ThemeSwitchTo" xml:space="preserve">
-    <value>{0}로 전환</value>
-  </data>
-  <data name="TranscriptLabel" xml:space="preserve">
-    <value>Transcript</value>
-  </data>
-  <data name="UnsubscribeButton" xml:space="preserve">
-    <value>구독 해제</value>
-  </data>
-  <data name="UnsubscribeFailed" xml:space="preserve">
-    <value>구독 해제에 실패했습니다.</value>
-  </data>
-  <data name="UserInterfaceCultureLabel" xml:space="preserve">
-    <value>LidGuard 언어</value>
-  </data>
-  <data name="VapidPublicKeyLoadFailed" xml:space="preserve">
-    <value>VAPID 공개 키를 불러오지 못했습니다.</value>
-  </data>
-  <data name="WebPushUnavailable" xml:space="preserve">
-    <value>이 브라우저에서는 Web Push를 사용할 수 없습니다.</value>
-  </data>
-  <data name="WebhookEventsHeading" xml:space="preserve">
-    <value>웹훅 이벤트</value>
-  </data>
-  <data name="WebhookIdLabel" xml:space="preserve">
-    <value>웹훅 ID</value>
-  </data>
-  <data name="WorkingDirectoryLabel" xml:space="preserve">
-    <value>작업 디렉터리</value>
-  </data>
-  <data name="DisplayWebhookEventTypeStopFollowUp" xml:space="preserve">
-    <value>절전 전 답장</value>
-  </data>
-  <data name="DisplayWebhookReasonAwaitingReply" xml:space="preserve">
-    <value>답장 대기 중</value>
-  </data>
-  <data name="DisplayStopFollowUpStatusPending" xml:space="preserve">
-    <value>대기 중</value>
-  </data>
-  <data name="DisplayStopFollowUpStatusAnswered" xml:space="preserve">
-    <value>답장 완료</value>
-  </data>
-  <data name="DisplayStopFollowUpStatusExpired" xml:space="preserve">
-    <value>만료됨</value>
-  </data>
-  <data name="DisplayStopFollowUpStatusCanceled" xml:space="preserve">
-    <value>취소됨</value>
+  <data name="StartingPromptLabel" xml:space="preserve">
+    <value>시작 프롬프트</value>
   </data>
   <data name="StopFollowUpCancelButton" xml:space="preserve">
     <value>지금 절전/최대절전 진행</value>
@@ -357,8 +382,17 @@
   <data name="StopFollowUpProviderHookTimeoutRemaining" xml:space="preserve">
     <value>Provider hook timeout 남은 시간: {0}초</value>
   </data>
+  <data name="StopFollowUpReplyAwaitingConsumptionMessage" xml:space="preserve">
+    <value>답장을 보냈지만 4번의 폴링 확인 동안 LidGuard가 아직 가져가지 않았습니다. 잠시 후 다시 확인해 주세요.</value>
+  </data>
   <data name="StopFollowUpReplyButton" xml:space="preserve">
     <value>답장 보내기</value>
+  </data>
+  <data name="StopFollowUpReplyCollectedAtLabel" xml:space="preserve">
+    <value>답장 가져간 시간</value>
+  </data>
+  <data name="StopFollowUpReplyConsumedMessage" xml:space="preserve">
+    <value>답장을 보냈고 LidGuard가 후속 폴링에서 가져갔습니다.</value>
   </data>
   <data name="StopFollowUpReplyHelp" xml:space="preserve">
     <value>여기에 답장하면 예정된 절전을 취소하고 에이전트가 작업을 이어갑니다.</value>
@@ -372,6 +406,9 @@
   <data name="StopFollowUpReplyRequiredMessage" xml:space="preserve">
     <value>답장이 필요합니다.</value>
   </data>
+  <data name="StopFollowUpReplySendingMessage" xml:space="preserve">
+    <value>답장을 보내는 중...</value>
+  </data>
   <data name="StopFollowUpReplySentAtLabel" xml:space="preserve">
     <value>답장 보낸 시각</value>
   </data>
@@ -381,37 +418,46 @@
   <data name="StopFollowUpStatusLabel" xml:space="preserve">
     <value>답장 상태</value>
   </data>
-  <data name="PushBodyStopFollowUp" xml:space="preserve">
-    <value>여기에 답장하면 예정된 절전을 취소하고 에이전트가 작업을 이어갑니다.</value>
+  <data name="SubscribeBrowserButton" xml:space="preserve">
+    <value>브라우저 구독</value>
   </data>
-  <data name="PushStopFollowUpStatus" xml:space="preserve">
-    <value>가 절전 전에 답장을 기다리고 있습니다</value>
+  <data name="SubscriptionFailed" xml:space="preserve">
+    <value>구독에 실패했습니다.</value>
   </data>
-  <data name="PushTitleStopFollowUp" xml:space="preserve">
-    <value>절전 전에 답장이 필요합니다</value>
+  <data name="ThemeDarkMode" xml:space="preserve">
+    <value>다크 모드</value>
   </data>
-  <data name="EventDetailsLoadFailed" xml:space="preserve">
-    <value>이벤트 세부 정보를 불러오지 못했습니다.</value>
+  <data name="ThemeLightMode" xml:space="preserve">
+    <value>라이트 모드</value>
   </data>
-  <data name="EventsLoadFailed" xml:space="preserve">
-    <value>이벤트를 더 불러오지 못했습니다.</value>
+  <data name="ThemeSwitchTo" xml:space="preserve">
+    <value>{0}로 전환</value>
   </data>
-  <data name="EventsLoadMore" xml:space="preserve">
-    <value>더 보기</value>
+  <data name="TranscriptLabel" xml:space="preserve">
+    <value>Transcript</value>
   </data>
-  <data name="EventsLoading" xml:space="preserve">
-    <value>불러오는 중...</value>
+  <data name="UnsubscribeButton" xml:space="preserve">
+    <value>구독 해제</value>
   </data>
-  <data name="StopFollowUpReplyAwaitingConsumptionMessage" xml:space="preserve">
-    <value>답장을 보냈지만 4번의 폴링 확인 동안 LidGuard가 아직 가져가지 않았습니다. 잠시 후 다시 확인해 주세요.</value>
+  <data name="UnsubscribeFailed" xml:space="preserve">
+    <value>구독 해제에 실패했습니다.</value>
   </data>
-  <data name="StopFollowUpReplyConsumedMessage" xml:space="preserve">
-    <value>답장을 보냈고 LidGuard가 후속 폴링에서 가져갔습니다.</value>
+  <data name="UserInterfaceCultureLabel" xml:space="preserve">
+    <value>LidGuard 언어</value>
   </data>
-  <data name="StopFollowUpReplyCollectedAtLabel" xml:space="preserve">
-    <value>답장 가져간 시간</value>
+  <data name="VapidPublicKeyLoadFailed" xml:space="preserve">
+    <value>VAPID 공개 키를 불러오지 못했습니다.</value>
   </data>
-  <data name="StopFollowUpReplySendingMessage" xml:space="preserve">
-    <value>답장을 보내는 중...</value>
+  <data name="WebhookEventsHeading" xml:space="preserve">
+    <value>웹훅 이벤트</value>
+  </data>
+  <data name="WebhookIdLabel" xml:space="preserve">
+    <value>웹훅 ID</value>
+  </data>
+  <data name="WebPushUnavailable" xml:space="preserve">
+    <value>이 브라우저에서는 Web Push를 사용할 수 없습니다.</value>
+  </data>
+  <data name="WorkingDirectoryLabel" xml:space="preserve">
+    <value>작업 디렉터리</value>
   </data>
 </root>

@@ -28,7 +28,7 @@ internal sealed class LidGuardWebhookRequest
 
     public string? InputPromptPreview { get; init; }
 
-    public string? LastResponse { get; init; }
+    public string? LastAssistantMessage { get; init; }
 
     public int? ReplyWaitSeconds { get; init; }
 

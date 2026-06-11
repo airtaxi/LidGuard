@@ -84,7 +84,7 @@ description: "LidGuard power, lid, suspend, and thermal behavior reference. Use 
 - If a post-stop suspend sound volume override is configured, capture the default output device master volume and mute state immediately before playback, temporarily unmute as needed, set the configured master volume percent for playback, then restore the previous volume and mute state in the sound playback cleanup path.
 - If a pre-suspend webhook URL is configured, POST JSON with a 5-second timeout after the post-stop suspend delay and before post-stop suspend sound playback.
 - Require pre-suspend webhook bodies to include `eventType = PreSuspend` and `reason`; include soft-locked session count for soft-lock-triggered suspend.
-- When provider-reported normal session end schedules suspend, include the same provider/session identity, UTC timestamps, end reason metadata, active session count, working directory, transcript path, `inputPromptPreview`, and `lastResponse` fields in the `PreSuspend` body when available.
+- When provider-reported normal session end schedules suspend, include the same provider/session identity, UTC timestamps, end reason metadata, active session count, working directory, transcript path, `inputPromptPreview`, and `lastAssistantMessage` fields in the `PreSuspend` body when available.
 - If pending suspend is canceled before the pre-suspend webhook is attempted, allow the suppressed normal session-end notification to fall back to `PostSessionEnd` when configured.
 - Require notification receivers to reject webhook payloads that omit `eventType`.
 

@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text.Json;
 using LidGuard.Ipc;
 using LidGuard.Sessions;

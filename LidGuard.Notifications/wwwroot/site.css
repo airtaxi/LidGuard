@@ -756,7 +756,7 @@ form.event-disclosure {
     grid-column: 1 / -1;
 }
 
-.response-body {
+.assistant-message-body {
     background: var(--surface-subtle);
     border: 1px solid var(--border-soft);
     border-radius: var(--radius-small);

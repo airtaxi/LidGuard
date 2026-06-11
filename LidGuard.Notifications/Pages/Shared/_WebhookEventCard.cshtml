@@ -62,14 +62,14 @@
             }
         </section>
         <section class="event-preview-block">
-            <span class="preview-label">@LidGuardNotificationText.LastResponseLabel</span>
-            @if (string.IsNullOrWhiteSpace(Model.LastResponsePreview))
+            <span class="preview-label">@LidGuardNotificationText.LastAssistantMessageLabel</span>
+            @if (string.IsNullOrWhiteSpace(Model.LastAssistantMessagePreview))
             {
-                <p class="muted">@LidGuardNotificationText.NoResponseCaptured</p>
+                <p class="muted">@LidGuardNotificationText.NoAssistantMessageCaptured</p>
             }
             else
             {
-                <p>@Model.LastResponsePreview</p>
+                <p>@Model.LastAssistantMessagePreview</p>
             }
         </section>
         @if (isStopFollowUpEvent)

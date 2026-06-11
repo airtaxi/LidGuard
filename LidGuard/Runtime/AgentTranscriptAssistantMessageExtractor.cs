@@ -4,12 +4,12 @@ using LidGuard.Sessions;
 
 namespace LidGuard.Runtime;
 
-internal static class AgentTranscriptResponseExtractor
+internal static class AgentTranscriptAssistantMessageExtractor
 {
     private const int RecentTranscriptLineLimit = 1024;
     private const int RecentTranscriptByteLimit = 1_048_576;
 
-    public static string CreateLastResponse(AgentProvider provider, string transcriptPath)
+    public static string CreateLastAssistantMessage(AgentProvider provider, string transcriptPath)
     {
         if (string.IsNullOrWhiteSpace(transcriptPath)) return null;
 

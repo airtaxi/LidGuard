@@ -1,4 +1,4 @@
-namespace LidGuard.Sessions;
+﻿namespace LidGuard.Sessions;
 
 public sealed class LidGuardSessionStopRequest
 {
@@ -17,4 +17,6 @@ public sealed class LidGuardSessionStopRequest
     public string PendingProviderWorkReason { get; init; } = string.Empty;
 
     public bool SuppressWebhooks { get; init; }
+
+    public string LastAssistantMessage { get; init; } = string.Empty;
 }

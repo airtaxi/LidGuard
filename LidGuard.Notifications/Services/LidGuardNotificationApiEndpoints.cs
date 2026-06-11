@@ -77,7 +77,7 @@ internal static class LidGuardNotificationApiEndpoints
         var normalizedUserInterfaceCulture = NormalizeWebhookUserInterfaceCulture(webhookRequest?.UserInterfaceCulture);
         if (eventType.Equals(LidGuardWebhookEventTypes.StopFollowUp, StringComparison.Ordinal))
         {
-            var stopFollowUpRequestAcceptedResult = await webhookEventStore.InsertStopFollowUpAsync(eventType, reason, normalizedUserInterfaceCulture, softLockedSessionCount, webhookRequest?.Provider?.Trim(), webhookRequest?.ProviderName?.Trim(), webhookRequest?.SessionIdentifier?.Trim(), webhookRequest?.StartedAtUtc, webhookRequest?.LastActivityAtUtc, webhookRequest?.EndedAtUtc, webhookRequest?.EndReason?.Trim(), webhookRequest?.ActiveSessionCount, webhookRequest?.InputPromptPreview?.Trim(), webhookRequest?.LastResponse?.Trim(), replyWaitSeconds!.Value, replyDeadlineUtc!.Value, webhookRequest?.WorkingDirectory?.Trim(), webhookRequest?.TranscriptPath?.Trim(), cancellationToken);
+            var stopFollowUpRequestAcceptedResult = await webhookEventStore.InsertStopFollowUpAsync(eventType, reason, normalizedUserInterfaceCulture, softLockedSessionCount, webhookRequest?.Provider?.Trim(), webhookRequest?.ProviderName?.Trim(), webhookRequest?.SessionIdentifier?.Trim(), webhookRequest?.StartedAtUtc, webhookRequest?.LastActivityAtUtc, webhookRequest?.EndedAtUtc, webhookRequest?.EndReason?.Trim(), webhookRequest?.ActiveSessionCount, webhookRequest?.InputPromptPreview?.Trim(), webhookRequest?.LastAssistantMessage?.Trim(), replyWaitSeconds!.Value, replyDeadlineUtc!.Value, webhookRequest?.WorkingDirectory?.Trim(), webhookRequest?.TranscriptPath?.Trim(), cancellationToken);
             processingSignal.Signal();
             var pollPath = $"/api/follow-ups/{stopFollowUpRequestAcceptedResult.PublicIdentifier}/poll/{stopFollowUpRequestAcceptedResult.PollToken}";
             var acceptedResponse = new StopFollowUpWebhookAcceptedResponse
@@ -90,7 +90,7 @@ internal static class LidGuardNotificationApiEndpoints
             return;
         }
 
-        await webhookEventStore.InsertAsync(eventType, reason, normalizedUserInterfaceCulture, softLockedSessionCount, webhookRequest?.Provider?.Trim(), webhookRequest?.ProviderName?.Trim(), webhookRequest?.SessionIdentifier?.Trim(), webhookRequest?.StartedAtUtc, webhookRequest?.LastActivityAtUtc, webhookRequest?.EndedAtUtc, webhookRequest?.EndReason?.Trim(), webhookRequest?.ActiveSessionCount, webhookRequest?.InputPromptPreview?.Trim(), webhookRequest?.LastResponse?.Trim(), replyWaitSeconds, replyDeadlineUtc, webhookRequest?.WorkingDirectory?.Trim(), webhookRequest?.TranscriptPath?.Trim(), cancellationToken);
+        await webhookEventStore.InsertAsync(eventType, reason, normalizedUserInterfaceCulture, softLockedSessionCount, webhookRequest?.Provider?.Trim(), webhookRequest?.ProviderName?.Trim(), webhookRequest?.SessionIdentifier?.Trim(), webhookRequest?.StartedAtUtc, webhookRequest?.LastActivityAtUtc, webhookRequest?.EndedAtUtc, webhookRequest?.EndReason?.Trim(), webhookRequest?.ActiveSessionCount, webhookRequest?.InputPromptPreview?.Trim(), webhookRequest?.LastAssistantMessage?.Trim(), replyWaitSeconds, replyDeadlineUtc, webhookRequest?.WorkingDirectory?.Trim(), webhookRequest?.TranscriptPath?.Trim(), cancellationToken);
         processingSignal.Signal();
         response.StatusCode = StatusCodes.Status202Accepted;
     }

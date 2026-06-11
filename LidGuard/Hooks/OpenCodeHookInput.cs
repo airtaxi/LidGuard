@@ -22,6 +22,8 @@ public sealed class OpenCodeHookInput : IHookCommandInput
 
     public string ToolName { get; init; } = string.Empty;
 
+    public string LastAssistantMessage { get; init; } = string.Empty;
+
     public string TranscriptPath { get; init; } = string.Empty;
 
     public string WorkingDirectory { get; init; } = string.Empty;
@@ -63,6 +65,7 @@ public sealed class OpenCodeHookInput : IHookCommandInput
                 SessionIdentifier = Coalesce(GetString(hookInputElement, "sessionID", "sessionId"), GetString(eventPropertiesElement, "sessionID", "sessionId"), GetString(eventInfoElement, "id")),
                 SessionStatus = Coalesce(GetString(hookInputElement, "sessionStatus", "status"), GetString(statusElement, "type")),
                 ToolName = Coalesce(GetString(hookInputElement, "toolName", "tool"), GetString(eventPropertiesElement, "tool")),
+                LastAssistantMessage = Coalesce(GetString(hookInputElement, "lastAssistantMessage", "last_assistant_message")),
                 TranscriptPath = GetString(hookInputElement, "transcriptPath", "transcript_path"),
                 WorkingDirectory = Coalesce(GetString(hookInputElement, "workingDirectory", "cwd"), GetString(hookInputElement, "directory"), GetString(eventElement, "directory"))
             };

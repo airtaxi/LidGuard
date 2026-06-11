@@ -75,9 +75,9 @@ Hook stop events may be missed, so LidGuard also watches the agent process.
 - Also send `PostSessionEnd` when a scheduled suspend is canceled before the pre-suspend webhook is attempted.
 - Do not send `PostSessionEnd` when an ask-before-sleep reply resumes the session; that cancellation path is a continuation, not a normal completed session end.
 - All LidGuard webhook payloads include `userInterfaceCulture` with the effective concrete UI culture name. Resolve it from valid `LIDGUARD_UI_CULTURE`, then configured `UserInterfaceCulture`, then the captured process/default UI culture for `auto`; fall back to `en` for empty or invariant cultures.
-- Include `eventType = PostSessionEnd`, `reason = SessionEnded`, provider/session identity, UTC start/activity/end timestamps, end reason metadata, active session count, working directory, transcript path when available, one-line `inputPromptPreview` when available, and full `lastResponse` when available.
+- Include `eventType = PostSessionEnd`, `reason = SessionEnded`, provider/session identity, UTC start/activity/end timestamps, end reason metadata, active session count, working directory, transcript path when available, one-line `inputPromptPreview` when available, and full `lastAssistantMessage` when available.
 - Normalize prompt previews by converting `\r\n` and `\r` to `\n`, replacing line breaks with spaces, and trimming overlong text to 50 characters with `...` using a word boundary when possible.
-- Derive notification event list and push text previews from `lastResponse`, capped at 50 characters, while exposing the full response in the event details UI.
+- Derive notification event list and push text previews from `lastAssistantMessage`, capped at 50 characters, while exposing the full assistant message in the event details UI.
 - Do not send the post-session-end webhook for abort, interrupt, manual stop/remove, watched parent process exit, or orphan cleanup paths.
 - Watched parent process exit and orphan cleanup must also suppress any new pre-suspend webhook they would schedule, without canceling a pre-existing pending suspend.
 - Send post-session-end webhooks in the background, keep runtime cleanup pending until the send finishes or times out, and log webhook failures without failing the stop.

@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace LidGuard.Runtime;
 
@@ -53,10 +53,6 @@ internal sealed class LidGuardWebhookRequest
     [JsonPropertyName("inputPromptPreview")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string InputPromptPreview { get; init; }
-
-    [JsonPropertyName("lastResponse")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string LastResponse { get; init; }
 
     [JsonPropertyName("lastAssistantMessage")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

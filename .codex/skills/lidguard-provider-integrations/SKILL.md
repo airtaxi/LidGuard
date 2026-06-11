@@ -157,6 +157,8 @@ Reference:
 - Activity events: `tool.execute.before`, `tool.execute.after`, `permission.replied`, `question.replied`, `question.rejected`, `question.v2.replied`, and `question.v2.rejected`.
 - Soft-lock events: `permission.asked`, `question.asked`, and `question.v2.asked`.
 - Stop trigger events: `session.idle`, `session.status` when the status is `idle`, `session.deleted`, and `session.error`.
+- `message.part.updated` is tracked internally by the managed plugin to cache the last visible assistant text (`part.type === "text"` only); it does not invoke the runtime activity hook. `reasoning` and `tool` parts are ignored for this cache.
+- Stop trigger payloads include `lastAssistantMessage` populated from this cache, which LidGuard forwards to runtime as `LastAssistantMessage` and surfaces in session-end, pre-suspend, and stop-follow-up webhooks. The cache is cleared immediately after the stop event is sent so stale messages are not forwarded to subsequent stop events.
 - Command path: `lidguard opencode-hook --event <event-name>` when the global tool is available on PATH, otherwise the current executable path plus `opencode-hook --event <event-name>`.
 - Snippet command: `lidguard opencode-hooks plugin-js`.
 - Install/status/remove commands: `lidguard hook-install --provider opencode`, `lidguard hook-status --provider opencode`, and `lidguard hook-remove --provider opencode`.

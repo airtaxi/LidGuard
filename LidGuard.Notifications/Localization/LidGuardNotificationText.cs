@@ -41,11 +41,11 @@ internal static class LidGuardNotificationText
     public static string EventsLoadMore => Get(nameof(EventsLoadMore));
     public static string EventsLoading => Get(nameof(EventsLoading));
     public static string EventsTitle => Get(nameof(EventsTitle));
-    public static string FullLastResponseLabel => Get(nameof(FullLastResponseLabel));
+    public static string FullLastAssistantMessageLabel => Get(nameof(FullLastAssistantMessageLabel));
     public static string InvalidAccessToken => Get(nameof(InvalidAccessToken));
     public static string LastActivityLabel => Get(nameof(LastActivityLabel));
     public static string LastErrorLabel => Get(nameof(LastErrorLabel));
-    public static string LastResponseLabel => Get(nameof(LastResponseLabel));
+    public static string LastAssistantMessageLabel => Get(nameof(LastAssistantMessageLabel));
     public static string LanguageEnglish => Get(nameof(LanguageEnglish));
     public static string LanguageJapanese => Get(nameof(LanguageJapanese));
     public static string LanguageKorean => Get(nameof(LanguageKorean));
@@ -56,7 +56,7 @@ internal static class LidGuardNotificationText
     public static string LoginTitle => Get(nameof(LoginTitle));
     public static string NoEventsRecorded => Get(nameof(NoEventsRecorded));
     public static string NoPromptCaptured => Get(nameof(NoPromptCaptured));
-    public static string NoResponseCaptured => Get(nameof(NoResponseCaptured));
+    public static string NoAssistantMessageCaptured => Get(nameof(NoAssistantMessageCaptured));
     public static string NotificationPermissionNotGranted => Get(nameof(NotificationPermissionNotGranted));
     public static string ProcessedLabel => Get(nameof(ProcessedLabel));
     public static string PostSessionEndWebhookCommandLabel => Get(nameof(PostSessionEndWebhookCommandLabel));
@@ -118,7 +118,7 @@ internal static class LidGuardNotificationText
 
     public static string PushInputPrompt(string inputPromptPreview) => Format(nameof(PushInputPrompt), inputPromptPreview);
 
-    public static string PushLastResponse(string lastResponsePreview) => Format(nameof(PushLastResponse), lastResponsePreview);
+    public static string PushLastAssistantMessage(string lastAssistantMessagePreview) => Format(nameof(PushLastAssistantMessage), lastAssistantMessagePreview);
 
     public static string PushSession(string sessionIdentifier) => Format(nameof(PushSession), sessionIdentifier);
 

@@ -123,11 +123,11 @@
             <strong>@Model.TranscriptPath</strong>
         </div>
     }
-    @if (!string.IsNullOrWhiteSpace(Model.LastResponse))
+    @if (!string.IsNullOrWhiteSpace(Model.LastAssistantMessage))
     {
         <div class="detail-item detail-item-wide">
-            <span>@LidGuardNotificationText.FullLastResponseLabel</span>
-            <pre class="response-body">@Model.LastResponse</pre>
+            <span>@LidGuardNotificationText.FullLastAssistantMessageLabel</span>
+            <pre class="assistant-message-body">@Model.LastAssistantMessage</pre>
         </div>
     }
 </div>

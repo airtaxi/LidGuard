@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using LidGuard.Ipc;
 using LidGuard.Localization;
 using LidGuard.Power;
@@ -224,7 +224,8 @@ internal sealed class LidGuardRuntimeCoordinator
                 IsProviderSessionEnd = request.IsProviderSessionEnd,
                 SessionEndReason = request.SessionEndReason,
                 HasPendingProviderWork = request.HasPendingProviderWork,
-                PendingProviderWorkReason = request.PendingProviderWorkReason
+                PendingProviderWorkReason = request.PendingProviderWorkReason,
+                LastAssistantMessage = request.LastAssistantMessage
             };
             var sessionKey = new LidGuardSessionKey(stopRequest.Provider, stopRequest.SessionIdentifier, stopRequest.ProviderName);
             response = StopInsideGate(stopRequest, $"Stopped {sessionKey}.", request, out stopFollowUpAwaitContext, successMessageCode: LidGuardPipeResponseMessageCodes.SessionStopped, successMessageArguments: [sessionKey.ToString()]);
@@ -791,7 +792,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
     private LidGuardPipeResponse RemoveSnapshotsInsideGate(LidGuardPipeRequest request, LidGuardSessionSnapshot[] matchingSnapshots, string multipleRemovalSuccessMessage, string multipleRemovalSuccessMessageCode, string[] multipleRemovalSuccessMessageArguments)
     {
-        var lastResponse = CreateSuccessResponse(string.Empty);
+        var lastStopResponse = CreateSuccessResponse(string.Empty);
         foreach (var matchingSnapshot in matchingSnapshots)
         {
             var sessionKey = matchingSnapshot.Key.ToString();
@@ -801,15 +802,15 @@ internal sealed class LidGuardRuntimeCoordinator
                 Provider = matchingSnapshot.Provider,
                 ProviderName = matchingSnapshot.ProviderName
             };
-            lastResponse = StopInsideGate(stopRequest, $"Removed {sessionKey}.", null, out _, "session-removed", LidGuardPipeCommands.RemoveSession, LidGuardPipeResponseMessageCodes.SessionRemoved, [sessionKey]);
-            if (!lastResponse.Succeeded) return lastResponse;
+            lastStopResponse = StopInsideGate(stopRequest, $"Removed {sessionKey}.", null, out _, "session-removed", LidGuardPipeCommands.RemoveSession, LidGuardPipeResponseMessageCodes.SessionRemoved, [sessionKey]);
+            if (!lastStopResponse.Succeeded) return lastStopResponse;
         }
 
-        var successMessage = matchingSnapshots.Length == 1 ? lastResponse.Message : multipleRemovalSuccessMessage;
-        var successMessageCode = matchingSnapshots.Length == 1 ? lastResponse.MessageCode : multipleRemovalSuccessMessageCode;
-        var successMessageArguments = matchingSnapshots.Length == 1 ? lastResponse.MessageArguments : multipleRemovalSuccessMessageArguments;
-        if (matchingSnapshots.Length > 1 && TryExtractPostStopScheduleMessage(lastResponse.Message, out var postStopScheduleMessage)) successMessage = $"{successMessage} {postStopScheduleMessage}";
-        return CreateSuccessResponse(successMessage, successMessageCode, successMessageArguments, lastResponse.SuspendScheduled, lastResponse.SuspendMode, lastResponse.SuspendDelaySeconds, lastResponse.SuspendReasonCode);
+        var successMessage = matchingSnapshots.Length == 1 ? lastStopResponse.Message : multipleRemovalSuccessMessage;
+        var successMessageCode = matchingSnapshots.Length == 1 ? lastStopResponse.MessageCode : multipleRemovalSuccessMessageCode;
+        var successMessageArguments = matchingSnapshots.Length == 1 ? lastStopResponse.MessageArguments : multipleRemovalSuccessMessageArguments;
+        if (matchingSnapshots.Length > 1 && TryExtractPostStopScheduleMessage(lastStopResponse.Message, out var postStopScheduleMessage)) successMessage = $"{successMessage} {postStopScheduleMessage}";
+        return CreateSuccessResponse(successMessage, successMessageCode, successMessageArguments, lastStopResponse.SuspendScheduled, lastStopResponse.SuspendMode, lastStopResponse.SuspendDelaySeconds, lastStopResponse.SuspendReasonCode);
     }
 
     private LidGuardPipeResponse StopInsideGate(LidGuardSessionStopRequest request, string successMessage, LidGuardPipeRequest runtimeRequest, out StopFollowUpAwaitContext stopFollowUpAwaitContext, string eventName = "session-stopped", string commandName = LidGuardPipeCommands.Stop, string successMessageCode = "", string[] successMessageArguments = null)
@@ -1423,7 +1424,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
         if (!pendingSuspendContext.IsProviderSessionEnd) return webhookRequest;
 
-        return CreateSessionEndWebhookRequest(LidGuardWebhookEventTypes.PreSuspend, suspendWebhookReason.ToString(), snapshot, string.IsNullOrWhiteSpace(pendingSuspendContext.SessionEndReason) ? pendingSuspendContext.CommandName : pendingSuspendContext.SessionEndReason, suspendTriggerSessionCount, pendingSuspendContext.ProviderSessionEndedAt ?? DateTimeOffset.UtcNow, userInterfaceCulture, suspendWebhookReason == SuspendWebhookReason.SoftLocked ? suspendTriggerSessionCount : null);
+        return CreateSessionEndWebhookRequest(LidGuardWebhookEventTypes.PreSuspend, suspendWebhookReason.ToString(), snapshot, string.IsNullOrWhiteSpace(pendingSuspendContext.SessionEndReason) ? pendingSuspendContext.CommandName : pendingSuspendContext.SessionEndReason, suspendTriggerSessionCount, pendingSuspendContext.ProviderSessionEndedAt ?? DateTimeOffset.UtcNow, userInterfaceCulture, suspendWebhookReason == SuspendWebhookReason.SoftLocked ? suspendTriggerSessionCount : null, pendingSuspendContext.LastAssistantMessage);
     }
 
     private static LidGuardWebhookRequest CreateStopFollowUpWebhookRequest(PendingSuspendContext pendingSuspendContext, LidGuardSessionSnapshot snapshot, int activeSessionCount, int replyWaitSeconds, DateTimeOffset replyDeadlineUtc, string userInterfaceCulture)
@@ -1444,8 +1445,7 @@ internal sealed class LidGuardRuntimeCoordinator
             EndReason = webhookRequest.EndReason,
             ActiveSessionCount = webhookRequest.ActiveSessionCount,
             InputPromptPreview = webhookRequest.InputPromptPreview,
-            LastResponse = webhookRequest.LastResponse,
-            LastAssistantMessage = string.IsNullOrWhiteSpace(pendingSuspendContext.LastAssistantMessage) ? null : pendingSuspendContext.LastAssistantMessage,
+            LastAssistantMessage = webhookRequest.LastAssistantMessage,
             ReplyWaitSeconds = replyWaitSeconds,
             ReplyDeadlineUtc = replyDeadlineUtc,
             WorkingDirectory = webhookRequest.WorkingDirectory,
@@ -1468,8 +1468,7 @@ internal sealed class LidGuardRuntimeCoordinator
         EndReason = endReason,
         ActiveSessionCount = activeSessionCount,
         InputPromptPreview = string.IsNullOrWhiteSpace(snapshot.InputPromptPreview) ? null : snapshot.InputPromptPreview,
-        LastResponse = AgentTranscriptResponseExtractor.CreateLastResponse(snapshot.Provider, snapshot.TranscriptPath),
-        LastAssistantMessage = string.IsNullOrWhiteSpace(lastAssistantMessage) ? null : lastAssistantMessage,
+        LastAssistantMessage = string.IsNullOrWhiteSpace(lastAssistantMessage) ? AgentTranscriptAssistantMessageExtractor.CreateLastAssistantMessage(snapshot.Provider, snapshot.TranscriptPath) : lastAssistantMessage,
         WorkingDirectory = string.IsNullOrWhiteSpace(snapshot.WorkingDirectory) ? null : snapshot.WorkingDirectory,
         TranscriptPath = string.IsNullOrWhiteSpace(snapshot.TranscriptPath) ? null : snapshot.TranscriptPath
     };
@@ -1574,7 +1573,8 @@ internal sealed class LidGuardRuntimeCoordinator
             ProviderName = snapshot.ProviderName,
             SessionIdentifier = snapshot.SessionIdentifier,
             IsProviderSessionEnd = true,
-            SessionEndReason = pendingSuspendContext.SessionEndReason
+            SessionEndReason = pendingSuspendContext.SessionEndReason,
+            LastAssistantMessage = pendingSuspendContext.LastAssistantMessage
         };
         QueuePostSessionEndWebhookInsideGate(stopRequest, snapshot, eventName, pendingSuspendContext.CommandName, activeSessionCount, pendingSuspendContext.ProviderSessionEndedAt ?? DateTimeOffset.UtcNow);
     }
@@ -1592,7 +1592,7 @@ internal sealed class LidGuardRuntimeCoordinator
 
         var postSessionEndWebhookUrl = _settings.PostSessionEndWebhookUrl;
         var userInterfaceCulture = LidGuardCulture.ResolveEffectiveCultureName(_settings);
-        var webhookRequest = CreateSessionEndWebhookRequest(LidGuardWebhookEventTypes.PostSessionEnd, LidGuardWebhookReasons.SessionEnded, snapshot, string.IsNullOrWhiteSpace(request.SessionEndReason) ? commandName : request.SessionEndReason, activeSessionCount, endedAtUtc, userInterfaceCulture);
+        var webhookRequest = CreateSessionEndWebhookRequest(LidGuardWebhookEventTypes.PostSessionEnd, LidGuardWebhookReasons.SessionEnded, snapshot, string.IsNullOrWhiteSpace(request.SessionEndReason) ? commandName : request.SessionEndReason, activeSessionCount, endedAtUtc, userInterfaceCulture, lastAssistantMessage: request.LastAssistantMessage);
 
         _pendingPostSessionEndWebhookCount++;
         _ = SendPostSessionEndWebhookAsync(postSessionEndWebhookUrl, webhookRequest, request, snapshot, eventName, commandName, activeSessionCount);
@@ -2167,7 +2167,7 @@ internal sealed class LidGuardRuntimeCoordinator
         => new(request.Provider, AgentProviderDisplay.NormalizeProviderName(request.Provider, request.ProviderName), request.SessionIdentifier, snapshot.WorkingDirectory, request.Command, request.SessionStateReason, false, false, string.Empty, null, string.Empty, false, false);
 
     private static PendingSuspendContext CreatePendingSuspendContext(LidGuardSessionStopRequest request, LidGuardPipeRequest runtimeRequest, LidGuardSessionSnapshot snapshot, string commandName)
-        => new(request.Provider, AgentProviderDisplay.NormalizeProviderName(request.Provider, request.ProviderName), request.SessionIdentifier, snapshot.WorkingDirectory, commandName, string.Empty, request.IsProviderSessionEnd, request.SuppressWebhooks, request.SessionEndReason, request.IsProviderSessionEnd ? DateTimeOffset.UtcNow : null, runtimeRequest?.LastAssistantMessage ?? string.Empty, runtimeRequest?.CanReturnStopContinuation ?? false, runtimeRequest?.StopHookAlreadyActive ?? false);
+        => new(request.Provider, AgentProviderDisplay.NormalizeProviderName(request.Provider, request.ProviderName), request.SessionIdentifier, snapshot.WorkingDirectory, commandName, string.Empty, request.IsProviderSessionEnd, request.SuppressWebhooks, request.SessionEndReason, request.IsProviderSessionEnd ? DateTimeOffset.UtcNow : null, runtimeRequest?.LastAssistantMessage ?? request.LastAssistantMessage ?? string.Empty, runtimeRequest?.CanReturnStopContinuation ?? false, runtimeRequest?.StopHookAlreadyActive ?? false);
 
     private readonly record struct CleanupResult(LidGuardPipeResponse Response, int RemovedSessionCount);
 

@@ -8,7 +8,7 @@ namespace LidGuard.Notifications.Data;
 
 internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactory)
 {
-    public async Task<long> InsertAsync(string eventType, string reason, string? userInterfaceCulture, int? softLockedSessionCount, string? provider, string? providerName, string? sessionIdentifier, DateTimeOffset? startedAtUtc, DateTimeOffset? lastActivityAtUtc, DateTimeOffset? endedAtUtc, string? endReason, int? activeSessionCount, string? inputPromptPreview, string? lastResponse, int? replyWaitSeconds, DateTimeOffset? replyDeadlineUtc, string? workingDirectory, string? transcriptPath, CancellationToken cancellationToken)
+    public async Task<long> InsertAsync(string eventType, string reason, string? userInterfaceCulture, int? softLockedSessionCount, string? provider, string? providerName, string? sessionIdentifier, DateTimeOffset? startedAtUtc, DateTimeOffset? lastActivityAtUtc, DateTimeOffset? endedAtUtc, string? endReason, int? activeSessionCount, string? inputPromptPreview, string? lastAssistantMessage, int? replyWaitSeconds, DateTimeOffset? replyDeadlineUtc, string? workingDirectory, string? transcriptPath, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
@@ -74,7 +74,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         command.Parameters.AddWithValue("$endReason", ToDatabaseValue(endReason));
         command.Parameters.AddWithValue("$activeSessionCount", ToDatabaseValue(activeSessionCount));
         command.Parameters.AddWithValue("$inputPromptPreview", ToDatabaseValue(inputPromptPreview));
-        command.Parameters.AddWithValue("$lastResponse", ToDatabaseValue(lastResponse));
+        command.Parameters.AddWithValue("$lastResponse", ToDatabaseValue(lastAssistantMessage));
         command.Parameters.AddWithValue("$replyWaitSeconds", ToDatabaseValue(replyWaitSeconds));
         command.Parameters.AddWithValue("$replyDeadlineUtc", ToDatabaseValue(replyDeadlineUtc));
         command.Parameters.AddWithValue("$workingDirectory", ToDatabaseValue(workingDirectory));
@@ -85,7 +85,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         return Convert.ToInt64(result, CultureInfo.InvariantCulture);
     }
 
-    public async Task<StopFollowUpRequestAcceptedResult> InsertStopFollowUpAsync(string eventType, string reason, string? userInterfaceCulture, int? softLockedSessionCount, string? provider, string? providerName, string? sessionIdentifier, DateTimeOffset? startedAtUtc, DateTimeOffset? lastActivityAtUtc, DateTimeOffset? endedAtUtc, string? endReason, int? activeSessionCount, string? inputPromptPreview, string? lastResponse, int replyWaitSeconds, DateTimeOffset replyDeadlineUtc, string? workingDirectory, string? transcriptPath, CancellationToken cancellationToken)
+    public async Task<StopFollowUpRequestAcceptedResult> InsertStopFollowUpAsync(string eventType, string reason, string? userInterfaceCulture, int? softLockedSessionCount, string? provider, string? providerName, string? sessionIdentifier, DateTimeOffset? startedAtUtc, DateTimeOffset? lastActivityAtUtc, DateTimeOffset? endedAtUtc, string? endReason, int? activeSessionCount, string? inputPromptPreview, string? lastAssistantMessage, int replyWaitSeconds, DateTimeOffset replyDeadlineUtc, string? workingDirectory, string? transcriptPath, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
         var publicIdentifier = Guid.NewGuid().ToString("N");
@@ -95,7 +95,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
 
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
         using var transaction = connection.BeginTransaction();
-        var webhookEventIdentifier = await InsertWebhookEventAsync(connection, transaction, eventType, reason, userInterfaceCulture, softLockedSessionCount, provider, providerName, sessionIdentifier, startedAtUtc, lastActivityAtUtc, endedAtUtc, endReason, activeSessionCount, inputPromptPreview, lastResponse, replyWaitSeconds, replyDeadlineUtc, workingDirectory, transcriptPath, now, cancellationToken);
+        var webhookEventIdentifier = await InsertWebhookEventAsync(connection, transaction, eventType, reason, userInterfaceCulture, softLockedSessionCount, provider, providerName, sessionIdentifier, startedAtUtc, lastActivityAtUtc, endedAtUtc, endReason, activeSessionCount, inputPromptPreview, lastAssistantMessage, replyWaitSeconds, replyDeadlineUtc, workingDirectory, transcriptPath, now, cancellationToken);
         using (var command = connection.CreateCommand())
         {
             command.Transaction = transaction;
@@ -722,7 +722,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
 
     private static object ToDatabaseValue(string? value) => string.IsNullOrWhiteSpace(value) ? DBNull.Value : value;
 
-    private static async Task<long> InsertWebhookEventAsync(SqliteConnection connection, SqliteTransaction transaction, string eventType, string reason, string? userInterfaceCulture, int? softLockedSessionCount, string? provider, string? providerName, string? sessionIdentifier, DateTimeOffset? startedAtUtc, DateTimeOffset? lastActivityAtUtc, DateTimeOffset? endedAtUtc, string? endReason, int? activeSessionCount, string? inputPromptPreview, string? lastResponse, int? replyWaitSeconds, DateTimeOffset? replyDeadlineUtc, string? workingDirectory, string? transcriptPath, DateTimeOffset receivedAtUtc, CancellationToken cancellationToken)
+    private static async Task<long> InsertWebhookEventAsync(SqliteConnection connection, SqliteTransaction transaction, string eventType, string reason, string? userInterfaceCulture, int? softLockedSessionCount, string? provider, string? providerName, string? sessionIdentifier, DateTimeOffset? startedAtUtc, DateTimeOffset? lastActivityAtUtc, DateTimeOffset? endedAtUtc, string? endReason, int? activeSessionCount, string? inputPromptPreview, string? lastAssistantMessage, int? replyWaitSeconds, DateTimeOffset? replyDeadlineUtc, string? workingDirectory, string? transcriptPath, DateTimeOffset receivedAtUtc, CancellationToken cancellationToken)
     {
         using var command = connection.CreateCommand();
         command.Transaction = transaction;
@@ -787,7 +787,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
         command.Parameters.AddWithValue("$endReason", ToDatabaseValue(endReason));
         command.Parameters.AddWithValue("$activeSessionCount", ToDatabaseValue(activeSessionCount));
         command.Parameters.AddWithValue("$inputPromptPreview", ToDatabaseValue(inputPromptPreview));
-        command.Parameters.AddWithValue("$lastResponse", ToDatabaseValue(lastResponse));
+        command.Parameters.AddWithValue("$lastResponse", ToDatabaseValue(lastAssistantMessage));
         command.Parameters.AddWithValue("$replyWaitSeconds", ToDatabaseValue(replyWaitSeconds));
         command.Parameters.AddWithValue("$replyDeadlineUtc", ToDatabaseValue(replyDeadlineUtc));
         command.Parameters.AddWithValue("$workingDirectory", ToDatabaseValue(workingDirectory));

@@ -1,5 +1,51 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
@@ -7,10 +53,10 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AccessTokenLabel" xml:space="preserve">
     <value>存取權杖</value>
@@ -39,6 +85,9 @@
   <data name="BrowserUnsubscribed" xml:space="preserve">
     <value>這個瀏覽器已取消訂閱。</value>
   </data>
+  <data name="ClosedLidStopFollowUpWebhookCommandLabel" xml:space="preserve">
+    <value>睡眠前回覆提醒 Webhook</value>
+  </data>
   <data name="CommandExamplesTitle" xml:space="preserve">
     <value>LidGuard 設定命令</value>
   </data>
@@ -50,6 +99,9 @@
   </data>
   <data name="CopyFailedButton" xml:space="preserve">
     <value>複製失敗</value>
+  </data>
+  <data name="CultureAutomaticStoredValueCannotBeExplicitCultureName" xml:space="preserve">
+    <value>auto 是儲存用設定值，不能當成明確的 CultureInfo 名稱使用。</value>
   </data>
   <data name="DashboardTitle" xml:space="preserve">
     <value>儀表板</value>
@@ -63,11 +115,29 @@
   <data name="DetailsLabel" xml:space="preserve">
     <value>詳細資訊</value>
   </data>
+  <data name="DisplayStopFollowUpStatusAnswered" xml:space="preserve">
+    <value>已回覆</value>
+  </data>
+  <data name="DisplayStopFollowUpStatusCanceled" xml:space="preserve">
+    <value>已取消</value>
+  </data>
+  <data name="DisplayStopFollowUpStatusExpired" xml:space="preserve">
+    <value>已過期</value>
+  </data>
+  <data name="DisplayStopFollowUpStatusPending" xml:space="preserve">
+    <value>等待中</value>
+  </data>
   <data name="DisplayWebhookEventTypePostSessionEnd" xml:space="preserve">
     <value>工作階段結束</value>
   </data>
   <data name="DisplayWebhookEventTypePreSuspend" xml:space="preserve">
     <value>睡眠/休眠前</value>
+  </data>
+  <data name="DisplayWebhookEventTypeStopFollowUp" xml:space="preserve">
+    <value>睡眠前回覆</value>
+  </data>
+  <data name="DisplayWebhookReasonAwaitingReply" xml:space="preserve">
+    <value>等待回覆</value>
   </data>
   <data name="DisplayWebhookReasonCompleted" xml:space="preserve">
     <value>已完成</value>
@@ -93,41 +163,44 @@
   <data name="DisplayWebhookStatusProcessing" xml:space="preserve">
     <value>處理中</value>
   </data>
+  <data name="EndedLabel" xml:space="preserve">
+    <value>已結束</value>
+  </data>
   <data name="EndReasonLabel" xml:space="preserve">
     <value>結束原因</value>
   </data>
-  <data name="EndedLabel" xml:space="preserve">
-    <value>已結束</value>
+  <data name="EventDetailsLoadFailed" xml:space="preserve">
+    <value>無法載入事件詳細資料。</value>
+  </data>
+  <data name="EventsLoadFailed" xml:space="preserve">
+    <value>無法載入更多事件。</value>
+  </data>
+  <data name="EventsLoading" xml:space="preserve">
+    <value>正在載入...</value>
+  </data>
+  <data name="EventsLoadMore" xml:space="preserve">
+    <value>載入更多</value>
   </data>
   <data name="EventsTitle" xml:space="preserve">
     <value>事件</value>
   </data>
-  <data name="FullLastResponseLabel" xml:space="preserve">
-    <value>完整的最後回應</value>
+  <data name="FullLastAssistantMessageLabel" xml:space="preserve">
+    <value>完整的最後助手訊息</value>
   </data>
   <data name="InvalidAccessToken" xml:space="preserve">
     <value>存取權杖無效。</value>
   </data>
-  <data name="CultureAutomaticStoredValueCannotBeExplicitCultureName" xml:space="preserve">
-    <value>auto 是儲存用設定值，不能當成明確的 CultureInfo 名稱使用。</value>
-  </data>
-  <data name="LastActivityLabel" xml:space="preserve">
-    <value>最後活動</value>
-  </data>
-  <data name="LastErrorLabel" xml:space="preserve">
-    <value>最後錯誤</value>
-  </data>
-  <data name="LastResponseLabel" xml:space="preserve">
-    <value>最後回應</value>
-  </data>
   <data name="LanguageEnglish" xml:space="preserve">
     <value>English</value>
+  </data>
+  <data name="LanguageJapanese" xml:space="preserve">
+    <value>日本語</value>
   </data>
   <data name="LanguageKorean" xml:space="preserve">
     <value>한국어</value>
   </data>
-  <data name="LanguageJapanese" xml:space="preserve">
-    <value>日本語</value>
+  <data name="LanguageLabel" xml:space="preserve">
+    <value>語言</value>
   </data>
   <data name="LanguageSimplifiedChinese" xml:space="preserve">
     <value>简体中文</value>
@@ -135,8 +208,14 @@
   <data name="LanguageTraditionalChinese" xml:space="preserve">
     <value>繁體中文</value>
   </data>
-  <data name="LanguageLabel" xml:space="preserve">
-    <value>語言</value>
+  <data name="LastActivityLabel" xml:space="preserve">
+    <value>最後活動</value>
+  </data>
+  <data name="LastAssistantMessageLabel" xml:space="preserve">
+    <value>最後助手訊息</value>
+  </data>
+  <data name="LastErrorLabel" xml:space="preserve">
+    <value>最後錯誤</value>
   </data>
   <data name="LidGuardWebhookTitle" xml:space="preserve">
     <value>LidGuard Webhook</value>
@@ -144,29 +223,26 @@
   <data name="LoginTitle" xml:space="preserve">
     <value>登入</value>
   </data>
+  <data name="NoAssistantMessageCaptured" xml:space="preserve">
+    <value>沒有記錄助手訊息。</value>
+  </data>
   <data name="NoEventsRecorded" xml:space="preserve">
     <value>目前沒有記錄任何事件。</value>
   </data>
   <data name="NoPromptCaptured" xml:space="preserve">
     <value>沒有記錄到起始提示詞。</value>
   </data>
-  <data name="NoResponseCaptured" xml:space="preserve">
-    <value>沒有記錄到回應。</value>
-  </data>
   <data name="NotificationPermissionNotGranted" xml:space="preserve">
     <value>尚未授予通知權限。</value>
-  </data>
-  <data name="ProcessedLabel" xml:space="preserve">
-    <value>已處理</value>
-  </data>
-  <data name="ClosedLidStopFollowUpWebhookCommandLabel" xml:space="preserve">
-    <value>睡眠前回覆提醒 Webhook</value>
   </data>
   <data name="PostSessionEndWebhookCommandLabel" xml:space="preserve">
     <value>工作階段結束後 Webhook</value>
   </data>
   <data name="PreSuspendWebhookCommandLabel" xml:space="preserve">
     <value>睡眠/休眠前 Webhook</value>
+  </data>
+  <data name="ProcessedLabel" xml:space="preserve">
+    <value>已處理</value>
   </data>
   <data name="PublicBaseUrlNotConfigured" xml:space="preserve">
     <value>尚未設定 PublicBaseUrl。</value>
@@ -183,14 +259,17 @@
   <data name="PushBodyFallback" xml:space="preserve">
     <value>LidGuard 收到了睡眠/休眠前 Webhook 事件。</value>
   </data>
+  <data name="PushBodyStopFollowUp" xml:space="preserve">
+    <value>在這裡回覆會取消計畫中的睡眠，並讓代理繼續工作。</value>
+  </data>
   <data name="PushEndReason" xml:space="preserve">
     <value>原因: {0}.</value>
   </data>
   <data name="PushInputPrompt" xml:space="preserve">
     <value>提示詞: {0}.</value>
   </data>
-  <data name="PushLastResponse" xml:space="preserve">
-    <value>最後回應: {0}.</value>
+  <data name="PushLastAssistantMessage" xml:space="preserve">
+    <value>最後助手訊息: {0}.</value>
   </data>
   <data name="PushPostSessionEndStatus" xml:space="preserve">
     <value>已正常結束。</value>
@@ -213,6 +292,9 @@
   <data name="PushSoftLockedSessionCount" xml:space="preserve">
     <value>{0} 個工作階段正在等待輸入，LidGuard 正在準備已設定的睡眠/休眠流程。</value>
   </data>
+  <data name="PushStopFollowUpStatus" xml:space="preserve">
+    <value>正在睡眠前等待你的回覆</value>
+  </data>
   <data name="PushTitleCompleted" xml:space="preserve">
     <value>LidGuard 工作階段已完成</value>
   </data>
@@ -228,14 +310,17 @@
   <data name="PushTitleSoftLocked" xml:space="preserve">
     <value>LidGuard 工作階段等待中</value>
   </data>
+  <data name="PushTitleStopFollowUp" xml:space="preserve">
+    <value>睡眠前需要回覆</value>
+  </data>
   <data name="ReadyStatus" xml:space="preserve">
     <value>準備就緒。</value>
   </data>
-  <data name="RememberLoginLabel" xml:space="preserve">
-    <value>保持登入狀態</value>
-  </data>
   <data name="RecentEvents" xml:space="preserve">
     <value>最近 {0} 筆</value>
+  </data>
+  <data name="RememberLoginLabel" xml:space="preserve">
+    <value>保持登入狀態</value>
   </data>
   <data name="ServiceWorkersUnavailable" xml:space="preserve">
     <value>這個瀏覽器不支援 Service Worker。</value>
@@ -249,71 +334,11 @@
   <data name="SoftLockedSessionCount" xml:space="preserve">
     <value>等待輸入 {0} 個</value>
   </data>
-  <data name="StartingPromptLabel" xml:space="preserve">
-    <value>起始提示詞</value>
-  </data>
   <data name="StartedLabel" xml:space="preserve">
     <value>已開始</value>
   </data>
-  <data name="SubscribeBrowserButton" xml:space="preserve">
-    <value>訂閱這個瀏覽器</value>
-  </data>
-  <data name="SubscriptionFailed" xml:space="preserve">
-    <value>訂閱失敗。</value>
-  </data>
-  <data name="ThemeDarkMode" xml:space="preserve">
-    <value>深色模式</value>
-  </data>
-  <data name="ThemeLightMode" xml:space="preserve">
-    <value>淺色模式</value>
-  </data>
-  <data name="ThemeSwitchTo" xml:space="preserve">
-    <value>切換為 {0}</value>
-  </data>
-  <data name="TranscriptLabel" xml:space="preserve">
-    <value>逐字稿</value>
-  </data>
-  <data name="UnsubscribeButton" xml:space="preserve">
-    <value>取消訂閱</value>
-  </data>
-  <data name="UnsubscribeFailed" xml:space="preserve">
-    <value>取消訂閱失敗。</value>
-  </data>
-  <data name="UserInterfaceCultureLabel" xml:space="preserve">
-    <value>LidGuard 語言</value>
-  </data>
-  <data name="VapidPublicKeyLoadFailed" xml:space="preserve">
-    <value>載入 VAPID 公開金鑰失敗。</value>
-  </data>
-  <data name="WebPushUnavailable" xml:space="preserve">
-    <value>這個瀏覽器不支援 Web Push。</value>
-  </data>
-  <data name="WebhookEventsHeading" xml:space="preserve">
-    <value>Webhook 事件</value>
-  </data>
-  <data name="WebhookIdLabel" xml:space="preserve">
-    <value>Webhook ID</value>
-  </data>
-  <data name="WorkingDirectoryLabel" xml:space="preserve">
-    <value>工作目錄</value>
-  </data>
-  <data name="DisplayWebhookEventTypeStopFollowUp" xml:space="preserve">
-    <value>睡眠前回覆</value>
-  </data>
-  <data name="DisplayWebhookReasonAwaitingReply" xml:space="preserve">
-    <value>等待回覆</value>
-  </data>
-  <data name="DisplayStopFollowUpStatusPending" xml:space="preserve">
-    <value>等待中</value>
-  </data>
-  <data name="DisplayStopFollowUpStatusAnswered" xml:space="preserve">
-    <value>已回覆</value>
-  </data>
-  <data name="DisplayStopFollowUpStatusExpired" xml:space="preserve">
-    <value>已過期</value>
-  </data>
-  <data name="DisplayStopFollowUpStatusCanceled" xml:space="preserve">
-    <value>已取消</value>
+  <data name="StartingPromptLabel" xml:space="preserve">
+    <value>起始提示詞</value>
   </data>
   <data name="StopFollowUpCancelButton" xml:space="preserve">
     <value>立即睡眠/休眠</value>
@@ -357,8 +382,17 @@
   <data name="StopFollowUpProviderHookTimeoutRemaining" xml:space="preserve">
     <value>Provider hook timeout 剩餘時間: {0} 秒</value>
   </data>
+  <data name="StopFollowUpReplyAwaitingConsumptionMessage" xml:space="preserve">
+    <value>回覆已送出，但經過 4 次輪詢確認後 LidGuard 仍未取得。它可能很快會取得。</value>
+  </data>
   <data name="StopFollowUpReplyButton" xml:space="preserve">
     <value>傳送回覆</value>
+  </data>
+  <data name="StopFollowUpReplyCollectedAtLabel" xml:space="preserve">
+    <value>回覆取得時間</value>
+  </data>
+  <data name="StopFollowUpReplyConsumedMessage" xml:space="preserve">
+    <value>回覆已送出。LidGuard 已在後續輪詢中取得。</value>
   </data>
   <data name="StopFollowUpReplyHelp" xml:space="preserve">
     <value>在這裡回覆會取消計畫中的睡眠，並讓代理繼續工作。</value>
@@ -372,6 +406,9 @@
   <data name="StopFollowUpReplyRequiredMessage" xml:space="preserve">
     <value>需要填寫回覆。</value>
   </data>
+  <data name="StopFollowUpReplySendingMessage" xml:space="preserve">
+    <value>正在送出回覆...</value>
+  </data>
   <data name="StopFollowUpReplySentAtLabel" xml:space="preserve">
     <value>回覆傳送時間</value>
   </data>
@@ -381,37 +418,46 @@
   <data name="StopFollowUpStatusLabel" xml:space="preserve">
     <value>回覆狀態</value>
   </data>
-  <data name="PushBodyStopFollowUp" xml:space="preserve">
-    <value>在這裡回覆會取消計畫中的睡眠，並讓代理繼續工作。</value>
+  <data name="SubscribeBrowserButton" xml:space="preserve">
+    <value>訂閱這個瀏覽器</value>
   </data>
-  <data name="PushStopFollowUpStatus" xml:space="preserve">
-    <value>正在睡眠前等待你的回覆</value>
+  <data name="SubscriptionFailed" xml:space="preserve">
+    <value>訂閱失敗。</value>
   </data>
-  <data name="PushTitleStopFollowUp" xml:space="preserve">
-    <value>睡眠前需要回覆</value>
+  <data name="ThemeDarkMode" xml:space="preserve">
+    <value>深色模式</value>
   </data>
-  <data name="EventDetailsLoadFailed" xml:space="preserve">
-    <value>無法載入事件詳細資料。</value>
+  <data name="ThemeLightMode" xml:space="preserve">
+    <value>淺色模式</value>
   </data>
-  <data name="EventsLoadFailed" xml:space="preserve">
-    <value>無法載入更多事件。</value>
+  <data name="ThemeSwitchTo" xml:space="preserve">
+    <value>切換為 {0}</value>
   </data>
-  <data name="EventsLoadMore" xml:space="preserve">
-    <value>載入更多</value>
+  <data name="TranscriptLabel" xml:space="preserve">
+    <value>逐字稿</value>
   </data>
-  <data name="EventsLoading" xml:space="preserve">
-    <value>正在載入...</value>
+  <data name="UnsubscribeButton" xml:space="preserve">
+    <value>取消訂閱</value>
   </data>
-  <data name="StopFollowUpReplyAwaitingConsumptionMessage" xml:space="preserve">
-    <value>回覆已送出，但經過 4 次輪詢確認後 LidGuard 仍未取得。它可能很快會取得。</value>
+  <data name="UnsubscribeFailed" xml:space="preserve">
+    <value>取消訂閱失敗。</value>
   </data>
-  <data name="StopFollowUpReplyConsumedMessage" xml:space="preserve">
-    <value>回覆已送出。LidGuard 已在後續輪詢中取得。</value>
+  <data name="UserInterfaceCultureLabel" xml:space="preserve">
+    <value>LidGuard 語言</value>
   </data>
-  <data name="StopFollowUpReplyCollectedAtLabel" xml:space="preserve">
-    <value>回覆取得時間</value>
+  <data name="VapidPublicKeyLoadFailed" xml:space="preserve">
+    <value>載入 VAPID 公開金鑰失敗。</value>
   </data>
-  <data name="StopFollowUpReplySendingMessage" xml:space="preserve">
-    <value>正在送出回覆...</value>
+  <data name="WebhookEventsHeading" xml:space="preserve">
+    <value>Webhook 事件</value>
+  </data>
+  <data name="WebhookIdLabel" xml:space="preserve">
+    <value>Webhook ID</value>
+  </data>
+  <data name="WebPushUnavailable" xml:space="preserve">
+    <value>這個瀏覽器不支援 Web Push。</value>
+  </data>
+  <data name="WorkingDirectoryLabel" xml:space="preserve">
+    <value>工作目錄</value>
   </data>
 </root>
