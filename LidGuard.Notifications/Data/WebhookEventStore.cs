@@ -358,7 +358,7 @@ internal sealed class WebhookEventStore(SqliteConnectionFactory connectionFactor
             return new StopFollowUpActionResult(false, false, status, CreateStopFollowUpStatusFailureMessage(status), deadlineAtUtc, maximumDeadlineAtUtc, snapshot.Value.ConsumedAtUtc);
         }
 
-        var requestedDeadlineAtUtc = DateTimeOffset.UtcNow.AddMinutes(extendMinutes);
+        var requestedDeadlineAtUtc = deadlineAtUtc.AddMinutes(extendMinutes);
         var nextDeadlineAtUtc = requestedDeadlineAtUtc > deadlineAtUtc ? requestedDeadlineAtUtc : deadlineAtUtc;
         if (nextDeadlineAtUtc > maximumDeadlineAtUtc) nextDeadlineAtUtc = maximumDeadlineAtUtc;
         var extended = nextDeadlineAtUtc > deadlineAtUtc;
