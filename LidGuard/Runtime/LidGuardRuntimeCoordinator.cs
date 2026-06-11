@@ -1162,6 +1162,28 @@ internal sealed class LidGuardRuntimeCoordinator
 
             if (stopFollowUpAwaitContext is not null) await stopFollowUpAwaitContext.FollowUpCompletedSource.Task.WaitAsync(pendingSuspendCancellationTokenSource.Token);
 
+            await _gate.WaitAsync(pendingSuspendCancellationTokenSource.Token);
+            try
+            {
+                var closedLidPolicyApplicability = EvaluateClosedLidPolicyApplicability("suspend");
+                if (!closedLidPolicyApplicability.IsApplicable)
+                {
+                    var releaseResult = ReleaseProtectionIfNoSessionRequiresItInsideGate(eventName, pendingSuspendContext, snapshot, "Released LidGuard protection because pending suspend was canceled after the stop follow-up ended because the lid is no longer closed.");
+                    if (!releaseResult.Succeeded)
+                    {
+                        var failedResponse = CreateFailureResponse(releaseResult);
+                        LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-suspend-canceled", pendingSuspendContext, failedResponse, snapshot);
+                        return;
+                    }
+
+                    var canceledResponse = CreateSuccessResponse(closedLidPolicyApplicability.Message);
+                    LidGuardRuntimeLogWriter.AppendSessionLog($"{eventName}-suspend-canceled", pendingSuspendContext, canceledResponse, snapshot);
+                    QueuePostSessionEndWebhookForCanceledSuspendInsideGate(pendingSuspendContext, snapshot, eventName, _sessionRegistry.ActiveSessionCount);
+                    return;
+                }
+            }
+            finally { _gate.Release(); }
+
             preSuspendWebhookAttempted = true;
             await SendPreSuspendWebhookAsync(pendingSuspendContext, snapshot, eventName, suspendWebhookReason, suspendTriggerSessionCount, pendingSuspendCancellationTokenSource.Token);
             await PlayPostStopSuspendSoundAsync(pendingSuspendContext, snapshot, eventName, postStopSuspendSound, postStopSuspendSoundVolumeOverridePercent, pendingSuspendCancellationTokenSource.Token);
