@@ -80,7 +80,7 @@ This is useful for long-running coding or agent tasks where "done" sometimes mea
 
 With repeat replies enabled, that can become a lightweight back-and-forth loop: the laptop can stay closed in your bag while you keep nudging follow-up work from your phone or browser, without opening the machine just to type the next instruction.
 
-OpenCode support currently uses OpenCode's global plugin system. It can start, soft-lock, and stop LidGuard protection, but OpenCode does not yet support handing an ask-before-sleep reply back into the same finishing flow.
+OpenCode works through a global plugin. When OpenCode says the session is idle, LidGuard can wait for your reply. If you answer, it sends your text back to the same OpenCode chat so the work can continue. Because OpenCode cannot pause its finishing step for LidGuard, this only works while OpenCode is still running and the chat is still available.
 
 ### Windows WSL Integration
 

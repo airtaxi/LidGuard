@@ -156,7 +156,7 @@ Reference:
 - Permission decision event: `permission.ask`.
 - Activity events: `tool.execute.before`, `tool.execute.after`, `permission.replied`, `question.replied`, `question.rejected`, `question.v2.replied`, and `question.v2.rejected`.
 - Soft-lock events: `permission.asked`, `question.asked`, and `question.v2.asked`.
-- Stop trigger events: `session.idle`, `session.status` when the status is `idle`, `session.deleted`, and `session.error`.
+- Stop trigger events (tracked by plugin): `session.idle`, `session.deleted`, and `session.error`. `session.status` is intentionally excluded so only `session.idle` drives stop and continuation behavior.
 - `message.part.updated` is tracked internally by the managed plugin to cache the last visible assistant text (`part.type === "text"` only); it does not invoke the runtime activity hook. `reasoning` and `tool` parts are ignored for this cache.
 - Stop trigger payloads include `lastAssistantMessage` populated from this cache, which LidGuard forwards to runtime as `LastAssistantMessage` and surfaces in session-end, pre-suspend, and stop-follow-up webhooks. The cache is cleared immediately after the stop event is sent so stale messages are not forwarded to subsequent stop events.
 - Command path: `lidguard opencode-hook --event <event-name>` when the global tool is available on PATH, otherwise the current executable path plus `opencode-hook --event <event-name>`.
@@ -174,8 +174,11 @@ Reference:
 - For `permission.ask`, it does not stop the runtime; it queries the runtime lid state and visible display monitor count. When the lid is closed and the visible display monitor count is `0`, Deny and Allow return OpenCode-specific structured JSON with `status` of `deny` or `allow`; Ask marks the session soft-locked with reason `closed_lid_permission_request_ask` and returns empty stdout so OpenCode's normal permission flow continues. The observed OpenCode plugin type contract only exposes `output.status` for `permission.ask`, so do not promise or wire a deny message there unless a future OpenCode contract adds one.
 - For activity events, it records provider activity and clears the current session soft-lock state.
 - For soft-lock events, it marks the session soft-locked with the event name as the reason.
-- For stop trigger events, it sends internal `stop --provider opencode`. Only `session.idle` and `session.status` with `idle` are treated as normal provider session ends.
-- OpenCode ask-before-sleep reply continuation is not implemented because the current plugin event surface does not expose a verified blocking Stop-hook continuation contract.
+- For stop trigger events, it sends internal `stop --provider opencode`. Only `session.idle` is treated as a normal provider session end.
+- Only `session.idle` may request ask-before-sleep reply continuation. `session.deleted` and `session.error` remain plain stop paths and must not reinject prompts.
+- For OpenCode ask-before-sleep reply continuation, the managed plugin consumes the hook stdout `StopHookContinuationDecisionOutput` (`decision = block`, `reason = <reply>`) after `session.idle` and calls `client.session.prompt({ path: { id: sessionID }, body: { parts: [{ type: "text", text: reply }] } })` to send the reply back into the same OpenCode session. Do not set `noReply`; the model should answer normally.
+- OpenCode `stopHookActive` is simulated by plugin-local per-session state after a successful continuation prompt. The next `session.idle` payload includes `stopHookActive = true` so LidGuard can apply `RepeatClosedLidStopFollowUp` consistently with providers that expose a real active Stop hook flag.
+- OpenCode ask-before-sleep reply continuation is an after-idle prompt reinjection, not a verified blocking Stop-hook continuation contract. It depends on the OpenCode plugin process, server, and target session still being available when the reply arrives.
 - OpenCode plugin payloads do not provide a stable parent process id, so LidGuard resolves the watched process from hook process ancestry when `WatchParentProcess` is enabled, accepting OpenCode CLI and bun/node/npm/npx wrapper processes. Working directory remains metadata only.
 - OpenCode `permission.ask` exits successfully with structured JSON stdout only for effective closed-lid Deny/Allow decisions; when Ask is configured, the lid is open, lid state is unknown, any visible display monitor remains active, or runtime status is unavailable, it exits successfully with empty stdout so the normal permission flow continues.
 

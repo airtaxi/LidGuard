@@ -15,11 +15,12 @@ const trackedEventTypes = new Set([
   "question.v2.replied",
   "session.deleted",
   "session.error",
-  "session.idle",
-  "session.status"
+  "session.idle"
 ]);
 
 const lastAssistantMessageBySession = new Map();
+const continuedSessionIDs = new Set();
+const stopInFlightSessionIDs = new Set();
 
 function collectText(parts) {
   if (!Array.isArray(parts)) return "";
@@ -78,7 +79,38 @@ function applyPermissionDecision(stdout, output) {
   } catch {}
 }
 
-export const LidGuardOpenCodePlugin = async ({ directory, worktree }) => ({
+function parseStopContinuationPrompt(stdout) {
+  if (!stdout) return "";
+  try {
+    const decision = JSON.parse(stdout);
+    if (decision?.decision === "block" && typeof decision.reason === "string") return decision.reason.trim();
+  } catch {}
+  return "";
+}
+
+async function logPluginMessage(client, message) {
+  try {
+    if (typeof client?.app?.log === "function") await client.app.log({ body: { level: "warn", message } });
+  } catch {}
+}
+
+async function sendStopContinuationPrompt(client, sessionID, prompt) {
+  if (!sessionID || !prompt || typeof client?.session?.prompt !== "function") return false;
+  await client.session.prompt({
+    path: { id: sessionID },
+    body: {
+      parts: [
+        {
+          type: "text",
+          text: prompt
+        }
+      ]
+    }
+  });
+  return true;
+}
+
+export const LidGuardOpenCodePlugin = async ({ client, directory, worktree }) => ({
   "chat.message": async (input, output) => {
     await runHook("chat.message", {
       ...createBasePayload("chat.message", directory, worktree),
@@ -127,14 +159,18 @@ export const LidGuardOpenCodePlugin = async ({ directory, worktree }) => ({
 
     const sessionID = extractSessionID(event);
 
+    if (event.type === "session.idle" && sessionID) {
+      if (stopInFlightSessionIDs.has(sessionID)) return;
+      stopInFlightSessionIDs.add(sessionID);
+    }
+
     if (event.type === "message.part.updated") {
       const text = extractPartText(event);
       if (text.length > 0 && sessionID) lastAssistantMessageBySession.set(sessionID, text);
       return;
     }
 
-    const isIdleStatus = event.type === "session.status" && extractSessionStatus(event) === "idle";
-    const isStopEvent = event.type === "session.idle" || event.type === "session.deleted" || event.type === "session.error" || isIdleStatus;
+    const isStopEvent = event.type === "session.idle" || event.type === "session.deleted" || event.type === "session.error";
 
     const payload = {
       ...createBasePayload(event.type, directory, worktree),
@@ -143,11 +179,38 @@ export const LidGuardOpenCodePlugin = async ({ directory, worktree }) => ({
       event
     };
 
+    if (event.type === "session.idle") payload.stopHookActive = continuedSessionIDs.has(sessionID);
     if (isStopEvent) payload.lastAssistantMessage = lastAssistantMessageBySession.get(sessionID) || "";
 
-    await runHook(event.type, payload);
+    let stdout = "";
+    try {
+      stdout = await runHook(event.type, payload);
+    } finally {
+      if (event.type === "session.idle" && sessionID) stopInFlightSessionIDs.delete(sessionID);
+    }
 
     if (isStopEvent) lastAssistantMessageBySession.delete(sessionID);
+
+    if (event.type === "session.idle") {
+      const stopContinuationPrompt = parseStopContinuationPrompt(stdout);
+      if (stopContinuationPrompt) {
+        if (sessionID) continuedSessionIDs.add(sessionID);
+        try {
+          const promptSent = await sendStopContinuationPrompt(client, sessionID, stopContinuationPrompt);
+          if (!promptSent) {
+            if (sessionID) continuedSessionIDs.delete(sessionID);
+            await logPluginMessage(client, "LidGuard could not send the ask-before-sleep reply because the OpenCode session prompt API is unavailable.");
+            await runHook("session.error", { ...createBasePayload("session.error", directory, worktree), sessionID, sessionStatus: "", event, lastAssistantMessage: payload.lastAssistantMessage });
+          }
+        } catch (error) {
+          if (sessionID) continuedSessionIDs.delete(sessionID);
+          await logPluginMessage(client, `LidGuard could not send the ask-before-sleep reply to OpenCode: ${error?.message || error}`);
+          await runHook("session.error", { ...createBasePayload("session.error", directory, worktree), sessionID, sessionStatus: "", event, lastAssistantMessage: payload.lastAssistantMessage });
+        }
+      } else if (sessionID) continuedSessionIDs.delete(sessionID);
+    } else if (event.type === "session.deleted" || event.type === "session.error") {
+      if (sessionID) continuedSessionIDs.delete(sessionID);
+    }
   }
 });
 

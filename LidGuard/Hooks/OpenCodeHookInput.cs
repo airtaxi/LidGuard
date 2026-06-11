@@ -20,6 +20,8 @@ public sealed class OpenCodeHookInput : IHookCommandInput
 
     public string SessionStatus { get; init; } = string.Empty;
 
+    public bool StopHookActive { get; init; }
+
     public string ToolName { get; init; } = string.Empty;
 
     public string LastAssistantMessage { get; init; } = string.Empty;
@@ -64,6 +66,7 @@ public sealed class OpenCodeHookInput : IHookCommandInput
                 Prompt = Coalesce(GetString(hookInputElement, "prompt"), GetPromptText(hookInputElement), GetPromptText(eventPropertiesElement)),
                 SessionIdentifier = Coalesce(GetString(hookInputElement, "sessionID", "sessionId"), GetString(eventPropertiesElement, "sessionID", "sessionId"), GetString(eventInfoElement, "id")),
                 SessionStatus = Coalesce(GetString(hookInputElement, "sessionStatus", "status"), GetString(statusElement, "type")),
+                StopHookActive = GetBoolean(hookInputElement, "stopHookActive", "stop_hook_active") ?? false,
                 ToolName = Coalesce(GetString(hookInputElement, "toolName", "tool"), GetString(eventPropertiesElement, "tool")),
                 LastAssistantMessage = Coalesce(GetString(hookInputElement, "lastAssistantMessage", "last_assistant_message")),
                 TranscriptPath = GetString(hookInputElement, "transcriptPath", "transcript_path"),
@@ -86,6 +89,8 @@ public sealed class OpenCodeHookInput : IHookCommandInput
     }
 
     private static JsonElement GetElement(JsonElement hookInputElement, string primaryPropertyName, string secondaryPropertyName = "") => HookJsonPropertyReader.GetElementProperty(hookInputElement, primaryPropertyName, secondaryPropertyName);
+
+    private static bool? GetBoolean(JsonElement hookInputElement, string primaryPropertyName, string secondaryPropertyName = "") => HookJsonPropertyReader.GetNullableBooleanProperty(hookInputElement, primaryPropertyName, secondaryPropertyName);
 
     private static string GetPromptText(JsonElement element)
     {

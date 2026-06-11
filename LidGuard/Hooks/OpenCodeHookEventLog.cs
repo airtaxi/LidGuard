@@ -12,7 +12,7 @@ public static class OpenCodeHookEventLog
     {
         ArgumentNullException.ThrowIfNull(hookInput);
 
-        var details = HookEventLog.CreateDetails(("tool", hookInput.ToolName), ("permission", hookInput.Permission), ("status", hookInput.SessionStatus), ("messageID", hookInput.MessageIdentifier), ("callID", hookInput.CallIdentifier), ("eventID", hookInput.EventIdentifier));
+        var details = HookEventLog.CreateDetails(("tool", hookInput.ToolName), ("permission", hookInput.Permission), ("status", hookInput.SessionStatus), ("stopHookActive", hookInput.StopHookActive.ToString()), ("messageID", hookInput.MessageIdentifier), ("callID", hookInput.CallIdentifier), ("eventID", hookInput.EventIdentifier));
         return s_eventLog.AppendReceived(hookInput.HookEventName, hookInput, details, hookInput.HookEventName.Equals(OpenCodeHookEventNames.ChatMessage, StringComparison.Ordinal));
     }
 

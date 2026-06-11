@@ -88,7 +88,11 @@ internal static class OpenCodeHookCommand
             return string.IsNullOrWhiteSpace(hookEventName) ? "opencode-hook-stop" : hookEventName;
         }
 
+        protected override bool CanReturnStopContinuation(string hookEventName, OpenCodeHookInput hookInput) => hookEventName.Equals(OpenCodeHookEventNames.SessionIdle, StringComparison.Ordinal);
+
         protected override string GetLastAssistantMessage(OpenCodeHookInput hookInput) => hookInput.LastAssistantMessage;
+
+        protected override bool IsStopHookAlreadyActive(OpenCodeHookInput hookInput) => hookInput.StopHookActive;
 
         private static bool IsNormalSessionEnd(string hookEventName, OpenCodeHookInput hookInput)
         {
