@@ -20,7 +20,7 @@ Most keep-awake tools protect a process, a timer, or the whole machine. LidGuard
 - Agent-aware sleep prevention for Codex, Claude Code, GitHub Copilot CLI, and OpenCode.
 - Optional lid-close protection so protected agent work can continue after the laptop closes, with automatic restoration of the original OS policy.
 - Windows-to-WSL hook and MCP setup, so providers running inside WSL can call the Windows LidGuard runtime without installing LidGuard inside the distro.
-- Automatic Sleep or Hibernate after protected sessions finish, helping avoid unnecessary battery drain.
+- Automatic Sleep or Hibernate after protected sessions finish, to avoid unnecessary battery drain.
 - Ask-before-sleep replies for supported providers, so LidGuard can ask before sleeping and keep the session alive when you reply.
 - Cross-platform power control for Windows, systemd/logind Linux, and macOS.
 - Safety controls such as SoftLock, inactive timeout, pre-suspend hooks, diagnostics, and emergency hibernation.
