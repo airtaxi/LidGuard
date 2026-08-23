@@ -66,17 +66,7 @@ internal static class WslCommandUtilities
             return false;
         }
 
-        var validationArguments = new List<string>();
-        if (!string.IsNullOrWhiteSpace(distroName))
-        {
-            validationArguments.Add("--distribution");
-            validationArguments.Add(distroName);
-        }
-
-        validationArguments.Add("--exec");
-        validationArguments.Add("true");
-
-        var distroResult = RunWslProcess(validationArguments);
+        var distroResult = RunShell(distroName, "exit 0", []);
         if (distroResult.ExitCode == 0) return true;
 
         message = string.IsNullOrWhiteSpace(distroName) ? LocalizationService.GetString("WslDefaultDistroUnavailable").Replace("{0}", distroResult.GetDisplayError(), StringComparison.Ordinal) : LocalizationService.GetString("WslNamedDistroUnavailable").Replace("{0}", distroName, StringComparison.Ordinal).Replace("{1}", distroResult.GetDisplayError(), StringComparison.Ordinal);
