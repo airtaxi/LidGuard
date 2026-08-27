@@ -1,4 +1,4 @@
-using System.Runtime.Versioning;
+﻿using System.Runtime.Versioning;
 using LidGuard.Results;
 using LidGuard.Services;
 using LidGuard.Settings;
@@ -115,11 +115,10 @@ public sealed partial class SystemAudioVolumeController : ISystemAudioVolumeCont
 
     private static unsafe LidGuardOperationResult<ComInterfaceHandle<IMMDeviceEnumerator>> CreateMmDeviceEnumerator()
     {
-        var enumeratorPointer = (void*)null;
-        var result = PInvoke.CoCreateInstance(s_mmDeviceEnumeratorClassIdentifier, null, CLSCTX.CLSCTX_INPROC_SERVER, IMMDeviceEnumerator.IID_Guid, out enumeratorPointer);
+        var result = PInvoke.CoCreateInstance(s_mmDeviceEnumeratorClassIdentifier, null, CLSCTX.CLSCTX_INPROC_SERVER, out IMMDeviceEnumerator* enumeratorPointer);
         if (Failed(result)) return LidGuardOperationResult<ComInterfaceHandle<IMMDeviceEnumerator>>.Failure("Failed to create the Windows audio device enumerator.", (int)result);
 
-        return LidGuardOperationResult<ComInterfaceHandle<IMMDeviceEnumerator>>.Success(new ComInterfaceHandle<IMMDeviceEnumerator>((IMMDeviceEnumerator*)enumeratorPointer));
+        return LidGuardOperationResult<ComInterfaceHandle<IMMDeviceEnumerator>>.Success(new ComInterfaceHandle<IMMDeviceEnumerator>(enumeratorPointer));
     }
 
     private static unsafe LidGuardOperationResult<ComInterfaceHandle<IMMDevice>> GetDefaultAudioEndpoint(IMMDeviceEnumerator* enumeratorPointer)
