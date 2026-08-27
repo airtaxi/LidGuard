@@ -1,10 +1,11 @@
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
 using LidGuard.Notifications.Configuration;
 using LidGuard.Notifications.Data;
 using LidGuard.Notifications.Models;
 using Microsoft.Extensions.Options;
 using WebPush;
+using WebPush.Model;
 
 namespace LidGuard.Notifications.Services;
 
