@@ -113,7 +113,7 @@
     <value>LidGuard is not running. No active session was removed.</value>
   </data>
   <data name="ConsoleSessionLine" xml:space="preserve">
-    <value>- {0}:{1} process={2} softLock={3} cwd="{4}" started={5} lastActivity={6}</value>
+    <value>- {0}:{1} process={2} softLock={3} pendingWork={4} cwd="{5}" started={6} lastActivity={7}</value>
   </data>
   <data name="ConsoleSettingsFile" xml:space="preserve">
     <value>Settings file: {0}</value>
@@ -183,6 +183,12 @@
   </data>
   <data name="DisplayMinuteCount" xml:space="preserve">
     <value>{0} minutes</value>
+  </data>
+  <data name="DisplaySessionPendingWorkStateActive" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="DisplaySessionPendingWorkStateNone" xml:space="preserve">
+    <value>None</value>
   </data>
   <data name="DisplaySessionSoftLockStateNone" xml:space="preserve">
     <value>None</value>
@@ -977,7 +983,7 @@
     <value>State: {0} | Last update: {1}</value>
   </data>
   <data name="LiveStatusSessionLine" xml:space="preserve">
-    <value>{0} session={1} process={2} softLock={3} started={4} last={5} workingDirectory={6}</value>
+    <value>{0} session={1} process={2} softLock={3} pendingWork={4} started={5} last={6} workingDirectory={7}</value>
   </data>
   <data name="LiveStatusSessionShortLabel" xml:space="preserve">
     <value>session</value>

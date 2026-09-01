@@ -29,7 +29,7 @@ description: "LidGuard CLI, settings, permission commands, examples, and failure
 - `remove-session --session <id>` removes a specific session identifier.
 - `remove-session --provider <provider>` narrows manual removal to a provider.
 - Provider MCP removal may also narrow by MCP provider name where supported.
-- `status` should report active sessions, runtime lid state, visible display monitor count, settings summary, soft-lock state, and runtime cleanup state.
+- `status` should report active sessions, runtime lid state, visible display monitor count, settings summary, soft-lock state, pending provider work state, and runtime cleanup state.
 - `live-status` should keep refreshing status every second until interrupted. Runtime events may refresh the dashboard sooner, but lid state display must not depend on a dedicated live-status lid-state event.
 - `cleanup-orphans` should remove sessions whose watched processes have exited or whose safe provider-specific cleanup criteria match.
 
@@ -65,7 +65,7 @@ description: "LidGuard CLI, settings, permission commands, examples, and failure
 - Post-stop suspend sound: off by default.
 - Post-stop suspend sound volume override: off by default, accepts 1 through 100 percent, and is rejected rather than clamped when out of range.
 - Suspend history recording: on by default, keeps the latest 10 entries, and accepts `off` or an enabled count of at least 1.
-- Inactive session timeout: 12 minutes by default, accepts `off` or an enabled minute count of at least 1, and has no product-level maximum.
+- Inactive session timeout: 12 minutes by default, accepts `off` or an enabled minute count of at least 1, and has no product-level maximum. Sessions deferred for pending provider work follow the same timeout; deferred stops refresh last activity, so live work keeps waiting, while pending work silent for the configured minutes is abandoned and soft-locks the session.
 - Server runtime cleanup delay after all sessions are gone: 10 minutes by default, accepts `off` to disable automatic runtime exit, `0` for immediate exit, or a positive minute count to wait, and has no product-level maximum.
 - Pre-suspend webhook URL: off by default.
 - Post-session-end webhook URL: off by default.

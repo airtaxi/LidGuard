@@ -113,7 +113,7 @@
     <value>LidGuard は実行されていません。削除されたアクティブなセッションはありません。</value>
   </data>
   <data name="ConsoleSessionLine" xml:space="preserve">
-    <value>- {0}:{1} プロセス={2} 入力待ち={3} 作業フォルダー="{4}" 開始={5} 最終アクティビティ={6}</value>
+    <value>- {0}:{1} プロセス={2} 入力待ち={3} バックグラウンド作業={4} 作業フォルダー="{5}" 開始={6} 最終アクティビティ={7}</value>
   </data>
   <data name="ConsoleSettingsFile" xml:space="preserve">
     <value>設定ファイル: {0}</value>
@@ -183,6 +183,12 @@
   </data>
   <data name="DisplayMinuteCount" xml:space="preserve">
     <value>{0} 分</value>
+  </data>
+  <data name="DisplaySessionPendingWorkStateActive" xml:space="preserve">
+    <value>あり</value>
+  </data>
+  <data name="DisplaySessionPendingWorkStateNone" xml:space="preserve">
+    <value>なし</value>
   </data>
   <data name="DisplaySessionSoftLockStateNone" xml:space="preserve">
     <value>なし</value>
@@ -977,7 +983,7 @@
     <value>状態: {0} | 最終更新: {1}</value>
   </data>
   <data name="LiveStatusSessionLine" xml:space="preserve">
-    <value>{0} セッション={1} プロセス={2} 入力待ち={3} 開始={4} 最終={5} 作業ディレクトリ={6}</value>
+    <value>{0} セッション={1} プロセス={2} 入力待ち={3} バックグラウンド作業={4} 開始={5} 最終={6} 作業ディレクトリ={7}</value>
   </data>
   <data name="LiveStatusSessionShortLabel" xml:space="preserve">
     <value>セッション</value>

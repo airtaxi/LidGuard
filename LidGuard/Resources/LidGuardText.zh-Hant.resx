@@ -113,7 +113,7 @@
     <value>LidGuard 未在執行中。沒有移除任何進行中的工作階段。</value>
   </data>
   <data name="ConsoleSessionLine" xml:space="preserve">
-    <value>- {0}:{1} 處理程序={2} 軟鎖定={3} 工作目錄="{4}" 開始={5} 最後活動={6}</value>
+    <value>- {0}:{1} 處理程序={2} 軟鎖定={3} 待處理工作={4} 工作目錄="{5}" 開始={6} 最後活動={7}</value>
   </data>
   <data name="ConsoleSettingsFile" xml:space="preserve">
     <value>設定檔: {0}</value>
@@ -183,6 +183,12 @@
   </data>
   <data name="DisplayMinuteCount" xml:space="preserve">
     <value>{0} 分鐘</value>
+  </data>
+  <data name="DisplaySessionPendingWorkStateActive" xml:space="preserve">
+    <value>有</value>
+  </data>
+  <data name="DisplaySessionPendingWorkStateNone" xml:space="preserve">
+    <value>無</value>
   </data>
   <data name="DisplaySessionSoftLockStateNone" xml:space="preserve">
     <value>無</value>
@@ -977,7 +983,7 @@
     <value>狀態: {0} | 最後更新: {1}</value>
   </data>
   <data name="LiveStatusSessionLine" xml:space="preserve">
-    <value>{0} 工作階段={1} 處理程序={2} 軟鎖定={3} 開始={4} 最後活動={5} 工作目錄={6}</value>
+    <value>{0} 工作階段={1} 處理程序={2} 軟鎖定={3} 待處理工作={4} 開始={5} 最後活動={6} 工作目錄={7}</value>
   </data>
   <data name="LiveStatusSessionShortLabel" xml:space="preserve">
     <value>工作階段</value>

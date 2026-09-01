@@ -113,7 +113,7 @@
     <value>LidGuard 未在运行。未移除任何活动会话。</value>
   </data>
   <data name="ConsoleSessionLine" xml:space="preserve">
-    <value>- {0}:{1} 进程={2} soft-lock={3} 工作目录="{4}" 开始={5} 最后活动={6}</value>
+    <value>- {0}:{1} 进程={2} soft-lock={3} 待处理任务={4} 工作目录="{5}" 开始={6} 最后活动={7}</value>
   </data>
   <data name="ConsoleSettingsFile" xml:space="preserve">
     <value>设置文件：{0}</value>
@@ -183,6 +183,12 @@
   </data>
   <data name="DisplayMinuteCount" xml:space="preserve">
     <value>{0} 分钟</value>
+  </data>
+  <data name="DisplaySessionPendingWorkStateActive" xml:space="preserve">
+    <value>有</value>
+  </data>
+  <data name="DisplaySessionPendingWorkStateNone" xml:space="preserve">
+    <value>无</value>
   </data>
   <data name="DisplaySessionSoftLockStateNone" xml:space="preserve">
     <value>无</value>
@@ -977,7 +983,7 @@
     <value>状态：{0} | 最后刷新：{1}</value>
   </data>
   <data name="LiveStatusSessionLine" xml:space="preserve">
-    <value>{0} 会话={1} 进程={2} SoftLock={3} 开始={4} 最后={5} 工作目录={6}</value>
+    <value>{0} 会话={1} 进程={2} SoftLock={3} 待处理任务={4} 开始={5} 最后={6} 工作目录={7}</value>
   </data>
   <data name="LiveStatusSessionShortLabel" xml:space="preserve">
     <value>会话</value>

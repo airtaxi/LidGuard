@@ -86,7 +86,7 @@ lidguard preview-system-sound Asterisk
 lidguard preview-current-sound
 ```
 
-Running `settings` with no options starts interactive editing. Session timeout defaults to 12 minutes; use `--session-timeout-minutes off` to disable it. Runtime auto-exit defaults to 10 minutes after all cleanup finishes; use `--server-runtime-cleanup-delay-minutes 0` to exit immediately or `off` to keep it running. Closed-lid PermissionRequest accepts `deny`, `allow`, or `ask`; `ask` pauses protection and lets the provider show its normal prompt.
+Running `settings` with no options starts interactive editing. Session timeout defaults to 12 minutes; use `--session-timeout-minutes off` to disable it. Sessions waiting on provider background work follow the same timeout: each deferred stop refreshes the activity time, so live work keeps waiting, and pending work that goes silent for the configured minutes is treated as abandoned and soft-locks the session. Protection then stays applied for at most the configured timeout, even if a stop or completion event is lost. Runtime auto-exit defaults to 10 minutes after all cleanup finishes; use `--server-runtime-cleanup-delay-minutes 0` to exit immediately or `off` to keep it running. Closed-lid PermissionRequest accepts `deny`, `allow`, or `ask`; `ask` pauses protection and lets the provider show its normal prompt.
 
 Ask-before-sleep replies are the "ask me before sleeping" flow. Set `--closed-lid-stop-follow-up-webhook-url` to send the alert, and use `--closed-lid-stop-follow-up-delay-seconds` for how long LidGuard waits for your reply. The default reply wait is 180 seconds; use 0 to turn the reply alert off, or at least 20 seconds when it is on. `--closed-lid-stop-follow-up-sound` plays once after the reply webhook starts and the poll URL is valid. `--override` is a short alias for `--closed-lid-stop-follow-up-sound-volume-override-percent`; if both are provided, the long option wins. `--post-stop-suspend-delay-seconds` is a separate safety delay after work ends so immediately-following prompts can arrive before sleep/hibernate or reply waiting starts; keep it at 10 seconds or more when ask-before-sleep replies are on. `--repeat-closed-lid-stop-follow-up true` is the default: after your reply makes work continue, LidGuard can ask again the next time that work tries to finish. Set it to `false` if you only want LidGuard to ask the first time. Changing the reply URL or either delay refreshes installed managed hook timeouts where LidGuard can do that safely.
 
@@ -189,7 +189,7 @@ LidGuard stores its default settings and runtime logs under:
 
 On typical Linux desktops, this resolves under `~/.local/share/LidGuard`. On macOS, it resolves through .NET's local application data path for the current user.
 
-The default settings file is `settings.json`. Runtime session execution events are written to `session-execution.log` as JSON lines, with only the latest 500 entries retained. Inactive-session timeout expiry is logged as `session-timeout-softlock-recorded`.
+The default settings file is `settings.json`. Runtime session execution events are written to `session-execution.log` as JSON lines, with only the latest 500 entries retained. Inactive-session timeout expiry is logged as `session-timeout-softlock-recorded`. Pending provider work that the timeout treats as abandoned is logged as `session-pending-provider-work-abandoned`.
 
 ## Notes
 

@@ -131,6 +131,27 @@ public sealed class LidGuardSessionRegistry
         }
     }
 
+    public bool TryClearPendingProviderWork(AgentProvider provider, string sessionIdentifier, string providerName, out LidGuardSessionSnapshot snapshot)
+    {
+        snapshot = LidGuardSessionSnapshot.Empty;
+        if (string.IsNullOrWhiteSpace(sessionIdentifier)) return false;
+
+        var key = new LidGuardSessionKey(provider, sessionIdentifier, providerName);
+        lock (_gate)
+        {
+            if (!_sessions.TryGetValue(key, out var existingSnapshot)) return false;
+            if (!existingSnapshot.HasPendingProviderWork)
+            {
+                snapshot = existingSnapshot;
+                return true;
+            }
+
+            snapshot = CloneSnapshot(existingSnapshot, existingSnapshot.SoftLockState, existingSnapshot.SoftLockReason, existingSnapshot.SoftLockedAt, existingSnapshot.LastActivityAt, false, string.Empty);
+            _sessions[key] = snapshot;
+            return true;
+        }
+    }
+
     public bool TryMarkSoftLocked(AgentProvider provider, string sessionIdentifier, string providerName, string softLockReason, DateTimeOffset softLockedAt, out LidGuardSessionSnapshot snapshot, out bool changed)
     {
         changed = false;

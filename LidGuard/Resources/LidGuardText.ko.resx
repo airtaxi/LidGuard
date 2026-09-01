@@ -113,7 +113,7 @@
     <value>LidGuard가 실행 중이 아닙니다. 제거된 활성 세션이 없습니다.</value>
   </data>
   <data name="ConsoleSessionLine" xml:space="preserve">
-    <value>- {0}:{1} 프로세스={2} 소프트락={3} 작업폴더="{4}" 시작={5} 마지막활동={6}</value>
+    <value>- {0}:{1} 프로세스={2} 소프트락={3} 대기작업={4} 작업폴더="{5}" 시작={6} 마지막활동={7}</value>
   </data>
   <data name="ConsoleSettingsFile" xml:space="preserve">
     <value>설정 파일: {0}</value>
@@ -183,6 +183,12 @@
   </data>
   <data name="DisplayMinuteCount" xml:space="preserve">
     <value>{0}분</value>
+  </data>
+  <data name="DisplaySessionPendingWorkStateActive" xml:space="preserve">
+    <value>있음</value>
+  </data>
+  <data name="DisplaySessionPendingWorkStateNone" xml:space="preserve">
+    <value>없음</value>
   </data>
   <data name="DisplaySessionSoftLockStateNone" xml:space="preserve">
     <value>없음</value>
@@ -977,7 +983,7 @@
     <value>상태: {0} | 마지막 갱신: {1}</value>
   </data>
   <data name="LiveStatusSessionLine" xml:space="preserve">
-    <value>{0} 세션={1} 프로세스={2} SoftLock={3} 시작={4} 마지막={5} 작업폴더={6}</value>
+    <value>{0} 세션={1} 프로세스={2} SoftLock={3} 대기작업={4} 시작={5} 마지막={6} 작업폴더={7}</value>
   </data>
   <data name="LiveStatusSessionShortLabel" xml:space="preserve">
     <value>세션</value>

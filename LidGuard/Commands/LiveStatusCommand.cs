@@ -226,7 +226,7 @@ internal static class LiveStatusCommand
         {
             var providerDisplayText = StyleStrong(AgentProviderDisplay.CreateProviderDisplayText(session.Provider, session.ProviderName), enableStyles);
             var processText = session.WatchedProcessIdentifier > 0 ? session.WatchedProcessIdentifier.ToString(CultureInfo.InvariantCulture) : LocalizationService.GetString("SessionProcessNone");
-            sessionLines.Add(Format("LiveStatusSessionLine", providerDisplayText, StyleCyan(DisplayValue(session.SessionIdentifier), enableStyles), processText, DescribeSoftLockStatus(session, enableStyles), FormatCompactTimestamp(session.StartedAt), FormatCompactTimestamp(session.LastActivityAt), DisplayValue(session.WorkingDirectory)));
+            sessionLines.Add(Format("LiveStatusSessionLine", providerDisplayText, StyleCyan(DisplayValue(session.SessionIdentifier), enableStyles), processText, DescribeSoftLockStatus(session, enableStyles), DescribePendingWorkStatus(session, enableStyles), FormatCompactTimestamp(session.StartedAt), FormatCompactTimestamp(session.LastActivityAt), DisplayValue(session.WorkingDirectory)));
         }
 
         return sessionLines;
@@ -403,6 +403,15 @@ internal static class LiveStatusCommand
         if (!string.IsNullOrWhiteSpace(session.SoftLockReason)) details = $"{details}:{session.SoftLockReason}";
         if (session.SoftLockedAt is not null) details = $"{details}@{FormatCompactTimestamp(session.SoftLockedAt.Value)}";
         return StyleFailure(details, enableStyles);
+    }
+
+    private static string DescribePendingWorkStatus(LidGuardSessionStatus session, bool enableStyles)
+    {
+        if (!session.HasPendingProviderWork) return StyleMuted(LocalizationService.GetString("DisplaySessionPendingWorkStateNone"), enableStyles);
+
+        var details = LocalizationService.GetString("DisplaySessionPendingWorkStateActive");
+        if (!string.IsNullOrWhiteSpace(session.PendingProviderWorkReason)) details = $"{details}:{session.PendingProviderWorkReason}";
+        return StyleWarning(details, enableStyles);
     }
 
     private static string FormatCompactTimestamp(DateTimeOffset timestamp)

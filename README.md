@@ -112,11 +112,11 @@ LidGuard is currently officially tested with Codex on Windows. Linux, macOS, Cla
 
 ## Full Feature Overview
 
-- Session tracking and status: active session count, provider/session identity, watched process id, SoftLock state, working directory, local start and last-activity times, current lid state, visible display monitor count, and a live terminal status dashboard.
+- Session tracking and status: active session count, provider/session identity, watched process id, SoftLock state, pending provider work state, working directory, local start and last-activity times, current lid state, visible display monitor count, and a live terminal status dashboard.
 - Provider integration: Codex, Claude Code, GitHub Copilot CLI, and OpenCode hooks/plugins; hook install/status/remove/events commands; regular MCP install/status/remove commands; Windows WSL hook/MCP setup commands; and Provider MCP for other tools that can call a custom stdio MCP server.
 - Keep-awake controls: configurable system sleep prevention, display sleep prevention, Windows away-mode requests, and the Windows power request reason text shown by the operating system.
 - Lid-close handling: temporary Windows lid-action override, Linux `handle-lid-switch` inhibitor, macOS `pmset disablesleep`, and restoration of the user's original policy after protection ends or recovery runs.
-- Process and runtime cleanup: parent-process watching, orphan cleanup, inactive-session timeout SoftLocking, and automatic runtime exit after the configured cleanup delay once all sessions are gone.
+- Process and runtime cleanup: parent-process watching, orphan cleanup, inactive-session timeout SoftLocking that also covers sessions waiting on provider background work, and automatic runtime exit after the configured cleanup delay once all sessions are gone. A lost provider stop or completion event keeps the lid-close override applied for at most the configured timeout.
 - Completion suspend flow: configurable Sleep or Hibernate, post-stop suspend delay in seconds, cancellation when sessions resume or the environment is no longer suspend-eligible, and recent suspend history retention.
 - Ask-before-sleep replies: optional notifications when a supported closed-lid session tries to finish. A reply keeps the session alive, and the default setting asks again if that continued work later tries to finish again.
 - Pre-suspend audio warning: optional off/system-sound/`.wav` warning sound before Sleep or Hibernate, plus an optional temporary master volume override from 1 through 100 percent that restores the previous volume and mute state afterward.

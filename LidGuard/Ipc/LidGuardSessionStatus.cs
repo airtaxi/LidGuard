@@ -20,6 +20,10 @@ public sealed class LidGuardSessionStatus
 
     public DateTimeOffset? SoftLockedAt { get; init; }
 
+    public bool HasPendingProviderWork { get; init; }
+
+    public string PendingProviderWorkReason { get; init; } = string.Empty;
+
     public int WatchedProcessIdentifier { get; init; }
 
     public string WorkingDirectory { get; init; } = string.Empty;

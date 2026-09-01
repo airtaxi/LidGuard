@@ -32,7 +32,7 @@ internal static class LidGuardCommandConsole
                 var providerDisplayText = AgentProviderDisplay.CreateProviderDisplayText(session.Provider, session.ProviderName);
                 var startedAt = LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(session.StartedAt);
                 var lastActivityAt = LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(session.LastActivityAt);
-                Console.WriteLine(LocalizationService.GetFormattedString("ConsoleSessionLine", providerDisplayText, session.SessionIdentifier, processText, DescribeSoftLockStatus(session), session.WorkingDirectory, startedAt, lastActivityAt));
+                Console.WriteLine(LocalizationService.GetFormattedString("ConsoleSessionLine", providerDisplayText, session.SessionIdentifier, processText, DescribeSoftLockStatus(session), DescribePendingWorkStatus(session), session.WorkingDirectory, startedAt, lastActivityAt));
             }
         }
 
@@ -154,6 +154,15 @@ internal static class LidGuardCommandConsole
         var details = LocalizationService.DisplaySessionSoftLockState(session.SoftLockState);
         if (!string.IsNullOrWhiteSpace(session.SoftLockReason)) details = $"{details}:{session.SoftLockReason}";
         if (session.SoftLockedAt is not null) details = $"{details}@{LidGuardCommandTimestampFormatter.FormatDisplayTimestamp(session.SoftLockedAt.Value)}";
+        return details;
+    }
+
+    private static string DescribePendingWorkStatus(LidGuardSessionStatus session)
+    {
+        if (!session.HasPendingProviderWork) return LocalizationService.GetString("DisplaySessionPendingWorkStateNone");
+
+        var details = LocalizationService.GetString("DisplaySessionPendingWorkStateActive");
+        if (!string.IsNullOrWhiteSpace(session.PendingProviderWorkReason)) details = $"{details}:{session.PendingProviderWorkReason}";
         return details;
     }
 

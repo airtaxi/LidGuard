@@ -86,7 +86,7 @@ lidguard preview-system-sound Asterisk
 lidguard preview-current-sound
 ```
 
-옵션 없이 `settings`를 실행하면 대화형 설정 편집을 시작합니다. 세션 타임아웃 기본값은 12분이고 끄려면 `--session-timeout-minutes off`를 사용합니다. 런타임 자동 종료는 모든 정리가 끝난 뒤 10분이 기본값입니다. 즉시 종료하려면 `--server-runtime-cleanup-delay-minutes 0`, 계속 켜 두려면 `off`를 사용합니다. 덮개 닫힘 PermissionRequest 결정은 `deny`, `allow`, `ask`를 받습니다. `ask`는 보호를 잠시 풀고 provider의 일반 권한 요청 화면을 그대로 쓰게 합니다.
+옵션 없이 `settings`를 실행하면 대화형 설정 편집을 시작합니다. 세션 타임아웃 기본값은 12분이고 끄려면 `--session-timeout-minutes off`를 사용합니다. provider 백그라운드 작업 때문에 종료를 유예 중인 세션도 같은 타임아웃을 받습니다. 종료 유예 신호가 세션 활동 시각을 다시 갱신하므로 살아 있는 작업은 계속 대기되지만, 설정 시간 동안 갱신이 없으면 해당 대기 작업을 더 이상 살아 있지 않은 것으로 보고 세션을 소프트락으로 전환합니다. 덕분에 종료나 완료 알림이 유실되어도 보호는 설정 시간이 지나면 해제됩니다. 런타임 자동 종료는 모든 정리가 끝난 뒤 10분이 기본값입니다. 즉시 종료하려면 `--server-runtime-cleanup-delay-minutes 0`, 계속 켜 두려면 `off`를 사용합니다. 덮개 닫힘 PermissionRequest 결정은 `deny`, `allow`, `ask`를 받습니다. `ask`는 보호를 잠시 풀고 provider의 일반 권한 요청 화면을 그대로 쓰게 합니다.
 
 절전 전 답장 알림은 "절전 전에 나에게 한 번 물어보기" 흐름입니다. `--closed-lid-stop-follow-up-webhook-url`은 알림을 보낼 URL이고 `--closed-lid-stop-follow-up-delay-seconds`는 답장을 기다릴 시간입니다. 기본값은 180초입니다. 0이면 답장 알림을 끄고 답장 알림을 쓰려면 20초 이상으로 설정하세요. `--closed-lid-stop-follow-up-sound`는 답장 webhook 시작과 poll URL 검증이 끝난 뒤 한 번 재생됩니다. `--override`는 `--closed-lid-stop-follow-up-sound-volume-override-percent`의 짧은 별칭이며 둘 다 지정하면 긴 옵션 값이 우선합니다. `--post-stop-suspend-delay-seconds`는 별도 안전 대기 시간입니다. 작업이 끝난 직후 바로 이어진 메시지를 받을 수 있도록 잠깐 기다린 뒤 절전이나 답장 대기를 시작합니다. 절전 전 답장 알림을 켰다면 10초 이상으로 두세요. `--repeat-closed-lid-stop-follow-up true`가 기본값입니다. 답장으로 작업을 이어간 뒤 그 작업이 다시 끝나려 할 때도 LidGuard가 한 번 더 물어볼 수 있다는 뜻입니다. 한 번만 물어보면 충분하면 `false`로 바꾸면 됩니다. 답장 알림 URL이나 두 대기 시간을 바꾸면 가능한 범위에서 AI 도구 쪽 제한 시간도 자동으로 맞춥니다.
 
@@ -187,7 +187,7 @@ LidGuard는 기본 설정과 runtime log를 다음 위치에 저장합니다:
 %LOCALAPPDATA%\LidGuard
 ```
 
-기본 설정 파일은 `settings.json`입니다. Runtime session execution event는 JSON Lines 형식으로 `session-execution.log`에 기록되며 최신 500개 항목만 유지됩니다. 비활성 세션 타임아웃 만료는 `session-timeout-softlock-recorded`로 기록됩니다.
+기본 설정 파일은 `settings.json`입니다. Runtime session execution event는 JSON Lines 형식으로 `session-execution.log`에 기록되며 최신 500개 항목만 유지됩니다. 비활성 세션 타임아웃 만료는 `session-timeout-softlock-recorded`로 기록됩니다. 타임아웃이 백그라운드 대기 작업을 더 이상 살아 있지 않은 것으로 처리한 경우는 `session-pending-provider-work-abandoned`로 기록됩니다.
 
 ## 참고
 

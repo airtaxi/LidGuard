@@ -570,8 +570,10 @@ internal sealed class LidGuardRuntimeCoordinator
         var nextExpirationAt = DateTimeOffset.MaxValue;
         foreach (var snapshot in _sessionRegistry.GetSnapshots())
         {
-            if (snapshot.HasPendingProviderWork) continue;
-            if (snapshot.IsSoftLocked) continue;
+            // Soft-locked sessions without pending work are already suspend-eligible and stay outside
+            // the timer, but pending work must not exempt a session: a lost provider stop event would
+            // otherwise keep protection alive with no timeout ever firing.
+            if (snapshot.IsSoftLocked && !snapshot.HasPendingProviderWork) continue;
 
             var sessionExpirationAt = AddSessionTimeoutDuration(snapshot.LastActivityAt, sessionTimeoutDuration);
             if (sessionExpirationAt < nextExpirationAt) nextExpirationAt = sessionExpirationAt;
@@ -689,8 +691,7 @@ internal sealed class LidGuardRuntimeCoordinator
         var now = DateTimeOffset.UtcNow;
         var expiredSnapshots = _sessionRegistry
             .GetSnapshots()
-            .Where(snapshot => !snapshot.HasPendingProviderWork)
-            .Where(snapshot => !snapshot.IsSoftLocked)
+            .Where(snapshot => !snapshot.IsSoftLocked || snapshot.HasPendingProviderWork)
             .Where(snapshot => now >= snapshot.LastActivityAt)
             .Where(snapshot => now - snapshot.LastActivityAt >= sessionTimeoutDuration)
             .ToArray();
@@ -702,10 +703,31 @@ internal sealed class LidGuardRuntimeCoordinator
 
         foreach (var expiredSnapshot in expiredSnapshots)
         {
+            if (expiredSnapshot.HasPendingProviderWork) AbandonPendingProviderWorkInsideGate(expiredSnapshot, sessionTimeoutMinutes);
             MarkSessionSoftLockedInsideGate(SessionTimeoutCommandName, "session-timeout-softlock-recorded", expiredSnapshot.Provider, expiredSnapshot.ProviderName, expiredSnapshot.SessionIdentifier, $"session-timeout-expired:{sessionTimeoutMinutes} minutes", expiredSnapshot.Key);
         }
 
         ReconfigureSessionTimeoutMonitorInsideGate();
+    }
+
+    private void AbandonPendingProviderWorkInsideGate(LidGuardSessionSnapshot snapshot, int sessionTimeoutMinutes)
+    {
+        if (!_sessionRegistry.TryClearPendingProviderWork(snapshot.Provider, snapshot.SessionIdentifier, snapshot.ProviderName, out var abandonedSnapshot)) return;
+
+        var request = new LidGuardPipeRequest
+        {
+            Command = SessionTimeoutCommandName,
+            Provider = snapshot.Provider,
+            ProviderName = snapshot.ProviderName,
+            SessionIdentifier = snapshot.SessionIdentifier,
+            SessionStateReason = snapshot.PendingProviderWorkReason
+        };
+        var pendingProviderWorkReason = string.IsNullOrWhiteSpace(snapshot.PendingProviderWorkReason) ? "pending provider work remains" : snapshot.PendingProviderWorkReason.Trim();
+        var response = CreateSuccessResponse($"Cleared pending provider work for {snapshot.Key} because '{pendingProviderWorkReason}' showed no provider activity for {sessionTimeoutMinutes} minute(s).");
+        LidGuardRuntimeLogWriter.AppendSessionLog("session-pending-provider-work-abandoned", request, response, abandonedSnapshot);
+        // Re-attach the process watcher so a still-running agent process still gets normal exit
+        // cleanup even though its stop or completion event was lost.
+        StartWatcher(abandonedSnapshot);
     }
 
     private static DateTimeOffset AddSessionTimeoutDuration(DateTimeOffset lastActivityAt, TimeSpan sessionTimeoutDuration)
@@ -1873,6 +1895,8 @@ internal sealed class LidGuardRuntimeCoordinator
                 SoftLockState = snapshot.SoftLockState,
                 SoftLockReason = snapshot.SoftLockReason,
                 SoftLockedAt = snapshot.SoftLockedAt,
+                HasPendingProviderWork = snapshot.HasPendingProviderWork,
+                PendingProviderWorkReason = snapshot.PendingProviderWorkReason,
                 WatchedProcessIdentifier = snapshot.WatchedProcessIdentifier,
                 WorkingDirectory = snapshot.WorkingDirectory
             };
