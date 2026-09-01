@@ -39,7 +39,7 @@ internal static class LidGuardCommandLineApplication
         if (commandName == LidGuardPipeCommands.LiveStatus) return await LiveStatusCommand.RunAsync(commandLineArguments[1..]);
         if (commandName == LidGuardMcpServerCommand.CommandName) return await LidGuardMcpServerCommand.RunAsync(commandLineArguments[1..]);
         if (commandName == ProviderMcpServerCommand.CommandName) return await ProviderMcpServerCommand.RunAsync(commandLineArguments[1..]);
-        if (commandName == LidGuardPipeCommands.RunServer) return await RunServerAsync(runtimePlatform);
+        if (commandName == LidGuardPipeCommands.RunServer) return RunServer(runtimePlatform);
 #if LIDGUARD_LINUX
         if (commandName == LinuxPermissionCommand.CommandName) return LinuxPermissionCommand.Run(commandLineArguments[1..]);
 #endif
@@ -224,41 +224,45 @@ internal static class LidGuardCommandLineApplication
             or "wsl-provider-mcp-uninstall";
 #endif
 
-    private static async Task<int> RunServerAsync(ILidGuardRuntimePlatform runtimePlatform)
+    private static int RunServer(ILidGuardRuntimePlatform runtimePlatform)
     {
+        // The runtime mutex has thread affinity and must be released by the thread that acquired it, so the
+        // entry thread blocks on the async server loop instead of awaiting across the acquire/release span.
         using var runtimeMutex = new Mutex(false, LidGuardPipeNames.RuntimeMutexName);
         if (!TryAcquireRuntimeMutex(runtimeMutex)) return 0;
 
+        try { return RunServerCoreAsync(runtimePlatform).GetAwaiter().GetResult(); }
+        finally { runtimeMutex.ReleaseMutex(); }
+    }
+
+    private static async Task<int> RunServerCoreAsync(ILidGuardRuntimePlatform runtimePlatform)
+    {
+        using var cancellationTokenSource = new CancellationTokenSource();
+        Console.CancelKeyPress += (_, eventArguments) =>
+        {
+            eventArguments.Cancel = true;
+            cancellationTokenSource.Cancel();
+        };
+
+        var serviceSetResult = runtimePlatform.CreateRuntimeServiceSet();
+        if (!serviceSetResult.Succeeded)
+        {
+            Console.WriteLine(serviceSetResult.Message);
+            return 0;
+        }
+
+        using var serviceSet = serviceSetResult.Value;
+        var settings = CreateRuntimeSettings();
+        var runtimeCoordinator = new LidGuardRuntimeCoordinator(settings, serviceSet.PowerRequestService, serviceSet.ProcessExitWatcher, serviceSet.LidActionPolicyController, serviceSet.SystemSuspendService, serviceSet.PostStopSuspendSoundPlayer, serviceSet.SystemAudioVolumeController, serviceSet.LidStateSource, serviceSet.VisibleDisplayMonitorCountProvider, cancellationTokenSource.Cancel);
+
+        var pipeServer = new LidGuardPipeServer(runtimeCoordinator, cancellationTokenSource.Cancel);
+
         try
         {
-            using var cancellationTokenSource = new CancellationTokenSource();
-            Console.CancelKeyPress += (_, eventArguments) =>
-            {
-                eventArguments.Cancel = true;
-                cancellationTokenSource.Cancel();
-            };
-
-            var serviceSetResult = runtimePlatform.CreateRuntimeServiceSet();
-            if (!serviceSetResult.Succeeded)
-            {
-                Console.WriteLine(serviceSetResult.Message);
-                return 0;
-            }
-
-            using var serviceSet = serviceSetResult.Value;
-            var settings = CreateRuntimeSettings();
-            var runtimeCoordinator = new LidGuardRuntimeCoordinator(settings, serviceSet.PowerRequestService, serviceSet.ProcessExitWatcher, serviceSet.LidActionPolicyController, serviceSet.SystemSuspendService, serviceSet.PostStopSuspendSoundPlayer, serviceSet.SystemAudioVolumeController, serviceSet.LidStateSource, serviceSet.VisibleDisplayMonitorCountProvider, cancellationTokenSource.Cancel);
-
-            var pipeServer = new LidGuardPipeServer(runtimeCoordinator, cancellationTokenSource.Cancel);
-
-            try
-            {
-                await pipeServer.RunAsync(cancellationTokenSource.Token);
-                return 0;
-            }
-            catch (OperationCanceledException) { return 0; }
+            await pipeServer.RunAsync(cancellationTokenSource.Token);
+            return 0;
         }
-        finally { runtimeMutex.ReleaseMutex(); }
+        catch (OperationCanceledException) { return 0; }
     }
 
     private static bool TryAcquireRuntimeMutex(Mutex runtimeMutex)
