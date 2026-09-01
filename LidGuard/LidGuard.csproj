@@ -52,7 +52,7 @@
     <Authors>LidGuard Contributors</Authors>
     <Description>Command-line tool that keeps long-running local AI coding agent sessions awake on Windows, Linux, and macOS.</Description>
     <PackageTags>dotnet-tool;nativeaot;aot;windows;macos;linux;codex;claude;copilot;opencode;power;sleep;lid</PackageTags>
-    <VersionPrefix>2.1.2</VersionPrefix>
+    <VersionPrefix>2.1.3</VersionPrefix>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageOutputPath>$(MSBuildProjectDirectory)\..\artifacts\packages</PackageOutputPath>
