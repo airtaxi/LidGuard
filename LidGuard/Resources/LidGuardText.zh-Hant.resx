@@ -619,6 +619,9 @@
   <data name="Help_Settings_SessionTimeoutOption" xml:space="preserve">
     <value>關閉閒置工作階段逾時，或讓閒置工作階段在這麼多分鐘沒有活動後停止保持系統喚醒。啟用時最小值為 1。</value>
   </data>
+  <data name="Help_Settings_SkipSuspendWhenLidCloseDoesNothingOption" xml:space="preserve">
+    <value>變更當蓋子關閉動作在目前電源連線狀態下已為不執行任何動作時，LidGuard 是否略過睡眠流程。</value>
+  </data>
   <data name="Help_Settings_SuspendHistoryOption" xml:space="preserve">
     <value>停用睡眠/休眠歷史記錄，或保留最近的睡眠/休眠要求項目。啟用時最小值為 1。</value>
   </data>
@@ -1810,6 +1813,9 @@
   <data name="SettingsNameSessionTimeoutMinutes" xml:space="preserve">
     <value>工作階段逾時分鐘數</value>
   </data>
+  <data name="SettingsNameSkipSuspendWhenLidCloseDoesNothing" xml:space="preserve">
+    <value>蓋子關閉動作為不執行任何動作時略過睡眠</value>
+  </data>
   <data name="SettingsNameSuspendHistoryEntryCount" xml:space="preserve">
     <value>睡眠/休眠記錄項目數量</value>
   </data>
@@ -1869,6 +1875,9 @@
   </data>
   <data name="SettingsOptionSessionTimeoutValidation" xml:space="preserve">
     <value>session-timeout-minutes 選項必須是 off，或至少為 {0} 的整數。</value>
+  </data>
+  <data name="SettingsOptionSkipSuspendWhenLidCloseDoesNothingUnsupported" xml:space="preserve">
+    <value>skip-suspend-when-lid-close-does-nothing 選項僅在 Windows 上受支援。</value>
   </data>
   <data name="SettingsOptionSuspendHistoryCountValidation" xml:space="preserve">
     <value>suspend-history-count 選項必須是 off，或至少為 {0} 的整數。</value>
@@ -1953,6 +1962,9 @@
   </data>
   <data name="SettingsSessionTimeout" xml:space="preserve">
     <value>  閒置工作階段逾時: {0}</value>
+  </data>
+  <data name="SettingsSkipSuspendWhenLidCloseDoesNothing" xml:space="preserve">
+    <value>  蓋子關閉動作為不執行任何動作時略過睡眠: {0}</value>
   </data>
   <data name="SettingsSuspendHistoryCount" xml:space="preserve">
     <value>  睡眠/休眠記錄數量: {0}</value>

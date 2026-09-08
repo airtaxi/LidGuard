@@ -12,6 +12,8 @@ public sealed class LidActionService : ILidActionService, IDisposable
 
     public LidGuardOperationResult<Guid> GetActivePowerSchemeIdentifier() => LidGuardOperationResult<Guid>.Success(s_linuxLidActionSchemeIdentifier);
 
+    public LidGuardOperationResult<PowerLine> GetCurrentPowerLine() => LidGuardOperationResult<PowerLine>.Failure("Current power connection state detection is not supported on Linux.");
+
     public LidGuardOperationResult<LidAction> ReadLidAction(Guid powerSchemeIdentifier, PowerLine powerLine)
     {
         if (powerSchemeIdentifier != s_linuxLidActionSchemeIdentifier) return LidGuardOperationResult<LidAction>.Failure("The Linux lid action scheme identifier is invalid.");

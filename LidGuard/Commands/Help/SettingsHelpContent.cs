@@ -20,8 +20,12 @@ internal static class SettingsHelpContent
 #if !LIDGUARD_LINUX && !LIDGUARD_MACOS
         powerRequestOptions += " [--prevent-away-mode-sleep <bool>]";
 #endif
+        var skipSuspendWhenLidCloseDoesNothingOption = string.Empty;
+#if !LIDGUARD_LINUX && !LIDGUARD_MACOS
+        skipSuspendWhenLidCloseDoesNothingOption = " [--skip-suspend-when-lid-close-does-nothing <bool>]";
+#endif
 
-        return $"{commandDisplayName} settings [--reset <bool>] [--change-lid-action <bool>] {powerRequestOptions} [--prevent-display-sleep <bool>] [--watch-parent-process <bool>] [--session-timeout-minutes off|<minutes>] [--server-runtime-cleanup-delay-minutes off|0|<minutes>] [--emergency-hibernation-on-high-temperature <bool>] [--emergency-hibernation-temperature-mode low|average|high] [--emergency-hibernation-temperature-celsius <number>] [--suspend-mode sleep|hibernate] [--post-stop-suspend-delay-seconds <number>] [--post-stop-suspend-sound off|<system-sound>|<wav-path>] [--post-stop-suspend-sound-volume-override-percent off|<1-100>] [--suspend-history-count off|<count>] [--pre-suspend-webhook-url <http-or-https-url>] [--post-session-end-webhook-url <http-or-https-url>] [--closed-lid-stop-follow-up-webhook-url <http-or-https-url>] [--closed-lid-stop-follow-up-delay-seconds <number>] [--closed-lid-stop-follow-up-sound off|<system-sound>|<wav-path>] [--closed-lid-stop-follow-up-sound-volume-override-percent off|<1-100>] [--override off|<1-100>] [--repeat-closed-lid-stop-follow-up <bool>] [--closed-lid-permission-request-decision deny|allow|ask] [--ui-culture auto|en|ko|ja|zh-Hans|zh-Hant|<culture-name>] [--power-request-reason <text>]";
+        return $"{commandDisplayName} settings [--reset <bool>] [--change-lid-action <bool>]{skipSuspendWhenLidCloseDoesNothingOption} {powerRequestOptions} [--prevent-display-sleep <bool>] [--watch-parent-process <bool>] [--session-timeout-minutes off|<minutes>] [--server-runtime-cleanup-delay-minutes off|0|<minutes>] [--emergency-hibernation-on-high-temperature <bool>] [--emergency-hibernation-temperature-mode low|average|high] [--emergency-hibernation-temperature-celsius <number>] [--suspend-mode sleep|hibernate] [--post-stop-suspend-delay-seconds <number>] [--post-stop-suspend-sound off|<system-sound>|<wav-path>] [--post-stop-suspend-sound-volume-override-percent off|<1-100>] [--suspend-history-count off|<count>] [--pre-suspend-webhook-url <http-or-https-url>] [--post-session-end-webhook-url <http-or-https-url>] [--closed-lid-stop-follow-up-webhook-url <http-or-https-url>] [--closed-lid-stop-follow-up-delay-seconds <number>] [--closed-lid-stop-follow-up-sound off|<system-sound>|<wav-path>] [--closed-lid-stop-follow-up-sound-volume-override-percent off|<1-100>] [--override off|<1-100>] [--repeat-closed-lid-stop-follow-up <bool>] [--closed-lid-permission-request-decision deny|allow|ask] [--ui-culture auto|en|ko|ja|zh-Hans|zh-Hant|<culture-name>] [--power-request-reason <text>]";
     }
 
     private static IReadOnlyList<LidGuardHelpOption> CreateOptions(string supportedPostStopSuspendSystemSounds)
@@ -30,6 +34,9 @@ internal static class SettingsHelpContent
         {
             new("--reset <bool>", LocalizationService.GetString("Help_Settings_ResetOption")),
             new("--change-lid-action <bool>", LocalizationService.GetString("Help_Settings_ChangeLidActionOption")),
+#if !LIDGUARD_LINUX && !LIDGUARD_MACOS
+            new("--skip-suspend-when-lid-close-does-nothing <bool>", LocalizationService.GetString("Help_Settings_SkipSuspendWhenLidCloseDoesNothingOption")),
+#endif
             new("--prevent-system-sleep <bool>", LocalizationService.GetString("Help_Settings_PreventSystemSleepOption"))
         };
 #if !LIDGUARD_LINUX && !LIDGUARD_MACOS

@@ -31,6 +31,8 @@ public sealed record LidGuardSettings
 
     public bool ChangeLidAction { get; init; }
 
+    public bool SkipSuspendWhenLidCloseDoesNothing { get; init; } = true;
+
     public SystemSuspendMode SuspendMode { get; init; } = SystemSuspendMode.Sleep;
 
     public int PostStopSuspendDelaySeconds { get; init; } = 10;
@@ -113,6 +115,11 @@ public sealed record LidGuardSettings
         {
             PowerRequest = normalizedPowerRequest,
             ChangeLidAction = settings.ChangeLidAction,
+#if LIDGUARD_LINUX || LIDGUARD_MACOS
+            SkipSuspendWhenLidCloseDoesNothing = false,
+#else
+            SkipSuspendWhenLidCloseDoesNothing = settings.SkipSuspendWhenLidCloseDoesNothing,
+#endif
             SuspendMode = settings.SuspendMode,
             PostStopSuspendDelaySeconds = Math.Max(0, settings.PostStopSuspendDelaySeconds),
             PostStopSuspendSound = string.IsNullOrWhiteSpace(settings.PostStopSuspendSound) ? string.Empty : settings.PostStopSuspendSound.Trim(),

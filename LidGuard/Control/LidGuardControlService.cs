@@ -213,6 +213,11 @@ public sealed class LidGuardControlService(IPostStopSuspendSoundPlayer postStopS
                 Reason = settingsPatch.PowerRequestReason is null ? basePowerRequest.Reason : NormalizePowerRequestReason(settingsPatch.PowerRequestReason)
             },
             ChangeLidAction = settingsPatch.ChangeLidAction ?? normalizedBaseSettings.ChangeLidAction,
+#if LIDGUARD_LINUX || LIDGUARD_MACOS
+            SkipSuspendWhenLidCloseDoesNothing = false,
+#else
+            SkipSuspendWhenLidCloseDoesNothing = settingsPatch.SkipSuspendWhenLidCloseDoesNothing ?? normalizedBaseSettings.SkipSuspendWhenLidCloseDoesNothing,
+#endif
             SuspendMode = settingsPatch.SuspendMode ?? normalizedBaseSettings.SuspendMode,
             PostStopSuspendDelaySeconds = settingsPatch.PostStopSuspendDelaySeconds ?? normalizedBaseSettings.PostStopSuspendDelaySeconds,
             PostStopSuspendSound = settingsPatch.PostStopSuspendSound ?? normalizedBaseSettings.PostStopSuspendSound,

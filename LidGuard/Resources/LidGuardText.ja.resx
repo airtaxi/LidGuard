@@ -619,6 +619,9 @@
   <data name="Help_Settings_SessionTimeoutOption" xml:space="preserve">
     <value>非アクティブ セッションのタイムアウトをオフにするか、最後のアクティビティから指定した分数が過ぎたら、そのセッションがシステムのスリープ防止を続けないようにします。有効にできる最小値は 1 です。</value>
   </data>
+  <data name="Help_Settings_SkipSuspendWhenLidCloseDoesNothingOption" xml:space="preserve">
+    <value>現在の電源接続状態で、ふたを閉じたときの動作がすでに「何もしない」なら、LidGuard がスリープ手順をスキップするかどうかを変更します。</value>
+  </data>
   <data name="Help_Settings_SuspendHistoryOption" xml:space="preserve">
     <value>スリープ履歴の記録を無効にするか、最新のスリープ/休止状態の要求エントリを保持します。有効にできる最小値は 1 です。</value>
   </data>
@@ -1810,6 +1813,9 @@
   <data name="SettingsNameSessionTimeoutMinutes" xml:space="preserve">
     <value>セッション タイムアウト (分)</value>
   </data>
+  <data name="SettingsNameSkipSuspendWhenLidCloseDoesNothing" xml:space="preserve">
+    <value>ふたを閉じたときの動作が何もしないならスリープをスキップ</value>
+  </data>
   <data name="SettingsNameSuspendHistoryEntryCount" xml:space="preserve">
     <value>スリープ履歴の保持件数</value>
   </data>
@@ -1869,6 +1875,9 @@
   </data>
   <data name="SettingsOptionSessionTimeoutValidation" xml:space="preserve">
     <value>session-timeout-minutes オプションは、off または {0} 以上の整数である必要があります。</value>
+  </data>
+  <data name="SettingsOptionSkipSuspendWhenLidCloseDoesNothingUnsupported" xml:space="preserve">
+    <value>skip-suspend-when-lid-close-does-nothing オプションは Windows でのみサポートされています。</value>
   </data>
   <data name="SettingsOptionSuspendHistoryCountValidation" xml:space="preserve">
     <value>suspend-history-count オプションは、off または {0} 以上の整数である必要があります。</value>
@@ -1953,6 +1962,9 @@
   </data>
   <data name="SettingsSessionTimeout" xml:space="preserve">
     <value>  非アクティブなセッションのタイムアウト: {0}</value>
+  </data>
+  <data name="SettingsSkipSuspendWhenLidCloseDoesNothing" xml:space="preserve">
+    <value>  ふたを閉じたときの動作が何もしないならスリープをスキップ: {0}</value>
   </data>
   <data name="SettingsSuspendHistoryCount" xml:space="preserve">
     <value>  スリープ履歴の件数: {0}</value>

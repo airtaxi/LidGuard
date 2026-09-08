@@ -6,6 +6,7 @@ CoUninitialize
 GetCurrentProcess
 GetPwrCapabilities
 GetSystemMetrics
+GetSystemPowerStatus
 IMMDevice
 IMMDeviceEnumerator
 IAudioEndpointVolume
@@ -32,5 +33,6 @@ ReadProcessMemory
 RegisterPowerSettingNotification
 SendNotifyMessage
 SetSuspendState
+SYSTEM_POWER_STATUS
 UnregisterPowerSettingNotification
 WaitForSingleObject

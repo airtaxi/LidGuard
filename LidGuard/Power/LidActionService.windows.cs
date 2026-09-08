@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using LidGuard.Power;
 using LidGuard.Results;
@@ -20,6 +21,18 @@ public sealed class LidActionService : ILidActionService
 
         try { return LidGuardOperationResult<Guid>.Success(*activePowerSchemePointer); }
         finally { PInvoke.LocalFree((HLOCAL)(nint)activePowerSchemePointer); }
+    }
+
+    public LidGuardOperationResult<PowerLine> GetCurrentPowerLine()
+    {
+        if (!PInvoke.GetSystemPowerStatus(out var systemPowerStatus)) return LidGuardOperationResult<PowerLine>.Failure("Failed to read the Windows power connection state.", Marshal.GetLastPInvokeError());
+
+        return systemPowerStatus.ACLineStatus switch
+        {
+            0 => LidGuardOperationResult<PowerLine>.Success(PowerLine.DirectCurrent),
+            1 or 2 => LidGuardOperationResult<PowerLine>.Success(PowerLine.AlternatingCurrent),
+            _ => LidGuardOperationResult<PowerLine>.Failure($"The Windows power connection state is unknown (AC line status: {systemPowerStatus.ACLineStatus}).")
+        };
     }
 
     public LidGuardOperationResult<LidAction> ReadLidAction(Guid powerSchemeIdentifier, PowerLine powerLine)

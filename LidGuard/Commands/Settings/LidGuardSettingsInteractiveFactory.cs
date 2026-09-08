@@ -23,6 +23,11 @@ internal static class LidGuardSettingsInteractiveFactory
 #endif
         if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting(LocalizationService.GetString("SettingsNamePreventDisplaySleep"), storedPowerRequest.PreventDisplaySleep, defaultPowerRequest.PreventDisplaySleep, out var preventDisplaySleep, out message)) return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting(LocalizationService.GetString("SettingsNameChangeLidAction"), normalizedStoredSettings.ChangeLidAction, defaultSettings.ChangeLidAction, out var changeLidAction, out message)) return false;
+#if LIDGUARD_LINUX || LIDGUARD_MACOS
+        var skipSuspendWhenLidCloseDoesNothing = false;
+#else
+        if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting(LocalizationService.GetString("SettingsNameSkipSuspendWhenLidCloseDoesNothing"), normalizedStoredSettings.SkipSuspendWhenLidCloseDoesNothing, defaultSettings.SkipSuspendWhenLidCloseDoesNothing, out var skipSuspendWhenLidCloseDoesNothing, out message)) return false;
+#endif
         if (!LidGuardSettingsInteractivePromptReader.TryReadBooleanSetting(LocalizationService.GetString("SettingsNameWatchParentProcess"), normalizedStoredSettings.WatchParentProcess, defaultSettings.WatchParentProcess, out var watchParentProcess, out message)) return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadSessionTimeoutMinutesSetting(LocalizationService.GetString("SettingsNameSessionTimeoutMinutes"), normalizedStoredSettings.SessionTimeoutMinutes, defaultSettings.SessionTimeoutMinutes, out var sessionTimeoutMinutes, out message)) return false;
         if (!LidGuardSettingsInteractivePromptReader.TryReadServerRuntimeCleanupDelayMinutesSetting(LocalizationService.GetString("SettingsNameServerRuntimeCleanupDelayMinutes"), normalizedStoredSettings.ServerRuntimeCleanupDelayMinutes, defaultSettings.ServerRuntimeCleanupDelayMinutes, out var serverRuntimeCleanupDelayMinutes, out message))
@@ -57,6 +62,7 @@ internal static class LidGuardSettingsInteractiveFactory
                 Reason = storedPowerRequest.Reason
             },
             ChangeLidAction = changeLidAction,
+            SkipSuspendWhenLidCloseDoesNothing = skipSuspendWhenLidCloseDoesNothing,
             SuspendMode = suspendMode,
             PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
             PostStopSuspendSound = postStopSuspendSound,

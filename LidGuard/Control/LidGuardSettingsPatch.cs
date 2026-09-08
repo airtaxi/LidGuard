@@ -15,6 +15,8 @@ public sealed class LidGuardSettingsPatch
 
     public bool? ChangeLidAction { get; init; }
 
+    public bool? SkipSuspendWhenLidCloseDoesNothing { get; init; }
+
     public bool? WatchParentProcess { get; init; }
 
     public bool HasSessionTimeoutMinutes { get; init; }

@@ -7,6 +7,8 @@ public interface ILidActionService
 {
     LidGuardOperationResult<Guid> GetActivePowerSchemeIdentifier();
 
+    LidGuardOperationResult<PowerLine> GetCurrentPowerLine();
+
     LidGuardOperationResult<LidAction> ReadLidAction(Guid powerSchemeIdentifier, PowerLine powerLine);
 
     LidGuardOperationResult WriteLidAction(Guid powerSchemeIdentifier, PowerLine powerLine, LidAction lidAction);

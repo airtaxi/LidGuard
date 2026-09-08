@@ -52,6 +52,9 @@ internal static class LidGuardCommandConsole
 #endif
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsPreventDisplaySleep", LocalizationService.DisplayBoolean(powerRequest.PreventDisplaySleep)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsChangeLidAction", LocalizationService.DisplayBoolean(normalizedSettings.ChangeLidAction)));
+#if !LIDGUARD_LINUX && !LIDGUARD_MACOS
+        Console.WriteLine(LocalizationService.GetFormattedString("SettingsSkipSuspendWhenLidCloseDoesNothing", LocalizationService.DisplayBoolean(normalizedSettings.SkipSuspendWhenLidCloseDoesNothing)));
+#endif
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsWatchParentProcess", LocalizationService.DisplayBoolean(normalizedSettings.WatchParentProcess)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsSessionTimeout", LocalizationService.DisplayMinuteCount(normalizedSettings.SessionTimeoutMinutes)));
         Console.WriteLine(LocalizationService.GetFormattedString("SettingsServerRuntimeCleanupDelay", LocalizationService.DisplayMinuteCount(normalizedSettings.ServerRuntimeCleanupDelayMinutes)));

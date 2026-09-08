@@ -60,6 +60,7 @@ description: "LidGuard CLI, settings, permission commands, examples, and failure
 - Away-mode sleep prevention: enabled on Windows only; Linux and macOS builds do not expose this setting and normalize it to disabled.
 - Display sleep prevention: disabled.
 - Temporary lid close action change: enabled for the headless CLI runtime and applied to AC/DC together.
+- Skip suspend when the active lid close action is Do Nothing: enabled by default, Windows-only; Linux and macOS builds do not expose this setting and normalize it to disabled.
 - Post-stop suspend delay: 10 seconds by default, `0` for immediate suspend.
 - Post-stop suspend mode: Sleep by default, Hibernate optional.
 - Post-stop suspend sound: off by default.
@@ -157,6 +158,7 @@ lidguard preview-current-sound
 lidguard settings
 lidguard settings --emergency-hibernation-temperature-mode average
 lidguard settings --change-lid-action true
+lidguard settings --skip-suspend-when-lid-close-does-nothing true
 lidguard settings --post-stop-suspend-delay-seconds 0
 lidguard settings --post-stop-suspend-sound Asterisk
 lidguard settings --post-stop-suspend-sound-volume-override-percent 75

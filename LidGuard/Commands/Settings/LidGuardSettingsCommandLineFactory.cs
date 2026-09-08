@@ -31,6 +31,17 @@ internal static class LidGuardSettingsCommandLineFactory
 #endif
         if (!CommandOptionReader.TryParseBooleanOption(options, basePowerRequest.PreventDisplaySleep, out var preventDisplaySleep, out message, "prevent-display-sleep", "display-required")) return false;
         if (!CommandOptionReader.TryParseBooleanOption(options, baseSettings.ChangeLidAction, out var changeLidAction, out message, "change-lid-action", "lid-action")) return false;
+#if LIDGUARD_LINUX || LIDGUARD_MACOS
+        if (CommandOptionReader.TryGetOption(options, out _, "skip-suspend-when-lid-close-does-nothing"))
+        {
+            message = LocalizationService.GetString("SettingsOptionSkipSuspendWhenLidCloseDoesNothingUnsupported");
+            return false;
+        }
+
+        var skipSuspendWhenLidCloseDoesNothing = false;
+#else
+        if (!CommandOptionReader.TryParseBooleanOption(options, baseSettings.SkipSuspendWhenLidCloseDoesNothing, out var skipSuspendWhenLidCloseDoesNothing, out message, "skip-suspend-when-lid-close-does-nothing")) return false;
+#endif
         if (!CommandOptionReader.TryParseBooleanOption(options, baseSettings.WatchParentProcess, out var watchParentProcess, out message, "watch-parent-process", "watch-parent")) return false;
         if (!LidGuardSettingsValueParser.TryParseSessionTimeoutMinutesOption(options, baseSettings.SessionTimeoutMinutes, out var sessionTimeoutMinutes, out message)) return false;
         if (!LidGuardSettingsValueParser.TryParseServerRuntimeCleanupDelayMinutesOption(options, baseSettings.ServerRuntimeCleanupDelayMinutes, out var serverRuntimeCleanupDelayMinutes, out message)) return false;
@@ -67,6 +78,7 @@ internal static class LidGuardSettingsCommandLineFactory
                 Reason = reason
             },
             ChangeLidAction = changeLidAction,
+            SkipSuspendWhenLidCloseDoesNothing = skipSuspendWhenLidCloseDoesNothing,
             SuspendMode = suspendMode,
             PostStopSuspendDelaySeconds = postStopSuspendDelaySeconds,
             PostStopSuspendSound = postStopSuspendSound,

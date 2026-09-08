@@ -619,6 +619,9 @@
   <data name="Help_Settings_SessionTimeoutOption" xml:space="preserve">
     <value>关闭非活动会话超时，或设置在最后活动后经过指定分钟数后，该会话不再保持防睡眠。启用时的最小值为 1。</value>
   </data>
+  <data name="Help_Settings_SkipSuspendWhenLidCloseDoesNothingOption" xml:space="preserve">
+    <value>更改当盖子关闭操作在当前电源连接状态下已为不执行任何操作时，LidGuard 是否跳过睡眠流程。</value>
+  </data>
   <data name="Help_Settings_SuspendHistoryOption" xml:space="preserve">
     <value>关闭睡眠/休眠历史记录，或保留最近的睡眠/休眠请求条目。启用时的最小值为 1。</value>
   </data>
@@ -1810,6 +1813,9 @@
   <data name="SettingsNameSessionTimeoutMinutes" xml:space="preserve">
     <value>会话超时时间（分钟）</value>
   </data>
+  <data name="SettingsNameSkipSuspendWhenLidCloseDoesNothing" xml:space="preserve">
+    <value>盖子关闭操作为不执行任何操作时跳过睡眠</value>
+  </data>
   <data name="SettingsNameSuspendHistoryEntryCount" xml:space="preserve">
     <value>睡眠/休眠历史记录条目数</value>
   </data>
@@ -1869,6 +1875,9 @@
   </data>
   <data name="SettingsOptionSessionTimeoutValidation" xml:space="preserve">
     <value>session-timeout-minutes 选项必须为 off 或不小于 {0} 的整数。</value>
+  </data>
+  <data name="SettingsOptionSkipSuspendWhenLidCloseDoesNothingUnsupported" xml:space="preserve">
+    <value>skip-suspend-when-lid-close-does-nothing 选项仅在 Windows 上受支持。</value>
   </data>
   <data name="SettingsOptionSuspendHistoryCountValidation" xml:space="preserve">
     <value>suspend-history-count 选项必须为 off 或不小于 {0} 的整数。</value>
@@ -1953,6 +1962,9 @@
   </data>
   <data name="SettingsSessionTimeout" xml:space="preserve">
     <value>  非活动会话超时时间：{0}</value>
+  </data>
+  <data name="SettingsSkipSuspendWhenLidCloseDoesNothing" xml:space="preserve">
+    <value>  盖子关闭操作为不执行任何操作时跳过睡眠: {0}</value>
   </data>
   <data name="SettingsSuspendHistoryCount" xml:space="preserve">
     <value>  睡眠/休眠历史记录数量：{0}</value>

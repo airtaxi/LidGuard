@@ -62,6 +62,7 @@ lidguard cleanup-orphans
 ```powershell
 lidguard settings
 lidguard settings --change-lid-action true --suspend-mode hibernate
+lidguard settings --skip-suspend-when-lid-close-does-nothing true
 lidguard settings --emergency-hibernation-temperature-mode average
 lidguard settings --post-stop-suspend-sound Asterisk
 lidguard settings --post-stop-suspend-sound-volume-override-percent 75
@@ -200,5 +201,7 @@ On Linux, idle sleep protection uses systemd/logind `sleep` and `idle` inhibitor
 On macOS, idle sleep protection uses `caffeinate`. Lid-close protection with `--change-lid-action true` temporarily sets `pmset -a disablesleep 1`, stores the original `SleepDisabled` state as a pending backup, and restores it when protection ends or during the next CLI recovery path. Hibernate temporarily sets supported `hibernatemode` values to `25` before `pmset sleepnow`, then leaves the original mode in the pending backup for recovery on a later CLI run. Temperature readings first use best-effort Apple Silicon `IOHIDEventSystemClient` processor sensors, then fall back to `powermetrics --samplers smc` samples; unavailable sensors or permissions simply make Emergency Hibernation skip that poll. If an Emergency Hibernation request cannot hibernate, LidGuard immediately requests Sleep as a best-effort fallback and records both outcomes.
 
 On Windows, WSL integration is only configuration management. WSL providers call the Windows LidGuard executable; LidGuard still protects the Windows host runtime and does not add independent Linux power management inside the distro. Before WSL commands run provider work, LidGuard checks that `wsl.exe` is usable and that the selected or default distro can execute a trivial command.
+
+On Windows, when `--skip-suspend-when-lid-close-does-nothing` is enabled (the default), LidGuard skips its suspend procedure with only a log entry when the active lid close action is already Do Nothing on the current power connection, respecting the existing power plan instead of forcing sleep after sessions end.
 
 Provider MCP integrations are best-effort only. They depend on the model actually calling the LidGuard MCP tools at the right times, so LidGuard cannot guarantee that a provider will start, soft-lock, clear, and stop sessions correctly.

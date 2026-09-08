@@ -25,6 +25,7 @@ internal sealed class LidGuardRuntimeCoordinator
     private static readonly TimeSpan s_stopFollowUpWebhookTimeout = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan s_stopFollowUpPollInterval = TimeSpan.FromSeconds(1);
     private readonly IProcessExitWatcher _processExitWatcher;
+    private readonly LidActionPolicyController _lidActionPolicyController;
     private readonly ConfiguredSoundPlaybackCoordinator _soundPlaybackCoordinator;
     private readonly ISystemSuspendService _systemSuspendService;
     private readonly ILidStateSource _lidStateSource;
@@ -53,6 +54,7 @@ internal sealed class LidGuardRuntimeCoordinator
     public LidGuardRuntimeCoordinator(LidGuardSettings initialSettings, IPowerRequestService powerRequestService, IProcessExitWatcher processExitWatcher, LidActionPolicyController lidActionPolicyController, ISystemSuspendService systemSuspendService, IPostStopSuspendSoundPlayer postStopSuspendSoundPlayer, ISystemAudioVolumeController systemAudioVolumeController, ILidStateSource lidStateSource, IVisibleDisplayMonitorCountProvider visibleDisplayMonitorCountProvider, Action requestRuntimeStop = null)
     {
         _processExitWatcher = processExitWatcher;
+        _lidActionPolicyController = lidActionPolicyController;
         _soundPlaybackCoordinator = new ConfiguredSoundPlaybackCoordinator(postStopSuspendSoundPlayer, systemAudioVolumeController);
         _systemSuspendService = systemSuspendService;
         _lidStateSource = lidStateSource;
@@ -1110,7 +1112,7 @@ internal sealed class LidGuardRuntimeCoordinator
     {
         stopFollowUpAwaitContext = null;
         suspendScheduled = false;
-        var closedLidPolicyApplicability = EvaluateClosedLidPolicyApplicability("suspend");
+        var closedLidPolicyApplicability = EvaluateSuspendPolicyApplicability("suspend");
         if (!closedLidPolicyApplicability.IsApplicable)
         {
             var releaseResult = ReleaseProtectionIfNoSessionRequiresItInsideGate(eventName, pendingSuspendContext, snapshot, "Released LidGuard protection because pending suspend is not applicable.");
@@ -1158,7 +1160,7 @@ internal sealed class LidGuardRuntimeCoordinator
                     return;
                 }
 
-                var closedLidPolicyApplicability = EvaluateClosedLidPolicyApplicability("suspend");
+                var closedLidPolicyApplicability = EvaluateSuspendPolicyApplicability("suspend");
                 if (!closedLidPolicyApplicability.IsApplicable)
                 {
                     CancelStopFollowUpBeforeStart(stopFollowUpAwaitContext);
@@ -1187,7 +1189,7 @@ internal sealed class LidGuardRuntimeCoordinator
             await _gate.WaitAsync(pendingSuspendCancellationTokenSource.Token);
             try
             {
-                var closedLidPolicyApplicability = EvaluateClosedLidPolicyApplicability("suspend");
+                var closedLidPolicyApplicability = EvaluateSuspendPolicyApplicability("suspend");
                 if (!closedLidPolicyApplicability.IsApplicable)
                 {
                     var releaseResult = ReleaseProtectionIfNoSessionRequiresItInsideGate(eventName, pendingSuspendContext, snapshot, "Released LidGuard protection because pending suspend was canceled after the stop follow-up ended because the lid is no longer closed.");
@@ -1235,7 +1237,7 @@ internal sealed class LidGuardRuntimeCoordinator
                 return;
             }
 
-            var closedLidPolicyApplicability = EvaluateClosedLidPolicyApplicability("suspend");
+            var closedLidPolicyApplicability = EvaluateSuspendPolicyApplicability("suspend");
             if (!closedLidPolicyApplicability.IsApplicable)
             {
                 var releaseResult = ReleaseProtectionIfNoSessionRequiresItInsideGate(eventName, pendingSuspendContext, snapshot, "Released LidGuard protection because pending suspend was canceled before the suspend request.");
@@ -1911,6 +1913,12 @@ internal sealed class LidGuardRuntimeCoordinator
         return $"{result.Message} Native error: {result.NativeErrorCode}.";
     }
 
+    private static string CreateResultMessage<TValue>(LidGuardOperationResult<TValue> result)
+    {
+        if (result.NativeErrorCode == 0) return result.Message;
+        return $"{result.Message} Native error: {result.NativeErrorCode}.";
+    }
+
     private static string CreateSuspendHistorySuccessMessage(LidGuardOperationResult result, string defaultMessage) => string.IsNullOrWhiteSpace(result.Message) ? defaultMessage : $"{defaultMessage} {result.Message}";
 
     private ClosedLidPolicyApplicability EvaluateClosedLidPolicyApplicability(string actionName)
@@ -1918,6 +1926,37 @@ internal sealed class LidGuardRuntimeCoordinator
         var lidSwitchState = _lidStateSource.CurrentState;
         var visibleDisplayMonitorCount = _visibleDisplayMonitorCountProvider.GetVisibleDisplayMonitorCount(excludeInternalDisplayMonitors: lidSwitchState == LidSwitchState.Closed);
         return EvaluateClosedLidPolicyApplicability(actionName, new CurrentLidAndDisplayState(lidSwitchState, visibleDisplayMonitorCount));
+    }
+
+    private ClosedLidPolicyApplicability EvaluateSuspendPolicyApplicability(string actionName)
+    {
+        var applicability = EvaluateClosedLidPolicyApplicability(actionName);
+        if (!applicability.IsApplicable) return applicability;
+        if (!_settings.SkipSuspendWhenLidCloseDoesNothing) return applicability;
+
+        var lidActionResult = ReadOriginalActiveLidAction();
+        if (!lidActionResult.Succeeded)
+        {
+            LidGuardRuntimeLogWriter.AppendRuntimeLog("lid-action-do-nothing-check-failed", "suspend", LidGuardPipeResponse.Failure(CreateResultMessage(lidActionResult)));
+            return applicability;
+        }
+
+        if (lidActionResult.Value != LidAction.DoNothing) return applicability;
+        return new ClosedLidPolicyApplicability(false, applicability.LidSwitchState, applicability.VisibleDisplayMonitorCount, $"Skipped {actionName} because the active lid close action for the current power connection is Do Nothing.");
+    }
+
+    private LidGuardOperationResult<LidAction> ReadOriginalActiveLidAction()
+    {
+        var powerLineResult = _lidActionPolicyController.GetCurrentPowerLine();
+        if (!powerLineResult.Succeeded) return LidGuardOperationResult<LidAction>.Failure(powerLineResult.Message, powerLineResult.NativeErrorCode);
+
+        if (LidGuardPendingLidActionBackupStore.TryLoad(out var pendingBackup, out var hasPendingBackup, out _) && hasPendingBackup)
+        {
+            var originalAction = powerLineResult.Value == PowerLine.AlternatingCurrent ? pendingBackup.AlternatingCurrentAction : pendingBackup.DirectCurrentAction;
+            return LidGuardOperationResult<LidAction>.Success(originalAction);
+        }
+
+        return _lidActionPolicyController.ReadActiveLidActionForCurrentPowerLine();
     }
 
     private CurrentLidAndDisplayState GetCurrentLidAndDisplayState()

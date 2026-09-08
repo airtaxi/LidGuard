@@ -44,6 +44,19 @@ public sealed class LidActionPolicyController(ILidActionService lidActionService
         return LidGuardOperationResult<LidActionBackup>.Success(backup);
     }
 
+    public LidGuardOperationResult<PowerLine> GetCurrentPowerLine() => lidActionService.GetCurrentPowerLine();
+
+    public LidGuardOperationResult<LidAction> ReadActiveLidActionForCurrentPowerLine()
+    {
+        var powerSchemeResult = lidActionService.GetActivePowerSchemeIdentifier();
+        if (!powerSchemeResult.Succeeded) return LidGuardOperationResult<LidAction>.Failure(powerSchemeResult.Message, powerSchemeResult.NativeErrorCode);
+
+        var powerLineResult = lidActionService.GetCurrentPowerLine();
+        if (!powerLineResult.Succeeded) return LidGuardOperationResult<LidAction>.Failure(powerLineResult.Message, powerLineResult.NativeErrorCode);
+
+        return lidActionService.ReadLidAction(powerSchemeResult.Value, powerLineResult.Value);
+    }
+
     public LidGuardOperationResult ApplyTemporaryDoNothing(LidActionBackup backup)
     {
         if (backup.IncludesAlternatingCurrent)

@@ -62,6 +62,7 @@ lidguard cleanup-orphans
 ```powershell
 lidguard settings
 lidguard settings --change-lid-action true --suspend-mode hibernate
+lidguard settings --skip-suspend-when-lid-close-does-nothing true
 lidguard settings --emergency-hibernation-temperature-mode average
 lidguard settings --post-stop-suspend-sound Asterisk
 lidguard settings --post-stop-suspend-sound-volume-override-percent 75
@@ -198,5 +199,7 @@ Linux에서는 idle sleep protection이 systemd/logind `sleep`, `idle` inhibitor
 macOS에서는 idle sleep protection이 `caffeinate`를 사용합니다. `--change-lid-action true`의 lid-close protection은 `pmset -a disablesleep 1`을 임시 적용하고 원래 `SleepDisabled` 상태를 pending backup으로 저장한 뒤, 보호 종료 또는 다음 CLI recovery path에서 복구합니다. Hibernate는 지원되는 `hibernatemode` 값을 임시로 `25`로 바꾸고 `pmset sleepnow`를 요청한 뒤, 원래 mode는 pending backup에 남겨 이후 CLI recovery에서 복구합니다. 온도는 먼저 Apple Silicon `IOHIDEventSystemClient` processor sensor에서 가능한 범위에서 읽고 실패하면 `powermetrics --samplers smc` sample로 fallback합니다. sensor나 권한이 없으면 Emergency Hibernation poll을 건너뜁니다. Emergency Hibernation 요청에서 hibernate에 실패하면 LidGuard는 즉시 Sleep을 대체 동작으로 요청하고 두 결과를 모두 기록합니다.
 
 Windows에서 WSL 통합은 설정 관리 기능입니다. WSL provider는 Windows LidGuard 실행 파일을 호출하며 LidGuard는 여전히 Windows host runtime을 보호합니다. distro 내부에 별도의 Linux 전원 관리를 추가하지는 않습니다. WSL 명령이 provider 작업을 실행하기 전에는 `wsl.exe`를 사용할 수 있는지와 선택한 또는 기본 distro가 간단한 명령을 실행할 수 있는지 먼저 확인합니다.
+
+Windows에서 `--skip-suspend-when-lid-close-does-nothing`이 켜져 있으면(기본값) 활성 덮개 닫힘 동작이 현재 전원 연결 상태에서 이미 아무 것도 안 함(Do Nothing)일 때 LidGuard는 로그만 남기고 절전 절차를 건너뜁니다. 세션이 끝난 뒤 절전을 강제하지 않고 기존 전원 구성표 설정을 존중합니다.
 
 Provider MCP 통합은 동작이 보장되지 않는 보조 기능입니다. 모델이 적절한 시점에 실제로 LidGuard MCP tool을 호출해야만 동작하므로, LidGuard는 provider가 세션을 올바르게 시작, soft-lock, clear, stop한다고 보장할 수 없습니다.

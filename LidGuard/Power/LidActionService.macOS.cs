@@ -11,6 +11,8 @@ public sealed class LidActionService : ILidActionService
 
     public LidGuardOperationResult<Guid> GetActivePowerSchemeIdentifier() => LidGuardOperationResult<Guid>.Success(s_macOSLidActionSchemeIdentifier);
 
+    public LidGuardOperationResult<PowerLine> GetCurrentPowerLine() => LidGuardOperationResult<PowerLine>.Failure("Current power connection state detection is not supported on macOS.");
+
     public LidGuardOperationResult<LidAction> ReadLidAction(Guid powerSchemeIdentifier, PowerLine powerLine)
     {
         if (powerSchemeIdentifier != s_macOSLidActionSchemeIdentifier) return LidGuardOperationResult<LidAction>.Failure("The macOS lid action scheme identifier is invalid.");

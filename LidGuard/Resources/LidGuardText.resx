@@ -619,6 +619,9 @@
   <data name="Help_Settings_SessionTimeoutOption" xml:space="preserve">
     <value>Turn off the inactive-session timeout, or let idle sessions stop keeping the system awake after this many minutes without activity. Minimum enabled value is 1.</value>
   </data>
+  <data name="Help_Settings_SkipSuspendWhenLidCloseDoesNothingOption" xml:space="preserve">
+    <value>Change whether LidGuard skips the suspend procedure when the active lid close action is already Do Nothing on the current power connection.</value>
+  </data>
   <data name="Help_Settings_SuspendHistoryOption" xml:space="preserve">
     <value>Disable sleep/hibernate history recording or retain the most recent sleep/hibernate request entries. Minimum enabled value is 1.</value>
   </data>
@@ -1810,6 +1813,9 @@
   <data name="SettingsNameSessionTimeoutMinutes" xml:space="preserve">
     <value>Session timeout minutes</value>
   </data>
+  <data name="SettingsNameSkipSuspendWhenLidCloseDoesNothing" xml:space="preserve">
+    <value>Skip suspend when lid close does nothing</value>
+  </data>
   <data name="SettingsNameSuspendHistoryEntryCount" xml:space="preserve">
     <value>Suspend history entry count</value>
   </data>
@@ -1869,6 +1875,9 @@
   </data>
   <data name="SettingsOptionSessionTimeoutValidation" xml:space="preserve">
     <value>The session-timeout-minutes option must be off or an integer of at least {0}.</value>
+  </data>
+  <data name="SettingsOptionSkipSuspendWhenLidCloseDoesNothingUnsupported" xml:space="preserve">
+    <value>The skip-suspend-when-lid-close-does-nothing option is only supported on Windows.</value>
   </data>
   <data name="SettingsOptionSuspendHistoryCountValidation" xml:space="preserve">
     <value>The suspend-history-count option must be off or an integer of at least {0}.</value>
@@ -1953,6 +1962,9 @@
   </data>
   <data name="SettingsSessionTimeout" xml:space="preserve">
     <value>  Inactive session timeout: {0}</value>
+  </data>
+  <data name="SettingsSkipSuspendWhenLidCloseDoesNothing" xml:space="preserve">
+    <value>  Skip suspend when lid close does nothing: {0}</value>
   </data>
   <data name="SettingsSuspendHistoryCount" xml:space="preserve">
     <value>  Sleep/hibernate history count: {0}</value>

@@ -619,6 +619,9 @@
   <data name="Help_Settings_SessionTimeoutOption" xml:space="preserve">
     <value>비활동 세션 시간 제한을 끄거나, 마지막 활동 후 지정한 분이 지나면 해당 세션이 더 이상 절전 방지를 유지하지 않게 합니다. 활성화된 최소값은 1입니다.</value>
   </data>
+  <data name="Help_Settings_SkipSuspendWhenLidCloseDoesNothingOption" xml:space="preserve">
+    <value>활성 덮개 닫힘 동작이 현재 전원 연결 상태에서 이미 아무 것도 안 함이면 LidGuard가 절전 절차를 건너뛸지 변경합니다.</value>
+  </data>
   <data name="Help_Settings_SuspendHistoryOption" xml:space="preserve">
     <value>절전 기록을 끄거나 최근 절전 요청 항목을 유지합니다. 활성화된 최소값은 1입니다.</value>
   </data>
@@ -1810,6 +1813,9 @@
   <data name="SettingsNameSessionTimeoutMinutes" xml:space="preserve">
     <value>세션 시간 제한(분)</value>
   </data>
+  <data name="SettingsNameSkipSuspendWhenLidCloseDoesNothing" xml:space="preserve">
+    <value>덮개 닫힘 동작이 아무 것도 안 함이면 절전 건너뛰기</value>
+  </data>
   <data name="SettingsNameSuspendHistoryEntryCount" xml:space="preserve">
     <value>절전 기록 항목 수</value>
   </data>
@@ -1869,6 +1875,9 @@
   </data>
   <data name="SettingsOptionSessionTimeoutValidation" xml:space="preserve">
     <value>session-timeout-minutes 옵션은 off 또는 최소 {0} 이상의 정수여야 합니다.</value>
+  </data>
+  <data name="SettingsOptionSkipSuspendWhenLidCloseDoesNothingUnsupported" xml:space="preserve">
+    <value>skip-suspend-when-lid-close-does-nothing 옵션은 Windows에서만 지원됩니다.</value>
   </data>
   <data name="SettingsOptionSuspendHistoryCountValidation" xml:space="preserve">
     <value>suspend-history-count 옵션은 off 또는 최소 {0} 이상의 정수여야 합니다.</value>
@@ -1953,6 +1962,9 @@
   </data>
   <data name="SettingsSessionTimeout" xml:space="preserve">
     <value>  비활동 세션 시간 제한: {0}</value>
+  </data>
+  <data name="SettingsSkipSuspendWhenLidCloseDoesNothing" xml:space="preserve">
+    <value>  덮개 닫힘 동작이 아무 것도 안 함이면 절전 건너뛰기: {0}</value>
   </data>
   <data name="SettingsSuspendHistoryCount" xml:space="preserve">
     <value>  절전 기록 수: {0}</value>
