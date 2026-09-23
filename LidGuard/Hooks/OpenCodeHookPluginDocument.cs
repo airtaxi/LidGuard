@@ -11,7 +11,7 @@ public static class OpenCodeHookPluginDocument
     public const string ManagedBlockEndMarker = "// <LidGuard OpenCode plugin end>";
 
     private const string HookCommandPlaceholder = "__LIDGUARD_HOOK_COMMAND_JSON__";
-    private const string ManagedPluginVersionMarker = "// LidGuard OpenCode plugin version: 1";
+    private const string ManagedPluginVersionMarker = "// LidGuard OpenCode plugin version: 2";
     private const string PluginTemplateResourceName = "LidGuard.Assets.OpenCode.lidguard.js";
 
     private static readonly JavaScriptEncoder s_jsonEncoder = JavaScriptEncoder.Create(UnicodeRanges.All);

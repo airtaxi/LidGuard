@@ -88,7 +88,7 @@ internal static class OpenCodeHookCommand
             return string.IsNullOrWhiteSpace(hookEventName) ? "opencode-hook-stop" : hookEventName;
         }
 
-        protected override bool CanReturnStopContinuation(string hookEventName, OpenCodeHookInput hookInput) => hookEventName.Equals(OpenCodeHookEventNames.SessionIdle, StringComparison.Ordinal);
+        protected override bool CanReturnStopContinuation(string hookEventName, OpenCodeHookInput hookInput) => hookEventName is OpenCodeHookEventNames.SessionExecutionSucceeded or OpenCodeHookEventNames.SessionIdle;
 
         protected override string GetLastAssistantMessage(OpenCodeHookInput hookInput) => hookInput.LastAssistantMessage;
 
@@ -96,7 +96,7 @@ internal static class OpenCodeHookCommand
 
         private static bool IsNormalSessionEnd(string hookEventName, OpenCodeHookInput hookInput)
         {
-            if (hookEventName.Equals(OpenCodeHookEventNames.SessionIdle, StringComparison.Ordinal)) return true;
+            if (hookEventName is OpenCodeHookEventNames.SessionExecutionSucceeded or OpenCodeHookEventNames.SessionIdle) return true;
             return hookEventName.Equals(OpenCodeHookEventNames.SessionStatus, StringComparison.Ordinal) && hookInput.SessionStatus.Equals("idle", StringComparison.OrdinalIgnoreCase);
         }
 

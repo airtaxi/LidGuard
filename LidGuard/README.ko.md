@@ -137,7 +137,7 @@ lidguard wsl-copilot-hooks config-json
 lidguard wsl-opencode-hooks plugin-js
 ```
 
-`hook-status`, `hook-install`, `hook-remove`, `hook-events`에서 `--provider`를 생략하면 LidGuard가 provider를 물어봅니다. `--provider all`을 사용하면 LidGuard는 기본 설정 루트가 이미 존재하는 provider만 처리하고 없는 provider는 skipped로 보고합니다. OpenCode는 전역 plugin 파일을 사용하므로 프로젝트마다 따로 OpenCode 설정을 만들 필요는 없습니다.
+`hook-status`, `hook-install`, `hook-remove`, `hook-events`에서 `--provider`를 생략하면 LidGuard가 provider를 물어봅니다. `--provider all`을 사용하면 LidGuard는 기본 설정 루트가 이미 존재하는 provider만 처리하고 없는 provider는 skipped로 보고합니다. OpenCode는 전역 plugin 파일을 사용하므로 프로젝트마다 따로 OpenCode 설정을 만들 필요는 없습니다. 같은 관리 플러그인이 OpenCode 1과 OpenCode 2를 모두 지원합니다. OpenCode를 업그레이드한 뒤에는 `hook-install --provider opencode`를 다시 실행해 플러그인 파일을 갱신해 주세요.
 
 `wsl-*` hook 명령은 Windows 빌드에서만 사용할 수 있습니다. 이 명령은 WSL 내부의 provider 설정을 검사하거나 수정하고 hook 명령에는 WSL 경로로 변환한 현재 Windows `lidguard.exe`를 기록합니다. 특정 distro를 선택하려면 `--distro <name>`을 전달하세요. 생략하면 `wsl.exe`가 기본 distro를 사용합니다. WSL hook 상태 검사는 이전 버전의 managed `lidguard.exe` 경로를 업데이트 필요 상태로 인식하므로 재설치하면 versioned tool path가 갱신됩니다.
 

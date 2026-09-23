@@ -137,7 +137,7 @@ lidguard wsl-copilot-hooks config-json
 lidguard wsl-opencode-hooks plugin-js
 ```
 
-If `--provider` is omitted on `hook-status`, `hook-install`, `hook-remove`, or `hook-events`, LidGuard prompts for a provider. With `--provider all`, LidGuard only processes providers whose default configuration roots already exist and reports missing providers as skipped. OpenCode uses a global plugin file, so no project-by-project OpenCode setup is needed.
+If `--provider` is omitted on `hook-status`, `hook-install`, `hook-remove`, or `hook-events`, LidGuard prompts for a provider. With `--provider all`, LidGuard only processes providers whose default configuration roots already exist and reports missing providers as skipped. OpenCode uses a global plugin file, so no project-by-project OpenCode setup is needed. The same managed plugin supports OpenCode 1 and OpenCode 2; re-run `hook-install --provider opencode` after upgrading OpenCode to refresh the plugin file.
 
 The `wsl-*` hook commands are available only in Windows builds. They inspect or edit provider configuration inside WSL and write hook commands that call the current Windows `lidguard.exe` through its WSL path. Pass `--distro <name>` to select a distro; when omitted, `wsl.exe` uses the default distro. WSL hook status treats older managed `lidguard.exe` paths as needing update so reinstalling refreshes versioned tool paths.
 

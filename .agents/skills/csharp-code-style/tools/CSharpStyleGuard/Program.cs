@@ -41,7 +41,7 @@ internal static class Program
 
         var totalDiagnosticCount = 0;
         var totalModifiedCount = 0;
-        var totalUnsafeFixCount = 0;
+        var totalFixedDiagnosticCount = 0;
 
         foreach (var sourceFilePath in sourceFilePaths)
         {
@@ -50,21 +50,29 @@ internal static class Program
             var fileResult = ProcessSourceFile(sourceFilePath, commandLineOptions.FixFiles, fixPlan.GetChangedLineRanges(sourceFilePath));
             totalDiagnosticCount += fileResult.Diagnostics.Count;
             totalModifiedCount += fileResult.Modified ? 1 : 0;
-            totalUnsafeFixCount += fileResult.UnsafeFixCount;
+            totalFixedDiagnosticCount += fileResult.FixedDiagnosticCount;
+            // In --fix mode the remaining Diagnostics are spans the guard could not safely rewrite (skipped). In --check mode all diagnostics are reported.
             foreach (var styleDiagnostic in fileResult.Diagnostics) Console.WriteLine(styleDiagnostic.ToDisplayString());
         }
 
-        if (commandLineOptions.FixFiles) Console.WriteLine($"CSharpStyleGuard fixed {totalModifiedCount} file(s), reported {totalDiagnosticCount} diagnostic(s), and skipped {totalUnsafeFixCount} unsafe span(s).");
-        else Console.WriteLine($"CSharpStyleGuard reported {totalDiagnosticCount} diagnostic(s).");
+        if (commandLineOptions.FixFiles)
+        {
+            Console.WriteLine($"CSharpStyleGuard fixed {totalModifiedCount} file(s) and {totalFixedDiagnosticCount} diagnostic(s), skipped {totalDiagnosticCount} diagnostic(s).");
+            if (totalFixedDiagnosticCount > 0) Console.WriteLine("REMINDER: If you are an AI agent, per the skill instructions you MUST NOT re-read files to verify guard-applied auto-fixes. Do not open the affected files in a Read call unless the guard reported unsafe/skipped spans that require manual fixing.");
+        }
+        else
+        {
+            Console.WriteLine($"CSharpStyleGuard reported {totalDiagnosticCount} diagnostic(s).");
+            if (totalDiagnosticCount > 0) Console.WriteLine("REMINDER: If you are an AI agent, per the skill instructions the final step after C# edits must be --fix (not --check). Run --fix now instead of manually rewriting diagnostics.");
+        }
 
-        if (commandLineOptions.FixFiles && totalUnsafeFixCount > 0) return 1;
-        return totalDiagnosticCount == 0 || commandLineOptions.FixFiles && totalUnsafeFixCount == 0 ? 0 : 1;
+        return totalDiagnosticCount == 0 ? 0 : 1;
     }
 
     private static void WriteUsage()
     {
         Console.WriteLine("Usage: CSharpStyleGuard (--check|--fix [--all]) <file-or-directory> [more paths]");
-        Console.WriteLine($"Checks or safely rewrites multiline ternary conditional expressions, logical/null-coalescing binary expressions, parameter/argument lists, collection-expression keyword spacing, object-creation argument-list spacing, top-level single-statement control flow, nested control-statement blocks, constructor initializers, expression-bodied members, and single-statement try/catch/finally blocks. The line-length threshold for newly compressed lines is {LineLengthThreshold} characters.");
+        Console.WriteLine($"Checks or safely rewrites multiline ternary conditional expressions, logical/null-coalescing binary expressions, parameter/argument lists, collection-expression keyword spacing, object-creation argument-list spacing, top-level single-statement control flow, nested control-statement blocks, constructor initializers, expression-bodied members, block-bodied-to-expression-bodied conversions, and single-statement try/catch/finally blocks. The line-length threshold for newly compressed lines is {LineLengthThreshold} characters.");
         Console.WriteLine("--fix rewrites only spans that intersect staged or unstaged git diff lines by default. Use --fix --all to rewrite every matching span in the input paths.");
         Console.WriteLine("When --fix runs outside a git repository, it rewrites every matching span in the input paths and reports a warning.");
     }
@@ -107,45 +115,36 @@ internal static class Program
     private static FileResult ProcessSourceFile(string sourceFilePath, bool fixFile, IReadOnlyList<LineRange>? changedLineRanges)
     {
         var sourceText = SourceText.From(File.ReadAllText(sourceFilePath));
-        var diagnostics = AnalyzeSourceText(sourceText, sourceFilePath, changedLineRanges);
-        if (!fixFile || diagnostics.Count == 0) return new FileResult(diagnostics, false, 0);
+        var initialDiagnostics = AnalyzeSourceText(sourceText, sourceFilePath, changedLineRanges);
+        if (!fixFile || initialDiagnostics.Count == 0) return new FileResult(initialDiagnostics, false, 0);
 
-        var allDiagnostics = new List<StyleDiagnostic>();
-        var totalUnsafeFixCount = 0;
         var modified = false;
 
         for (var fixPassIndex = 0; fixPassIndex < 8; fixPassIndex++)
         {
-            diagnostics = AnalyzeSourceText(sourceText, sourceFilePath, changedLineRanges);
+            var diagnostics = AnalyzeSourceText(sourceText, sourceFilePath, changedLineRanges);
             if (diagnostics.Count == 0)
             {
                 if (modified) File.WriteAllText(sourceFilePath, sourceText.ToString());
 
-                return new FileResult(allDiagnostics, modified, totalUnsafeFixCount);
+                break;
             }
-
-            allDiagnostics.AddRange(diagnostics);
-            totalUnsafeFixCount += diagnostics.Count(styleDiagnostic => !styleDiagnostic.CanFixAutomatically);
 
             var safeFixes = diagnostics.Where(styleDiagnostic => styleDiagnostic.CanFixAutomatically).OrderBy(styleDiagnostic => styleDiagnostic.Span.Start).ThenByDescending(styleDiagnostic => styleDiagnostic.Span.Length).ToList();
             var selectedFixes = SelectNonOverlappingFixes(safeFixes);
             var textChanges = selectedFixes.Select(styleDiagnostic => new TextChange(styleDiagnostic.Span, styleDiagnostic.ReplacementText ?? CreateSingleLineText(styleDiagnostic.Node))).ToImmutableArray();
-            if (textChanges.Length == 0)
-            {
-                if (modified) File.WriteAllText(sourceFilePath, sourceText.ToString());
-
-                return new FileResult(allDiagnostics, modified, totalUnsafeFixCount);
-            }
+            if (textChanges.Length == 0) break;
 
             sourceText = sourceText.WithChanges(textChanges);
             modified = true;
         }
 
+        // Diagnostics that still remain after all fix passes are the ones the guard could not rewrite safely (unsafe spans).
         var remainingDiagnostics = AnalyzeSourceText(sourceText, sourceFilePath, changedLineRanges);
-        allDiagnostics.AddRange(remainingDiagnostics);
-        totalUnsafeFixCount += remainingDiagnostics.Count;
         if (modified) File.WriteAllText(sourceFilePath, sourceText.ToString());
-        return new FileResult(allDiagnostics, modified, totalUnsafeFixCount);
+
+        var fixedDiagnosticCount = initialDiagnostics.Count - remainingDiagnostics.Count;
+        return new FileResult(remainingDiagnostics, modified, fixedDiagnosticCount);
     }
 
     private static List<StyleDiagnostic> AnalyzeSourceText(SourceText sourceText, string sourceFilePath, IReadOnlyList<LineRange>? changedLineRanges)
@@ -204,6 +203,7 @@ internal static class Program
         spacedNode = SwitchExpressionSpacingRewriter.Shared.Visit(spacedNode);
         spacedNode = CollectionExpressionSpacingRewriter.Shared.Visit(spacedNode);
         spacedNode = ObjectCreationArgumentListSpacingRewriter.Shared.Visit(spacedNode);
+        spacedNode = CastExpressionSpacingRewriter.Shared.Visit(spacedNode);
         return spacedNode;
     }
 
@@ -311,6 +311,8 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
     public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
     {
         if (node.Body is not null) ReportMemberNestedBlockExpansionIfNeeded(node, node.Body);
+        if (node.Body is not null) ReportCollectionReturnExpressionBodiedMemberIfNeeded(node, node.Body);
+        if (node.Body is not null) ReportBlockToExpressionBodiedMemberIfNeeded(node, node.Body);
         if (node.ExpressionBody is not null) ReportExpressionBodiedMemberIfNeeded(node, node.ExpressionBody, node.SemicolonToken);
         base.VisitMethodDeclaration(node);
     }
@@ -318,6 +320,8 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
     public override void VisitLocalFunctionStatement(LocalFunctionStatementSyntax node)
     {
         if (node.Body is not null) ReportMemberNestedBlockExpansionIfNeeded(node, node.Body);
+        if (node.Body is not null) ReportCollectionReturnExpressionBodiedMemberIfNeeded(node, node.Body);
+        if (node.Body is not null) ReportBlockToExpressionBodiedMemberIfNeeded(node, node.Body);
         if (node.ExpressionBody is not null) ReportExpressionBodiedMemberIfNeeded(node, node.ExpressionBody, node.SemicolonToken);
         base.VisitLocalFunctionStatement(node);
     }
@@ -326,6 +330,7 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
     {
         if (node.Body is not null) ReportConstructorInitializerIfNeeded(node);
         if (node.Body is not null) ReportMemberNestedBlockExpansionIfNeeded(node, node.Body);
+        if (node.Body is not null) ReportBlockToExpressionBodiedMemberIfNeeded(node, node.Body);
         if (node.ExpressionBody is not null) ReportExpressionBodiedMemberIfNeeded(node, node.ExpressionBody, node.SemicolonToken);
         base.VisitConstructorDeclaration(node);
     }
@@ -333,6 +338,7 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
     public override void VisitDestructorDeclaration(DestructorDeclarationSyntax node)
     {
         if (node.Body is not null) ReportMemberNestedBlockExpansionIfNeeded(node, node.Body);
+        if (node.Body is not null) ReportBlockToExpressionBodiedMemberIfNeeded(node, node.Body);
         if (node.ExpressionBody is not null) ReportExpressionBodiedMemberIfNeeded(node, node.ExpressionBody, node.SemicolonToken);
         base.VisitDestructorDeclaration(node);
     }
@@ -349,9 +355,20 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
         base.VisitIndexerDeclaration(node);
     }
 
+    public override void VisitAccessorDeclaration(AccessorDeclarationSyntax node)
+    {
+        if (node.Body is not null) ReportMemberNestedBlockExpansionIfNeeded(node, node.Body);
+        if (node.Body is not null) ReportCollectionReturnExpressionBodiedMemberIfNeeded(node, node.Body);
+        if (node.Body is not null) ReportBlockToExpressionBodiedMemberIfNeeded(node, node.Body);
+        if (node.ExpressionBody is not null) ReportExpressionBodiedMemberIfNeeded(node, node.ExpressionBody, node.SemicolonToken);
+        base.VisitAccessorDeclaration(node);
+    }
+
     public override void VisitOperatorDeclaration(OperatorDeclarationSyntax node)
     {
         if (node.Body is not null) ReportMemberNestedBlockExpansionIfNeeded(node, node.Body);
+        if (node.Body is not null) ReportCollectionReturnExpressionBodiedMemberIfNeeded(node, node.Body);
+        if (node.Body is not null) ReportBlockToExpressionBodiedMemberIfNeeded(node, node.Body);
         if (node.ExpressionBody is not null) ReportExpressionBodiedMemberIfNeeded(node, node.ExpressionBody, node.SemicolonToken);
         base.VisitOperatorDeclaration(node);
     }
@@ -359,6 +376,8 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
     public override void VisitConversionOperatorDeclaration(ConversionOperatorDeclarationSyntax node)
     {
         if (node.Body is not null) ReportMemberNestedBlockExpansionIfNeeded(node, node.Body);
+        if (node.Body is not null) ReportCollectionReturnExpressionBodiedMemberIfNeeded(node, node.Body);
+        if (node.Body is not null) ReportBlockToExpressionBodiedMemberIfNeeded(node, node.Body);
         if (node.ExpressionBody is not null) ReportExpressionBodiedMemberIfNeeded(node, node.ExpressionBody, node.SemicolonToken);
         base.VisitConversionOperatorDeclaration(node);
     }
@@ -627,6 +646,9 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
         if (node.Parent is ElseClauseSyntax) return;
         if (ShouldExpandNestedControlStatement(node) && !ShouldFormatNestedIfChainAsSingleLine(node)) return;
 
+        // Skip if the if/else chain is already formatted correctly: no braces, each branch on its own physical line, each line ≤320 chars.
+        if (IsIfChainAlreadyFormattedCorrectly(node)) return;
+
         var replacementText = TryCreateIfStatementReplacementText(node);
         if (replacementText is null) return;
 
@@ -818,6 +840,65 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
         }
     }
 
+    private static bool IfStatementHasAnyBlock(IfStatementSyntax ifStatement)
+    {
+        var currentIfStatement = ifStatement;
+        while (true)
+        {
+            if (currentIfStatement.Statement is BlockSyntax) return true;
+            if (currentIfStatement.Else is null) return false;
+            if (currentIfStatement.Else.Statement is IfStatementSyntax elseIfStatement)
+            {
+                currentIfStatement = elseIfStatement;
+                continue;
+            }
+
+            return currentIfStatement.Else.Statement is BlockSyntax;
+        }
+    }
+
+    private bool IsIfChainAlreadyFormattedCorrectly(IfStatementSyntax ifStatement)
+    {
+        if (IfStatementHasAnyBlock(ifStatement)) return false;
+
+        var currentIfStatement = ifStatement;
+        var previousBranchEndLine = -1;
+        while (true)
+        {
+            // The if branch: from if-keyword to end of body statement (excluding else clause).
+            var ifBranchSpan = TextSpan.FromBounds(currentIfStatement.IfKeyword.SpanStart, currentIfStatement.Statement.Span.End);
+            if (!IsSingleLine(ifBranchSpan)) return false;
+            if (!FitsPhysicalLine(ifBranchSpan.Start, _sourceText.ToString(ifBranchSpan))) return false;
+
+            var ifBranchLine = _sourceText.Lines.GetLinePosition(ifBranchSpan.Start).Line;
+            if (ifBranchLine == previousBranchEndLine) return false; // Two branches on the same line — should be split.
+            previousBranchEndLine = _sourceText.Lines.GetLinePosition(ifBranchSpan.End).Line;
+
+            if (currentIfStatement.Else is null) return true;
+            if (currentIfStatement.Else.Statement is IfStatementSyntax elseIfStatement)
+            {
+                // The "else if" must be on one line (else keyword through the inner if-body).
+                var elseIfSpan = TextSpan.FromBounds(currentIfStatement.Else.ElseKeyword.SpanStart, elseIfStatement.Statement.Span.End);
+                if (!IsSingleLine(elseIfSpan)) return false;
+                if (!FitsPhysicalLine(elseIfSpan.Start, _sourceText.ToString(elseIfSpan))) return false;
+
+                var elseIfBranchLine = _sourceText.Lines.GetLinePosition(elseIfSpan.Start).Line;
+                if (elseIfBranchLine == previousBranchEndLine) return false;
+
+                currentIfStatement = elseIfStatement;
+                continue;
+            }
+
+            // Final else branch: from else-keyword to end of else-body.
+            var elseBranchSpan = TextSpan.FromBounds(currentIfStatement.Else.ElseKeyword.SpanStart, currentIfStatement.Else.Statement.Span.End);
+            if (!IsSingleLine(elseBranchSpan)) return false;
+            if (!FitsPhysicalLine(elseBranchSpan.Start, _sourceText.ToString(elseBranchSpan))) return false;
+
+            var elseBranchLine = _sourceText.Lines.GetLinePosition(elseBranchSpan.Start).Line;
+            return elseBranchLine != previousBranchEndLine;
+        }
+    }
+
     private void ReportConstructorInitializerIfNeeded(ConstructorDeclarationSyntax node)
     {
         if (node.Initializer is null || node.Body is null || node.Body.Statements.Count != 0) return;
@@ -874,8 +955,60 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
         var replacementText = TryCreateExpressionBodiedMemberReplacement(memberNode, expressionBody, semicolonToken);
         if (replacementText is null || replacementText == _sourceText.ToString(memberNode.Span)) return;
 
-        var canFixAutomatically = !ContainsUnsafeTrivia(memberNode);
+        var canFixAutomatically = CanRewriteExpressionBodiedMemberAutomatically(memberNode);
         var message = $"Expression-bodied member arrows must stay on the declaration line when the resulting line is {Program.LineLengthThreshold} characters or shorter, with object initializer and collection expression delimiters aligned to the member declaration.";
+        var fullMessage = canFixAutomatically ? message : $"{message} Automatic rewriting was skipped because the span contains comments, directives, or disabled text.";
+        var linePositionSpan = _sourceText.Lines.GetLinePositionSpan(memberNode.Span);
+        Diagnostics.Add(new StyleDiagnostic(_sourceFilePath, memberNode.Span, linePositionSpan.Start.Line + 1, linePositionSpan.Start.Character + 1, "CSG0008", fullMessage, canFixAutomatically, memberNode, replacementText));
+    }
+
+    private void ReportBlockToExpressionBodiedMemberIfNeeded(SyntaxNode memberNode, BlockSyntax body)
+    {
+        if (body.Statements.Count == 1 && body.Statements[0] is ReturnStatementSyntax { Expression: CollectionExpressionSyntax }) return;
+
+        var expression = TryGetSingleMemberBlockExpression(body);
+        if (expression is null) return;
+        if (ContainsMultilineSwitchExpression(expression)) return;
+
+        if (SimpleLambdaBlockExpressionRewriter.Shared.Visit(expression) is not ExpressionSyntax rewrittenExpression) return;
+        if (ContainsMultilineBracedSyntax(rewrittenExpression)) return;
+
+        var headerText = TryCreateExpressionBodiedMemberHeaderText(memberNode);
+        if (headerText is null) return;
+
+        var baseIndentation = GetLineIndentation(memberNode.SpanStart);
+        var expressionText = Program.CreateSingleLineText(rewrittenExpression);
+        var semicolonText = ";";
+
+        string replacementText;
+        var singleLineText = $"{headerText} => {expressionText}{semicolonText}";
+        if (FitsPhysicalLine(memberNode.SpanStart, singleLineText))
+        {
+            replacementText = singleLineText;
+        }
+        else
+        {
+            var firstLine = $"{headerText} =>";
+            if (!FitsPhysicalLine(memberNode.SpanStart, firstLine)) return;
+            replacementText = $"{firstLine}{_endOfLine}{baseIndentation}    {expressionText}{semicolonText}";
+        }
+
+        replacementText = AddAttributeLinesToExpressionBodiedMemberReplacement(memberNode, replacementText, baseIndentation);
+        if (replacementText == _sourceText.ToString(memberNode.Span)) return;
+
+        var canFixAutomatically = CanRewriteExpressionBodiedMemberAutomatically(memberNode);
+        var message = $"Single-statement block-bodied members must use expression-bodied syntax; lines over {Program.LineLengthThreshold} characters split the expression onto the next line.";
+        var fullMessage = canFixAutomatically ? message : $"{message} Automatic rewriting was skipped because the span contains comments, directives, or disabled text.";
+        var linePositionSpan = _sourceText.Lines.GetLinePositionSpan(memberNode.Span);
+        Diagnostics.Add(new StyleDiagnostic(_sourceFilePath, memberNode.Span, linePositionSpan.Start.Line + 1, linePositionSpan.Start.Character + 1, "CSG0013", fullMessage, canFixAutomatically, memberNode, replacementText));
+    }
+    private void ReportCollectionReturnExpressionBodiedMemberIfNeeded(SyntaxNode memberNode, BlockSyntax body)
+    {
+        var replacementText = TryCreateCollectionReturnExpressionBodiedMemberReplacement(memberNode, body);
+        if (replacementText is null || replacementText == _sourceText.ToString(memberNode.Span)) return;
+
+        var canFixAutomatically = CanRewriteExpressionBodiedMemberAutomatically(memberNode);
+        var message = "Members that only return a collection expression must use expression-bodied syntax with collection expression delimiters aligned to the member declaration.";
         var fullMessage = canFixAutomatically ? message : $"{message} Automatic rewriting was skipped because the span contains comments, directives, or disabled text.";
         var linePositionSpan = _sourceText.Lines.GetLinePositionSpan(memberNode.Span);
         Diagnostics.Add(new StyleDiagnostic(_sourceFilePath, memberNode.Span, linePositionSpan.Start.Line + 1, linePositionSpan.Start.Character + 1, "CSG0008", fullMessage, canFixAutomatically, memberNode, replacementText));
@@ -926,6 +1059,8 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
 
         if (expression is CollectionExpressionSyntax collectionExpression)
         {
+            if (IsExpressionBodiedMemberArrowOnDeclarationLine(expressionBody) && IsCollectionExpressionAlignedToMember(collectionExpression, baseIndentation)) return null;
+
             var collectionExpressionText = CreateAlignedCollectionExpressionText(collectionExpression, baseIndentation, semicolonText);
             if (collectionExpressionText.Length == 0)
             {
@@ -948,6 +1083,30 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
         return FitsPhysicalLine(memberNode.SpanStart, singleLineReplacementText) ? AddAttributeLinesToExpressionBodiedMemberReplacement(memberNode, singleLineReplacementText, baseIndentation) : null;
     }
 
+    private string? TryCreateCollectionReturnExpressionBodiedMemberReplacement(SyntaxNode memberNode, BlockSyntax body)
+    {
+        if (body.Statements.Count != 1) return null;
+        if (body.Statements[0] is not ReturnStatementSyntax { Expression: CollectionExpressionSyntax collectionExpression }) return null;
+
+        var headerText = TryCreateExpressionBodiedMemberHeaderText(memberNode);
+        if (headerText is null) return null;
+
+        var baseIndentation = GetLineIndentation(memberNode.SpanStart);
+        var collectionExpressionText = CreateAlignedCollectionExpressionText(collectionExpression, baseIndentation, ";");
+        if (collectionExpressionText.Length == 0)
+        {
+            var emptyCollectionLine = $"{headerText} => [];";
+            return FitsPhysicalLine(memberNode.SpanStart, emptyCollectionLine) ? AddAttributeLinesToExpressionBodiedMemberReplacement(memberNode, emptyCollectionLine, baseIndentation) : null;
+        }
+
+        var firstLine = $"{headerText} =>";
+        if (!FitsPhysicalLine(memberNode.SpanStart, firstLine)) return null;
+
+        var outputLines = new List<string> { firstLine };
+        outputLines.AddRange(SplitLines(collectionExpressionText));
+        return AddAttributeLinesToExpressionBodiedMemberReplacement(memberNode, string.Join(_endOfLine, outputLines), baseIndentation);
+    }
+
     private bool IsExpressionBodiedMemberArrowOnDeclarationLine(ArrowExpressionClauseSyntax expressionBody)
     {
         var previousToken = expressionBody.ArrowToken.GetPreviousToken();
@@ -956,6 +1115,15 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
         var previousTokenLine = _sourceText.Lines.GetLinePosition(previousToken.Span.End).Line;
         var arrowLine = _sourceText.Lines.GetLinePosition(expressionBody.ArrowToken.SpanStart).Line;
         return previousTokenLine == arrowLine;
+    }
+
+    private bool IsCollectionExpressionAlignedToMember(CollectionExpressionSyntax collectionExpression, string baseIndentation)
+    {
+        if (collectionExpression.Elements.Count == 0) return true;
+
+        var openBracketIndentation = GetLineIndentation(collectionExpression.OpenBracketToken.SpanStart);
+        var closeBracketIndentation = GetLineIndentation(collectionExpression.CloseBracketToken.SpanStart);
+        return openBracketIndentation == baseIndentation && closeBracketIndentation == baseIndentation;
     }
 
     private string CreateExpressionWithAlignedDelimiterReplacement(string firstLine, InitializerExpressionSyntax initializer, string baseIndentation, string semicolonText)
@@ -996,6 +1164,8 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
     }
 
     private bool CanRewriteAutomatically(SyntaxNode node) => !ContainsUnsafeTrivia(node) && !ContainsMultilineBracedSyntax(node);
+
+    private bool CanRewriteExpressionBodiedMemberAutomatically(SyntaxNode node) => !ContainsUnsafeTrivia(node, node.Span);
 
     private static bool CanRewriteExceptionHandlingBlockAutomatically(SyntaxNode node, TextSpan span) => !ContainsUnsafeTrivia(node, span);
 
@@ -1077,7 +1247,6 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
     {
         if (statement.Parent is not BlockSyntax block) return false;
         if (!IsControlStatementBodyBlock(block)) return false;
-        if (statement is IfStatementSyntax && IsMethodLikeBodyBlock(block)) return false;
         return block.Statements.Count == 1 && IsSameNode(block.Statements[0], statement);
     }
 
@@ -1162,6 +1331,7 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
             IndexerDeclarationSyntax indexerDeclaration => Program.CreateSingleLineText(indexerDeclaration.WithAttributeLists(SyntaxFactory.List<AttributeListSyntax>()).WithExpressionBody(null).WithSemicolonToken(default)),
             OperatorDeclarationSyntax operatorDeclaration => Program.CreateSingleLineText(operatorDeclaration.WithAttributeLists(SyntaxFactory.List<AttributeListSyntax>()).WithBody(null).WithExpressionBody(null).WithSemicolonToken(default)),
             ConversionOperatorDeclarationSyntax conversionOperatorDeclaration => Program.CreateSingleLineText(conversionOperatorDeclaration.WithAttributeLists(SyntaxFactory.List<AttributeListSyntax>()).WithBody(null).WithExpressionBody(null).WithSemicolonToken(default)),
+            AccessorDeclarationSyntax accessorDeclaration => Program.CreateSingleLineText(accessorDeclaration.WithAttributeLists(SyntaxFactory.List<AttributeListSyntax>()).WithBody(null).WithExpressionBody(null).WithSemicolonToken(default)),
             _ => null
         };
 
@@ -1177,6 +1347,7 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
             IndexerDeclarationSyntax indexerDeclaration => indexerDeclaration.AttributeLists,
             OperatorDeclarationSyntax operatorDeclaration => operatorDeclaration.AttributeLists,
             ConversionOperatorDeclarationSyntax conversionOperatorDeclaration => conversionOperatorDeclaration.AttributeLists,
+            AccessorDeclarationSyntax accessorDeclaration => accessorDeclaration.AttributeLists,
             _ => SyntaxFactory.List<AttributeListSyntax>()
         };
 
@@ -1191,6 +1362,18 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
             _ => null
         };
 
+    private static ExpressionSyntax? TryGetSingleMemberBlockExpression(BlockSyntax block)
+    {
+        if (block.Statements.Count != 1) return null;
+
+        return block.Statements[0] switch
+        {
+            ReturnStatementSyntax { Expression: { } expression } => expression,
+            ExpressionStatementSyntax expressionStatement => expressionStatement.Expression,
+            _ => null
+        };
+    }
+
     private static string CreateExpressionHeadText(ExpressionSyntax expression)
         => expression switch
         {
@@ -1203,7 +1386,8 @@ internal sealed class SingleLineRuleWalker(SourceText sourceText, string sourceF
     {
         if (collectionExpression.Elements.Count == 0) return string.Empty;
 
-        var delimiterIndentation = GetLineIndentation(collectionExpression.SpanStart);
+        var openBracketIndentation = GetLineIndentation(collectionExpression.OpenBracketToken.SpanStart);
+        var delimiterIndentation = openBracketIndentation.All(char.IsWhiteSpace) ? openBracketIndentation : GetLineIndentation(collectionExpression.CloseBracketToken.SpanStart);
         var outputLines = SplitLines(collectionExpression.ToString());
         if (outputLines.Count == 0) return string.Empty;
 
@@ -1506,6 +1690,29 @@ internal sealed class ObjectCreationArgumentListSpacingRewriter : CSharpSyntaxRe
     private static bool ContainsOnlyWhitespaceTrivia(SyntaxTriviaList triviaList) => triviaList.All(trivia => trivia.IsKind(SyntaxKind.WhitespaceTrivia));
 }
 
+internal sealed class CastExpressionSpacingRewriter : CSharpSyntaxRewriter
+{
+    public static CastExpressionSpacingRewriter Shared { get; } = new();
+
+    public override SyntaxNode? VisitCastExpression(CastExpressionSyntax node)
+    {
+        var castExpression = (CastExpressionSyntax?)base.VisitCastExpression(node) ?? node;
+        var typeLastToken = castExpression.Type.GetLastToken();
+        var closeParenthesisToken = castExpression.CloseParenToken;
+
+        // NormalizeWhitespace inserts a spurious trailing space after the nullable '?' token inside a cast (for example `(JsonNode? )x`).
+        // Ensure no whitespace sits between the cast type and the closing parenthesis.
+        var cleanedTypeLastToken = typeLastToken.WithTrailingTrivia(typeLastToken.TrailingTrivia.Where(RemoveWhitespaceTrivia));
+        var cleanedCloseParenthesisToken = closeParenthesisToken.WithLeadingTrivia(closeParenthesisToken.LeadingTrivia.Where(RemoveWhitespaceTrivia));
+        if (cleanedTypeLastToken == typeLastToken && cleanedCloseParenthesisToken == closeParenthesisToken) return castExpression;
+
+        var updatedType = castExpression.Type.ReplaceToken(typeLastToken, cleanedTypeLastToken);
+        return castExpression.WithType(updatedType).WithCloseParenToken(cleanedCloseParenthesisToken);
+    }
+
+    private static bool RemoveWhitespaceTrivia(SyntaxTrivia syntaxTrivia) => !syntaxTrivia.IsKind(SyntaxKind.WhitespaceTrivia);
+}
+
 internal sealed class FixPlan(bool fixEveryFile, ImmutableHashSet<string> fullFileFixPaths, ImmutableDictionary<string, ImmutableArray<LineRange>> changedLineRangesByFilePath, ImmutableArray<string> warningMessages)
 {
     private readonly bool _fixEveryFile = fixEveryFile;
@@ -1669,7 +1876,7 @@ internal sealed record StyleDiagnostic(string SourceFilePath, TextSpan Span, int
     public string ToDisplayString() => $"{SourceFilePath}({LineNumber},{CharacterNumber}): {DiagnosticId} {Message}";
 }
 
-internal sealed record FileResult(IReadOnlyList<StyleDiagnostic> Diagnostics, bool Modified, int UnsafeFixCount);
+internal sealed record FileResult(IReadOnlyList<StyleDiagnostic> Diagnostics, bool Modified, int FixedDiagnosticCount);
 
 internal sealed class SimpleLambdaBlockExpressionRewriter : CSharpSyntaxRewriter
 {

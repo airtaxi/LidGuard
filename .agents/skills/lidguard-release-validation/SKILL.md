@@ -16,7 +16,7 @@ description: "LidGuard validation and release workflow reference. Use when worki
 
 - Current manual runtime validation has only covered Windows with Codex.
 - Windows, Linux, and macOS RID compile validation can catch platform compilation regressions, but it is not a substitute for runtime behavior validation on each target OS.
-- Linux systemd/logind runtime behavior, macOS runtime behavior, Claude Code hooks, GitHub Copilot CLI hooks, OpenCode hooks, Provider MCP flows, and cross-provider concurrent-session behavior still need real environment validation before being treated as verified.
+- Linux systemd/logind runtime behavior, macOS runtime behavior, Claude Code hooks, GitHub Copilot CLI hooks, OpenCode 1 and OpenCode 2 hooks, Provider MCP flows, and cross-provider concurrent-session behavior still need real environment validation before being treated as verified.
 
 ## Missing Work
 
@@ -29,7 +29,7 @@ The Windows, Linux, and macOS CLI hook receiving path is implemented for Codex, 
 - Validate macOS behavior on a real MacBook: `caffeinate` lifecycle, `pmset disablesleep` backup/restore, `pmset sleepnow`, temporary `hibernatemode 25` hibernate with deferred recovery restore, closed-lid plus monitor-count suspend eligibility, `ioreg` lid-state reads, `system_profiler` monitor detection, best-effort Apple Silicon `IOHIDEventSystemClient` and `powermetrics` temperature aggregation, Emergency Hibernation, and suspend history logging.
 - Validate `macos-permission status|check|install|remove` on non-root and root paths, including managed marker refusal for unmanaged sudoers files, `visudo` validation, non-interactive sudo failure paths, and removal safety.
 - Validate macOS post-stop sound behavior with missing `afplay`, SystemSounds mapping, `.wav` paths, and `osascript` volume override capture/apply/restore failure paths.
-- Add automated regression tests or verification scripts for the already manually verified provider behavior, Windows behavior, Linux systemd/logind behavior, and macOS behavior: latest Codex hook behavior, Claude Code hook stdout behavior, GitHub Copilot CLI hook output behavior, OpenCode plugin and MCP config behavior, GitHub Copilot CLI user-level `~/.copilot/hooks/` loading and inline `~/.copilot/settings.json` hook composition, GitHub Copilot CLI session id stability, `PowerReadACValueIndex`/`PowerReadDCValueIndex` read/write behavior under normal user permissions, Linux inhibitor lifecycle, Linux polkit rule management, macOS parser/permission management, and Group Policy or MDM blocked power setting fallback messages.
+- Add automated regression tests or verification scripts for the already manually verified provider behavior, Windows behavior, Linux systemd/logind behavior, and macOS behavior: latest Codex hook behavior, Claude Code hook stdout behavior, GitHub Copilot CLI hook output behavior, OpenCode 1 and OpenCode 2 plugin and MCP config behavior, GitHub Copilot CLI user-level `~/.copilot/hooks/` loading and inline `~/.copilot/settings.json` hook composition, GitHub Copilot CLI session id stability, `PowerReadACValueIndex`/`PowerReadDCValueIndex` read/write behavior under normal user permissions, Linux inhibitor lifecycle, Linux polkit rule management, macOS parser/permission management, and Group Policy or MDM blocked power setting fallback messages.
 - Add direct Codex soft-lock support only if Codex later exposes a notification or machine-readable pending-state hook surface.
 
 ## .NET Tool Package Guidelines

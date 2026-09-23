@@ -88,7 +88,7 @@ description: "LidGuard CLI, settings, permission commands, examples, and failure
 
 - PermissionRequest hooks only emit a structured allow/deny decision when the runtime reports `LidSwitchState = Closed`, `VisibleDisplayMonitorCount = 0`, and Closed-lid PermissionRequest decision is Deny or Allow; otherwise they return empty stdout so the provider's default permission flow continues.
 - When Closed-lid PermissionRequest decision is Ask and the closed-lid policy is active, mark the session soft-locked with reason `closed_lid_permission_request_ask` before returning empty stdout. If soft-lock recording fails, keep stdout empty and rely on hook/runtime logs for diagnostics.
-- Claude and GitHub Copilot CLI structured closed-lid `PermissionRequest` allow/deny outputs also set `interrupt: true`; OpenCode `permission.ask` uses only `status` values of `allow` or `deny` because the current OpenCode plugin output type exposes no message field.
+- Claude and GitHub Copilot CLI structured closed-lid `PermissionRequest` allow/deny outputs also set `interrupt: true`; OpenCode `permission.ask` uses only `status` values of `allow` or `deny` because the OpenCode 1 plugin output type exposes no message field, while the OpenCode 2 permission evaluate hook receives the same decision as `effect` plus `message`.
 - Keep hook DTOs separate per provider even when another provider later uses a similar JSON shape.
 - Claude `Elicitation` hooks emit a structured `cancel` only when the runtime reports `LidSwitchState = Closed` and `VisibleDisplayMonitorCount = 0`; otherwise they return empty stdout so Claude's default elicitation flow continues.
 

@@ -22,6 +22,26 @@ Read this skill before making any C#-related code changes. Apply every rule belo
 - Before using its C# or XAML tools in a project, call `csharp_set_workspace` with the solution or project directory.
 - Before rebuilding a project after the MCP has loaded it, call `csharp_stop` to release LSP-held file locks, then call `csharp_set_workspace` again after the rebuild if more C# or XAML analysis is needed.
 
+## CsWin32 Generated File Inspection
+
+CsWin32 (`Microsoft.Windows.CsWin32`) is a Roslyn source generator — it does not write generated `.cs` files to disk by default. Generated P/Invoke signatures exist only in memory during compilation and are embedded directly into the assembly. When you need to inspect the exact generated signatures (parameter types, `unsafe` modifiers, `WIN32_ERROR` return types, pointer vs marshalling forms, etc.), use an isolated temporary inspection project so the real project is never modified.
+
+### Workflow
+
+1. **Primary agent picks a temp project path** under the OpenCode temp directory, e.g. `C:/Users/kck41/AppData/Local/Temp/opencode/cswin32-inspect-<timestamp>`. Pass this absolute path and the list of Win32 functions/methods to inspect to the subagent.
+2. **Delegate to a subagent** via the `Task` tool. The subagent should (reason and respond in English):
+   - Create a new class library project at the path the primary agent provided: `dotnet new classlib -o <tempPath>`.
+   - Add the same `Microsoft.Windows.CsWin32` package version that the real project uses (check the real project's `.csproj` or `packages.lock.json` for the exact version): `dotnet add package Microsoft.Windows.CsWin32 --version <version>` — work inside `<tempPath>`.
+   - Copy the real project's `NativeMethods.json` into the temp project root, or create one listing the functions to generate. The CsWin32 configuration (`allowMarshaling`, `emitSingleFile`, `public`, etc.) must match the real project, because these options change the emitted signature shapes significantly.
+   - Add `<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>` to the temp project's `<PropertyGroup>`.
+   - Match the real project's `<TargetFramework>` so the generated code targets the same framework.
+   - Build the temp project: `dotnet build <tempPath>` — the source generator writes files under `obj/<Platform>/<Configuration>/<TargetFramework>/generated/` (or the CsWin32 subfolder within).
+   - Read the generated `.cs` file(s) and report back the exact method signatures.
+3. **Do NOT clean up the temp project immediately.** If follow-up inspections are needed (missing functions, different `NativeMethods.json` options, etc.), reuse or re-run the same subagent against the same temp project so the context is preserved.
+4. **Clean up the temp project only as the final step** when all inspection goals have been met and no further CsWin32 signature lookups are expected in the current session. Delete the entire `<tempPath>` directory.
+
+Always verify P/Invoke signatures against the actual generated output rather than guessing from memory or other projects.
+
 ## Core Rules
 
 - Use full, unabbreviated names for all variables and methods. For example, use `GreatestCommonDivisor` and `LeastCommonMultiple`; never use `Gcd` or `Lcm`.
@@ -30,6 +50,7 @@ Read this skill before making any C#-related code changes. Apply every rule belo
 - Prefer `var` declarations over explicit type declarations.
 - Preserve the comment language and style of the referenced file unless explicitly instructed otherwise. If comments are in English, write comments in English. If comments are in Korean, write comments in Korean.
 - After editing code, inspect the touched and nearby C# code. If you find code that violates this skill, fix it before finishing.
+- When adding a NuGet package to a project, always use `dotnet add package` against the actual project so the latest available version is resolved automatically. Never guess or hard-code a package version from memory. If a specific version is required, pass it explicitly with `--version`, but still run `dotnet add package` to apply it rather than hand-editing `PackageReference` entries.
 
 ## Naming
 
@@ -37,6 +58,13 @@ Read this skill before making any C#-related code changes. Apply every rule belo
 - Private static fields: `s_camelCase`.
 - Properties, methods, classes, and enums: `PascalCase`.
 - Variable names must never use abbreviations unless the abbreviated form is overwhelmingly more common than the expanded form or is effectively a standard term, such as `IP`, `AC`/`DC`, or `Regex`. Use full, descriptive names otherwise.
+
+## File Organization
+
+- Each `.cs` file should contain a single primary type (class, record, struct, enum, interface, or delegate). Do not place multiple top-level types in one file.
+- Tightly coupled helper types that exist solely to support a single primary type — such as a private nested `enum`, a private nested `record` used only by that type, or a file-scoped helper type — may remain in the same file when they are small and have no independent reuse. When in doubt, split them into their own files.
+- The file name must match the primary type name (e.g., `FileSystemProviderSnapshotStore.cs` for `class FileSystemProviderSnapshotStore`).
+- When generating new source files, prefer one responsibility per file so each type can be located, reviewed, and tested independently.
 
 ## C# Formatting
 
@@ -245,18 +273,29 @@ public FileSystemProviderSnapshotStore() : this(rootDirectoryPath, windowsDataPr
 
 ## Automated Guard
 
-- For C# formatting verification or automatic cleanup of the ternary-expression, logical/null-coalescing binary-expression, pattern spacing, collection-expression keyword spacing, object-creation argument-list spacing, single-expression parameter/argument-list, single-statement control-flow, nested braced block, constructor initializer, and expression-bodied member rules above, use the Roslyn-based guard in `tools/CSharpStyleGuard`.
-- Before reporting C# work as complete, and before any commit that includes C# changes, run the guard's `--fix` mode on the relevant project paths. If repository-local restrictions prevent running `dotnet run`, state that explicitly before finishing.
+### Workflow (MANDATORY)
+
+When validating C# style after edits, you MUST follow this exact workflow. Do NOT deviate from it.
+
+1. **Run `--fix` first, never `--check` then hand-edit.** Always run the guard's `--fix` mode on the relevant project paths before reporting C# work as complete, and before any commit that includes C# changes. Do NOT run `--check` and then manually rewrite every diagnostic by hand — `--fix` already rewrites the safe cases automatically. Only manually fix the spans that `--fix` reports as skipped (unsafe spans: line comments, multiline comments, preprocessor directives, disabled text, unsafe multiline braced syntax).
+2. **Do NOT re-read files just to verify guard-applied auto-fixes.** After `--fix` completes, if the guard did NOT report any unsafe/skipped spans, do NOT open the affected files in a `Read` call to "confirm" what the guard changed. The guard's fix report is authoritative. Re-reading those files wastes cache-read tokens for no benefit. Only open a file when you need to manually fix an unsafe span that the guard explicitly reported as skipped.
+3. **If the guard reports unsafe/skipped spans**, manually fix only those spans, then you MAY re-run `--fix` on the affected files to confirm they are clean. After that confirmation run, do NOT re-read the files again unless the confirmation report still shows remaining unsafe spans.
+
+### Guard details
+
+- The guard project lives at `tools/CSharpStyleGuard/CSharpStyleGuard.csproj` inside this skill directory (the same directory as this `SKILL.md`). All `dotnet run` commands below use the relative path `tools/CSharpStyleGuard/CSharpStyleGuard.csproj` from this `SKILL.md`. If this skill is installed under a different `CODEX_HOME`/`ZCODE_HOME`, resolve the path relative to this `SKILL.md` instead of hard-coding `.codex`.
+- For C# formatting verification or automatic cleanup of the ternary-expression, logical/null-coalescing binary-expression, pattern spacing, collection-expression keyword spacing, object-creation argument-list spacing, single-expression parameter/argument-list, single-statement control-flow, nested braced block, constructor initializer, expression-bodied member, and block-bodied-to-expression-bodied conversion rules above, use the Roslyn-based guard in `tools/CSharpStyleGuard`.
+- If repository-local restrictions prevent running `dotnet run`, state that explicitly before finishing.
 - Check files or directories with:
 
 ```powershell
-dotnet run --project C:\Users\kck41\.codex\skills\csharp-code-style\tools\CSharpStyleGuard\CSharpStyleGuard.csproj -- --check <path>
+dotnet run --project tools/CSharpStyleGuard/CSharpStyleGuard.csproj -- --check <path>
 ```
 
 - Automatically rewrite safe cases in the current git diff with:
 
 ```powershell
-dotnet run --project C:\Users\kck41\.codex\skills\csharp-code-style\tools\CSharpStyleGuard\CSharpStyleGuard.csproj -- --fix <path>
+dotnet run --project tools/CSharpStyleGuard/CSharpStyleGuard.csproj -- --fix <path>
 ```
 
 - In a git repository, `--fix` rewrites only diagnostics whose spans intersect staged or unstaged git diff lines by default. Untracked C# files under the input paths are treated as fully changed.
@@ -264,9 +303,9 @@ dotnet run --project C:\Users\kck41\.codex\skills\csharp-code-style\tools\CSharp
 - To run the previous full-input fix behavior intentionally, pass `--all`:
 
 ```powershell
-dotnet run --project C:\Users\kck41\.codex\skills\csharp-code-style\tools\CSharpStyleGuard\CSharpStyleGuard.csproj -- --fix --all <path>
+dotnet run --project tools/CSharpStyleGuard/CSharpStyleGuard.csproj -- --fix --all <path>
 ```
 
-- The guard intentionally allows lines over 320 characters for ternary, logical/null-coalescing, and single-expression parameter/argument-list rules. The guard applies the 320-character threshold to control-flow, exception-handling, constructor-initializer, and expression-bodied member rewrites that would otherwise create a new single physical line.
-- The guard skips automatic rewriting for spans that contain line comments, multiline comments, preprocessor directives, disabled text, or unsafe multiline braced syntax, and reports those cases for manual cleanup. For CSG0002 specifically, the guard reports only cases it can safely rewrite automatically, including simple block lambdas with one `return expression;` or one expression statement.
+- The guard intentionally allows lines over 320 characters for ternary, logical/null-coalescing, and single-expression parameter/argument-list rules. The guard applies the 320-character threshold to control-flow, exception-handling, constructor-initializer, expression-bodied member, and block-bodied-to-expression-bodied conversion rewrites that would otherwise create a new single physical line. For block-bodied-to-expression-bodied conversions (CSG0013), when the single-line form exceeds 320 characters, the guard splits the expression onto the next line with `=>` remaining on the declaration line.
+- The guard skips automatic rewriting for spans that contain line comments, multiline comments, preprocessor directives, disabled text, or unsafe multiline braced syntax, and reports those cases for manual cleanup. For CSG0002 specifically, the guard reports only cases it can safely rewrite automatically, including simple block lambdas with one `return expression;` or one expression statement. For CSG0013 specifically, the guard converts block-bodied members (methods, local functions, constructors, destructors, operators, conversion operators, and accessors) with a single `return expression;` or single expression statement to expression-bodied syntax, skipping collection-return bodies (handled by CSG0008) and multiline switch expressions.
 - The guard's `dotnet run` commands are exempt from repository-local build restrictions and may be run whenever needed, even when ordinary project builds are prohibited.
